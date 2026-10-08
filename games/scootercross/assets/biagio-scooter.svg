@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 260" role="img" aria-labelledby="t d">
+<title id="t">Biagio Gelo sullo scooter bordeaux</title><desc id="d">Biagio con cappellino rosso, occhiali bianchi, maglietta blu, pantaloncini beige e tracolla nera guida uno scooter bordeaux con bauletto.</desc>
+<defs>
+ <linearGradient id="wine" x1=".2" y1="0" x2=".85" y2="1"><stop stop-color="#db5970"/><stop offset=".42" stop-color="#9e203e"/><stop offset="1" stop-color="#4a142c"/></linearGradient>
+ <linearGradient id="light" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff2c8"/><stop offset="1" stop-color="#c68b60"/></linearGradient>
+ <linearGradient id="blue" x1="0" y1="0" x2=".9" y2="1"><stop stop-color="#4e93e2"/><stop offset=".55" stop-color="#2862b6"/><stop offset="1" stop-color="#1a356d"/></linearGradient>
+ <radialGradient id="rub"><stop stop-color="#52606c"/><stop offset=".4" stop-color="#1d242e"/><stop offset=".83" stop-color="#111821"/><stop offset="1" stop-color="#080e15"/></radialGradient>
+ <linearGradient id="chrome"><stop stop-color="#dae5df"/><stop offset=".5" stop-color="#708a96"/><stop offset="1" stop-color="#eff5ed"/></linearGradient>
+</defs>
+<!-- thick toy outline -->
+<g stroke="#181e2b" stroke-linejoin="round" stroke-linecap="round">
+<!-- rear top box -->
+<rect x="39" y="128" width="93" height="52" rx="20" fill="url(#wine)" stroke-width="6"/>
+<path d="M44 146H123" stroke="#efafbb" stroke-width="4" opacity=".45"/>
+<path d="M39 156H133" stroke="#401626" stroke-width="6"/>
+<rect x="40" y="158" width="12" height="11" rx="3" fill="#f9c4b1" stroke-width="2"/>
+<!-- wheels -->
+<g transform="translate(107 211)"><circle r="39" fill="url(#rub)" stroke-width="7"/><circle r="24" fill="url(#chrome)" stroke-width="5"/><circle r="13" fill="#445767" stroke-width="4"/><circle r="6" fill="#ebf3eb" stroke="none"/><path d="M0 -23V-12M23 0H12M0 23V12M-23 0H-12" stroke="#eef6ef" stroke-width="6"/></g>
+<g transform="translate(273 211)"><circle r="39" fill="url(#rub)" stroke-width="7"/><circle r="24" fill="url(#chrome)" stroke-width="5"/><circle r="13" fill="#445767" stroke-width="4"/><circle r="6" fill="#ebf3eb" stroke="none"/><path d="M0 -23V-12M23 0H12M0 23V12M-23 0H-12" stroke="#eef6ef" stroke-width="6"/></g>
+<!-- motor frame and scooter -->
+<path d="M97 158Q123 150 151 174L188 191H250L270 165L297 179Q282 193 279 218H250Q242 191 226 191H152Q123 185 116 219H86Q86 186 97 158Z" fill="#542438" stroke-width="6"/>
+<path d="M120 180Q155 177 174 197L224 196Q242 199 249 182L266 145Q262 115 282 113L299 125Q280 171 287 193Q274 209 236 209H162Q129 205 120 180Z" fill="url(#wine)" stroke-width="7"/>
+<path d="M251 146Q249 115 272 108Q294 104 300 133L298 180H259Q269 158 251 146Z" fill="url(#wine)" stroke-width="6"/>
+<path d="M278 116L295 125L298 149L275 149Z" fill="#f3cf9c" stroke="#e7eff0" stroke-width="4"/>
+<path d="M145 177H229" stroke="#e8818d" stroke-width="5" opacity=".9"/>
+<path d="M161 204H235" stroke="#331a27" stroke-width="9"/>
+<path d="M114 147Q149 131 207 143L213 163Q173 157 131 162Z" fill="#242532" stroke-width="6"/>
+<path d="M107 148L118 166" stroke="#8d98a1" stroke-width="8"/>
+<!-- exhaust -->
+<path d="M113 197Q91 190 78 202Q76 218 114 221" fill="#637783" stroke-width="5"/>
+<!-- front fork and handlebar -->
+<path d="M283 117L275 199" stroke="#86919a" stroke-width="8"/>
+<path d="M270 117L304 110" stroke="#18212a" stroke-width="9"/>
+<path d="M297 109L306 115" stroke="#101827" stroke-width="8"/>
+<path d="M295 110L296 80Q293 67 282 73" fill="none" stroke="#26303e" stroke-width="5"/>
+<ellipse cx="281" cy="73" rx="10" ry="7" fill="#222a34" stroke-width="4"/>
+<!-- rider shoes and legs -->
+<path d="M157 132Q180 130 194 154L222 168L210 184Q192 186 176 168L155 165Z" fill="#caa46f" stroke-width="6"/>
+<path d="M194 156L227 174L234 188L209 199L192 189Z" fill="#f4f4ea" stroke-width="5"/>
+<path d="M204 187Q228 186 237 193Q240 202 215 204L201 198" fill="#f8fcf4" stroke-width="4"/>
+<path d="M118 134Q141 116 158 128L182 156L168 175L142 159L129 173Z" fill="#cfaa75" stroke-width="6"/>
+<path d="M145 162L158 181L176 194L163 203L146 194L133 176Z" fill="#f7f4ea" stroke-width="4"/>
+<!-- body -->
+<path d="M119 79Q152 62 185 78Q209 86 213 114L197 155Q173 165 125 142Q99 129 105 103Z" fill="url(#blue)" stroke-width="7"/>
+<path d="M113 94Q105 123 139 139" fill="none" stroke="#6aa4f3" stroke-width="5" opacity=".65"/>
+<!-- neck and head -->
+<path d="M144 77V59H172V82" fill="#d99d73" stroke-width="5"/>
+<ellipse cx="155" cy="45" rx="42" ry="39" fill="url(#light)" stroke-width="6"/>
+<path d="M170 53Q182 55 178 66" fill="none" stroke="#ba765e" stroke-width="3"/>
+<ellipse cx="111" cy="51" rx="9" ry="12" fill="#dc9d76" stroke-width="4"/>
+<!-- cap -->
+<path d="M116 26Q112 -5 150 -8Q185 -8 193 17L195 27Q152 21 116 31Z" fill="#b72a32" stroke-width="6"/>
+<path d="M138 24Q187 14 207 30Q200 42 174 38L125 37" fill="#a8232e" stroke-width="5"/>
+<path d="M125 12Q150 -1 176 12" fill="none" stroke="#ef7980" stroke-width="4"/>
+<!-- white sunglasses -->
+<path d="M121 45Q130 39 148 44L153 49Q155 66 143 69Q127 70 122 60ZM160 46Q178 40 189 49L186 60Q180 73 166 67Z" fill="#1d2838" stroke="#fffef4" stroke-width="6"/>
+<path d="M149 49L162 49M116 46L110 44" fill="none" stroke="#fffef4" stroke-width="6"/>
+<!-- arm, black diagonal bag strap -->
+<path d="M138 83L196 142" fill="none" stroke="#1c2430" stroke-width="11"/>
+<path d="M203 90Q227 104 232 128L291 114" fill="none" stroke="#d7a276" stroke-width="20"/>
+<path d="M204 92Q231 103 234 131" fill="none" stroke="#346db8" stroke-width="22"/>
+<circle cx="289" cy="114" r="10" fill="#edb78f" stroke-width="4"/>
+<!-- mirror small details -->
+<path d="M133 142Q109 158 112 167" fill="none" stroke="#202a33" stroke-width="5"/>
+<rect x="106" y="139" width="28" height="19" rx="7" fill="#252e3b" stroke-width="4"/>
+</g>
+</svg>
