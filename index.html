@@ -34,6 +34,12 @@ a{color:inherit;text-decoration:none}
 .cta{display:inline-flex;align-items:center;justify-content:center;gap:12px;padding:15px 21px;background:linear-gradient(135deg,#ffe49f,#f5b964);color:#1d1830;border-radius:12px;font-weight:1000;font-size:14px;box-shadow:0 4px 0 #a46a3f,0 10px 24px #0004;transition:transform .16s}
 .cta:hover,.cta:focus-visible{transform:translateY(-2px)}
 .cta-secondary{padding:15px 19px;background:#1b2550;border:1px solid #5466a4;border-radius:12px;color:#e0e9ff;font-size:14px;font-weight:800}
+.cta-fishing{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #57bdb9;background:linear-gradient(135deg,#144a59,#123448);border-radius:12px;color:#e2fff4;transition:transform .16s,border-color .16s}
+.cta-fishing:hover,.cta-fishing:focus-visible{transform:translateY(-2px);border-color:#9df9ed}
+.cta-fishing .fish-symbol{font-size:27px}
+.cta-fishing .fish-copy{display:flex;flex-direction:column;gap:3px}
+.cta-fishing strong{font-size:14px;line-height:1.1}
+.cta-fishing small{font-size:9px;letter-spacing:.12em;color:#a3e9d7;font-weight:900}
 .hero-meta{display:flex;gap:24px;flex-wrap:wrap;margin-top:37px}
 .hero-meta div{display:flex;flex-direction:column;gap:6px}
 .hero-meta strong{font:bold 22px Georgia,serif;color:#f8d692}
@@ -130,11 +136,12 @@ a{color:inherit;text-decoration:none}
     <h1>Pronto per<br><span>un'altra partita?</span></h1>
     <p class="hero-copy">Entra nella nostra sala giochi arcade. Scegli un titolo, punta al record e torna quando vuoi: la collezione crescerà con nuove sfide.</p>
     <div class="hero-actions">
-     <a class="cta" id="hero-play" href="./games/effetto-karmagra/">Gioca a Biagio Gelo <span aria-hidden="true">▶</span></a>
-     <a class="cta-secondary" href="#giochi">Esplora i giochi ↓</a>
+     <a class="cta" id="hero-play" href="./games/effetto-karmagra/">Effetto Karmagra <span aria-hidden="true">▶</span></a>
+     <a class="cta-fishing" id="featured-fishing" href="./games/pesca-grossa/" aria-label="Gioca a Pesca Grossa, nuovo arcade"><span class="fish-symbol" aria-hidden="true">🎣</span><span class="fish-copy"><strong>Pesca Grossa</strong><small>NUOVO ARCADE ↗</small></span></a>
+     <a class="cta-secondary" href="#giochi">Tutti i giochi ↓</a>
     </div>
     <div class="hero-meta">
-     <div><strong id="game-count">01</strong><small>ARCADE DISPONIBILI</small></div>
+     <div><strong id="game-count">02</strong><small>ARCADE DISPONIBILI</small></div>
      <div><strong>8-BIT</strong><small>ATMOSFERA RETRÒ</small></div>
      <div><strong>HTML5</strong><small>GIOCA DA BROWSER</small></div>
     </div>
@@ -154,14 +161,14 @@ a{color:inherit;text-decoration:none}
   <section class="section" id="giochi">
    <div class="section-head">
     <div><div class="section-kicker">SCEGLI IL TUO ARCADE</div><h2>La collezione</h2></div>
-    <span class="section-count" id="available-count">1 gioco disponibile</span>
+    <span class="section-count" id="available-count">2 giochi disponibili</span>
    </div>
    <div class="cards" id="game-grid" aria-live="polite"></div>
   </section>
  </main>
  <footer class="foot"><b>ARCADE CLUB · DAL PRIMO LIVELLO AL PROSSIMO</b><span>Una sala giochi, tanti mondi da aggiungere.</span></footer>
 </div>
-<script src="./arcade/catalog.js"></script>
+<script src="./arcade/catalog.js?v=2"></script>
 <script>
 (function(){
 "use strict";
@@ -172,7 +179,7 @@ document.getElementById("game-count").textContent=String(live.length).padStart(2
 document.getElementById("available-count").textContent=live.length+" "+(live.length===1?"gioco disponibile":"giochi disponibili");
 var hero=document.getElementById("hero-play");
 if(live.length){
- hero.href=live[0].href;hero.firstChild.textContent="Gioca a "+live[0].title+" ";
+ hero.href=live[0].href;hero.firstChild.textContent=live[0].id==="effetto-karmagra"?"Effetto Karmagra ":"Gioca a "+live[0].title+" ";
 }else{hero.href="#giochi";hero.firstChild.textContent="Esplora i giochi ";}
 function tag(name,cls,text){
  var e=document.createElement(name);
