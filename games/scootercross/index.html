@@ -250,9 +250,10 @@ function simulate(dt){
  const roadSlope=slope(rider.x),targetY=terrain(rider.x)-BASELINE;
  if(rider.onGround){
   // The sharp change after an uphill ramp launches the scooter.
-  const lip=stops.some((b,i)=>i>0&&i<stops.length-1&&oldX<=b[0]&&rider.x>=b[0]&&((b[1]-stops[i-1][1])/(b[0]-stops[i-1][0]))<-.18&&((stops[i+1][1]-b[1])/(stops[i+1][0]-b[0]))>.12)&&rider.speed>115;
+  const rampIndex=stops.findIndex((b,i)=>i>0&&i<stops.length-1&&oldX<=b[0]&&rider.x>=b[0]&&((b[1]-stops[i-1][1])/(b[0]-stops[i-1][0]))<-.18&&((stops[i+1][1]-b[1])/(stops[i+1][0]-b[0]))>.12);
+  const lip=rampIndex>0&&rider.speed>115;
   if(lip){
-   rider.onGround=false;rider.vy=Math.sin(oldSlope)*rider.speed*1.15-95;
+   rider.onGround=false;const ramp=stops[rampIndex],before=stops[rampIndex-1],launchSlope=Math.atan2(ramp[1]-before[1],ramp[0]-before[0]);rider.vy=Math.sin(launchSlope)*rider.speed*1.15-95;rider.angle=launchSlope;
    rider.y=terrain(oldX)-BASELINE;
    rider.airtime=0;beep(540,.07,"triangle",.02,1.7);
   }else{
