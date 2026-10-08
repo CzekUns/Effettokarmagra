@@ -32,6 +32,13 @@ main{width:100%;display:block}
 .dialog h2{font:bold clamp(26px,5vw,40px) Georgia,serif;line-height:1.1;color:#ffe2a3;margin:13px 0}
 .dialog p{line-height:1.6;color:#d4e0ee;font-size:14px}
 .dialog button{border:0;border-radius:10px;padding:14px 25px;background:linear-gradient(#ffe7a9,#dfad4c);color:#1d2432;font-weight:1000;box-shadow:0 4px #a2702f;margin-top:13px}
+
+.dialog .share-score{display:flex;align-items:center;justify-content:center;gap:9px;width:max-content;max-width:100%;margin:14px auto 0;padding:12px 17px;border-radius:11px;background:#1c8d55;border:2px solid #6ee1a1;color:white;text-decoration:none;font-size:13px;font-weight:900;line-height:1.4;box-shadow:0 4px #11643c}
+.dialog .share-score:hover,.dialog .share-score:focus-visible{background:#167748;border-color:#d3ffe0}
+.dialog .share-score[hidden]{display:none}
+.dialog .share-hint{color:#aee3ce;font-size:11px;line-height:1.5;margin:10px 0 0}
+.dialog .share-hint[hidden]{display:none}
+
 .powerhud{position:absolute;top:2px;left:10px;z-index:2;display:none;align-items:center;gap:9px;padding:7px 11px;border-radius:9px;background:#0a1d37e8;border:1px solid #f4d689;pointer-events:none;box-shadow:0 3px 12px #0008}
 #powertxt{font-size:10px;font-weight:900;letter-spacing:.06em;color:#ffe49c;white-space:nowrap}
 .bar{width:55px;height:7px;border:1px solid #be9651;border-radius:8px;overflow:hidden;background:#293044}
@@ -85,6 +92,8 @@ main{width:100%;display:block}
    <h2 id="title">PRONTO, BIAGIO?</h2>
    <p id="message">Raccogli le palline, evita le signorine e trova le pillole speciali.</p>
    <button id="play" type="button">GIOCA ORA ▶</button>
+   <a class="share-score" id="share-score" href="#" target="_blank" rel="noopener noreferrer" hidden>↗ Condividi su WhatsApp</a>
+   <p class="share-hint" id="share-hint" hidden>Sfida gli amici: potranno aprire subito questo gioco.</p>
   </div></div>
  </div>
  <nav class="controls" aria-label="Tastierino direzionale">
@@ -99,7 +108,7 @@ main{width:100%;display:block}
 <script>
 (function(){"use strict";
 const N=15,T=800/15,SECONDS=9,dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]},colors=["red","violet","green","gold"],E=id=>document.getElementById(id),c=E("board"),ctx=c.getContext("2d");
-const ui={score:E("score"),best:E("best"),lives:E("lives"),level:E("level"),pow:E("powertxt"),bar:E("bar"),veil:E("veil"),tag:E("tag"),title:E("title"),message:E("message"),play:E("play"),pause:E("pause"),audio:E("audio")};
+const ui={score:E("score"),best:E("best"),lives:E("lives"),level:E("level"),pow:E("powertxt"),bar:E("bar"),veil:E("veil"),tag:E("tag"),title:E("title"),message:E("message"),play:E("play"),pause:E("pause"),audio:E("audio"),share:E("share-score"),shareHint:E("share-hint")};
 const imgs={};["biaggio-normal","biaggio-power"].concat(colors.flatMap(k=>["lady-"+k+"-long","lady-"+k+"-short"])).forEach(k=>{let im=new Image();im.src="../../assets/"+k+".svg";imgs[k]=im;});
 const s={phase:"ready",level:1,score:0,best:0,lives:3,power:0,grace:0,dots:new Set(),pills:new Set(),maze:[],player:null,girls:[],last:0,t:0,mute:false,ac:null,musicBus:null,musicStep:0,nextBeat:0,bg:null};
 try{s.best=Number(localStorage.getItem("effetto-karmagra-best")||0);}catch(_){}
@@ -246,8 +255,13 @@ function background(){
 function drawBackground(){s.bg=background();}
 function drawActor(a,name,main){let p=pos(a),x=(p.x+.5)*T,y=(p.y+.5)*T;ctx.save();ctx.translate(x,y);ctx.rotate({up:Math.PI,down:0,left:Math.PI/2,right:-Math.PI/2}[a.dir]||0);if(main&&s.grace&&Math.floor(s.t*12)%2===0)ctx.globalAlpha=.45;ctx.fillStyle="#0008";ctx.beginPath();ctx.ellipse(0,18,25,9,0,0,7);ctx.fill();let im=imgs[name];if(im.complete&&im.naturalWidth)ctx.drawImage(im,-50,-55,100,100);else{ctx.fillStyle=main?"#316ab3":"#bc5279";ctx.beginPath();ctx.arc(0,0,23,0,7);ctx.fill();}if(main&&s.power){ctx.strokeStyle="#ffe5a5";ctx.globalAlpha=.55;ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,37,0,7);ctx.stroke();}ctx.restore();}
 function draw(){ctx.clearRect(0,0,800,800);ctx.drawImage(s.bg,0,0);ctx.fillStyle="#fff9e8";s.dots.forEach(k=>{let [x,y]=k.split(",").map(Number);ctx.beginPath();ctx.arc((x+.5)*T,(y+.5)*T,5,0,7);ctx.fill();});s.pills.forEach(k=>{let [x,y]=k.split(",").map(Number);ctx.save();ctx.translate((x+.5)*T,(y+.5)*T);ctx.rotate(-.6+Math.sin(s.t*3)*.12);ctx.fillStyle="#fff6d8";ctx.shadowColor="#fff0a0";ctx.shadowBlur=14;ctx.beginPath();ctx.roundRect(-20,-10,40,20,10);ctx.fill();ctx.restore();});s.girls.forEach(a=>{if(a.delay>.8&&s.phase==="running")return;drawActor(a,"lady-"+a.color+"-"+(s.power?"short":"long"),false);});drawActor(s.player,s.power?"biaggio-power":"biaggio-normal",true);}
-function show(k,title,message,button){ui.tag.textContent=k;ui.title.textContent=title;ui.message.textContent=message;ui.play.textContent=button;ui.veil.classList.remove("hide");}
-function start(){if(s.phase==="win"){s.level++;setLevel();}else if(s.phase==="over"){s.level=1;s.score=0;s.lives=3;setLevel();}s.phase="playing";ui.veil.classList.add("hide");ui.pause.textContent="Ⅱ Pausa";startMusic();}
+function whatsappScoreLink(points){
+ const page="https://czekuns.github.io/Effettokarmagra/games/effetto-karmagra/";
+ const message="🕹️ Ho fatto "+points+" punti a *Biagio Gelo in Effetto Karmagra* su Arcade Club!\nRiesci a superarmi? Accetta la sfida e gioca qui: "+page;
+ return "https://wa.me/?text="+encodeURIComponent(message);
+}
+function show(k,title,message,button){ui.tag.textContent=k;ui.title.textContent=title;ui.message.textContent=message;ui.play.textContent=button;const gameOver=s.phase==="over";ui.share.hidden=!gameOver;ui.shareHint.hidden=!gameOver;if(gameOver)ui.share.href=whatsappScoreLink(s.score);ui.veil.classList.remove("hide");}
+function start(){if(s.phase==="win"){s.level++;setLevel();}else if(s.phase==="over"){s.level=1;s.score=0;s.lives=3;setLevel();}s.phase="playing";ui.share.hidden=true;ui.shareHint.hidden=true;ui.veil.classList.add("hide");ui.pause.textContent="Ⅱ Pausa";startMusic();}
 function pause(){if(s.phase==="playing"){s.phase="paused";stopMusic();show("PAUSA","UNA PICCOLA PAUSA","Riprendi quando vuoi.","RIPRENDI ▶");ui.pause.textContent="▶ Riprendi";}else if(s.phase==="paused")start();}
 function input(d){if(!dirs[d])return;s.player.want=d;if(s.phase==="ready")start();}
 window.addEventListener("keydown",e=>{let d=({ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",w:"up",a:"left",s:"down",d:"right",W:"up",A:"left",S:"down",D:"right"})[e.key];if(d){e.preventDefault();input(d);}if(e.code==="Space"){e.preventDefault();if(["ready","over","win"].includes(s.phase))start();else pause();}});
