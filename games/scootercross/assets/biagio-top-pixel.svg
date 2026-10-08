@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 66" shape-rendering="crispEdges" role="img" aria-label="Biagio Gelo visto dall'alto sullo scooter bordeaux con bauletto">
+<rect x="13" y="10" width="14" height="53" fill="#121c2d"/>
+<!-- back wheel and scooter burgundy chassis -->
+<rect x="16" y="6" width="8" height="6" fill="#1c2331"/><rect x="14" y="12" width="12" height="40" fill="#6f203b"/>
+<rect x="11" y="23" width="18" height="28" fill="#a52e49"/><rect x="14" y="15" width="12" height="32" fill="#d45a66"/>
+<rect x="16" y="5" width="8" height="8" fill="#343d4a"/>
+<!-- side wings of scooter -->
+<rect x="9" y="35" width="5" height="16" fill="#75223d"/><rect x="26" y="35" width="5" height="16" fill="#75223d"/>
+<rect x="10" y="30" width="4" height="7" fill="#e77770"/><rect x="26" y="30" width="4" height="7" fill="#e77770"/>
+<!-- rear topcase clearly visible -->
+<rect x="9" y="51" width="22" height="13" fill="#24222d"/>
+<rect x="10" y="52" width="20" height="10" fill="#9d2544"/>
+<rect x="11" y="52" width="18" height="3" fill="#db6475"/>
+<rect x="13" y="60" width="14" height="2" fill="#541a30"/>
+<rect x="17" y="62" width="6" height="2" fill="#e4aeb3"/>
+<!-- legs, beige shorts and white shoes -->
+<rect x="10" y="37" width="8" height="10" fill="#e2b47e"/><rect x="22" y="37" width="8" height="10" fill="#e2b47e"/>
+<rect x="10" y="44" width="7" height="6" fill="#f7efe4"/><rect x="23" y="44" width="7" height="6" fill="#f7efe4"/>
+<rect x="11" y="46" width="5" height="4" fill="#d7e6e7"/><rect x="24" y="46" width="5" height="4" fill="#d7e6e7"/>
+<!-- chubby torso blue shirt -->
+<rect x="10" y="24" width="20" height="17" fill="#20345d"/>
+<rect x="8" y="26" width="24" height="12" fill="#2756a1"/>
+<rect x="10" y="23" width="20" height="14" fill="#326fc4"/>
+<rect x="11" y="24" width="18" height="3" fill="#71a3e1"/>
+<!-- diagonal bag -->
+<path d="M13 24h5v3h5v4h5v4h-5v-3h-5v-4h-5Z" fill="#22212c"/>
+<!-- arms to handlebars -->
+<rect x="5" y="22" width="6" height="15" fill="#e6b287"/><rect x="29" y="22" width="6" height="15" fill="#e6b287"/>
+<rect x="4" y="18" width="7" height="6" fill="#f1c79c"/><rect x="29" y="18" width="7" height="6" fill="#f1c79c"/>
+<!-- handlebars -->
+<rect x="4" y="17" width="32" height="3" fill="#343944"/><rect x="2" y="16" width="6" height="4" fill="#171f29"/><rect x="32" y="16" width="6" height="4" fill="#171f29"/>
+<!-- head and cap -->
+<rect x="12" y="10" width="16" height="17" fill="#aa735c"/>
+<rect x="10" y="12" width="20" height="12" fill="#ecc096"/>
+<rect x="12" y="11" width="16" height="12" fill="#f2c89b"/>
+<!-- white sunglasses -->
+<rect x="11" y="16" width="18" height="5" fill="#f5f5e9"/>
+<rect x="12" y="17" width="7" height="3" fill="#1c2733"/><rect x="21" y="17" width="7" height="3" fill="#1c2733"/>
+<rect x="19" y="17" width="2" height="2" fill="#ebede8"/>
+<!-- red cap -->
+<rect x="13" y="5" width="14" height="8" fill="#8a2335"/>
+<rect x="12" y="6" width="16" height="6" fill="#bf3641"/>
+<rect x="14" y="7" width="12" height="3" fill="#e55c60"/>
+<rect x="10" y="11" width="20" height="4" fill="#7d1f32"/>
+<rect x="10" y="12" width="20" height="2" fill="#d4494d"/>
+<!-- mirror ends -->
+<rect x="3" y="12" width="4" height="5" fill="#151c27"/><rect x="33" y="12" width="4" height="5" fill="#151c27"/>
+</svg>
