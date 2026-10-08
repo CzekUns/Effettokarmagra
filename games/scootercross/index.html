@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#13223c">
 <meta name="description" content="Biagio Gelo Scootercross: corri in 8-bit su Via Roma, Melito di Napoli. Gioca col telefono in orizzontale e salta i barili.">
 <title>Biagio Gelo: Scootercross — Via Roma 8-bit | Arcade Club</title>
@@ -29,7 +29,7 @@ header small{display:block;margin-top:4px;color:#9bd3d4;letter-spacing:.13em;fon
 .pad.jump{background:#c24d4f;color:#fff1d0}
 .pad.boost{background:#d4a054;color:#231d21}
 .pad.tilt{background:#465d86}
-.machine{min-width:0;background:#192d4c;border:4px solid #8094a9;border-radius:4px;padding:5px;box-shadow:0 5px #070c19,0 12px 28px #0006}
+.machine{min-width:0;width:100%;justify-self:center;background:#192d4c;border:4px solid #8094a9;border-radius:4px;padding:5px;box-shadow:0 5px #070c19,0 12px 28px #0006}
 .hud{display:flex;justify-content:space-around;align-items:center;gap:3px;padding:1px 3px 5px}
 .hud div{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;text-align:center}
 .hud small{font-size:clamp(7px,1vw,10px);color:#9dcfdd;letter-spacing:.04em}
@@ -145,5 +145,19 @@ header{margin-bottom:2px}
 <p class="instructions">PC: FRECCE / WASD · SPAZIO SALTA · SHIFT TURBO · P PAUSA · SMARTPHONE: SCHERMO ORIZZONTALE</p>
 </div>
 <script src="./game.js?v=5"></script>
+<script>
+(function(){
+ const cabinet=document.querySelector(".machine");
+ if(!cabinet)return;
+ function fit(){
+  if(window.innerWidth>window.innerHeight&&window.innerWidth<=890){
+    // Leave vertical room for the top bar, score, progress and safe-area in landscape.
+    cabinet.style.maxWidth=Math.max(260,Math.floor((window.innerHeight-100)*16/9))+"px";
+  }else cabinet.style.maxWidth="";
+ }
+ window.addEventListener("resize",fit);
+ fit();
+})();
+</script>
 </body>
 </html>
