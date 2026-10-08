@@ -6,6 +6,7 @@ Raccolta di giochi arcade indipendenti in HTML, CSS e JavaScript, ospitata da Gi
 
 - **Sala giochi:** https://czekuns.github.io/Effettokarmagra/
 - **Biagio Gelo in Effetto Karmagra:** https://czekuns.github.io/Effettokarmagra/games/effetto-karmagra/
+- **Biagio Gelo — Pesca Grossa:** https://czekuns.github.io/Effettokarmagra/games/pesca-grossa/
 
 GitHub Pages: `Settings → Pages → Deploy from a branch → main → /(root)`.
 
@@ -17,8 +18,11 @@ GitHub Pages: `Settings → Pages → Deploy from a branch → main → /(root)`
 ├── arcade/
 │   └── catalog.js                 # Elenco centralizzato dei titoli
 ├── games/
-│   └── effetto-karmagra/
-│       └── index.html             # Primo gioco completo
+│   ├── effetto-karmagra/
+│   │   └── index.html             # Primo gioco completo
+│   └── pesca-grossa/
+│       ├── index.html             # Pesca touch + tastiera
+│       └── fish.svg               # Icona vettoriale del gioco
 ├── assets/                        # SVG condivisi del primo gioco
 │   ├── biaggio-normal.svg
 │   ├── biaggio-power.svg
@@ -61,6 +65,18 @@ Arcade top-down con labirinto 15×15, palline bianche, potenziamento Karmagra, s
 - **Karmagra:** effetto temporaneo di 9 secondi; Biagio diventa calvo e veste di nero; le signorine indossano una gonna corta.
 - **Colonna sonora:** musica 8-bit originale sintetizzata con Web Audio, con tasto ON/OFF.
 - **Grafica:** 10 asset personaggio SVG nativi + capsula SVG. Asset condivisi in `assets/`; il gioco li richiama tramite `../../assets/`.
+
+## Biagio Gelo — Pesca Grossa
+
+Secondo arcade giocabile, con lo **stesso SVG di Biagio calvo e vestito di nero** usato nel potenziamento di Effetto Karmagra (`assets/biaggio-power.svg`), caricato tramite percorso relativo `../../assets/biaggio-power.svg`.
+
+- Visuale dall'alto: Biagio pesca da un pontile.
+- Tocca il lago per lanciare o usa il pulsante **LANCIA** per mirare automaticamente a un pesce.
+- Aspetta l'abboccata, poi tieni premuto **RECUPERA** e rilascialo quando cresce la tensione, altrimenti la lenza si spezza.
+- Quattro pesci con punteggi e resistenze diversi: sardina, orata, spigola, pesce d'oro.
+- Sfida a tempo da 90 secondi, bonus per catture consecutive, record salvato nel browser.
+- Supporto mobile, mouse, frecce + spazio; piccoli effetti e accompagnamento audio sintetizzato.
+- Nessuna risorsa esterna o backend.
 
 ## Tecnologia
 
