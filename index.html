@@ -40,6 +40,12 @@ a{color:inherit;text-decoration:none}
 .cta-fishing .fish-copy{display:flex;flex-direction:column;gap:3px}
 .cta-fishing strong{font-size:14px;line-height:1.1}
 .cta-fishing small{font-size:9px;letter-spacing:.12em;color:#a3e9d7;font-weight:900}
+.cta-scooter{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #de8c81;background:linear-gradient(135deg,#6a273e,#35203c);border-radius:12px;color:#ffe6d5;transition:transform .16s,border-color .16s}
+.cta-scooter:hover,.cta-scooter:focus-visible{transform:translateY(-2px);border-color:#ffc5a4}
+.cta-scooter .scooter-mark{font-size:27px}
+.cta-scooter .scooter-copy{display:flex;flex-direction:column;gap:3px}
+.cta-scooter strong{font-size:14px;line-height:1.1}
+.cta-scooter small{font-size:9px;letter-spacing:.12em;color:#f5b6a6;font-weight:900}
 .hero-meta{display:flex;gap:24px;flex-wrap:wrap;margin-top:37px}
 .hero-meta div{display:flex;flex-direction:column;gap:6px}
 .hero-meta strong{font:bold 22px Georgia,serif;color:#f8d692}
@@ -138,10 +144,11 @@ a{color:inherit;text-decoration:none}
     <div class="hero-actions">
      <a class="cta" id="hero-play" href="./games/effetto-karmagra/">Effetto Karmagra <span aria-hidden="true">▶</span></a>
      <a class="cta-fishing" id="featured-fishing" href="./games/pesca-grossa/" aria-label="Gioca a Pesca Grossa, nuovo arcade"><span class="fish-symbol" aria-hidden="true">🎣</span><span class="fish-copy"><strong>Pesca Grossa</strong><small>NUOVO ARCADE ↗</small></span></a>
+     <a class="cta-scooter" href="./games/scootercross/" aria-label="Gioca a Biagio Gelo Scootercross"><span class="scooter-mark" aria-hidden="true">🛵</span><span class="scooter-copy"><strong>Scootercross</strong><small>TERZO ARCADE ↗</small></span></a>
      <a class="cta-secondary" href="#giochi">Tutti i giochi ↓</a>
     </div>
     <div class="hero-meta">
-     <div><strong id="game-count">02</strong><small>ARCADE DISPONIBILI</small></div>
+     <div><strong id="game-count">03</strong><small>ARCADE DISPONIBILI</small></div>
      <div><strong>8-BIT</strong><small>ATMOSFERA RETRÒ</small></div>
      <div><strong>HTML5</strong><small>GIOCA DA BROWSER</small></div>
     </div>
@@ -161,14 +168,14 @@ a{color:inherit;text-decoration:none}
   <section class="section" id="giochi">
    <div class="section-head">
     <div><div class="section-kicker">SCEGLI IL TUO ARCADE</div><h2>La collezione</h2></div>
-    <span class="section-count" id="available-count">2 giochi disponibili</span>
+    <span class="section-count" id="available-count">3 giochi disponibili</span>
    </div>
    <div class="cards" id="game-grid" aria-live="polite"></div>
   </section>
  </main>
  <footer class="foot"><b>ARCADE CLUB · DAL PRIMO LIVELLO AL PROSSIMO</b><span>Una sala giochi, tanti mondi da aggiungere.</span></footer>
 </div>
-<script src="./arcade/catalog.js?v=2"></script>
+<script src="./arcade/catalog.js?v=3"></script>
 <script>
 (function(){
 "use strict";
