@@ -17,5 +17,19 @@ window.ARCADE_CATALOG = [
     status: "live",
     accent: "gold",
     recordKey: "effetto-karmagra-best"
+  },
+  {
+    id: "pesca-grossa",
+    title: "Biagio Gelo",
+    subtitle: "Pesca Grossa",
+    genre: "Pesca / Riflessi",
+    description: "Lancia l'amo, aspetta che abbocchi e recupera la lenza senza spezzarla. Riuscirai a prendere il pesce d'oro?",
+    href: "./games/pesca-grossa/",
+    artwork: "./assets/biaggio-power.svg",
+    decoration: "./games/pesca-grossa/fish.svg",
+    support: "Telefono e PC",
+    status: "live",
+    accent: "aqua",
+    recordKey: "biagio-pesca-record"
   }
 ];
