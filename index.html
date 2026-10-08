@@ -1,257 +1,229 @@
-<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09172a"><title>Biagio Gelo in Effetto Karmagra · Arcade 8-bit</title><link rel="icon" href="assets/pill.svg"><style>
-
-:root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#f2e4b8;background:#06101e}
-*{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:radial-gradient(circle at 40% 0%,#1d416a 0%,#091b30 46%,#030a14 100%)}
-button{font:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.app{max-width:800px;margin:0 auto;padding:6px 12px 25px}
-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 9px}
-.tag{font-size:10px;letter-spacing:.18em;color:#9dbbdc;font-weight:900}
-h1{font:bold clamp(25px,4.7vw,43px)/.98 Georgia,"Times New Roman",serif;margin:3px 0;color:#fff0bf;text-shadow:2px 3px #164c94}
-h1 span{display:block;font-size:.76em;color:#f7d582;line-height:1.12;margin-top:3px}
-.sub{font-size:10px;letter-spacing:.12em;color:#8baed4;font-weight:900;margin-top:7px}
-.actions{display:flex;flex-shrink:0;gap:6px;align-items:center}
-.actions button{border:1px solid #3b689d;background:#112c4e;color:#f9e9c5;border-radius:10px;font-size:12px;font-weight:850;padding:10px 11px;white-space:nowrap}
-.actions button:active,.controls button:active{transform:scale(.95);background:#24548b}
-main{width:100%;display:block}
-.game{min-width:0;display:flex;flex-direction:column}
-.score{order:0;height:64px;display:flex;justify-content:space-between;align-items:center;gap:10px;background:linear-gradient(#102649,#051226);border:4px solid #295ca5;border-radius:14px 14px 0 0;padding:6px clamp(11px,3vw,24px);box-shadow:inset 0 0 13px #183b69}
-.score>div{display:flex;flex-direction:column}
-.score>div:last-child{text-align:right}
-.score small{color:#bfd4ec;font-size:10px;font-weight:900;letter-spacing:.13em}
-.score strong{color:#ffe28e;font:bold clamp(19px,3vw,28px) monospace}
-.center-stats{align-items:center;gap:2px}
-#level{font-size:9px;letter-spacing:.1em;color:#b8d4ec;font-weight:900}
-.lives{display:flex;flex-direction:row!important;align-items:center;justify-content:center;gap:1px}
-.lives img{width:29px;height:29px}
-.field{position:relative;order:1;overflow:hidden;border:5px solid #2759a1;border-top:0;border-radius:0 0 13px 13px;background:#071528;box-shadow:0 11px 33px #0009}
-.field canvas{display:block;width:100%;height:auto;aspect-ratio:1;touch-action:none;outline:none}
-.veil{position:absolute;inset:0;display:flex;justify-content:center;align-items:center;background:#031126bb;backdrop-filter:blur(3px);padding:14px}
-.veil.hide{display:none}
-.dialog{max-width:390px;width:100%;padding:clamp(18px,4vw,30px);border:2px solid #e6c173;border-radius:16px;background:linear-gradient(135deg,#1d3c65,#09182c);text-align:center;box-shadow:0 12px 45px #000b}
-.dialog h2{font:bold clamp(26px,5vw,40px) Georgia,serif;line-height:1.1;color:#ffe2a3;margin:13px 0}
-.dialog p{line-height:1.6;color:#d4e0ee;font-size:14px}
-.dialog button{border:0;border-radius:10px;padding:14px 25px;background:linear-gradient(#ffe7a9,#dfad4c);color:#1d2432;font-weight:1000;box-shadow:0 4px #a2702f;margin-top:13px}
-.powerhud{position:absolute;top:2px;left:10px;z-index:2;display:none;align-items:center;gap:9px;padding:7px 11px;border-radius:9px;background:#0a1d37e8;border:1px solid #f4d689;pointer-events:none;box-shadow:0 3px 12px #0008}
-#powertxt{font-size:10px;font-weight:900;letter-spacing:.06em;color:#ffe49c;white-space:nowrap}
-.bar{width:55px;height:7px;border:1px solid #be9651;border-radius:8px;overflow:hidden;background:#293044}
-.bar>div{height:100%;width:0;background:linear-gradient(90deg,#e8a12f,#fff2b6)}
-.controls{order:2;display:flex;justify-content:center;align-items:center;margin-top:12px;padding:15px 16px 18px;border:2px solid #285996;border-radius:15px;background:linear-gradient(145deg,#132f54,#0a1b32);box-shadow:inset 0 1px 0 #4e78aa50;min-height:210px}
-.pad{display:flex;flex-direction:column;align-items:center;gap:8px}
-.pad>div{display:flex;justify-content:center;align-items:center;gap:8px}
-.pad button{display:grid;place-items:center;width:68px;height:60px;padding:0;border:2px solid #4d7fbf;border-radius:13px;background:linear-gradient(#24518a,#102d53);font-size:24px;color:#ffe5a2;font-weight:900;box-shadow:0 4px #07162e}
-.pad>div span{width:60px;display:grid;place-items:center;font:bold 16px Georgia,serif;color:#97b9df}
-@media(max-width:620px){
- .app{padding:3px 7px 20px}
- header{align-items:flex-start;gap:6px;padding-bottom:7px}
- h1{font-size:clamp(21px,6.1vw,31px)}
- h1 span{font-size:.7em}
- .tag{font-size:8px}
- .sub{display:none}
- .actions{flex-direction:column;gap:4px}
- .actions button{padding:6px 8px;font-size:10px}
- .score{height:55px;padding:5px 10px}
- .score strong{font-size:clamp(17px,5vw,22px)}
- .score small,#level{font-size:9px}
- .lives img{width:23px;height:23px}
- .controls{margin-top:13px;padding:16px 8px 20px;min-height:212px}
- .pad button{width:66px;height:60px}
- .pad>div span{width:57px}
- .pad{gap:8px}
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090d22">
+<meta name="description" content="Arcade Club: una sala giochi online da browser. Gioca a Biagio Gelo in Effetto Karmagra e scopri i prossimi arcade.">
+<title>Arcade Club · La sala giochi</title>
+<link rel="icon" href="./assets/pill.svg" type="image/svg+xml">
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#f2f2ff;background:#090d22}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse 65% 40% at 75% 0%,#24205d 0,transparent 76%),radial-gradient(ellipse 55% 40% at 1% 54%,#101b42 0,transparent 85%),#090d22;overflow-x:hidden}
+button,a{-webkit-tap-highlight-color:transparent}
+a{color:inherit;text-decoration:none}
+.site{max-width:1190px;margin:0 auto;padding:0 clamp(16px,4vw,44px)}
+.top{min-height:82px;display:flex;align-items:center;justify-content:space-between;gap:15px;border-bottom:1px solid #a7b6ff19}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{height:46px;width:46px;display:grid;place-items:center;border-radius:14px;border:2px solid #77a1fa;background:linear-gradient(140deg,#204b96,#121b48);box-shadow:inset 0 0 14px #a5b5ff25,0 0 18px #729aff2d;color:#ffdf86}
+.logo-mark svg{width:30px;height:30px}
+.logo-type{font-size:18px;font-weight:1000;letter-spacing:.14em;line-height:1}
+.logo-type em{font-style:normal;color:#ffd477}
+.logo-sub{display:block;margin-top:5px;color:#95a5d0;font-size:9px;letter-spacing:.25em;font-weight:800}
+.top-link{font-weight:800;color:#d3dbf6;border:1px solid #52629c66;border-radius:10px;padding:10px 14px;font-size:13px}
+.top-link:hover,.top-link:focus-visible{border-color:#b3bff9;color:#fff}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,.96fr);gap:clamp(20px,4vw,50px);align-items:center;padding:clamp(38px,5.8vw,72px) 0 48px}
+.stamp{display:inline-flex;align-items:center;gap:9px;border:1px solid #7c92ce55;background:#131b3c;border-radius:50px;padding:8px 13px;color:#a9bdf4;font-size:11px;font-weight:850;letter-spacing:.12em}
+.stamp-dot{height:8px;width:8px;background:#9af5b8;border-radius:50%;box-shadow:0 0 13px #64e8a6}
+.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(48px,6.3vw,84px);line-height:.98;letter-spacing:-.055em;margin:23px 0;color:#fbf1dc;text-shadow:0 8px 30px #0004}
+.hero h1 span{display:block;background:linear-gradient(120deg,#ffe29b,#ffb465 70%,#ff8f9d);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-copy{max-width:480px;color:#b2bfdf;font-size:clamp(15px,1.6vw,18px);line-height:1.7;margin:23px 0 26px}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px}
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:12px;padding:15px 21px;background:linear-gradient(135deg,#ffe49f,#f5b964);color:#1d1830;border-radius:12px;font-weight:1000;font-size:14px;box-shadow:0 4px 0 #a46a3f,0 10px 24px #0004;transition:transform .16s}
+.cta:hover,.cta:focus-visible{transform:translateY(-2px)}
+.cta-secondary{padding:15px 19px;background:#1b2550;border:1px solid #5466a4;border-radius:12px;color:#e0e9ff;font-size:14px;font-weight:800}
+.hero-meta{display:flex;gap:24px;flex-wrap:wrap;margin-top:37px}
+.hero-meta div{display:flex;flex-direction:column;gap:6px}
+.hero-meta strong{font:bold 22px Georgia,serif;color:#f8d692}
+.hero-meta small{font-size:10px;letter-spacing:.15em;font-weight:800;color:#8fa0ca}
+.cabinet{min-width:0;transform:rotate(1deg);border:2px solid #5861a5;border-radius:26px;padding:12px;background:linear-gradient(135deg,#1f2a63,#111a3c 60%,#141444);box-shadow:0 23px 60px #03071599,0 0 45px #6460bc35,inset 0 0 18px #8f7dee2c}
+.cabinet-head{display:flex;justify-content:space-between;align-items:center;padding:5px 12px 15px;color:#d1bdf9;letter-spacing:.14em;font-size:10px;font-weight:900}
+.cabinet-head span:last-child{color:#f9cd73}
+.screen{position:relative;aspect-ratio:1.24;border:6px solid #111b3b;border-radius:15px;overflow:hidden;background:linear-gradient(90deg,#0a1733,#0d1940);box-shadow:inset 0 0 0 2px #3d519f,0 4px 20px #0008}
+.wall-vertical,.wall-horizontal{position:absolute;border:8px solid #2e67ce;border-radius:12px;box-shadow:inset 0 0 0 3px #6997ec,0 0 13px #2c51be50}
+.wall-vertical{left:28%;height:73%;width:17%;top:15%}
+.wall-horizontal{right:9%;height:16%;width:43%;top:25%}
+.wall-bot{position:absolute;right:13%;bottom:11%;height:15%;width:28%;border:8px solid #2e67ce;border-radius:12px}
+.dots{position:absolute;inset:0;background-image:radial-gradient(#ffedc5 2.7px,transparent 3.4px);background-size:32px 32px;background-position:12px 6px;opacity:.96}
+.preview-player{position:absolute;left:48%;top:45%;width:24%;max-width:125px;filter:drop-shadow(0 8px 9px #0009);animation:float 2.6s ease-in-out infinite}
+.preview-lady{position:absolute;right:8%;top:44%;width:20%;max-width:96px;transform:rotate(-16deg);filter:drop-shadow(0 6px 7px #0008)}
+.preview-pill{position:absolute;left:10%;bottom:20%;width:13%;max-width:53px;filter:drop-shadow(0 0 10px #ffe1a9)}
+.screen-gloss{position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,#b8caff16,transparent 40%,#22399a15)}
+.cabinet-foot{display:flex;align-items:center;justify-content:space-between;padding:13px 10px 5px;gap:10px;font-family:monospace;font-weight:900;color:#a9b5e1}
+.cabinet-foot strong{color:#ffe3a1}
+.signal{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.1em}
+.signal i{height:9px;width:9px;border-radius:50%;background:#91ed9d;box-shadow:0 0 11px #8ae69f}
+@keyframes float{50%{transform:translateY(-7px)}}
+.section{padding:20px 0 40px}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:18px;padding:0 0 20px;border-bottom:1px solid #5b69a53a}
+.section-kicker{font-size:10px;font-weight:1000;letter-spacing:.25em;color:#93abe6}
+.section-head h2{font:700 clamp(27px,3.9vw,41px) Georgia,serif;letter-spacing:-.025em;margin:7px 0 0;color:#f9e7bb}
+.section-count{color:#a5b7da;font-size:12px;font-weight:800;white-space:nowrap}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:25px 0 12px}
+.game-card,.slot{min-width:0;display:flex;flex-direction:column;min-height:350px;border-radius:19px;overflow:hidden}
+.game-card{background:linear-gradient(150deg,#172e55,#101b39 60%,#11152e);border:1px solid #627db07a;box-shadow:0 10px 30px #0004;transition:transform .15s,border-color .15s}
+.game-card:hover,.game-card:focus-visible{transform:translateY(-5px);border-color:#d9cb93}
+.card-art{position:relative;height:195px;overflow:hidden;background:radial-gradient(ellipse at 70% 55%,#213d75,#0c1835 65%);border-bottom:1px solid #627db04d}
+.card-art::before{content:"";position:absolute;inset:0;background-image:radial-gradient(#fff1cf 2px,transparent 2.7px);background-size:27px 27px;background-position:12px 9px;opacity:.5}
+.art-wall{position:absolute;width:50%;height:115px;left:-4%;top:35%;border:9px solid #2460c2;border-radius:17px;transform:rotate(16deg);box-shadow:inset 0 0 0 3px #85a7ee}
+.art-wall.two{left:auto;right:-16%;top:-17%;width:65%;height:155px;transform:rotate(-19deg)}
+.art-sprite{position:absolute;width:125px;max-width:62%;height:145px;object-fit:contain;left:50%;top:18%;transform:translateX(-50%);filter:drop-shadow(0 8px 7px #0009)}
+.art-pill{position:absolute;width:47px;bottom:9%;right:12%;filter:drop-shadow(0 0 12px #ffe3ab)}
+.card-status{position:absolute;top:12px;left:12px;padding:7px 10px;background:#103b3a;border:1px solid #439f7d;border-radius:8px;color:#9cf3be;font-size:10px;font-weight:900;letter-spacing:.12em}
+.card-body{padding:17px 18px 18px;display:flex;flex:1;flex-direction:column}
+.card-category{font-size:10px;letter-spacing:.16em;font-weight:900;color:#8eaddb}
+.card-title{font:700 26px/1.15 Georgia,serif;color:#ffebbd;margin:9px 0 2px}
+.card-subtitle{font-size:13px;font-weight:750;color:#a7c4f4}
+.card-desc{font-size:12px;line-height:1.6;color:#b2bfdc;margin:13px 0 18px}
+.card-end{display:flex;align-items:center;justify-content:space-between;margin-top:auto;gap:8px;border-top:1px solid #5a74a73b;padding-top:14px}
+.card-end span{color:#a9bae4;font-size:11px;font-weight:800}
+.card-play{color:#ffe0a2;font-size:12px;letter-spacing:.04em;font-weight:950}
+.slot{align-items:center;justify-content:center;text-align:center;padding:25px;background:repeating-linear-gradient(135deg,#111833,#111833 10px,#121b38 10px,#121b38 20px);border:2px dashed #50618a}
+.slot-icon{width:68px;height:68px;border-radius:19px;display:grid;place-items:center;font-size:38px;font-weight:300;color:#8ba3d2;background:#1a2850;border:1px solid #536aa257}
+.slot-count{font:900 10px monospace;letter-spacing:.22em;color:#708bb7;margin:24px 0 9px}
+.slot h3{font:700 24px Georgia,serif;color:#ccd7ee;margin:0}
+.slot p{font-size:12px;line-height:1.65;color:#8d9ec0;max-width:210px;margin:12px 0}
+.foot{display:flex;justify-content:space-between;gap:18px;align-items:center;border-top:1px solid #6e80b83b;padding:25px 0 35px;font-size:11px;color:#8799c6}
+.foot b{letter-spacing:.14em;color:#d5b972}
+@media(max-width:950px){
+ .hero{grid-template-columns:minmax(0,1fr) minmax(270px,.9fr);gap:22px}
+ .hero h1{font-size:clamp(45px,6vw,68px)}
+ .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-@media(max-width:350px){
- .actions button{font-size:9px;padding:5px}
- h1{font-size:20px}
- .score{gap:4px;padding:4px 7px}
- .score strong{font-size:16px}
- .lives img{width:20px;height:20px}
+@media(max-width:670px){
+ .site{padding:0 14px}
+ .top{min-height:66px}
+ .logo-mark{width:41px;height:41px}
+ .logo-type{font-size:16px}
+ .top-link{font-size:11px;padding:9px}
+ .hero{grid-template-columns:1fr;padding:28px 0 27px;gap:27px}
+ .hero h1{font-size:clamp(47px,11vw,72px);margin:16px 0}
+ .hero-copy{font-size:14px;margin:17px 0 21px}
+ .hero-meta{margin-top:24px}
+ .cabinet{max-width:520px;margin:0 auto;width:100%}
+ .section{padding:12px 0 27px}
+ .cards{grid-template-columns:1fr;gap:14px}
+ .game-card,.slot{min-height:unset}
+ .slot{min-height:225px}
+ .section-head h2{font-size:29px}
+ .section-count{font-size:10px}
+ .foot{flex-wrap:wrap}
 }
-</style></head><body><div class="app"><header><div><div class="tag">ARCADE · 8-BIT EDITION</div><h1>BIAGIO GELO <span>IN EFFETTO KARMAGRA</span></h1><div class="sub">PALLINE • SIGNORINE • PILLOLE</div></div><div class="actions"><button id="pause">Ⅱ Pausa</button><button id="audio">♫ Audio ON</button></div></header><main>
-<section class="game" aria-label="Gioco Effetto Karmagra">
- <div class="score">
-  <div><small>PUNTI</small><strong id="score">000000</strong></div>
-  <div class="center-stats"><span id="level">LIVELLO 01</span><div class="lives" id="lives" aria-label="Vite rimaste"></div></div>
-  <div><small>RECORD</small><strong id="best">000000</strong></div>
- </div>
- <div class="field">
-  <canvas id="board" width="800" height="800" tabindex="0" aria-label="Labirinto: frecce o WASD su tastiera; usa le frecce sullo schermo o scorri per muoverti"></canvas>
-  <div class="powerhud" id="powerhud"><span id="powertxt"></span><div class="bar"><div id="bar"></div></div></div>
-  <div class="veil" id="veil"><div class="dialog">
-   <div class="tag" id="tag">UN NUOVO ARCADE</div>
-   <h2 id="title">PRONTO, BIAGIO?</h2>
-   <p id="message">Raccogli le palline, evita le signorine e trova le pillole speciali.</p>
-   <button id="play" type="button">GIOCA ORA ▶</button>
-  </div></div>
- </div>
- <nav class="controls" aria-label="Tastierino direzionale">
-  <div class="pad">
-   <button type="button" data-dir="up" aria-label="Su">▲</button>
-   <div><button type="button" data-dir="left" aria-label="Sinistra">◀</button><span aria-hidden="true">BG</span><button type="button" data-dir="right" aria-label="Destra">▶</button></div>
-   <button type="button" data-dir="down" aria-label="Giù">▼</button>
-  </div>
- </nav>
-</section>
-</main></div>
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.preview-player{animation:none}.cta,.game-card{transition:none}}
+</style>
+</head>
+<body>
+<div class="site">
+ <header class="top">
+  <a class="logo" href="./" aria-label="Arcade Club, pagina iniziale">
+   <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="26" height="16" rx="6"/><path d="M10 13v9M6 17.5h8"/><circle cx="22" cy="16" r="1.5" fill="currentColor" stroke="none"/><circle cx="25.5" cy="20" r="1.5" fill="currentColor" stroke="none"/></svg></span>
+   <span><span class="logo-type">ARCADE <em>CLUB</em></span><span class="logo-sub">LA SALA GIOCHI</span></span>
+  </a>
+  <a class="top-link" href="#giochi">Tutti i giochi ↓</a>
+ </header>
+ <main>
+  <section class="hero" aria-label="Benvenuto ad Arcade Club">
+   <div>
+    <div class="stamp"><span class="stamp-dot"></span> SALA GIOCHI ONLINE</div>
+    <h1>Pronto per<br><span>un'altra partita?</span></h1>
+    <p class="hero-copy">Entra nella nostra sala giochi arcade. Scegli un titolo, punta al record e torna quando vuoi: la collezione crescerà con nuove sfide.</p>
+    <div class="hero-actions">
+     <a class="cta" id="hero-play" href="./games/effetto-karmagra/">Gioca a Biagio Gelo <span aria-hidden="true">▶</span></a>
+     <a class="cta-secondary" href="#giochi">Esplora i giochi ↓</a>
+    </div>
+    <div class="hero-meta">
+     <div><strong id="game-count">01</strong><small>ARCADE DISPONIBILI</small></div>
+     <div><strong>8-BIT</strong><small>ATMOSFERA RETRÒ</small></div>
+     <div><strong>HTML5</strong><small>GIOCA DA BROWSER</small></div>
+    </div>
+   </div>
+   <div class="cabinet" aria-label="Anteprima del gioco Biagio Gelo">
+    <div class="cabinet-head"><span>ARCADE CLUB // PLAYER 01</span><span>INSERT COIN ★</span></div>
+    <div class="screen">
+     <div class="dots"></div><div class="wall-vertical"></div><div class="wall-horizontal"></div><div class="wall-bot"></div>
+     <img class="preview-player" src="./assets/biaggio-normal.svg" alt="Biagio Gelo in abiti blu e cappello rosso">
+     <img class="preview-lady" src="./assets/lady-red-long.svg" alt="Personaggio avversario con gonna lunga">
+     <img class="preview-pill" src="./assets/pill.svg" alt="Karmagra">
+     <div class="screen-gloss"></div>
+    </div>
+    <div class="cabinet-foot"><span class="signal"><i></i> READY TO PLAY</span><strong>HIGH SCORE 999999</strong></div>
+   </div>
+  </section>
+  <section class="section" id="giochi">
+   <div class="section-head">
+    <div><div class="section-kicker">SCEGLI IL TUO ARCADE</div><h2>La collezione</h2></div>
+    <span class="section-count" id="available-count">1 gioco disponibile</span>
+   </div>
+   <div class="cards" id="game-grid" aria-live="polite"></div>
+  </section>
+ </main>
+ <footer class="foot"><b>ARCADE CLUB · DAL PRIMO LIVELLO AL PROSSIMO</b><span>Una sala giochi, tanti mondi da aggiungere.</span></footer>
+</div>
+<script src="./arcade/catalog.js"></script>
 <script>
-(function(){"use strict";
-const N=15,T=800/15,SECONDS=9,dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]},colors=["red","violet","green","gold"],E=id=>document.getElementById(id),c=E("board"),ctx=c.getContext("2d");
-const ui={score:E("score"),best:E("best"),lives:E("lives"),level:E("level"),pow:E("powertxt"),bar:E("bar"),veil:E("veil"),tag:E("tag"),title:E("title"),message:E("message"),play:E("play"),pause:E("pause"),audio:E("audio")};
-const imgs={};["biaggio-normal","biaggio-power"].concat(colors.flatMap(k=>["lady-"+k+"-long","lady-"+k+"-short"])).forEach(k=>{let im=new Image();im.src="assets/"+k+".svg";imgs[k]=im;});
-const s={phase:"ready",level:1,score:0,best:0,lives:3,power:0,grace:0,dots:new Set(),pills:new Set(),maze:[],player:null,girls:[],last:0,t:0,mute:false,ac:null,musicBus:null,musicStep:0,nextBeat:0,bg:null};
-try{s.best=Number(localStorage.getItem("effetto-karmagra-best")||0);}catch(_){}
-const id=(x,y)=>x+","+y,valid=(x,y)=>x>=0&&x<N&&y>=0&&y<N,free=(x,y)=>valid(x,y)&&s.maze[y][x]===0;
-function random(seed){let x=seed>>>0;return()=>((x=(1664525*x+1013904223)>>>0)/4294967296);}
-function shuffle(a,r){for(let i=a.length-1;i>0;i--){let j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function generate(level){let m=Array.from({length:N},()=>Array(N).fill(1)),rnd=random(9022+level*89),stack=[[1,1]];m[1][1]=0;while(stack.length){let [x,y]=stack[stack.length-1],d=shuffle([[0,2],[0,-2],[2,0],[-2,0]],rnd).find(([a,b])=>x+a>0&&x+a<N-1&&y+b>0&&y+b<N-1&&m[y+b][x+a]);if(!d){stack.pop();continue;}let [a,b]=d;m[y+b/2][x+a/2]=0;m[y+b][x+a]=0;stack.push([x+a,y+b]);}
-let loops=0,n=0;while(loops<25&&n++<1600){let x=1+Math.floor(rnd()*(N-2)),y=1+Math.floor(rnd()*(N-2));if(!m[y][x])continue;if((x%2===0&&y%2===1&&!m[y][x-1]&&!m[y][x+1])||(y%2===0&&x%2===1&&!m[y-1][x]&&!m[y+1][x])){m[y][x]=0;loops++;}}
-// Wide central plaza and two open courtyards make the maze lighter and more readable.
-for(const [x1,y1,x2,y2] of [[5,5,9,9],[3,3,5,5],[9,9,11,11]]){
- for(let y=y1;y<=y2;y++)for(let x=x1;x<=x2;x++)m[y][x]=0;
+(function(){
+"use strict";
+var games=Array.isArray(window.ARCADE_CATALOG)?window.ARCADE_CATALOG:[];
+var root=document.getElementById("game-grid");
+var live=games.filter(function(game){return game.status==="live";});
+document.getElementById("game-count").textContent=String(live.length).padStart(2,"0");
+document.getElementById("available-count").textContent=live.length+" "+(live.length===1?"gioco disponibile":"giochi disponibili");
+var hero=document.getElementById("hero-play");
+if(live.length){
+ hero.href=live[0].href;hero.firstChild.textContent="Gioca a "+live[0].title+" ";
+}else{hero.href="#giochi";hero.firstChild.textContent="Esplora i giochi ";}
+function tag(name,cls,text){
+ var e=document.createElement(name);
+ if(cls)e.className=cls;
+ if(text!==undefined)e.textContent=text;
+ return e;
 }
-for(let x=3;x<=11;x++){m[3][x]=0;m[11][x]=0;}
-return m;}
-function mob(x,y,speed){return{x,y,fx:x,fy:y,tx:x,ty:y,p:0,moving:false,dir:"left",want:"left",speed,delay:0};}
-function pos(a){return a.moving?{x:a.fx+(a.tx-a.fx)*a.p,y:a.fy+(a.ty-a.fy)*a.p}:{x:a.x,y:a.y};}
-function step(a,d){let v=dirs[d];if(!v||!free(a.x+v[0],a.y+v[1]))return false;a.fx=a.x;a.fy=a.y;a.tx=a.x+v[0];a.ty=a.y+v[1];a.dir=d;a.p=0;a.moving=true;return true;}
-function opposite(d){return{up:"down",down:"up",left:"right",right:"left"}[d];}
-function setLevel(){s.maze=generate(s.level);s.dots=new Set();s.pills=new Set();s.power=0;s.grace=2;
-for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++)if(free(x,y))s.dots.add(id(x,y));
-[[1,1],[13,1],[1,13],[13,13]].forEach(([x,y])=>{s.pills.add(id(x,y));s.dots.delete(id(x,y));});
-s.player=mob(7,11,4.35);s.dots.delete(id(7,11));s.girls=colors.map((color,i)=>{let [x,y]=[[6,6],[8,6],[6,8],[8,8]][i],a=mob(x,y,2.65+i*.10+Math.min(.55,(s.level-1)*.1));a.color=color;a.sx=x;a.sy=y;a.delay=1+i*.4;a.dir=["up","right","left","down"][i];s.dots.delete(id(x,y));return a;});drawBackground();hud();}
-function hud(){ui.score.textContent=String(s.score).padStart(6,"0");ui.best.textContent=String(s.best).padStart(6,"0");ui.level.textContent="LIVELLO "+String(s.level).padStart(2,"0");ui.lives.textContent="";for(let i=0;i<s.lives;i++){let im=document.createElement("img");im.src="assets/biaggio-normal.svg";im.alt="vita";ui.lives.appendChild(im);}powerHUD();}
-function powerHUD(){ui.pow.textContent=s.power?"KARMAGRA · "+s.power.toFixed(1)+"s":"";ui.bar.style.width=(s.power/SECONDS*100)+"%";E("powerhud").style.display=s.power>0?"flex":"none";}
-function score(n){s.score+=n;if(s.score>s.best){s.best=s.score;try{localStorage.setItem("effetto-karmagra-best",s.best);}catch(_){}}hud();}
-// Original looping 8-bit score, synthesized with four Web Audio channels.
-const soundtrack={
-  beat:60/132/4,
-  melody:[
-    76,null,79,81,83,81,79,null,76,null,74,76,79,null,76,null,
-    74,null,76,79,81,79,76,null,74,72,74,76,74,null,72,null,
-    76,null,79,81,83,86,83,81,79,null,81,79,76,74,76,null,
-    72,74,76,79,76,74,72,null,71,72,74,76,72,null,67,null
-  ],
-  bass:[45,45,41,41,43,43,40,40,45,45,41,41,43,43,40,40],
-  arps:[[57,60,64],[53,57,60],[55,59,62],[52,55,59]]
-};
-function audioContext(){
- if(s.mute)return null;
- try{
-  if(!s.ac){const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return null;s.ac=new Ctx();}
-  if(s.ac.state==="suspended"&&s.ac.resume)s.ac.resume().catch(()=>{});
-  return s.ac;
- }catch(_){return null;}
-}
-function chip(note,when,len,type,vol,bus){
- if(!s.ac||!bus||note==null)return;
- const osc=s.ac.createOscillator(),amp=s.ac.createGain();
- const freq=440*Math.pow(2,(note-69)/12);
- osc.type=type;
- osc.frequency.setValueAtTime(freq,when);
- amp.gain.setValueAtTime(.0001,when);
- amp.gain.linearRampToValueAtTime(vol,when+.006);
- amp.gain.setValueAtTime(vol*.78,when+Math.min(len*.45,.07));
- amp.gain.exponentialRampToValueAtTime(.0001,when+len);
- osc.connect(amp).connect(bus);osc.start(when);osc.stop(when+len+.02);
-}
-function drum(kind,when,bus){
- if(!s.ac||!bus)return;
- const osc=s.ac.createOscillator(),amp=s.ac.createGain(),kick=kind==="kick",snare=kind==="snare";
- const len=kick?.15:snare?.09:.028;
- osc.type=kick?"sine":"square";
- osc.frequency.setValueAtTime(kick?140:snare?220:3600,when);
- osc.frequency.exponentialRampToValueAtTime(kick?48:snare?80:1900,when+len*.85);
- amp.gain.setValueAtTime(kick?.14:snare?.028:.007,when);
- amp.gain.exponentialRampToValueAtTime(.0001,when+len);
- osc.connect(amp).connect(bus);osc.start(when);osc.stop(when+len+.005);
-}
-function soundtrackStep(step,when){
- if(!s.musicBus)return;
- const n=step%64,b=n%16,section=Math.floor(n/16),powered=s.power>0;
- const note=soundtrack.melody[n];
- if(note!=null)chip(note+(powered?12:0),when,soundtrack.beat*1.28,"square",powered?.052:.065,s.musicBus);
- if(b%4===0)chip(soundtrack.bass[Math.floor(step/4)%16]-12,when,soundtrack.beat*3.3,"triangle",.135,s.musicBus);
- if(n%2===0){const chord=soundtrack.arps[section];chip(chord[Math.floor(n/2)%3]+12,when,soundtrack.beat*1.3,"square",.023,s.musicBus);}
- if(b%4===0)drum("kick",when,s.musicBus);
- if(b===4||b===12)drum("snare",when,s.musicBus);
- if(n%2===0)drum("hat",when,s.musicBus);
-}
-function stopMusic(){
- if(s.musicBus&&s.ac){
-  try{s.musicBus.gain.cancelScheduledValues(s.ac.currentTime);s.musicBus.gain.setTargetAtTime(.00001,s.ac.currentTime,.016);}catch(_){}
+function card(game){
+ var playable=game.status==="live";
+ var outer=tag(playable?"a":"article","game-card");
+ if(playable)outer.href=game.href;
+ else outer.setAttribute("aria-label",game.title+" – in arrivo");
+ var art=tag("div","card-art");
+ art.appendChild(tag("div","art-wall"));
+ art.appendChild(tag("div","art-wall two"));
+ var img=tag("img","art-sprite");
+ img.src=game.artwork||"./assets/pill.svg";
+ img.alt=game.title;
+ img.loading="lazy";
+ art.appendChild(img);
+ var pill=tag("img","art-pill");
+ pill.src="./assets/pill.svg";pill.alt="";pill.loading="lazy";
+ art.appendChild(pill);
+ art.appendChild(tag("span","card-status",playable?"● GIOCABILE":"PROSSIMAMENTE"));
+ outer.appendChild(art);
+ var body=tag("div","card-body");
+ body.appendChild(tag("div","card-category",(game.genre||"ARCADE").toUpperCase()));
+ body.appendChild(tag("h3","card-title",game.title));
+ body.appendChild(tag("div","card-subtitle",game.subtitle||""));
+ body.appendChild(tag("p","card-desc",game.description||""));
+ var bottom=tag("div","card-end");
+ var support=game.support||"Gioca dal browser";
+ if(playable&&game.recordKey){
+  try{var score=Number(localStorage.getItem(game.recordKey)||0);if(score>0)support="Tuo record: "+score;}catch(e){}
  }
- s.musicBus=null;s.nextBeat=0;
+ bottom.appendChild(tag("span",null,support));
+ bottom.appendChild(tag("span","card-play",playable?"GIOCA ORA ↗":"IN ARRIVO"));
+ body.appendChild(bottom);
+ outer.appendChild(body);
+ return outer;
 }
-function startMusic(){
- if(s.mute)return;
- const ac=audioContext();if(!ac)return;
- stopMusic();
- s.musicBus=ac.createGain();s.musicBus.gain.value=.38;s.musicBus.connect(ac.destination);
- s.musicStep=0;s.nextBeat=ac.currentTime+.06;
+games.forEach(function(game){root.appendChild(card(game));});
+for(var i=games.length;i<Math.max(3,games.length);i++){
+ var slot=tag("div","slot");
+ slot.appendChild(tag("span","slot-icon","+"));
+ slot.appendChild(tag("div","slot-count","SLOT "+String(i+1).padStart(2,"0")));
+ slot.appendChild(tag("h3",null,"Nuovo arcade"));
+ slot.appendChild(tag("p",null,"Uno spazio pronto per il prossimo gioco."));
+ root.appendChild(slot);
 }
-function musicTick(){
- const ac=s.ac;
- if(!ac||!s.musicBus||s.mute||s.phase!=="playing"||ac.state==="suspended")return;
- let safety=0;
- while(s.nextBeat<ac.currentTime+.12&&safety++<5){
-  soundtrackStep(s.musicStep++,s.nextBeat);
-  s.nextBeat+=soundtrack.beat;
- }
- // Discard notes delayed while the browser was in the background.
- if(s.nextBeat<ac.currentTime-.2)s.nextBeat=ac.currentTime+.035;
-}
-function beep(freq,d=.06){
- const ac=audioContext();if(!ac)return;
- const at=ac.currentTime,osc=ac.createOscillator(),amp=ac.createGain();
- osc.type="square";
- osc.frequency.setValueAtTime(freq,at);
- osc.frequency.exponentialRampToValueAtTime(freq*.88,at+d);
- amp.gain.setValueAtTime(.018,at);amp.gain.exponentialRampToValueAtTime(.0001,at+d);
- osc.connect(amp).connect(ac.destination);osc.start(at);osc.stop(at+d+.01);
-}
-function collect(){let k=id(s.player.x,s.player.y);if(s.pills.delete(k)){s.power=SECONDS;score(50);beep(850,.2);}else if(s.dots.delete(k)){score(10);if(Math.random()<.3)beep(470,.024);}if(!s.dots.size&&!s.pills.size){s.phase="win";stopMusic();show("LIVELLO SUPERATO","BRAVO, BIAGIO!","Hai raccolto tutte le palline. Passiamo al prossimo labirinto?","PROSSIMO LIVELLO ▶");}}
-function movePlayer(dt){let p=s.player;if(!p.moving){if(!step(p,p.want))step(p,p.dir);}if(p.moving){p.p+=p.speed*dt;if(p.p>=1){p.x=p.tx;p.y=p.ty;p.p=0;p.moving=false;collect();}}}
-function distances(x,y){let d=Array.from({length:N},()=>Array(N).fill(999)),q=[[x,y]];if(!free(x,y))return d;d[y][x]=0;for(let i=0;i<q.length;i++){let [a,b]=q[i];for(let [dx,dy] of Object.values(dirs)){let nx=a+dx,ny=b+dy;if(free(nx,ny)&&d[ny][nx]===999){d[ny][nx]=d[b][a]+1;q.push([nx,ny]);}}}return d;}
-function moveGirls(dt){let p=pos(s.player),dist=distances(Math.round(p.x),Math.round(p.y));s.girls.forEach((a,i)=>{if(a.delay>0){a.delay-=dt;return;}if(!a.moving){let options=Object.keys(dirs).filter(d=>free(a.x+dirs[d][0],a.y+dirs[d][1]));if(options.length>1)options=options.filter(d=>d!==opposite(a.dir));options.sort((u,v)=>{let aa=dirs[u],bb=dirs[v],da=dist[a.y+aa[1]][a.x+aa[0]],db=dist[a.y+bb[1]][a.x+bb[0]];return s.power?db-da:da-db;});if(options.length)step(a,Math.random()<[.16,.26,.44,.55][i]?options[Math.floor(Math.random()*options.length)]:options[0]);}
-if(a.moving){a.p+=a.speed*dt*(s.power?.84:1);if(a.p>=1){a.x=a.tx;a.y=a.ty;a.moving=false;a.p=0;}}});}
-function collision(){if(s.grace>0)return;let p=pos(s.player);for(const a of s.girls){if(a.delay>0)continue;let q=pos(a);if(Math.hypot(q.x-p.x,q.y-p.y)>.62)continue;if(s.power){score(200);beep(1040,.13);a.x=a.sx;a.y=a.sy;a.moving=false;a.p=0;a.delay=1.6;}else{s.lives--;s.grace=2.5;s.power=0;s.player=mob(7,11,4.35);s.girls.forEach((b,i)=>{b.x=b.sx;b.y=b.sy;b.p=0;b.moving=false;b.delay=1+i*.3;});hud();beep(170,.4);if(s.lives<=0){s.phase="over";stopMusic();show("PARTITA TERMINATA","GAME OVER","Hai fatto "+s.score+" punti. Riprova a battere il record!","RICOMINCIA ↻");}break;}}}
-function background(){
- const b=document.createElement("canvas");b.width=b.height=800;
- const t=b.getContext("2d");t.fillStyle="#061321";t.fillRect(0,0,800,800);
- t.strokeStyle="#11243c";t.lineWidth=.8;
- for(let i=0;i<=N;i++){let z=i*T;t.beginPath();t.moveTo(z,0);t.lineTo(z,800);t.moveTo(0,z);t.lineTo(800,z);t.stroke();}
- const unit=T/32;
- for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(s.maze[y][x]){
-   const xx=x*T,yy=y*T;
-   t.fillStyle="#0b3077";t.fillRect(xx,yy,T+.3,T+.3);
-   t.fillStyle="#1552ac";t.fillRect(xx+2*unit,yy+2*unit,T-4*unit,T-4*unit);
-   t.fillStyle="#2473d7";t.fillRect(xx+3*unit,yy+3*unit,T-6*unit,5*unit);
-   t.fillRect(xx+3*unit,yy+3*unit,5*unit,T-6*unit);
-   t.fillStyle="#0b367d";t.fillRect(xx+25*unit,yy+8*unit,4*unit,21*unit);
-   t.fillRect(xx+8*unit,yy+25*unit,21*unit,4*unit);
-   if(x<N-1&&s.maze[y][x+1]){t.fillStyle="#1552ac";t.fillRect(xx+28*unit,yy+2*unit,7*unit,T-4*unit);t.fillStyle="#2473d7";t.fillRect(xx+28*unit,yy+3*unit,7*unit,5*unit);}
-   if(y<N-1&&s.maze[y+1][x]){t.fillStyle="#1552ac";t.fillRect(xx+2*unit,yy+28*unit,T-4*unit,7*unit);t.fillStyle="#2473d7";t.fillRect(xx+3*unit,yy+28*unit,5*unit,7*unit);}
- }
- for(const [x,y] of [[3,3],[11,3],[3,11],[11,11]]){
-   if(!s.maze[y][x])continue;
-   const xx=x*T+T/2,yy=y*T+T/2;
-   t.fillStyle="#69452d";t.fillRect(xx-11*unit,yy+5*unit,22*unit,7*unit);
-   for(let j=0;j<5;j++){t.fillStyle=j%2?"#4b9e52":"#347746";t.beginPath();t.arc(xx+(-9+j*4)*unit,yy+(-1+j%2)*unit,7*unit,0,Math.PI*2);t.fill();}
- }
- return b;
-}
-function drawBackground(){s.bg=background();}
-function drawActor(a,name,main){let p=pos(a),x=(p.x+.5)*T,y=(p.y+.5)*T;ctx.save();ctx.translate(x,y);ctx.rotate({up:Math.PI,down:0,left:Math.PI/2,right:-Math.PI/2}[a.dir]||0);if(main&&s.grace&&Math.floor(s.t*12)%2===0)ctx.globalAlpha=.45;ctx.fillStyle="#0008";ctx.beginPath();ctx.ellipse(0,18,25,9,0,0,7);ctx.fill();let im=imgs[name];if(im.complete&&im.naturalWidth)ctx.drawImage(im,-50,-55,100,100);else{ctx.fillStyle=main?"#316ab3":"#bc5279";ctx.beginPath();ctx.arc(0,0,23,0,7);ctx.fill();}if(main&&s.power){ctx.strokeStyle="#ffe5a5";ctx.globalAlpha=.55;ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,37,0,7);ctx.stroke();}ctx.restore();}
-function draw(){ctx.clearRect(0,0,800,800);ctx.drawImage(s.bg,0,0);ctx.fillStyle="#fff9e8";s.dots.forEach(k=>{let [x,y]=k.split(",").map(Number);ctx.beginPath();ctx.arc((x+.5)*T,(y+.5)*T,5,0,7);ctx.fill();});s.pills.forEach(k=>{let [x,y]=k.split(",").map(Number);ctx.save();ctx.translate((x+.5)*T,(y+.5)*T);ctx.rotate(-.6+Math.sin(s.t*3)*.12);ctx.fillStyle="#fff6d8";ctx.shadowColor="#fff0a0";ctx.shadowBlur=14;ctx.beginPath();ctx.roundRect(-20,-10,40,20,10);ctx.fill();ctx.restore();});s.girls.forEach(a=>{if(a.delay>.8&&s.phase==="running")return;drawActor(a,"lady-"+a.color+"-"+(s.power?"short":"long"),false);});drawActor(s.player,s.power?"biaggio-power":"biaggio-normal",true);}
-function show(k,title,message,button){ui.tag.textContent=k;ui.title.textContent=title;ui.message.textContent=message;ui.play.textContent=button;ui.veil.classList.remove("hide");}
-function start(){if(s.phase==="win"){s.level++;setLevel();}else if(s.phase==="over"){s.level=1;s.score=0;s.lives=3;setLevel();}s.phase="playing";ui.veil.classList.add("hide");ui.pause.textContent="Ⅱ Pausa";startMusic();}
-function pause(){if(s.phase==="playing"){s.phase="paused";stopMusic();show("PAUSA","UNA PICCOLA PAUSA","Riprendi quando vuoi.","RIPRENDI ▶");ui.pause.textContent="▶ Riprendi";}else if(s.phase==="paused")start();}
-function input(d){if(!dirs[d])return;s.player.want=d;if(s.phase==="ready")start();}
-window.addEventListener("keydown",e=>{let d=({ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",w:"up",a:"left",s:"down",d:"right",W:"up",A:"left",S:"down",D:"right"})[e.key];if(d){e.preventDefault();input(d);}if(e.code==="Space"){e.preventDefault();if(["ready","over","win"].includes(s.phase))start();else pause();}});
-document.querySelectorAll("[data-dir]").forEach(b=>b.addEventListener("pointerdown",e=>{e.preventDefault();input(b.dataset.dir);}));
-let down=null;c.addEventListener("pointerdown",e=>down={x:e.clientX,y:e.clientY});c.addEventListener("pointerup",e=>{if(!down)return;let x=e.clientX-down.x,y=e.clientY-down.y;if(Math.hypot(x,y)>12)input(Math.abs(x)>Math.abs(y)?(x>0?"right":"left"):(y>0?"down":"up"));down=null;});
-ui.play.addEventListener("click",start);ui.pause.addEventListener("click",pause);ui.audio.addEventListener("click",()=>{s.mute=!s.mute;ui.audio.textContent=s.mute?"♫ Audio OFF":"♫ Audio ON";if(s.mute)stopMusic();else if(s.phase==="playing")startMusic();else beep(680);});
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&s.phase==="playing")pause();});
-function frame(now){let dt=Math.min(.04,(now-s.last)/1000||0);s.last=now;s.t+=dt;if(s.phase==="playing"){s.grace=Math.max(0,s.grace-dt);s.power=Math.max(0,s.power-dt);movePlayer(dt);if(s.phase==="playing"){moveGirls(dt);collision();}powerHUD();musicTick();}draw();requestAnimationFrame(frame);}
-setLevel();requestAnimationFrame(frame);
 })();
-</script></body></html>
+</script>
+</body>
+</html>
