@@ -1,295 +1,285 @@
 (function(){
 "use strict";
-const W=256,H=448,ROAD_LEFT=56,ROAD_RIGHT=200,PLAYER_Y=342,FINISH=6200,LANES=[80,128,176],STORE=["BAR","PIZZA","TABACCHI","CAFFE","MARKET","FARMACIA"],NOTES=[262,330,392,330,294,349,440,349,262,294,330,392,349,294,262,196];
-const by=id=>document.getElementById(id),canvas=by("screen"),c=canvas.getContext("2d",{alpha:false});
-c.imageSmoothingEnabled=false;
-const ui={score:by("score"),time:by("time"),lives:by("lives"),coins:by("coins"),progress:by("progress"),overlay:by("overlay"),title:by("dialog-title"),message:by("dialog-message"),kicker:by("dialog-kicker"),start:by("start"),share:by("share"),audio:by("audio"),status:by("status"),boost:by("boost")};
-const rider=new Image();rider.src="./assets/biagio-top-pixel.svg";
-const input={left:false,right:false};
-const s={phase:"ready",distance:0,time:0,score:0,coins:0,lives:3,best:0,lane:1,x:LANES[1],z:0,vz:0,jumpCooldown:0,immune:0,jumpCount:0,jumpedSinceLanding:false,turbo:100,turboTime:0,slowTime:0,objects:[],particles:[],last:0,sound:true,ac:null,lastBeat:-1,notice:"",noticeTime:0,fxTime:0,speed:170};
-try{s.best=Number(localStorage.getItem("biagio-scootercross-best")||0)||0;}catch(e){}
-function clamp(v,a,b){return Math.min(b,Math.max(a,v));}
-function hash(n){let v=(Math.imul(n,1597334677)+3812015801)|0;v^=v>>>13;v=Math.imul(v,1597334677);return (v>>>0)/4294967295;}
-function rect(x,y,w,h,color){if(w<=0||h<=0)return;c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));}
-function txt(t,x,y,color="#f9e5ac",size=9,align="center"){c.textAlign=align;c.font="bold "+size+"px monospace";c.fillStyle="#12243a";c.fillText(t,x+1,y+1);c.fillStyle=color;c.fillText(t,x,y);}
-function audio(){if(!s.sound)return null;try{if(!s.ac){let A=window.AudioContext||window.webkitAudioContext;if(!A)return null;s.ac=new A();}if(s.ac.state==="suspended"&&s.ac.resume)s.ac.resume().catch(()=>{});return s.ac;}catch(_){return null;}}
-function bleep(f,d=.075,type="square",volume=.021){const a=audio();if(!a)return;let o=a.createOscillator(),g=a.createGain(),t=a.currentTime;o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(volume,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.01);}
-function tune(){if(s.phase!=="playing")return;let beat=Math.floor(s.time/.16);if(beat!==s.lastBeat){s.lastBeat=beat;if(beat%2===0)bleep(NOTES[(beat/2)%NOTES.length]*2,.063,"square",.009);if(beat%4===0)bleep([110,146,130,98][Math.floor(beat/8)%4],.16,"triangle",.012);}}
-function makeObjects(){
- s.objects=[];
- for(let i=0;i<24;i++){
-  const at=420+i*238;
-  const lane=[1,0,2,1,2,0,1,2,1,0,2,1][i%12];
-  s.objects.push({type:i%4===3?"pothole":"barrel",lane,at,done:false});
-  // Reward the risky lane with an approach coin and one after the hazard.
-  s.objects.push({type:"coin",lane,at:at-100,done:false});
-  s.objects.push({type:"coin",lane:(lane+1)%3,at:at+52,done:false});
-  if(i%3===0)s.objects.push({type:"coin",lane:(lane+2)%3,at:at-40,done:false});
+const W=480,H=270,FINISH=4200,G=650,MAX=208;
+const get=id=>document.getElementById(id),cv=get("game"),g=cv.getContext("2d",{alpha:false});
+g.imageSmoothingEnabled=false;
+const ui={score:get("score"),best:get("best"),time:get("time"),lives:get("lives"),progress:get("progress"),coins:get("coins"),speed:get("speed"),boost:get("boost"),status:get("status"),veil:get("veil"),tag:get("tag"),title:get("title"),message:get("message"),play:get("play"),share:get("share"),sound:get("sound")};
+const art=new Image();art.src="./assets/biagio-side-pixel.svg";
+const control={gas:false,brake:false,up:false,down:false};
+const ramps=[
+[0,207],[380,207],[462,204],[560,194],[626,211],[825,211],
+[952,206],[1025,183],[1102,209],[1300,209],[1410,204],[1490,185],[1562,210],
+[1770,210],[1870,204],[1950,184],[2036,211],[2240,211],[2340,205],[2420,184],[2494,210],
+[2700,210],[2830,202],[2905,187],[2978,210],[3150,209],[3280,205],[3365,182],[3445,211],
+[3630,211],[3750,204],[3834,191],[3920,208],[FINISH+180,208]];
+const obstacles=[455,852,1338,1740,2178,2585,3000,3460,3860];
+const colors=["#dfb488","#c7b1a5","#e5c39b","#bfc2b6","#ccad99","#deb98c"];
+const signs=["CAFFE","PANIFICIO","BAR","TABACCHI","MARKET","OTTICA","PIZZERIA","EDICOLA"];
+const state={mode:"ready",dist:0,time:0,score:0,best:0,coins:0,lives:3,cam:0,mute:false,audio:null,lastBeat:-1,last:0,invincible:0,jumpCount:0,boost:100,boostTime:0,notice:"",noticeTimer:0,particles:[],pickups:[],barrels:[],screenShake:0};
+const player={x:70,y:195,vy:0,speed:0,angle:0,ground:true,airTime:0};
+try{state.best=Math.max(0,Number(localStorage.getItem("biagio-scootercross-best")||0));}catch(_){}
+const clamp=(a,lo,hi)=>Math.max(lo,Math.min(hi,a));
+function terrain(x){
+ if(x<0)return ramps[0][1];
+ for(let i=1;i<ramps.length;i++){const a=ramps[i-1],b=ramps[i];if(x<=b[0])return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]);}
+ return ramps[ramps.length-1][1];
+}
+function slope(x){return Math.atan2(terrain(x+12)-terrain(x-12),24);}
+function rnd(n){let v=(Math.imul(n|0,1664525)+1013904223)|0;v^=v>>>16;v=Math.imul(v,2246822519);return ((v^(v>>>13))>>>0)/4294967296;}
+function rect(color,x,y,w,h){g.fillStyle=color;g.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));}
+function text(t,x,y,size=9,color="#f6ecce",align="center"){g.font="bold "+size+"px monospace";g.textAlign=align;g.fillStyle="#172a38";g.fillText(t,x+1,y+1);g.fillStyle=color;g.fillText(t,x,y);}
+function audio(){
+ if(state.mute)return null;
+ try{if(!state.audio){const Ac=window.AudioContext||window.webkitAudioContext;if(!Ac)return null;state.audio=new Ac();}
+ if(state.audio.state==="suspended"&&state.audio.resume)state.audio.resume().catch(()=>{});
+ return state.audio;}catch(_){return null;}
+}
+function note(freq,len=.1,vol=.012,type="square",slide=1){
+ const a=audio();if(!a)return;const t=a.currentTime,o=a.createOscillator(),v=a.createGain();
+ o.type=type;o.frequency.setValueAtTime(freq,t);
+ if(slide!==1)o.frequency.exponentialRampToValueAtTime(Math.max(38,freq*slide),t+len);
+ v.gain.setValueAtTime(vol,t);v.gain.exponentialRampToValueAtTime(.0001,t+len);
+ o.connect(v).connect(a.destination);o.start(t);o.stop(t+len+.01);
+}
+function playMusic(){
+ let beat=Math.floor(state.time/.20);
+ if(beat===state.lastBeat)return;
+ state.lastBeat=beat;
+ const m=[392,440,523,440,349,392,493,392,330,392,440,523,493,440,392,294];
+ if(beat%2===0)note(m[Math.floor(beat/2)%m.length],.09,.008,"square");
+ if(beat%4===0)note([110,130,98,147][Math.floor(beat/8)%4],.17,.013,"triangle");
+}
+function particles(x,y,n,color){
+ for(let i=0;i<n;i++)state.particles.push({x,y,vx:(Math.random()-.5)*115,vy:(Math.random()-.7)*80,life:.3+Math.random()*.65,t:0,color});
+ if(state.particles.length>100)state.particles.splice(0,state.particles.length-100);
+}
+function reset(){
+ state.mode="ready";state.time=0;state.score=0;state.coins=0;state.lives=3;state.cam=0;
+ state.last=0;state.lastBeat=-1;state.invincible=0;state.jumpCount=0;state.boost=100;state.boostTime=0;
+ state.notice="";state.noticeTimer=0;state.screenShake=0;state.particles=[];
+ state.barrels=obstacles.map((x,i)=>({x,type:i%4===3?"pothole":"barrel",done:false}));
+ state.pickups=Array.from({length:38},(_,i)=>{let x=180+i*101;return{x,y:terrain(x)-(i%4===1?69:48),done:false};});
+ Object.assign(player,{x:70,y:terrain(70)-11,vy:0,speed:0,angle:0,ground:true,airTime:0});
+ for(const k in control)control[k]=false;
+ if(ui.share)ui.share.hidden=true;hud();
+}
+function earn(v){
+ state.score+=v;if(state.score>state.best){state.best=state.score;
+ try{localStorage.setItem("biagio-scootercross-best",String(state.best));}catch(_){}
  }
- for(let i=0;i<8;i++)s.objects.push({type:"coin",lane:i%3,at:175+i*140,done:false});
 }
-function fresh(){
- Object.assign(s,{phase:"ready",distance:0,time:0,score:0,coins:0,lives:3,lane:1,x:LANES[1],z:0,vz:0,jumpCooldown:0,immune:0,jumpCount:0,jumpedSinceLanding:false,turbo:100,turboTime:0,slowTime:0,notice:"",noticeTime:0,fxTime:0,speed:170,lastBeat:-1,last:0});
- for(let k in input)input[k]=false;
- s.particles=[];makeObjects();updateUI();
+function callout(s,t=1.3){state.notice=s;state.noticeTimer=t;}
+function hud(){
+ ui.score.textContent=String(Math.round(state.score)).padStart(5,"0");
+ ui.best.textContent=String(Math.round(state.best)).padStart(5,"0");
+ ui.time.textContent=String(Math.floor(state.time/60)).padStart(2,"0")+":"+String(Math.floor(state.time%60)).padStart(2,"0");
+ ui.lives.textContent="♥".repeat(state.lives)||"—";
+ ui.coins.textContent="◉ "+state.coins;
+ ui.speed.textContent=Math.round(player.speed*.52)+" km/h";
+ ui.boost.textContent="TURBO "+Math.round(state.boost)+"%";
+ ui.progress.style.width=(clamp(100*player.x/FINISH,0,100))+"%";
+ const approaching=state.barrels.find(b=>!b.done&&b.x-player.x>15&&b.x-player.x<105);
+ ui.status.textContent=state.noticeTimer>0?state.notice:approaching?"⚠ "+(approaching.type==="pothole"?"BUCA":"BARILE")+" · PREMI SALTA!":"VIA ROMA · MELITO DI NAPOLI";
 }
-function score(n){s.score+=n;if(s.score>s.best){s.best=s.score;try{localStorage.setItem("biagio-scootercross-best",String(s.best));}catch(_){}}}
-function status(message,duration=1.4){s.notice=message;s.noticeTime=duration;}
-function updateUI(){
- ui.score.textContent=String(Math.round(s.score)).padStart(5,"0");
- ui.time.textContent=String(Math.floor(s.time/60)).padStart(2,"0")+":"+String(Math.floor(s.time%60)).padStart(2,"0");
- ui.lives.textContent="♥".repeat(s.lives)||"—";
- ui.coins.textContent="◉ "+s.coins;
- ui.boost.textContent="⚡ "+Math.round(s.turbo)+"%";
- ui.progress.style.width=Math.min(100,Math.floor(100*s.distance/FINISH))+"%";
- const danger=s.objects.find(o=>!o.done&&o.type!=="coin"&&o.lane===s.lane&&o.at-s.distance>25&&o.at-s.distance<113);
- ui.status.textContent=s.noticeTime>0?s.notice:(s.phase==="playing"?(danger?(danger.type==="pothole"?"⚠ BUCA DAVANTI · PREMI SALTA!":"⚠ BARILE DAVANTI · PREMI SALTA!"):"CORSO EUROPA · MELITO"):"MELITO DI NAPOLI");
+function whatsAppUrl(){
+ const url="https://czekuns.github.io/Effettokarmagra/games/scootercross/";
+ return "https://wa.me/?text="+encodeURIComponent("🛵 Ho fatto "+Math.round(state.score)+" punti a *Biagio Gelo: Scootercross* su Via Roma a Melito di Napoli! Vuoi battermi? Gioca qui: "+url);
 }
-function show(kicker,title,message,action,share){
- ui.kicker.textContent=kicker;ui.title.textContent=title;ui.message.textContent=message;ui.start.textContent=action;
- ui.share.hidden=!share;
- if(share){
-  const direct="https://czekuns.github.io/Effettokarmagra/games/scootercross/";
-  const msg="🛵 Ho fatto "+Math.round(s.score)+" punti a *Biagio Gelo: Scootercross* sul Corso Europa di Melito! Riesci a superarmi? Gioca qui: "+direct;
-  ui.share.href="https://wa.me/?text="+encodeURIComponent(msg);
- }
- ui.overlay.classList.remove("hidden");
+function popup(tag,title,message,btn,share){
+ ui.tag.textContent=tag;ui.title.textContent=title;ui.message.textContent=message;ui.play.textContent=btn;
+ ui.share.hidden=!share;if(share)ui.share.href=whatsAppUrl();ui.veil.classList.remove("hidden");
 }
-function start(){fresh();s.phase="playing";ui.overlay.classList.add("hidden");audio();bleep(600,.15);updateUI();}
-function finish(won){
- if(s.phase!=="playing")return;
- s.phase=won?"won":"over";
- if(won){let bonus=Math.max(0,Math.floor((55-s.time)*35));score(bonus);}
- show(won?"TRAGUARDO · CORSO EUROPA":"FINE CORSA",won?"GRANDE BIAGIO!":"GAME OVER",
-  won?"Traguardo raggiunto in "+s.time.toFixed(1)+" secondi! "+s.coins+" monete e "+s.score+" punti. Sfida gli amici!":"Hai finito le tre vite. Hai conquistato "+s.score+" punti e "+s.coins+" monete. Riprova!","RIGIOCA ▶",true);
- bleep(won?820:156,.21,won?"square":"sawtooth",.038);updateUI();
-}
-function steer(dir){
- if(s.phase!=="playing")return;
- let next=clamp(s.lane+dir,0,2);if(next!==s.lane){s.lane=next;bleep(250,.033,"triangle",.006);}
+function start(){reset();state.mode="playing";ui.veil.classList.add("hidden");audio();note(560,.13,.023);}
+function resume(){state.mode="playing";state.last=0;ui.veil.classList.add("hidden");}
+function pause(){if(state.mode==="playing"){state.mode="paused";release();popup("PAUSA","GIOCO IN PAUSA","Riprendi la corsa su Via Roma.","RIPRENDI ▶",false);}else if(state.mode==="paused")resume();}
+function end(won){
+ if(state.mode!=="playing")return;state.mode=won?"won":"lost";
+ if(won)earn(Math.max(0,Math.floor((70-state.time)*22)));
+ release();note(won?880:155,.28,.032,won?"square":"sawtooth");
+ popup(won?"TRAGUARDO · VIA ROMA":"PARTITA TERMINATA",won?"TRAGUARDO!":"GAME OVER",
+ won?"Hai completato Via Roma in "+state.time.toFixed(1)+" secondi, raccogliendo "+state.coins+" monete. Totale: "+state.score+" punti.":"Hai terminato le tre vite. Punteggio: "+state.score+". Riprova e sfida gli amici.","RIGIOCA ↻",true);hud();
 }
 function jump(){
- if(s.phase!=="playing"||s.z>0||s.jumpCooldown>0)return;
- s.vz=165;s.z=.01;s.jumpCooldown=.88;s.jumpedSinceLanding=false;
- bleep(490,.13,"square",.019);
- for(let i=0;i<5;i++)particle(s.x,PLAYER_Y+12,"#e1c0a0");
+ if(state.mode!=="playing"||!player.ground)return;
+ player.ground=false;player.vy=-250;player.airTime=0;player.y-=1;state.jumpCount++;
+ particles(player.x-26,player.y+11,6,"#eac39a");note(610,.09,.023,"square",1.5);
 }
-function turbo(){
- if(s.phase!=="playing"||s.turbo<32||s.turboTime>0)return;
- s.turbo-=32;s.turboTime=1.65;status("TURBO!");bleep(810,.16,"sawtooth",.02);
-}
-function particle(x,y,color){
- s.particles.push({x,y,dx:(Math.random()-.5)*55,dy:(Math.random()-.5)*70,life:.25+Math.random()*.4,t:0,color});
- if(s.particles.length>70)s.particles.splice(0,s.particles.length-70);
+function boost(){
+ if(state.mode!=="playing"||state.boost<30||state.boostTime>0)return;
+ state.boost-=30;state.boostTime=1.3;player.speed=Math.min(250,player.speed+45);
+ callout("TURBO!");note(365,.17,.022,"sawtooth",2);
 }
 function crash(){
- if(s.immune>0||s.phase!=="playing")return;
- s.lives--;s.immune=1.7;s.slowTime=.75;s.fxTime=.4;
- status("AHI! UN BARILE!",1.25);bleep(145,.27,"sawtooth",.033);
- for(let i=0;i<12;i++)particle(s.x,PLAYER_Y+10,"#ffe7b0");
- if(s.lives<=0){finish(false);}
+ if(state.invincible>0||state.mode!=="playing")return;
+ state.lives--;state.invincible=1.6;state.screenShake=5;player.speed=Math.min(player.speed,65);
+ particles(player.x,player.y,12,"#ffe2b1");callout("AHI! VITA PERSA");
+ note(180,.24,.034,"sawtooth",.45);
+ if(state.lives<=0)end(false);
 }
-function update(dt){
- s.time+=dt;
- s.immune=Math.max(0,s.immune-dt);s.jumpCooldown=Math.max(0,s.jumpCooldown-dt);
- s.slowTime=Math.max(0,s.slowTime-dt);s.turboTime=Math.max(0,s.turboTime-dt);
- s.noticeTime=Math.max(0,s.noticeTime-dt);s.fxTime=Math.max(0,s.fxTime-dt);
- s.turbo=Math.min(100,s.turbo+dt*2.3);
- s.speed=s.turboTime>0?260:s.slowTime>0?105:176;
- s.distance+=dt*s.speed;
- s.x+=(LANES[s.lane]-s.x)*Math.min(1,dt*15);
- if(s.z>0||s.vz>0){
-  s.z+=s.vz*dt;s.vz-=370*dt;
-  if(s.z<=0){s.z=0;s.vz=0;s.jumpedSinceLanding=false;}
- }
- for(const o of s.objects){
-  if(o.done)continue;
-  const y=PLAYER_Y-(o.at-s.distance);
-  if(y>PLAYER_Y+26){o.done=true;continue;}
-  if(Math.abs(y-PLAYER_Y)<12&&Math.abs(LANES[o.lane]-s.x)<19){
-    if(o.type==="coin"){
-      o.done=true;s.coins++;score(100);s.turbo=Math.min(100,s.turbo+8);
-      bleep(665,.072,"square",.02);for(let j=0;j<4;j++)particle(s.x,PLAYER_Y-12,"#ffe578");
-    }else if(s.z>=15){
-      if(!o.cleared){o.cleared=true;score(60);s.jumpedSinceLanding=true;status("SALTO PERFETTO +60",.8);bleep(780,.1);}
-      o.done=true;
-    }else{
-      o.done=true;crash();
-    }
-  }
- }
- for(const p of s.particles){p.t+=dt;p.x+=p.dx*dt;p.y+=p.dy*dt;p.dy+=80*dt;}
- s.particles=s.particles.filter(p=>p.t<p.life);
- tune();
- if(s.distance>=FINISH){finish(true);return;}
- updateUI();
-}
-function drawBuilding(side,moduleY,index){
- const left=side===0,x=left?0:214,w=42;
- const palette=["#d8aa7d","#c7b3a2","#e2bd96","#b4b5ad","#ddae85","#c3d3ca"];
- const wall=palette[Math.floor(hash(index*9+side*41)*palette.length)];
- rect(x,moduleY,w,87,"#6d6c79");rect(x+2,moduleY+2,w-4,82,wall);
- rect(x+3,moduleY+1,w-6,5,"#755961");
- const isShop=(index+side)%3!==1;
- if(isShop){
-  rect(x+3,moduleY+46,w-6,12,"#744d51");
-  const stripes=["#9c283d","#1c8b85","#385a8f","#b6503b"][(index+side*2+1000)%4];
-  for(let k=0;k<5;k++)rect(x+4+k*7,moduleY+47,7,10,k%2? "#ffe9cf":stripes);
-  rect(x+5,moduleY+60,30,19,"#253f4e");
-  rect(x+7,moduleY+61,12,14,"#86b8b4");rect(x+22,moduleY+61,11,14,"#91c8c0");
-  rect(x+4,moduleY+35,w-8,9,"#26374d");
-  if(moduleY>-18&&moduleY<H+20){txt(STORE[(Math.abs(index)*3+side)%STORE.length],x+21,moduleY+42,"#fff6d6",5);}
+function tick(dt){
+ state.time+=dt;state.invincible=Math.max(0,state.invincible-dt);
+ state.noticeTimer=Math.max(0,state.noticeTimer-dt);state.boostTime=Math.max(0,state.boostTime-dt);
+ state.screenShake=Math.max(0,state.screenShake-dt*12);state.boost=clamp(state.boost+3*dt,0,100);
+ let acceleration=control.gas?165:0,friction=player.ground?24:9;
+ player.speed=clamp(player.speed+(acceleration-(control.brake?240:0)-friction)*dt,0,MAX+(state.boostTime>0?45:0));
+ if(state.boostTime>0)player.speed=Math.max(165,player.speed);
+ player.x+=player.speed*dt;
+ const road=terrain(player.x)-11,groundAngle=slope(player.x);
+ if(player.ground){
+  player.y=road;player.angle+=(groundAngle-player.angle)*Math.min(1,dt*6);
  }else{
-  for(let row=0;row<2;row++)for(let col=0;col<2;col++){
-   rect(x+5+col*18,moduleY+15+row*26,12,16,"#314955");
-   rect(x+6+col*18,moduleY+16+row*26,10,10,"#a0c8c2");
-   rect(x+5+col*18,moduleY+29+row*26,12,3,"#795967");
-  }
-  rect(x+3,moduleY+69,36,9,"#867364");
- }
- // facade edge and balcony
- rect(left?39:214,moduleY,3,87,"#8c827b");
-}
-function drawStreet(){
- rect(0,0,W,H,"#a9b4ab");
- const scroll=s.distance*.86, offset=((scroll%88)+88)%88;
- for(let i=-2;i<7;i++){
-  const y=Math.floor(i*88+offset);
-  const index=Math.floor(scroll/88)+i;
-  drawBuilding(0,y,index);drawBuilding(1,y,index);
- }
- // Concrete sidewalks, curbs, road asphalt.
- rect(42,0,13,H,"#adaaa2");rect(201,0,13,H,"#adaaa2");
- rect(45,0,2,H,"#d8c8a9");rect(209,0,2,H,"#d8c8a9");
- rect(55,0,146,H,"#4a5760");rect(57,0,2,H,"#dfceab");rect(197,0,2,H,"#dfceab");
- // Asphalt texture and lane markings.
- let textureOffset=Math.floor(scroll*.37)%31;
- for(let i=0;i<60;i++){
-  let seed=i+Math.floor(scroll/31)*60,x=60+Math.floor(hash(seed*29)*134),y=(i*17+textureOffset*3)%460-5;
-  rect(x,y,1+Math.floor(hash(seed*13)*3),1,"#52616b");
- }
- for(let x of [104,152])for(let i=-2;i<29;i++){
-  let y=i*24+scroll%24;rect(x,Math.floor(y),2,12,"#cfccc2");
- }
- // Painted crossings at regular intervals.
- for(let d=650;d<FINISH;d+=1080){
-  const y=Math.round(PLAYER_Y-(d-s.distance));
-  if(y>-30&&y<H+20){
-    rect(56,y-11,144,5,"#d3c4a4");
-    for(let i=0;i<9;i++)rect(61+i*16,y-6,10,10,"#ede9d6");
+  player.airTime+=dt;player.vy+=G*dt;player.y+=player.vy*dt;
+  if(control.up)player.angle-=1.8*dt;
+  if(control.down)player.angle+=1.8*dt;
+  player.angle=clamp(player.angle,-1.2,1.2);
+  if(player.y>=road&&player.vy>0){
+   const diff=Math.abs(player.angle-groundAngle),air=player.airTime;
+   player.y=road;player.vy=0;player.ground=true;player.airTime=0;
+   if(diff>1.05&&player.speed>95)crash();
+   else if(air>.34){earn(Math.floor(Math.min(air,1.5)*60));callout("BUON ATTERRAGGIO");particles(player.x,road+12,6,"#d1b598");}
+   player.angle+=(groundAngle-player.angle)*.7;
   }
  }
- // Roadside trees, lamp posts, scooters parked on sidewalks.
- for(let i=-2;i<8;i++){
-  const y=Math.floor(i*88+offset),n=Math.floor(scroll/88)+i;
-  if(n%3===0){
-   for(const x of [49,207]){
-    rect(x-2,y+6,4,14,"#5c5145");
-    rect(x-6,y+1,12,8,"#28674d");rect(x-4,y-4,8,11,"#388660");
-    rect(x-2,y-7,4,4,"#60a46c");
-   }
-  }else if(n%3===1){
-   for(const x of [48,207]){
-    rect(x-1,y+17,2,27,"#5d6770");rect(x-3,y+14,6,6,"#f5e9a3");
-   }
-  }
- }
- // Decorative sign with verified street name.
- rect(63,8,130,17,"#122941");rect(65,10,126,13,"#254968");
- txt("MELITO DI NAPOLI",128,17,"#ffedc3",7);
- txt("CORSO EUROPA",128,23,"#d9edd9",5);
-}
-function barrel(x,y){
- rect(x-12,y-9,24,22,"#25323b");rect(x-10,y-10,20,19,"#a34839");
- rect(x-9,y-10,18,4,"#d87550");rect(x-10,y-2,20,4,"#f1debd");rect(x-10,y+5,20,4,"#e9d8ba");
- rect(x-9,y+12,18,2,"#4b3033");
-}
-function pothole(x,y){
- rect(x-16,y-7,32,14,"#30383b");rect(x-13,y-4,25,10,"#293038");
- rect(x-8,y-4,8,3,"#3a4348");rect(x+4,y+3,7,2,"#474d4d");
-}
-function coin(x,y,angle){
- let w=Math.max(4,Math.round(12*Math.abs(Math.cos(angle))));rect(x-w/2-2,y-8,w+4,16,"#9d6e2b");
- rect(x-w/2,y-7,w,14,"#ffe078");
- rect(x-w/2+1,y-5,Math.max(2,w-2),10,"#ebb538");
- if(w>=7)txt("★",x,y+3,"#fff3b1",8);
-}
-function drawObjects(){
- for(const o of s.objects){
+ for(const o of state.barrels){
   if(o.done)continue;
-  let x=LANES[o.lane],y=PLAYER_Y-(o.at-s.distance);
-  if(y < -35||y>H+35)continue;
-  if(o.type==="coin")coin(x,y,Math.floor(s.time*10+o.at%14)*.17);
-  else if(o.type==="barrel")barrel(x,y);
-  else pothole(x,y);
+  if(player.x-o.x>24){o.done=true;continue;}
+  if(Math.abs(player.x-o.x)<15){
+   const clearance=terrain(player.x)-11-player.y;
+   if(clearance>25){o.done=true;earn(90);callout("OSTACOLO SALTATO +90");note(900,.085,.023);}
+   else if(clearance<10){o.done=true;crash();}
+  }
  }
- // Finish gate.
- let fy=Math.round(PLAYER_Y-(FINISH-s.distance));
- if(fy>-25&&fy<H+20){
-  for(let i=0;i<14;i++)for(let k=0;k<2;k++)rect(58+i*10,fy+k*10,10,10,(i+k)%2?"#202833":"#f3efe4");
-  txt("TRAGUARDO",128,fy-7,"#fff3af",10);
+ for(const p of state.pickups){
+  if(p.done)continue;
+  if(Math.abs(player.x-p.x)<22&&Math.abs((player.y-17)-p.y)<30){
+   p.done=true;state.coins++;earn(100);state.boost=Math.min(100,state.boost+8);note(670,.06,.02);particles(p.x,p.y,4,"#ffe486");
+  }
  }
+ if(player.ground&&player.speed>75&&Math.random()<dt*8)particles(player.x-35,player.y+10,1,"#c5aa8d");
+ for(const p of state.particles){p.t+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;}
+ state.particles=state.particles.filter(p=>p.t<p.life);
+ if(player.x>=FINISH){end(true);return;}
+ playMusic();hud();
 }
-function drawRider(){
- const x=Math.round(s.x),y=PLAYER_Y-Math.round(s.z);
- // shadow remains on asphalt when jumping.
- rect(x-17,PLAYER_Y+15,34,6,"#25313e");
- if(s.immune>0&&Math.floor(s.time*12)%2===0)return;
- if(rider.complete&&rider.naturalWidth){
-   c.imageSmoothingEnabled=false;c.drawImage(rider,x-23,y-49,46,74);
- }else{
-   rect(x-12,y-25,24,40,"#842a43");rect(x-10,y-28,20,16,"#3168b0");
-   rect(x-9,y-39,18,12,"#dfbb91");rect(x-10,y-42,20,5,"#c23943");
-   rect(x-10,y-31,20,3,"#fff1dd");rect(x-10,y+12,20,11,"#972b4a");
+function backdrop(){
+ const cam=state.cam;
+ rect("#7fb8d1",0,0,W,H);rect("#9fd4e5",0,65,W,78);
+ for(let i=0;i<9;i++){let x=((i*167-Math.floor(cam*.09))%(W+150)+W+150)%(W+150)-50,y=14+i%3*20;
+  rect("#e6ecdf",x,y,36,8);rect("#f6eee0",x+8,y-4,20,5);rect("#e2ece0",x-12,y+6,58,7);}
+ // Via Roma streetscape: apartment buildings, balconies, shutters, striped awnings.
+ const parallax=.46,step=86,offset=Math.floor(cam*parallax),first=Math.floor(offset/step)-1;
+ for(let i=first;i<first+9;i++){
+  let x=i*step-offset,variant=Math.floor(rnd(i*29)*colors.length),roof=37+Math.floor(rnd(i*31)*24);
+  rect("#4a4a55",x+1,roof,83,143);
+  rect(colors[variant],x+3,roof+2,79,137);
+  rect("#866d69",x+2,roof+2,81,4);
+  for(let row=0;row<2;row++)for(let col=0;col<3;col++){
+   const xx=x+11+col*23, yy=roof+18+row*39;
+   rect("#677b88",xx-2,yy-2,17,25);rect("#b3cec6",xx,yy,13,18);
+   rect("#5b7b75",xx,yy,4,18);rect("#c8b79c",xx,yy+15,13,3);
+   rect("#3b4c57",xx-6,yy+22,25,3);
+   for(let b=0;b<3;b++)rect("#465966",xx-5+b*8,yy+24,2,6);
+  }
+  rect("#3b4f5f",x+5,roof+102,75,12);
+  text(signs[((i%signs.length)+signs.length)%signs.length],x+43,roof+111,7,"#ffe5ba");
+  for(let j=0;j<9;j++)rect(j%2?"#e3e1d2":"#9c4350",x+5+j*8,roof+114,8,9);
+  rect("#405969",x+7,roof+123,31,22);rect("#a5c9c6",x+9,roof+125,27,16);
+  rect("#405969",x+45,roof+123,31,22);rect("#a5c9c6",x+47,roof+125,27,16);
  }
- if(s.z>0){
-   rect(x-18,y+20,36,2,"#f4deb3");rect(x-10,y+23,20,1,"#f0ac70");
+ rect("#a3a29c",0,183,W,9);rect("#737979",0,191,W,6);
+ for(let i=Math.floor(cam*.58/165)-1;i<Math.floor(cam*.58/165)+5;i++){
+  let x=i*165-Math.floor(cam*.58);
+  rect("#4e5756",x+61,138,3,49);rect("#28394a",x+58,138,18,3);rect("#f0e0a0",x+70,139,7,5);
+  rect("#5b5549",x+110,170,4,24);rect("#3b8063",x+98,148,31,29);rect("#4a8e69",x+105,142,20,20);
+  // parked car silhouette behind pavement
+  if(i%2===0){rect("#344151",x-22,176,42,13);rect("#7f5060",x-18,170,32,11);rect("#a8cfcb",x-12,171,18,7);rect("#202a33",x-15,188,8,7);rect("#202a33",x+8,188,8,7);}
  }
- if(s.turboTime>0){
-   rect(x-6,y+24,5,12,"#ffc05c");rect(x+2,y+24,5,14,"#fa7a38");
- }
+ // Nameplate.
+ rect("#22334a",350,4,123,26);rect("#b78c63",352,6,119,22);rect("#2b4254",354,8,115,18);
+ text("VIA ROMA",412,16,10,"#ffe1a1");text("MELITO DI NAPOLI",412,24,6,"#d2e8dd");
 }
-function drawParticles(){
- for(let p of s.particles){c.globalAlpha=clamp((p.life-p.t)/p.life,0,1);rect(p.x,p.y,2,2,p.color);}
- c.globalAlpha=1;
+function track(){
+ let camera=state.cam;
+ g.save();g.translate(-camera,0);
+ g.beginPath();g.moveTo(camera-20,H+15);
+ for(let x=Math.floor((camera-24)/4)*4;x<camera+W+40;x+=4)g.lineTo(x,terrain(x));
+ g.lineTo(camera+W+50,H+15);g.closePath();g.fillStyle="#49545e";g.fill();
+ for(let x=Math.floor(camera/48)*48-48;x<camera+W+70;x+=48){
+  let y=terrain(x);rect("#bdbbae",x,y+35,23,2);
+  rect("#5f6568",x+12,y+20,3,2);
+ }
+ g.beginPath();for(let x=Math.floor((camera-15)/3)*3;x<camera+W+20;x+=3){if(x===Math.floor((camera-15)/3)*3)g.moveTo(x,terrain(x));else g.lineTo(x,terrain(x));}
+ g.strokeStyle="#363e43";g.lineWidth=8;g.stroke();g.strokeStyle="#dbc398";g.lineWidth=3;g.stroke();
+ // Striped curb and decorative crossings.
+ for(let i=0;i<ramps.length-1;i++){
+  if(i%5!==2)continue;
+  let wx=ramps[i][0],yy=terrain(wx);
+  if(wx<camera-50||wx>camera+W+60)continue;
+  for(let j=0;j<5;j++)rect(j%2?"#e0dfcc":"#a7a9a4",wx+j*10,yy+6,7,15);
+ }
+ for(const o of state.barrels){
+  if(o.done||o.x<camera-40||o.x>camera+W+40)continue;
+  let y=terrain(o.x);
+  if(o.type==="pothole"){rect("#222d32",o.x-18,y-2,36,9);rect("#35373c",o.x-14,y+1,28,4);}
+  else{rect("#342c31",o.x-13,y-24,26,24);rect("#a54546",o.x-11,y-23,22,20);rect("#d36854",o.x-10,y-22,20,4);rect("#e1c1a5",o.x-11,y-16,22,3);rect("#f5e0c5",o.x-11,y-6,22,3);}
+ }
+ for(const p of state.pickups){
+  if(p.done||p.x<camera-24||p.x>camera+W+24)continue;
+  let half=4+Math.round(Math.abs(Math.cos(state.time*7+p.x*.03))*6);
+  rect("#906622",p.x-half-2,p.y-10,half*2+4,20);rect("#ffda68",p.x-half,p.y-8,half*2,16);
+  if(half>6)text("★",p.x,p.y+4,12,"#fff1b4");
+ }
+ let fy=terrain(FINISH);
+ rect("#ddd7be",FINISH-1,fy-110,5,110);
+ for(let i=0;i<5;i++)for(let j=0;j<3;j++)rect((i+j)%2?"#101c2b":"#fff4d9",FINISH+4+i*9,fy-106+j*9,9,9);
+ text("TRAGUARDO",FINISH+21,fy-118,12,"#fff4cf");
+ if(state.invincible<=0||Math.floor(state.time*12)%2===0){
+  g.save();g.translate(player.x,player.y);g.rotate(player.angle);
+  if(art.complete&&art.naturalWidth){g.imageSmoothingEnabled=false;g.drawImage(art,-52,-64,105,77);}
+  else{
+   rect("#171e29",-36,-11,16,15);rect("#171e29",24,-11,16,15);
+   rect("#8a2a46",-40,-27,78,28);rect("#3169b1",-17,-45,39,29);
+   rect("#e9c19b",-18,-62,30,18);rect("#c93e48",-20,-68,34,8);
+   rect("#f1eee0",-18,-56,26,3);
+  }
+  if(state.boostTime>0){rect("#fca049",-60,-19,14,6);rect("#ffdb6a",-71,-17,11,3);}
+  g.restore();
+ }
+ for(const p of state.particles){g.globalAlpha=clamp((p.life-p.t)/p.life,0,1);rect(p.color,p.x,p.y,2,2);}
+ g.globalAlpha=1;g.restore();
 }
 function render(){
- drawStreet();drawObjects();drawRider();drawParticles();
- if(s.noticeTime>0){
-  rect(39,265,178,19,"#13263c");txt(s.notice,128,278,"#ffe19d",9);
- }
- if(s.phase==="ready"){rect(67,394,122,21,"#22384a");txt("PRESS START",128,408,"#ffe3a0",10);}
+ state.cam=clamp(player.x-140,0,FINISH-W+150);
+ g.save();if(state.screenShake>0)g.translate((Math.random()-.5)*state.screenShake,(Math.random()-.5)*state.screenShake);
+ backdrop();track();g.restore();
+ if(state.noticeTimer>0){rect("#172c42",140,30,200,18);text(state.notice,240,43,10,"#ffe2a0");}
 }
-function release(){input.left=false;input.right=false;document.querySelectorAll("[data-dir]").forEach(b=>b.classList.remove("down"));}
-function bind(){
+function release(){for(const k in control)control[k]=false;document.querySelectorAll("[data-control]").forEach(el=>el.classList.remove("pressed"));}
+function events(){
+ const map={ArrowRight:"gas",d:"gas",D:"gas",ArrowLeft:"brake",a:"brake",A:"brake",ArrowUp:"up",w:"up",W:"up",ArrowDown:"down",s:"down",S:"down"};
  window.addEventListener("keydown",e=>{
-  if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," ","Enter","a","d","A","D","w","W"].includes(e.key))e.preventDefault();
-  if(e.code==="Space"||e.key==="ArrowUp"||e.key==="w"||e.key==="W"){if(s.phase==="playing"&&!e.repeat)jump();else if(s.phase!=="playing"&&!e.repeat)start();return;}
-  if(e.key==="ArrowLeft"||e.key==="a"||e.key==="A"){if(!e.repeat)steer(-1);}
-  if(e.key==="ArrowRight"||e.key==="d"||e.key==="D"){if(!e.repeat)steer(1);}
-  if(e.key==="Shift"||e.key==="ArrowDown"){if(!e.repeat)turbo();}
-  if(e.key==="Enter"&&s.phase!=="playing")start();
-  if(e.key==="p"||e.key==="P"){if(s.phase==="playing"){s.phase="paused";show("PAUSA","IN PAUSA","Riprendi la tua corsa su Corso Europa.","RIPRENDI ▶",false);}else if(s.phase==="paused")resume();}
+  if(map[e.key]){e.preventDefault();control[map[e.key]]=true;}
+  if(e.code==="Space"){e.preventDefault();if(state.mode==="ready"||state.mode==="won"||state.mode==="lost")start();else if(!e.repeat)jump();}
+  if(e.key==="Shift"){e.preventDefault();if(!e.repeat)boost();}
+  if((e.key==="p"||e.key==="P")&&!e.repeat)pause();
  });
- let down=null;
- canvas.addEventListener("pointerdown",e=>{down={x:e.clientX,y:e.clientY};if(s.phase==="playing")jump();});
- canvas.addEventListener("pointerup",e=>{if(!down)return;down=null;});
- document.querySelectorAll("[data-dir]").forEach(b=>{
-  b.addEventListener("pointerdown",e=>{e.preventDefault();let dir=Number(b.dataset.dir);steer(dir);b.classList.add("down");});
-  for(let t of ["pointerup","pointercancel","pointerleave","lostpointercapture"])b.addEventListener(t,()=>b.classList.remove("down"));
+ window.addEventListener("keyup",e=>{if(map[e.key]){e.preventDefault();control[map[e.key]]=false;}});
+ document.querySelectorAll("[data-control]").forEach(el=>{
+  const c=el.dataset.control;
+  el.addEventListener("pointerdown",e=>{e.preventDefault();if(state.mode!=="playing")return;control[c]=true;el.classList.add("pressed");try{el.setPointerCapture(e.pointerId);}catch(_){}});
+  for(const key of ["pointerup","pointercancel","lostpointercapture"])el.addEventListener(key,()=>{control[c]=false;el.classList.remove("pressed");});
  });
- by("jump").addEventListener("pointerdown",e=>{e.preventDefault();jump();});
- by("turbo").addEventListener("pointerdown",e=>{e.preventDefault();turbo();});
- ui.start.addEventListener("click",()=>{if(s.phase==="paused")resume();else start();});
- ui.audio.addEventListener("click",()=>{s.sound=!s.sound;ui.audio.textContent=s.sound?"♫ ON":"♫ OFF";if(s.sound)bleep(710);});
- document.addEventListener("visibilitychange",()=>{if(document.hidden&&s.phase==="playing"){s.phase="paused";show("PAUSA","IN PAUSA","La partita è stata messa in pausa.","RIPRENDI ▶",false);}});
+ get("jump").addEventListener("pointerdown",e=>{e.preventDefault();jump();});
+ get("turbo").addEventListener("pointerdown",e=>{e.preventDefault();boost();});
+ ui.play.addEventListener("click",()=>{if(state.mode==="paused")resume();else start();});
+ ui.sound.addEventListener("click",()=>{state.mute=!state.mute;ui.sound.textContent=state.mute?"♫ OFF":"♫ ON";if(!state.mute)note(660,.08);});
  window.addEventListener("blur",release);
+ document.addEventListener("visibilitychange",()=>{if(document.hidden&&state.mode==="playing")pause();});
 }
-function resume(){s.phase="playing";s.last=0;ui.overlay.classList.add("hidden");}
 function frame(t){
- let dt=s.last?clamp((t-s.last)/1000,0,.04):0;s.last=t;
- if(s.phase==="playing")update(dt);
+ let dt=state.last?clamp((t-state.last)/1000,0,.04):0;state.last=t;
+ if(state.mode==="playing")tick(dt);
  render();requestAnimationFrame(frame);
 }
-fresh();bind();requestAnimationFrame(frame);
+reset();events();requestAnimationFrame(frame);
 })();
