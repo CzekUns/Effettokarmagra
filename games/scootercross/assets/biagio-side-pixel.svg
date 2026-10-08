@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 88" shape-rendering="crispEdges" role="img" aria-labelledby="title desc">
+<title id="title">Biagio Gelo sullo scooter bordeaux, sprite 8-bit laterale</title>
+<desc id="desc">Biagio con cappello rosso, occhiali bianchi, maglia blu, pantaloncini beige, su uno scooter bordeaux con bauletto posteriore</desc>
+<!-- retro block pixel outline and scooter rear case -->
+<path fill="#24212c" d="M8 32H34V50H8z"/><path fill="#721e38" d="M10 32H34V46H10z"/><path fill="#b13a55" d="M10 32H33V40H10z"/>
+<path fill="#ed9ca7" d="M11 33H31V35H11z"/><path fill="#3a2632" d="M10 41H35V44H10z"/><path fill="#dcb5a6" d="M8 39H12V43H8z"/>
+<!-- rear support -->
+<path fill="#202733" d="M22 47H56V54H22z"/>
+<!-- wheels with pixel edges -->
+<path fill="#0e1d29" d="M22 62H44V66H47V82H43V86H22V82H18V66H22zM87 62H109V66H113V82H109V86H87V82H83V66H87z"/>
+<path fill="#3f5260" d="M24 64H42V68H45V80H42V83H24V80H21V68H24zM89 64H107V68H110V80H107V83H89V80H86V68H89z"/>
+<path fill="#d5d5c8" d="M28 68H38V71H41V77H38V80H28V77H25V71H28zM93 68H103V71H106V77H103V80H93V77H90V71H93z"/>
+<path fill="#253845" d="M30 71H36V77H30zM95 71H101V77H95z"/>
+<!-- chassis and exhaust -->
+<path fill="#2b2434" d="M33 49H66V54H88V61H98V68H83V64H49V67H39V58H31z"/>
+<path fill="#942644" d="M36 47H72V52H85V43H95V51H101V63H88V60H63V63H48V58H36z"/>
+<path fill="#c44a60" d="M37 47H71V51H82V46H95V56H91V54H63V56H44V53H37z"/>
+<path fill="#64213a" d="M52 56H87V63H52z"/>
+<path fill="#d26872" d="M78 55H96V57H78z"/>
+<path fill="#b3bac2" d="M44 61H78V65H44z"/><path fill="#3b4b55" d="M44 64H77V67H44z"/>
+<path fill="#1c2934" d="M18 68H54V72H18z"/><path fill="#708a92" d="M21 68H49V70H21z"/>
+<!-- scooter front shield -->
+<path fill="#181f2c" d="M88 22H100V29H105V48H102V67H94V44H87z"/>
+<path fill="#8d2840" d="M90 24H98V31H102V49H100V64H95V41H90z"/>
+<path fill="#c04c60" d="M95 27H100V48H97z"/><path fill="#faf0ba" d="M98 32H105V38H98z"/>
+<!-- handlebar and mirrors -->
+<path fill="#272632" d="M89 20H108V24H91zM103 9H107V22H103zM101 7H113V13H101z"/>
+<path fill="#b4bcc3" d="M104 22H108V24H104z"/>
+<!-- beige legs shorts shoes -->
+<path fill="#c9976b" d="M46 38H63V53H72V59H61V55H50z"/>
+<path fill="#e6b783" d="M43 40H56V52H65V55H50V52H43z"/>
+<path fill="#f6f1df" d="M65 54H77V60H64zM49 57H60V62H45V59H49z"/>
+<path fill="#d2d4d2" d="M64 59H78V62H62zM44 61H59V63H44z"/>
+<!-- blue torso with bag strap -->
+<path fill="#1e3150" d="M39 19H62V24H72V42H42V37H35V25H39z"/>
+<path fill="#2c5baf" d="M40 20H62V25H69V39H43V35H37V25H40z"/>
+<path fill="#3b7bce" d="M40 20H60V23H40zM39 25H42V35H39z"/>
+<path fill="#20212e" d="M47 20H52V25H57V30H62V35H66V40H61V36H57V32H52V27H47z"/>
+<!-- skin arm -->
+<path fill="#cb8e65" d="M66 25H73V31H79V34H91V30H96V38H89V40H76V36H69V33H66z"/>
+<path fill="#ecb789" d="M68 26H74V32H79V34H91V36H76V34H70z"/>
+<path fill="#e7b185" d="M88 29H98V37H88z"/>
+<!-- neck -->
+<path fill="#d3946b" d="M44 19H56V24H44z"/>
+<!-- face -->
+<path fill="#b9795a" d="M27 9H61V13H66V27H61V32H34V29H28V24H24V14H27z"/>
+<path fill="#efc295" d="M30 10H58V15H63V24H59V29H34V26H29V22H26V15H30z"/>
+<path fill="#ffd5a5" d="M32 12H59V15H32z"/><path fill="#c88968" d="M59 21H69V25H59z"/>
+<path fill="#2a303c" d="M28 19H58V26H28z"/>
+<path fill="#fff7dd" d="M28 18H60V20H28zM27 21H37V25H27zM43 21H59V25H43z"/>
+<path fill="#263344" d="M30 22H36V24H30zM46 22H57V24H46z"/>
+<path fill="#f3f0e4" d="M38 20H43V22H38z"/>
+<!-- red baseball cap -->
+<path fill="#6e2637" d="M27 5H38V2H55V5H63V10H68V14H28z"/>
+<path fill="#b52d40" d="M30 6H39V3H55V6H62V11H31z"/>
+<path fill="#e15761" d="M34 5H56V8H34z"/>
+<path fill="#a5253d" d="M30 11H70V15H30z"/>
+<path fill="#ee6564" d="M45 11H69V13H45z"/>
+</svg>
