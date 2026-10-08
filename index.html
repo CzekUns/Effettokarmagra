@@ -148,7 +148,7 @@ a{color:inherit;text-decoration:none}
      <img class="preview-pill" src="./assets/pill.svg" alt="Karmagra">
      <div class="screen-gloss"></div>
     </div>
-    <div class="cabinet-foot"><span class="signal"><i></i> READY TO PLAY</span><strong>HIGH SCORE 999999</strong></div>
+    <div class="cabinet-foot"><span class="signal"><i></i> READY TO PLAY</span><strong>LEVEL 01 · READY</strong></div>
    </div>
   </section>
   <section class="section" id="giochi">
@@ -193,9 +193,11 @@ function card(game){
  img.alt=game.title;
  img.loading="lazy";
  art.appendChild(img);
- var pill=tag("img","art-pill");
- pill.src="./assets/pill.svg";pill.alt="";pill.loading="lazy";
- art.appendChild(pill);
+ if(game.decoration){
+  var pill=tag("img","art-pill");
+  pill.src=game.decoration;pill.alt="";pill.loading="lazy";
+  art.appendChild(pill);
+ }
  art.appendChild(tag("span","card-status",playable?"● GIOCABILE":"PROSSIMAMENTE"));
  outer.appendChild(art);
  var body=tag("div","card-body");
