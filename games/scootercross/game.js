@@ -42,7 +42,8 @@ function updateUI(){
  ui.coins.textContent="◉ "+s.coins;
  ui.boost.textContent="⚡ "+Math.round(s.turbo)+"%";
  ui.progress.style.width=Math.min(100,Math.floor(100*s.distance/FINISH))+"%";
- ui.status.textContent=s.noticeTime>0?s.notice:(s.phase==="playing"?"CORSO EUROPA · MELITO":"MELITO DI NAPOLI");
+ const danger=s.objects.find(o=>!o.done&&o.type!=="coin"&&o.lane===s.lane&&o.at-s.distance>25&&o.at-s.distance<113);
+ ui.status.textContent=s.noticeTime>0?s.notice:(s.phase==="playing"?(danger?"⚠ BARILE DAVANTI · PREMI SALTA!":"CORSO EUROPA · MELITO"):"MELITO DI NAPOLI");
 }
 function show(kicker,title,message,action,share){
  ui.kicker.textContent=kicker;ui.title.textContent=title;ui.message.textContent=message;ui.start.textContent=action;
