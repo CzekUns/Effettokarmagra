@@ -283,7 +283,14 @@ function simulate(dt){
   p.taken=true;state.coins++;state.score+=100;state.boost=clamp(state.boost+12,0,100);
   beep(670,.08,"square",.034,1.45);newParticles(p.x,p.y,8,"#ffe99b");
  }
- for(const x of obstacleX)if(Math.abs(rider.x-x)<35&&rider.onGround&&rider.invuln<=0&&rider.speed>50){crash("OSTACOLO");break;}
+ for(const x of obstacleX)if(Math.abs(rider.x-x)<35&&rider.onGround&&rider.invuln<=0&&rider.speed>50){
+  if(rider.speed>MAX_SPEED+20)crash("OSTACOLO");
+  else{
+   rider.speed=Math.max(55,rider.speed*.32);rider.invuln=1.1;
+   textNotice("BARILE! RALLENTA");newParticles(rider.x,rider.y+5,7,"#f4b675");beep(230,.13,"triangle",.026,.7);
+  }
+  break;
+ }
  state.particles=state.particles.filter(p=>p.age<p.life);
  for(const p of state.particles){p.age+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=185*dt;}
  if(rider.x>=FINISH){end(true);return;}
