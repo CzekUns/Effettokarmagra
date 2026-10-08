@@ -43,7 +43,7 @@ function updateUI(){
  ui.boost.textContent="⚡ "+Math.round(s.turbo)+"%";
  ui.progress.style.width=Math.min(100,Math.floor(100*s.distance/FINISH))+"%";
  const danger=s.objects.find(o=>!o.done&&o.type!=="coin"&&o.lane===s.lane&&o.at-s.distance>25&&o.at-s.distance<113);
- ui.status.textContent=s.noticeTime>0?s.notice:(s.phase==="playing"?(danger?"⚠ BARILE DAVANTI · PREMI SALTA!":"CORSO EUROPA · MELITO"):"MELITO DI NAPOLI");
+ ui.status.textContent=s.noticeTime>0?s.notice:(s.phase==="playing"?(danger?(danger.type==="pothole"?"⚠ BUCA DAVANTI · PREMI SALTA!":"⚠ BARILE DAVANTI · PREMI SALTA!"):"CORSO EUROPA · MELITO"):"MELITO DI NAPOLI");
 }
 function show(kicker,title,message,action,share){
  ui.kicker.textContent=kicker;ui.title.textContent=title;ui.message.textContent=message;ui.start.textContent=action;
@@ -100,7 +100,7 @@ function update(dt){
  s.x+=(LANES[s.lane]-s.x)*Math.min(1,dt*15);
  if(s.z>0||s.vz>0){
   s.z+=s.vz*dt;s.vz-=370*dt;
-  if(s.z<=0){s.z=0;s.vz=0;if(!s.jumpedSinceLanding){score(20);}s.jumpedSinceLanding=false;}
+  if(s.z<=0){s.z=0;s.vz=0;s.jumpedSinceLanding=false;}
  }
  for(const o of s.objects){
   if(o.done)continue;
