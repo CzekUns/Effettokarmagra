@@ -1,104 +1,149 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101b36">
-<meta name="description" content="Biagio Gelo: Scootercross. Corsa 8-bit verticale su Corso Europa a Melito di Napoli, salta i barili e batti il record.">
-<title>Biagio Gelo · Scootercross — Melito 8-Bit | Arcade Club</title>
-<link rel="icon" href="./assets/biagio-top-pixel.svg" type="image/svg+xml">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#13223c">
+<meta name="description" content="Biagio Gelo Scootercross: corri in 8-bit su Via Roma, Melito di Napoli. Gioca col telefono in orizzontale e salta i barili.">
+<title>Biagio Gelo: Scootercross — Via Roma 8-bit | Arcade Club</title>
+<link rel="icon" type="image/svg+xml" href="./assets/biagio-side-pixel.svg">
 <style>
-:root{color-scheme:dark;background:#0b142b;color:#fceac1;font-family:monospace}
+:root{color-scheme:dark;background:#0c1730;color:#f9edce;font:900 12px/1.3 monospace}
 *{box-sizing:border-box}
-body{margin:0;min-height:100dvh;background:repeating-linear-gradient(0deg,#0e1b34 0 8px,#10203b 8px 16px);overscroll-behavior:none}
-button{font:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.page{display:flex;flex-direction:column;align-items:center;gap:5px;padding:5px 5px 14px;min-height:100dvh}
-.top{display:flex;align-items:center;justify-content:space-between;gap:6px;width:min(100%,440px);min-height:40px}
-.back,.audio{font-size:11px;text-decoration:none;font-weight:900;background:#213658;color:#fcdfac;border:2px solid #8291a4;box-shadow:3px 3px #040b1b;border-radius:2px;padding:7px 6px;white-space:nowrap}
-.top h1{font-family:monospace;font-size:clamp(15px,3.7vw,22px);line-height:.95;text-shadow:3px 3px #712b3b;margin:0;text-align:center;letter-spacing:-.055em}
-.top h1 span{display:block;color:#f39763;font-size:.84em;margin-top:3px;letter-spacing:.03em}
-.subtitle{font-weight:900;color:#a9d5d2;letter-spacing:.14em;font-size:9px;margin:0 0 3px;text-align:center}
-.cabinet{width:min(440px,calc((100dvh - 180px)*.5714),calc(100vw - 10px));min-width:min(245px,calc(100vw - 10px));border:4px solid #8399ad;border-radius:4px;background:#172a4b;box-shadow:inset 0 0 0 3px #283d60,0 6px #030b17,0 15px 35px #0008;padding:5px}
-.hud{display:flex;align-items:stretch;justify-content:space-between;gap:3px;padding:3px 0 6px;font-size:clamp(8px,1.8vw,11px);font-weight:900}
-.hud .box{display:flex;flex-direction:column;gap:3px;text-align:center}
-.hud label{color:#a8d7e1;font-size:8px;letter-spacing:.04em}
-.hud strong{color:#ffe79b;text-shadow:1px 1px #191827}
-#lives{color:#ff7776;letter-spacing:.08em}#time{color:#c0fff5}
-.screenframe{border:3px solid #0a1526;background:#3d4b60;position:relative;overflow:hidden;box-shadow:0 0 0 2px #e9c27b}
-#screen{display:block;width:100%;height:auto;aspect-ratio:256/448;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:manipulation;cursor:pointer}
-.progress{height:7px;background:#071426;border:1px solid #354969;margin:7px 0 5px}
-#progress{height:100%;width:0;background:repeating-linear-gradient(90deg,#efbb63 0 10px,#fff19e 10px 13px);transition:width .14s}
-.status{font-size:10px;text-align:center;color:#f0dbb1;height:14px;font-weight:900;overflow:hidden;white-space:nowrap}
-.controls{width:100%;margin-top:7px;display:grid;grid-template-columns:1fr 1.25fr 1fr 1fr;gap:6px}
-.ctrl{border:3px solid #0b1221;box-shadow:inset 0 0 0 2px #f2cda0,0 4px #050a14;border-radius:3px;min-height:62px;padding:5px 1px;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#426b89;color:#fff3d8;font-weight:1000;font-size:clamp(10px,2.2vw,13px);line-height:1.1}
-.ctrl .symbol{display:block;font-size:clamp(19px,4.6vw,26px);line-height:1.35}
-.ctrl.jump{background:#ba4c4d;box-shadow:inset 0 0 0 2px #ffe1a6,0 4px #280e1a;border-color:#531e30;color:#fff9df}
-.ctrl.turbo{background:#bd8b3b;border-color:#5e471d;color:#211923}
-.ctrl.down,.ctrl:active{transform:translateY(4px);box-shadow:inset 0 0 0 2px #ffeacb,0 0 #050a14;filter:brightness(1.2)}
-.legend{margin:8px 0 1px;font-size:10px;line-height:1.35;color:#a1c2c9;text-align:center;max-width:450px}
-.legend strong{color:#ffd585}
-.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:10px;background:#071325dc}
+body{min-height:100dvh;overscroll-behavior:none;margin:0;background:repeating-linear-gradient(0deg,#101d39 0 10px,#122241 10px 20px)}
+button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:none}
+a{color:inherit;text-decoration:none}
+.app{width:100%;max-width:1270px;margin:auto;padding:6px 8px 13px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+header h1{text-align:center;font:bold clamp(15px,3.3vw,31px)/1 Georgia,serif;color:#ffdc91;text-shadow:3px 3px #7b2b40;margin:0}
+header h1 span{color:#ff9c72}
+header small{display:block;margin-top:4px;color:#9bd3d4;letter-spacing:.13em;font:900 8px monospace;text-align:center}
+.toplink,.audio{border:2px solid #7b98ad;background:#243a5b;color:#ffebc7;border-radius:3px;padding:8px 10px;font-weight:900;white-space:nowrap;box-shadow:2px 3px #070e1c}
+.toplink{display:inline-flex;align-items:center}
+.layout{display:grid;grid-template-columns:minmax(85px,1fr) minmax(0,960px) minmax(93px,1fr);align-items:center;gap:8px}
+.group{display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:0;align-items:stretch}
+.group h2{margin:0;text-align:center;color:#9bc4d7;font-size:10px;letter-spacing:.1em}
+.pad{width:100%;min-height:57px;padding:7px 4px;background:#275580;border:3px solid #11192b;outline:2px solid #7f9eaf;box-shadow:0 4px #050b18;border-radius:3px;color:#fff4ce;font-size:clamp(10px,1.6vw,14px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center}
+.pad span{font-size:clamp(16px,2.2vw,23px);line-height:1.1}
+.pad:active,.pad.pressed{transform:translateY(3px);background:#3776ae;box-shadow:0 1px #050b18}
+.pad.go{background:#45936b;color:#f4ffdf}
+.pad.jump{background:#c24d4f;color:#fff1d0}
+.pad.boost{background:#d4a054;color:#231d21}
+.pad.tilt{background:#465d86}
+.machine{min-width:0;background:#192d4c;border:4px solid #8094a9;border-radius:4px;padding:5px;box-shadow:0 5px #070c19,0 12px 28px #0006}
+.hud{display:flex;justify-content:space-around;align-items:center;gap:3px;padding:1px 3px 5px}
+.hud div{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;text-align:center}
+.hud small{font-size:clamp(7px,1vw,10px);color:#9dcfdd;letter-spacing:.04em}
+.hud strong{font:bold clamp(11px,1.7vw,18px) monospace;color:#ffe399;white-space:nowrap}
+.hud #lives{color:#ff9c9a}
+.frame{position:relative;border:3px solid #10213a;outline:2px solid #c79e69;overflow:hidden;background:#4c5964}
+canvas{width:100%;height:auto;aspect-ratio:16/9;display:block;image-rendering:pixelated;touch-action:none}
+.overlay{position:absolute;inset:0;display:flex;justify-content:center;align-items:center;background:#081a2fdb;padding:8px}
 .overlay.hidden{display:none}
-.dialog{border:3px solid #f4cc88;background:#173752;color:#fff0c8;box-shadow:5px 5px #040b18;padding:13px 9px;text-align:center;width:100%;max-width:310px}
-.kicker{font-weight:900;letter-spacing:.09em;font-size:10px;color:#a1eaed}
-.dialog h2{font:900 clamp(23px,5vw,30px) monospace;text-shadow:3px 3px #7d3337;color:#ffdd7f;margin:9px 0}
-.dialog p{font-size:clamp(10px,2.3vw,12px);line-height:1.55;margin:10px 0;color:#edf2ea}
-.go{color:#251c28;background:#f3cc80;border:3px solid #422d2d;box-shadow:3px 4px #070d17;padding:10px 15px;font-weight:1000;font-size:14px}
-.share{display:block;margin:13px auto 0;background:#178357;border:2px solid #99f2ae;padding:9px 6px;max-width:100%;font-size:11px;color:#e8fff0;text-decoration:none;font-weight:900}
-.share[hidden]{display:none}
-.fineprint{text-align:center;color:#739bab;font-size:9px;line-height:1.4;margin:4px 0}
-@media(max-height:680px){
- .page{gap:3px;padding-top:2px}
- .top{min-height:34px}
- .subtitle,.fineprint{display:none}
- .controls{margin-top:4px}
- .ctrl{min-height:50px}
- .legend{font-size:9px;margin:5px 0}
+.dialog{background:#1b3c59;border:3px solid #eac786;box-shadow:4px 4px #061321;text-align:center;padding:clamp(9px,2vw,17px);width:min(340px,98%)}
+.dialog .tag{font-size:9px;color:#a8dace;letter-spacing:.1em}
+.dialog h2{font:bold clamp(19px,3.5vw,34px) Georgia,serif;color:#ffe29b;text-shadow:2px 2px #7e3749;margin:6px 0}
+.dialog p{font-size:clamp(10px,1.3vw,13px);font-weight:650;color:#f0e9d4;line-height:1.5;margin:5px 0}
+.dialog button{margin-top:9px;border:3px solid #483238;background:#f7d17f;color:#25212a;padding:8px 14px;box-shadow:2px 3px #050e1c;font-weight:900}
+.dialog .share{display:block;width:max-content;max-width:100%;margin:10px auto 0;background:#198052;border:2px solid #a0e8b2;padding:9px;color:white;font-size:10px}
+.dialog .share[hidden]{display:none}
+.progress{height:7px;background:#08172c;border:1px solid #5b7395;margin-top:5px}
+.progress>div{height:100%;width:0;background:repeating-linear-gradient(90deg,#f9dc96 0 9px,#d77e54 9px 12px)}
+.bottom{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:4px}
+.bottom span{font-size:10px;color:#a1d7cf}
+.instructions{text-align:center;font-size:9px;color:#8badc1;margin:10px 2px}
+.orientation{display:none}
+@media(max-width:890px) and (orientation:landscape){
+.app{padding:2px 4px 4px}
+header{margin-bottom:3px}
+header h1{font-size:clamp(15px,3vw,22px)}
+header small{display:none}
+.toplink,.audio{padding:5px 7px;font-size:10px}
+.layout{grid-template-columns:minmax(69px,1fr) minmax(0,960px) minmax(77px,1fr);gap:5px}
+.machine{padding:3px;border-width:3px}
+.hud{padding-bottom:2px}
+.hud strong{font-size:12px}
+.hud small{font-size:7px}
+.group{gap:7px}
+.group h2{display:none}
+.pad{min-height:clamp(35px,12dvh,54px);font-size:10px;padding:3px;border-width:2px}
+.pad span{font-size:17px}
+.instructions{display:none}
 }
-@media(max-width:355px){
- .back,.audio{font-size:9px;padding:6px 4px}
- .hud label{font-size:7px}
- .hud strong{font-size:9px}
- .ctrl{min-height:56px}
+@media(max-height:400px) and (orientation:landscape){
+.app{padding:2px 4px}
+.layout{gap:4px}
+header{margin-bottom:2px}
+.group{gap:4px}
+.pad{min-height:34px}
+.pad span{font-size:14px}
+.bottom{margin-top:2px}
+.dialog h2{font-size:19px}
+.dialog p{font-size:9px;line-height:1.25}
+.dialog{padding:8px}
+.dialog button{padding:5px 9px}
 }
-@media(prefers-reduced-motion:reduce){#progress{transition:none}}
+@media(max-width:800px) and (orientation:portrait){
+.orientation{position:fixed;z-index:1000;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:17px;padding:30px;text-align:center;background:#152b49}
+.orientation .phone{font-size:76px;line-height:1;transform:rotate(-90deg)}
+.orientation h2{font:900 25px Georgia,serif;color:#ffe4aa;margin:0}
+.orientation p{font-size:14px;max-width:310px;color:#d2e0e4}
+.orientation a{border:2px solid #d9af77;padding:10px 15px}
+}
+@media(prefers-reduced-motion:reduce){.orientation .phone{transform:none}}
 </style>
 </head>
 <body>
-<div class="page">
- <header class="top"><a class="back" href="../../index.html">← ARCADE</a><h1>BIAGIO GELO<span>SCOOTERCROSS</span></h1><button class="audio" id="audio" type="button">♫ ON</button></header>
- <p class="subtitle">MELITO DI NAPOLI · CORSO EUROPA · 8-BIT</p>
- <main class="cabinet">
+<div class="orientation" role="note" aria-label="Gioco in modalità orizzontale">
+ <div class="phone" aria-hidden="true">📱</div>
+ <h2>Ruota il telefono</h2>
+ <p>Scootercross si gioca in orizzontale: gira lo smartphone per vedere la pista laterale e tutti i comandi.</p>
+ <a href="../../index.html">← Torna ad Arcade Club</a>
+</div>
+<div class="app">
+<header>
+ <a class="toplink" href="../../index.html">← ARCADE CLUB</a>
+ <div><h1>BIAGIO GELO <span>· SCOOTERCROSS</span></h1><small>VIA ROMA · MELITO DI NAPOLI · 8-BIT</small></div>
+ <button class="audio" id="sound" type="button">♫ ON</button>
+</header>
+<main class="layout">
+ <div class="group left">
+  <h2>GUIDA</h2>
+  <button class="pad" data-control="brake" type="button"><span>◀</span>FRENA</button>
+  <button class="pad go" data-control="gas" type="button"><span>▶</span>ACCELERA</button>
+ </div>
+ <section class="machine" aria-label="Biagio Gelo Scootercross">
   <div class="hud">
-   <div class="box"><label>PUNTI</label><strong id="score">00000</strong></div>
-   <div class="box"><label>TEMPO</label><strong id="time">00:00</strong></div>
-   <div class="box"><label>VITE</label><strong id="lives">♥♥♥</strong></div>
-   <div class="box"><label>MONETE</label><strong id="coins">◉ 0</strong></div>
+   <div><small>PUNTI</small><strong id="score">00000</strong></div>
+   <div><small>TEMPO</small><strong id="time">00:00</strong></div>
+   <div><small>VITE</small><strong id="lives">♥♥♥</strong></div>
+   <div><small>MONETE</small><strong id="coins">◉ 0</strong></div>
+   <div><small>RECORD</small><strong id="best">00000</strong></div>
   </div>
-  <div class="screenframe">
-   <canvas id="screen" width="256" height="448" aria-label="Scootercross 8-bit: Biagio guida sul Corso Europa di Melito, salta i barili."></canvas>
-   <div class="overlay" id="overlay">
+  <div class="frame">
+   <canvas id="game" width="480" height="270" aria-label="Pista a scorrimento laterale in Via Roma, Melito di Napoli"></canvas>
+   <div class="overlay" id="veil">
     <div class="dialog">
-      <div class="kicker" id="dialog-kicker">ARCADE CLUB · MELITO 8-BIT</div>
-      <h2 id="dialog-title">SCOOTERCROSS!</h2>
-      <p id="dialog-message">Corri sul Corso Europa di Melito con lo scooter bordeaux e il bauletto. Cambia corsia con ◀ ▶ e premi <strong>SALTA</strong> per superare barili e buche. Prendi monete e usa il turbo!</p>
-      <button class="go" id="start" type="button">INIZIA ▶</button>
-      <a class="share" id="share" href="#" target="_blank" rel="noopener noreferrer" hidden>↗ CONDIVIDI SU WHATSAPP</a>
+     <div class="tag" id="tag">ARCADE CLUB · MELITO 8-BIT</div>
+     <h2 id="title">SCOOTERCROSS!</h2>
+     <p id="message">Guida lo scooter bordeaux con bauletto lungo Via Roma. Tieni premuto ACCELERA, premi SALTA prima dei barili e usa INCLINA durante i salti. Raggiungi il traguardo!</p>
+     <button id="play" type="button">INIZIA ▶</button>
+     <a class="share" id="share" href="#" target="_blank" rel="noopener noreferrer" hidden>↗ CONDIVIDI SU WHATSAPP</a>
     </div>
    </div>
   </div>
   <div class="progress"><div id="progress"></div></div>
-  <div class="status" id="status">MELITO DI NAPOLI</div>
-  <div class="controls" aria-label="Controlli dello scooter">
-   <button class="ctrl" type="button" data-dir="-1"><span class="symbol">◀</span>SINISTRA</button>
-   <button class="ctrl jump" id="jump" type="button"><span class="symbol">▲</span>SALTA</button>
-   <button class="ctrl" type="button" data-dir="1"><span class="symbol">▶</span>DESTRA</button>
-   <button class="ctrl turbo" id="turbo" type="button"><span class="symbol">⚡</span><span id="boost">100%</span></button>
-  </div>
- </main>
- <p class="legend">Avanzamento automatico · <strong>SALTA</strong> prima dei barili · <strong>◀ ▶</strong> cambia corsia · <strong>⚡ TURBO</strong></p>
- <p class="fineprint">PC: FRECCE / A-D · SPAZIO PER SALTARE · SHIFT PER TURBO · P PAUSA</p>
+  <div class="bottom"><span id="status">VIA ROMA · MELITO DI NAPOLI</span><span id="speed">0 km/h</span></div>
+ </section>
+ <div class="group right">
+  <h2>SALTO</h2>
+  <button class="pad jump" id="jump" type="button"><span>▲</span>SALTA</button>
+  <button class="pad tilt" data-control="up" type="button"><span>↶</span>INCLINA SU</button>
+  <button class="pad tilt" data-control="down" type="button"><span>↷</span>INCLINA GIÙ</button>
+  <button class="pad boost" id="turbo" type="button"><span>⚡</span><span id="boost">TURBO 100%</span></button>
+ </div>
+</main>
+<p class="instructions">PC: FRECCE / WASD · SPAZIO SALTA · SHIFT TURBO · P PAUSA · SMARTPHONE: SCHERMO ORIZZONTALE</p>
 </div>
-<script src="./game.js?v=3"></script>
+<script src="./game.js?v=5"></script>
 </body>
 </html>
