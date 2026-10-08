@@ -1,427 +1,104 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#132648">
-<meta name="description" content="Biagio Gelo: Scootercross. Salta, guida lo scooter bordeaux, raccogli monete e taglia il traguardo nell'Arcade Club.">
-<title>Biagio Gelo: Scootercross | Arcade Club</title>
-<link rel="icon" href="./assets/biagio-scooter.svg" type="image/svg+xml">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101b36">
+<meta name="description" content="Biagio Gelo: Scootercross. Corsa 8-bit verticale su Corso Europa a Melito di Napoli, salta i barili e batti il record.">
+<title>Biagio Gelo · Scootercross — Melito 8-Bit | Arcade Club</title>
+<link rel="icon" href="./assets/biagio-top-pixel.svg" type="image/svg+xml">
 <style>
-:root{color-scheme:dark;background:#091529;color:#fdf3d5;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+:root{color-scheme:dark;background:#0b142b;color:#fceac1;font-family:monospace}
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;overscroll-behavior:none}
-body{background:radial-gradient(circle at 45% 0%,#34669c 0,#0a2447 50%,#050d20 100%);overflow-x:hidden}
-button{font:inherit;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent}
-a{color:inherit;text-decoration:none}
-.app{max-width:1050px;margin:auto;padding:7px clamp(6px,2vw,18px) 25px}
-.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.back{color:#deecff;background:#173b67;border:1px solid #7296c1;border-radius:10px;padding:9px 12px;font-weight:800;font-size:12px;white-space:nowrap}
-.brand{text-align:center;min-width:0}
-.brand small{font-size:10px;letter-spacing:.15em;color:#b3d8ff;font-weight:900}
-.brand h1{margin:2px 0 0;font:900 clamp(21px,4.6vw,38px)/1.05 Georgia,serif;letter-spacing:-.02em;color:#ffe5a4;text-shadow:2px 3px #754124}
-.brand h1 span{color:#f8b071}
-.sound{border:1px solid #7296c1;background:#173b67;border-radius:10px;padding:9px 12px;font-weight:800;font-size:12px;color:#deecff;white-space:nowrap}
-.boardframe{border:4px solid #3a67a7;border-radius:15px 15px 0 0;overflow:hidden;box-shadow:0 18px 48px #020917a6}
-.hud{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:8px 14px;background:linear-gradient(#17395e,#0c2440);border-bottom:3px solid #4f7ab5}
-.stat{display:flex;flex-direction:column;gap:2px;min-width:0}
-.stat:last-child{text-align:right}
-.stat small{color:#aed3f6;font-size:9px;letter-spacing:.11em;font-weight:950}
-.stat strong{font:bold clamp(16px,3vw,26px) monospace;white-space:nowrap;color:#ffe6a4}
-#speed{color:#aaf5e6}
-#lives{color:#f6b4aa}
-.playfield{position:relative;background:#6ac6f5}
-#game{display:block;width:100%;height:auto;aspect-ratio:16/9;touch-action:none}
-.shade{position:absolute;inset:0;background:#081b35be;backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:12px}
-.shade.hidden{display:none}
-.modal{width:min(440px,100%);border:2px solid #f1c980;border-radius:18px;background:linear-gradient(140deg,#193d70,#0a1c36);padding:clamp(14px,4vw,26px);box-shadow:0 12px 35px #001426ba;text-align:center}
-.kicker{color:#aedaf8;letter-spacing:.15em;font-weight:1000;font-size:10px}
-.modal h2{font:900 clamp(29px,6vw,46px)/1.07 Georgia,serif;color:#ffdc89;margin:10px 0}
-.modal p{font-size:13px;line-height:1.6;color:#e0ecf9;margin:9px auto;max-width:390px}
-.modal .go{background:linear-gradient(#fff0ac,#e6a451);color:#2e2230;border:0;border-radius:11px;padding:12px 24px;font-size:15px;font-weight:1000;box-shadow:0 4px #996537;margin-top:8px}
-.share{display:block;width:max-content;max-width:100%;margin:12px auto 0;padding:10px 14px;font-size:12px;font-weight:950;border:2px solid #8be0b1;border-radius:10px;background:#16854e;box-shadow:0 4px #0d5130}
+body{margin:0;min-height:100dvh;background:repeating-linear-gradient(0deg,#0e1b34 0 8px,#10203b 8px 16px);overscroll-behavior:none}
+button{font:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.page{display:flex;flex-direction:column;align-items:center;gap:5px;padding:5px 5px 14px;min-height:100dvh}
+.top{display:flex;align-items:center;justify-content:space-between;gap:6px;width:min(100%,440px);min-height:40px}
+.back,.audio{font-size:11px;text-decoration:none;font-weight:900;background:#213658;color:#fcdfac;border:2px solid #8291a4;box-shadow:3px 3px #040b1b;border-radius:2px;padding:7px 6px;white-space:nowrap}
+.top h1{font-family:monospace;font-size:clamp(15px,3.7vw,22px);line-height:.95;text-shadow:3px 3px #712b3b;margin:0;text-align:center;letter-spacing:-.055em}
+.top h1 span{display:block;color:#f39763;font-size:.84em;margin-top:3px;letter-spacing:.03em}
+.subtitle{font-weight:900;color:#a9d5d2;letter-spacing:.14em;font-size:9px;margin:0 0 3px;text-align:center}
+.cabinet{width:min(440px,calc((100dvh - 180px)*.5714),calc(100vw - 10px));min-width:min(245px,calc(100vw - 10px));border:4px solid #8399ad;border-radius:4px;background:#172a4b;box-shadow:inset 0 0 0 3px #283d60,0 6px #030b17,0 15px 35px #0008;padding:5px}
+.hud{display:flex;align-items:stretch;justify-content:space-between;gap:3px;padding:3px 0 6px;font-size:clamp(8px,1.8vw,11px);font-weight:900}
+.hud .box{display:flex;flex-direction:column;gap:3px;text-align:center}
+.hud label{color:#a8d7e1;font-size:8px;letter-spacing:.04em}
+.hud strong{color:#ffe79b;text-shadow:1px 1px #191827}
+#lives{color:#ff7776;letter-spacing:.08em}#time{color:#c0fff5}
+.screenframe{border:3px solid #0a1526;background:#3d4b60;position:relative;overflow:hidden;box-shadow:0 0 0 2px #e9c27b}
+#screen{display:block;width:100%;height:auto;aspect-ratio:256/448;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:manipulation;cursor:pointer}
+.progress{height:7px;background:#071426;border:1px solid #354969;margin:7px 0 5px}
+#progress{height:100%;width:0;background:repeating-linear-gradient(90deg,#efbb63 0 10px,#fff19e 10px 13px);transition:width .14s}
+.status{font-size:10px;text-align:center;color:#f0dbb1;height:14px;font-weight:900;overflow:hidden;white-space:nowrap}
+.controls{width:100%;margin-top:7px;display:grid;grid-template-columns:1fr 1.25fr 1fr 1fr;gap:6px}
+.ctrl{border:3px solid #0b1221;box-shadow:inset 0 0 0 2px #f2cda0,0 4px #050a14;border-radius:3px;min-height:62px;padding:5px 1px;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#426b89;color:#fff3d8;font-weight:1000;font-size:clamp(10px,2.2vw,13px);line-height:1.1}
+.ctrl .symbol{display:block;font-size:clamp(19px,4.6vw,26px);line-height:1.35}
+.ctrl.jump{background:#ba4c4d;box-shadow:inset 0 0 0 2px #ffe1a6,0 4px #280e1a;border-color:#531e30;color:#fff9df}
+.ctrl.turbo{background:#bd8b3b;border-color:#5e471d;color:#211923}
+.ctrl.down,.ctrl:active{transform:translateY(4px);box-shadow:inset 0 0 0 2px #ffeacb,0 0 #050a14;filter:brightness(1.2)}
+.legend{margin:8px 0 1px;font-size:10px;line-height:1.35;color:#a1c2c9;text-align:center;max-width:450px}
+.legend strong{color:#ffd585}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:10px;background:#071325dc}
+.overlay.hidden{display:none}
+.dialog{border:3px solid #f4cc88;background:#173752;color:#fff0c8;box-shadow:5px 5px #040b18;padding:13px 9px;text-align:center;width:100%;max-width:310px}
+.kicker{font-weight:900;letter-spacing:.09em;font-size:10px;color:#a1eaed}
+.dialog h2{font:900 clamp(23px,5vw,30px) monospace;text-shadow:3px 3px #7d3337;color:#ffdd7f;margin:9px 0}
+.dialog p{font-size:clamp(10px,2.3vw,12px);line-height:1.55;margin:10px 0;color:#edf2ea}
+.go{color:#251c28;background:#f3cc80;border:3px solid #422d2d;box-shadow:3px 4px #070d17;padding:10px 15px;font-weight:1000;font-size:14px}
+.share{display:block;margin:13px auto 0;background:#178357;border:2px solid #99f2ae;padding:9px 6px;max-width:100%;font-size:11px;color:#e8fff0;text-decoration:none;font-weight:900}
 .share[hidden]{display:none}
-.progress{height:8px;background:#0a233a;border:1px solid #486ea1;border-top:0;position:relative;overflow:hidden}
-.progress div{height:100%;width:0;background:linear-gradient(90deg,#ffe29c,#ff8b58);transition:width .12s linear}
-.controls{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;padding:13px;border:2px solid #365f94;border-radius:0 0 16px 16px;background:linear-gradient(#172f56,#0c1f3b)}
-.ctrl{display:flex;justify-content:center;align-items:center;min-height:70px;gap:8px;border-radius:14px;border:2px solid #527ba9;color:#f7ebd1;background:linear-gradient(#28548a,#163358);box-shadow:0 4px #08182b;font-size:13px;font-weight:950;user-select:none}
-.ctrl strong{font-size:21px}
-.ctrl:active,.ctrl.held{transform:translateY(3px);box-shadow:0 1px #08182b;background:#376da5;border-color:#d2edff}
-.ctrl.gas{background:linear-gradient(#a9e095,#3a925a);border-color:#b9f7b5;color:#092b1c}
-.ctrl.boost{background:linear-gradient(#fbe19d,#e49250);border-color:#fff2bc;color:#34211c}
-.subrow{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:11px;padding:0 2px;color:#a9c9e6;font-size:11px}
-.subrow strong{color:#ffe0a5}
-.instructions{font-size:10px;color:#8daec9;text-align:center;letter-spacing:.035em;margin:13px 0}
-@media(max-width:600px){
-.app{padding:3px 6px 25px}.top{gap:5px;margin-bottom:5px}
-.brand h1{font-size:clamp(18px,5vw,26px)}.brand small{font-size:8px}
-.back,.sound{font-size:10px;padding:6px}
-.hud{gap:4px;padding:6px 7px}
-.stat small{font-size:7px}
-.stat strong{font-size:clamp(12px,3.8vw,18px)}
-.controls{gap:7px;padding:11px 6px}
-.ctrl{min-height:68px;flex-direction:column;gap:0;font-size:10px;border-radius:11px;padding:5px}
-.ctrl strong{font-size:20px}
-.subrow{font-size:10px}
-.instructions{font-size:9px}
-.modal{padding:13px}.modal h2{font-size:clamp(25px,7vw,38px)}.modal p{font-size:11px;line-height:1.45}
+.fineprint{text-align:center;color:#739bab;font-size:9px;line-height:1.4;margin:4px 0}
+@media(max-height:680px){
+ .page{gap:3px;padding-top:2px}
+ .top{min-height:34px}
+ .subtitle,.fineprint{display:none}
+ .controls{margin-top:4px}
+ .ctrl{min-height:50px}
+ .legend{font-size:9px;margin:5px 0}
 }
-@media(max-width:350px){.stat strong{font-size:12px}.back,.sound{font-size:9px;padding:5px}.ctrl{font-size:9px}}
-@media(prefers-reduced-motion:reduce){.progress div{transition:none}}
+@media(max-width:355px){
+ .back,.audio{font-size:9px;padding:6px 4px}
+ .hud label{font-size:7px}
+ .hud strong{font-size:9px}
+ .ctrl{min-height:56px}
+}
+@media(prefers-reduced-motion:reduce){#progress{transition:none}}
 </style>
 </head>
-<body><div class="app">
-<header class="top">
-<a class="back" href="../../index.html">← Arcade Club</a>
-<div class="brand"><small>BIAGIO GELO PRESENTA</small><h1><span>SCOOTER</span>CROSS</h1></div>
-<button id="sound" class="sound" type="button">♫ Audio ON</button>
-</header>
-<div class="boardframe">
- <div class="hud">
- <div class="stat"><small>PUNTI</small><strong id="points">00000</strong></div>
- <div class="stat"><small>TEMPO</small><strong id="clock">00:00</strong></div>
- <div class="stat"><small>VELOCITÀ</small><strong id="speed">0 km/h</strong></div>
- <div class="stat"><small>VITE</small><strong id="lives">♥ ♥ ♥</strong></div>
- <div class="stat"><small>RECORD</small><strong id="record">00000</strong></div>
- </div>
- <div class="playfield"><canvas id="game" width="960" height="540" aria-label="Scootercross: gioco arcade con rampe, scooter e monete"></canvas>
- <div class="shade" id="shade"><div class="modal">
-  <div class="kicker" id="kicker">ARCADE CLUB · NUOVA SFIDA</div>
-  <h2 id="headline">SCOOTERCROSS!</h2>
-  <p id="message">Biagio guida lo scooter bordeaux con il bauletto. Accelera sulle rampe, inclinalo in volo, raccogli le monete e raggiungi il traguardo. Tre vite a disposizione!</p>
-  <button id="start" class="go" type="button">PARTI ▶</button>
-  <a class="share" id="share" href="#" target="_blank" rel="noopener noreferrer" hidden>↗ Sfida un amico su WhatsApp</a>
- </div></div>
- </div>
- <div class="progress"><div id="distance-bar"></div></div>
+<body>
+<div class="page">
+ <header class="top"><a class="back" href="../../index.html">← ARCADE</a><h1>BIAGIO GELO<span>SCOOTERCROSS</span></h1><button class="audio" id="audio" type="button">♫ ON</button></header>
+ <p class="subtitle">MELITO DI NAPOLI · CORSO EUROPA · 8-BIT</p>
+ <main class="cabinet">
+  <div class="hud">
+   <div class="box"><label>PUNTI</label><strong id="score">00000</strong></div>
+   <div class="box"><label>TEMPO</label><strong id="time">00:00</strong></div>
+   <div class="box"><label>VITE</label><strong id="lives">♥♥♥</strong></div>
+   <div class="box"><label>MONETE</label><strong id="coins">◉ 0</strong></div>
+  </div>
+  <div class="screenframe">
+   <canvas id="screen" width="256" height="448" aria-label="Scootercross 8-bit: Biagio guida sul Corso Europa di Melito, salta i barili."></canvas>
+   <div class="overlay" id="overlay">
+    <div class="dialog">
+      <div class="kicker" id="dialog-kicker">ARCADE CLUB · MELITO 8-BIT</div>
+      <h2 id="dialog-title">SCOOTERCROSS!</h2>
+      <p id="dialog-message">Corri sul Corso Europa di Melito con lo scooter bordeaux e il bauletto. Cambia corsia con ◀ ▶ e premi <strong>SALTA</strong> per superare barili e buche. Prendi monete e usa il turbo!</p>
+      <button class="go" id="start" type="button">INIZIA ▶</button>
+      <a class="share" id="share" href="#" target="_blank" rel="noopener noreferrer" hidden>↗ CONDIVIDI SU WHATSAPP</a>
+    </div>
+   </div>
+  </div>
+  <div class="progress"><div id="progress"></div></div>
+  <div class="status" id="status">MELITO DI NAPOLI</div>
+  <div class="controls" aria-label="Controlli dello scooter">
+   <button class="ctrl" type="button" data-dir="-1"><span class="symbol">◀</span>SINISTRA</button>
+   <button class="ctrl jump" id="jump" type="button"><span class="symbol">▲</span>SALTA</button>
+   <button class="ctrl" type="button" data-dir="1"><span class="symbol">▶</span>DESTRA</button>
+   <button class="ctrl turbo" id="turbo" type="button"><span class="symbol">⚡</span><span id="boost">100%</span></button>
+  </div>
+ </main>
+ <p class="legend">Avanzamento automatico · <strong>SALTA</strong> prima dei barili · <strong>◀ ▶</strong> cambia corsia · <strong>⚡ TURBO</strong></p>
+ <p class="fineprint">PC: FRECCE / A-D · SPAZIO PER SALTARE · SHIFT PER TURBO · P PAUSA</p>
 </div>
-<section class="controls" aria-label="Controlli dello scooter">
- <button class="ctrl brake" type="button" data-key="brake"><strong>◀</strong> FRENA</button>
- <button class="ctrl" type="button" data-key="back"><strong>↶</strong> CABRA</button>
- <button class="ctrl" type="button" data-key="forward"><strong>↷</strong> PICCHIA</button>
- <button class="ctrl gas" type="button" data-key="gas"><strong>▶</strong> ACCELERA</button>
-</section>
-<div class="subrow">
- <span><strong id="boost-meter">TURBO 100%</strong> · <button class="sound" style="padding:6px 9px" id="boost-button" type="button">⚡ TURBO</button></span>
- <span id="coins">🟡 0 monete</span>
-</div>
-<p class="instructions">PC: → ACCELERA · ← FRENA · ↑/↓ INCLINA · SPAZIO TURBO · P PAUSA · TELEFONO: TIENI PREMUTI I TASTI</p>
-</div>
-<script>
-(function(){
-"use strict";
-const W=960,H=540,FINISH=6300,MAX_SPEED=275,G=975,BASELINE=12;
-const $=id=>document.getElementById(id),canvas=$("game"),ctx=canvas.getContext("2d");
-const UI={points:$("points"),clock:$("clock"),speed:$("speed"),lives:$("lives"),record:$("record"),coins:$("coins"),boost:$("boost-meter"),bar:$("distance-bar"),shade:$("shade"),kicker:$("kicker"),headline:$("headline"),message:$("message"),start:$("start"),share:$("share"),sound:$("sound"),turbo:$("boost-button")};
-const sprite=new Image();sprite.src="./assets/biagio-scooter.svg";
-const stops=[
-[0,392],[380,392],[510,388],[650,332],[705,475],[865,475],
-[1040,463],[1215,375],[1280,480],[1470,474],
-[1620,458],[1770,354],[1850,470],[2010,474],
-[2220,462],[2350,387],[2420,486],[2600,488],
-[2745,466],[2900,367],[2980,478],[3200,483],
-[3350,468],[3500,384],[3570,492],[3750,494],
-[3940,475],[4100,377],[4180,483],[4400,479],
-[4580,458],[4770,420],[4890,420],[5080,412],[5230,347],[5290,484],[5500,483],[5710,475],[5850,380],[5940,482],[6150,474],[FINISH+240,470]];
-const obstacleX=[960,1525,2660,3785,4490,5550,6150];
-const coinX=[180,285,468,533,615,755,873,1120,1210,1305,1420,1640,1705,1780,1900,2045,2250,2380,2470,2640,2830,2910,3030,3150,3400,3520,3640,3920,4090,4210,4350,4520,4720,4950,5160,5250,5400,5580,5800,5870,6030,6240];
-const soundNotes=[196,247,294,370,330,294,247,196,220,262,330,392,370,330,262,220];
-const input={gas:false,brake:false,back:false,forward:false};
-const state={phase:"ready",score:0,best:0,coins:0,crashes:0,clock:0,last:0,offset:0,particles:[],stars:[],pickups:[],boost:100,boostTime:0,mute:false,ac:null,lastMusic:-1,shake:0,notice:"",noticeTime:0,progress:0,finishBonus:0};
-const rider={x:100,y:380,vy:0,speed:0,angle:0,onGround:true,lastSlope:0,airtime:0,invuln:0,flips:0};
-try{state.best=Number(localStorage.getItem("biagio-scootercross-best")||0)||0;}catch(e){}
-function clamp(v,a,b){return Math.min(b,Math.max(a,v));}
-function lerp(a,b,t){return a+(b-a)*t;}
-function terrain(x){
- if(x<=stops[0][0])return stops[0][1];
- for(let i=1;i<stops.length;i++){
-  const a=stops[i-1],b=stops[i];
-  if(x<=b[0])return lerp(a[1],b[1],(x-a[0])/(b[0]-a[0]));
- }
- return stops[stops.length-1][1];
-}
-function slope(x){return Math.atan2(terrain(x+20)-terrain(x-20),40);}
-function drawFallback(){
- ctx.save();ctx.strokeStyle="#24283c";ctx.lineWidth=4;
- for(const dx of [-53,56]){ctx.fillStyle="#191e25";ctx.beginPath();ctx.arc(dx,0,22,0,7);ctx.fill();ctx.stroke();ctx.fillStyle="#c1d4d6";ctx.beginPath();ctx.arc(dx,0,11,0,7);ctx.fill();}
- ctx.fillStyle="#8f2145";ctx.fillRect(-70,-53,139,52);ctx.fillRect(43,-90,27,48);ctx.fillRect(-79,-69,44,38);
- ctx.fillStyle="#2868ac";ctx.fillRect(-37,-113,66,57);
- ctx.fillStyle="#e9b185";ctx.beginPath();ctx.arc(-12,-126,26,0,7);ctx.fill();
- ctx.fillStyle="#b72736";ctx.fillRect(-40,-153,60,13);
- ctx.fillStyle="#f2f3ea";ctx.fillRect(-32,-133,52,11);
- ctx.restore();
-}
-function newParticles(x,y,n,color){
- for(let i=0;i<n;i++)state.particles.push({x,y,vx:(Math.random()-.5)*150-45,vy:(Math.random()-.8)*160,life:.3+Math.random()*.55,age:0,r:1+Math.random()*5,color});
- if(state.particles.length>115)state.particles.splice(0,state.particles.length-115);
-}
-function init(){
- state.phase="ready";state.score=0;state.coins=0;state.crashes=0;state.clock=0;state.offset=0;state.particles=[];state.stars=[];state.pickups=coinX.map((x,i)=>({x,y:terrain(x)-((i%4===0||i%4===1)?91:49),taken:false,phase:i*.75}));
- state.boost=100;state.boostTime=0;state.shake=0;state.notice="";state.noticeTime=0;state.progress=0;state.finishBonus=0;state.lastMusic=-1;
- Object.assign(rider,{x:100,y:terrain(100)-BASELINE,vy:0,speed:0,angle:0,onGround:true,lastSlope:0,airtime:0,invuln:0,flips:0});
- for(const k in input)input[k]=false;
- refresh();
-}
-function gameAudio(){
- if(state.mute)return null;
- try{
-  if(!state.ac){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;state.ac=new A();}
-  if(state.ac.state==="suspended"&&state.ac.resume)state.ac.resume().catch(()=>{});
-  return state.ac;
- }catch(e){return null;}
-}
-function beep(freq,len=.08,type="square",volume=.02,slide=1){
- const a=gameAudio();if(!a)return;
- const t=a.currentTime,o=a.createOscillator(),g=a.createGain();
- o.type=type;o.frequency.setValueAtTime(freq,t);if(slide!==1)o.frequency.exponentialRampToValueAtTime(Math.max(35,freq*slide),t+len);
- g.gain.setValueAtTime(volume,t);g.gain.exponentialRampToValueAtTime(.0001,t+len);
- o.connect(g).connect(a.destination);o.start(t);o.stop(t+len+.015);
-}
-function music(){
- if(state.mute||state.phase!=="playing")return;
- const i=Math.floor(state.clock/0.22);
- if(i!==state.lastMusic){
-  state.lastMusic=i;
-  if(i%2===0)beep(soundNotes[Math.floor(i/2)%soundNotes.length]*2,.09,"square",.009);
-  if(i%4===0)beep(98+([0,4,7,5][Math.floor(i/8)%4])*5,.18,"triangle",.018);
- }
-}
-function textNotice(t){state.notice=t;state.noticeTime=1.8;}
-function refresh(){
- UI.points.textContent=String(Math.round(state.score)).padStart(5,"0");
- UI.clock.textContent=String(Math.floor(state.clock/60)).padStart(2,"0")+":"+String(Math.floor(state.clock%60)).padStart(2,"0");
- UI.speed.textContent=Math.round(rider.speed*.34)+" km/h";
- UI.lives.textContent="♥ ".repeat(Math.max(0,3-state.crashes)).trim()||"—";
- UI.record.textContent=String(Math.round(state.best)).padStart(5,"0");
- UI.coins.textContent="🟡 "+state.coins+" monete";
- UI.boost.textContent="TURBO "+Math.floor(state.boost)+"%";
- state.progress=clamp(rider.x/FINISH*100,0,100);UI.bar.style.width=state.progress+"%";
-}
-function record(){
- if(state.score>state.best){state.best=state.score;try{localStorage.setItem("biagio-scootercross-best",String(Math.round(state.best)));}catch(e){}}
-}
-function whatsAppLink(){
- const url="https://czekuns.github.io/Effettokarmagra/games/scootercross/";
- const msg="🛵 Ho fatto "+Math.round(state.score)+" punti a *Biagio Gelo: Scootercross* su Arcade Club! Riesci a battermi? Gioca anche tu: "+url;
- return "https://wa.me/?text="+encodeURIComponent(msg);
-}
-function overlay(kind,heading,msg,button,share){
- UI.kicker.textContent=kind;UI.headline.textContent=heading;UI.message.textContent=msg;UI.start.textContent=button;
- UI.share.hidden=!share;
- if(share)UI.share.href=whatsAppLink();
- UI.shade.classList.remove("hidden");
-}
-function start(){
- init();state.phase="playing";UI.shade.classList.add("hidden");UI.share.hidden=true;gameAudio();beep(540,.13,"square",.04,1.5);
-}
-function end(win){
- if(state.phase!=="playing")return;
- state.phase=win?"finished":"over";
- if(win){state.finishBonus=Math.max(0,Math.round((115-state.clock)*24));state.score+=state.finishBonus;}
- record();refresh();for(const k in input)input[k]=false;
- beep(win?880:145,.27,win?"square":"sawtooth",.045,win?1.4:.42);
- overlay(win?"TRAGUARDO RAGGIUNTO":"PARTITA TERMINATA",win?"TRAGUARDO!":"GAME OVER",win?"Hai completato la pista in "+state.clock.toFixed(1)+" secondi, raccolto "+state.coins+" monete e ottenuto "+Math.round(state.score)+" punti.": "Hai esaurito le tre vite. Punti: "+Math.round(state.score)+". Riprova per battere il record!","RIGIOCA ↻",true);
-}
-function crash(reason){
- if(rider.invuln>0||state.phase!=="playing")return;
- state.crashes++;rider.invuln=2.8;state.shake=13;
- newParticles(rider.x,rider.y,17,"#f9c06d");
- beep(180,.3,"sawtooth",.04,.5);
- if(state.crashes>=3){end(false);return;}
- textNotice(reason+" · VITA PERSA");
- rider.x=Math.max(110,rider.x-120);rider.y=terrain(rider.x)-BASELINE;rider.vy=0;rider.speed=60;rider.angle=slope(rider.x);rider.onGround=true;rider.airtime=0;
-}
-function turbo(){
- if(state.phase!=="playing"||state.boost<35||state.boostTime>0)return;
- state.boost-=35;state.boostTime=.82;rider.speed=Math.min(MAX_SPEED+75,Math.max(235,rider.speed+95));textNotice("TURBO!");beep(420,.16,"sawtooth",.023,2);
-}
-function simulate(dt){
- state.clock+=dt;
- if(rider.invuln>0)rider.invuln=Math.max(0,rider.invuln-dt);
- state.boostTime=Math.max(0,state.boostTime-dt);
- state.boost=clamp(state.boost+dt*2.6,0,100);
- state.shake=Math.max(0,state.shake-dt*25);state.noticeTime=Math.max(0,state.noticeTime-dt);
- let throttle=input.gas?235:0;
- if(input.brake)throttle-=435;
- const drag=rider.onGround?64:22;
- rider.speed=clamp(rider.speed+(throttle-drag)*dt,0,MAX_SPEED+(state.boostTime>0?75:0));
- if(state.boostTime>0)rider.speed=Math.max(rider.speed,245);
- const oldX=rider.x,oldSlope=slope(oldX);
- rider.x+=rider.speed*dt;
- const roadSlope=slope(rider.x),targetY=terrain(rider.x)-BASELINE;
- if(rider.onGround){
-  // The sharp change after an uphill ramp launches the scooter.
-  const rampIndex=stops.findIndex((b,i)=>i>0&&i<stops.length-1&&oldX<=b[0]&&rider.x>=b[0]&&((b[1]-stops[i-1][1])/(b[0]-stops[i-1][0]))<-.18&&((stops[i+1][1]-b[1])/(stops[i+1][0]-b[0]))>.12);
-  const lip=rampIndex>0&&rider.speed>115;
-  if(lip){
-   rider.onGround=false;const ramp=stops[rampIndex],before=stops[rampIndex-1],launchSlope=Math.atan2(ramp[1]-before[1],ramp[0]-before[0]);rider.vy=Math.sin(launchSlope)*rider.speed*1.15-95;rider.angle=launchSlope;
-   rider.y=terrain(oldX)-BASELINE;
-   rider.airtime=0;beep(540,.07,"triangle",.02,1.7);
-  }else{
-   rider.y=targetY;rider.vy=0;rider.angle=lerp(rider.angle,roadSlope,clamp(dt*6,0,1));
-  }
- }
- if(!rider.onGround){
-  rider.airtime+=dt;
-  rider.vy+=G*dt;rider.y+=rider.vy*dt;
-  if(input.forward)rider.angle+=2.05*dt;
-  if(input.back)rider.angle-=2.05*dt;
-  rider.angle=clamp(rider.angle,-1.35,1.35);
-  const nowGround=terrain(rider.x)-BASELINE;
-  if(rider.y>=nowGround&&rider.vy>0){
-   const error=Math.abs(rider.angle-roadSlope),impact=rider.vy;
-   rider.y=nowGround;rider.vy=0;rider.onGround=true;
-   if(error>.96||impact>940){crash("ATTERRAGGIO STORTO");}
-   else {
-    if(rider.airtime>.23){const bonus=Math.round(Math.min(rider.airtime,1.8)*120);state.score+=bonus;textNotice("SALTO +"+bonus);beep(735,.09,"triangle",.025);newParticles(rider.x,rider.y+BASELINE,6,"#eed19a");}
-    rider.angle=lerp(rider.angle,roadSlope,.65);rider.speed*=error>.46?.8:.99;
-   }
-   rider.airtime=0;
-  }
- }
- if(rider.onGround&&rider.speed>80&&Math.random()<.3)newParticles(rider.x-53,rider.y+12,1,"#e8c08a");
- for(const p of state.pickups)if(!p.taken&&Math.abs(rider.x-p.x)<37&&Math.abs((rider.y-33)-p.y)<63){
-  p.taken=true;state.coins++;state.score+=100;state.boost=clamp(state.boost+12,0,100);
-  beep(670,.08,"square",.034,1.45);newParticles(p.x,p.y,8,"#ffe99b");
- }
- for(const x of obstacleX)if(Math.abs(rider.x-x)<35&&rider.onGround&&rider.invuln<=0&&rider.speed>50){
-  if(rider.speed>MAX_SPEED+20)crash("OSTACOLO");
-  else{
-   rider.speed=Math.max(55,rider.speed*.32);rider.invuln=1.1;
-   textNotice("BARILE! RALLENTA");newParticles(rider.x,rider.y+5,7,"#f4b675");beep(230,.13,"triangle",.026,.7);
-  }
-  break;
- }
- state.particles=state.particles.filter(p=>p.age<p.life);
- for(const p of state.particles){p.age+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=185*dt;}
- if(rider.x>=FINISH){end(true);return;}
- if(rider.y>710){crash("CADUTA");}
- music();refresh();
-}
-function hillLayer(camera,depth,color,base,amp,scale){
- ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,H);
- for(let sx=0;sx<=W+25;sx+=18){
-  const wx=(sx+camera*depth)*scale;
-  const y=base+Math.sin(wx*.008)*amp+Math.sin(wx*.019+2)*amp*.32;
-  ctx.lineTo(sx,y);
- }
- ctx.lineTo(W,H);ctx.closePath();ctx.fill();
-}
-function renderWorld(){
- const cam=state.offset,sky=ctx.createLinearGradient(0,0,0,H);
- sky.addColorStop(0,"#2d83e4");sky.addColorStop(.53,"#8bccef");sky.addColorStop(1,"#e7eed1");
- ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
- ctx.fillStyle="#fff6de";ctx.beginPath();ctx.arc(776-cam*.018,73,47,0,7);ctx.fill();
- for(let i=0;i<11;i++){
-  const x=((i*281-cam*.12)%1550+1550)%1550-170,y=62+i%4*41;
-  ctx.globalAlpha=.32;ctx.fillStyle="#fffef7";
-  ctx.beginPath();ctx.ellipse(x,y,52,13,0,0,7);ctx.ellipse(x+30,y+5,46,16,0,0,7);ctx.fill();
- }ctx.globalAlpha=1;
- hillLayer(cam,.13,"#8ab0aa",276,36,.7);
- hillLayer(cam,.22,"#619d83",332,47,.9);
- hillLayer(cam,.37,"#387c68",383,39,1.1);
- for(let i=0;i<25;i++){
-  const x=i*215+90-cam*.45;if(x < -50||x>W+50)continue;
-  const y=385+Math.sin(i*8)*16;
-  ctx.fillStyle="#285f50";ctx.fillRect(x-5,y-37,10,44);
-  for(let j=0;j<3;j++){ctx.beginPath();ctx.fillStyle=j%2?"#3c805a":"#2d7157";ctx.arc(x+(j-1)*9,y-33-j%2*9,17,0,7);ctx.fill();}
- }
- // Ground profile.
- ctx.save();ctx.translate(-cam,0);
- ctx.beginPath();ctx.moveTo(cam-45,H+50);
- for(let x=Math.floor((cam-50)/10)*10;x<=cam+W+65;x+=10)ctx.lineTo(x,terrain(x));
- ctx.lineTo(cam+W+75,H+80);ctx.closePath();
- ctx.fillStyle="#956139";ctx.fill();
- ctx.save();ctx.clip();for(let x=Math.floor(cam/36)*36-50;x<cam+W+75;x+=36){
-  let y=terrain(x);ctx.strokeStyle="#ae794c";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,y+24);ctx.lineTo(x+17,y+27);ctx.stroke();
-  ctx.fillStyle="#774522";ctx.fillRect(x+7,y+55,15,4);
- }ctx.restore();
- ctx.beginPath();for(let x=Math.floor((cam-40)/8)*8;x<=cam+W+48;x+=8){if(x===Math.floor((cam-40)/8)*8)ctx.moveTo(x,terrain(x));else ctx.lineTo(x,terrain(x));}
- ctx.strokeStyle="#543d31";ctx.lineWidth=12;ctx.stroke();
- ctx.strokeStyle="#eab47a";ctx.lineWidth=6;ctx.stroke();
- // Ramps are integrated into ground; mark their leading edges.
- for(let i=2;i<stops.length-1;i++){
-  let a=stops[i-1],b=stops[i],c=stops[i+1];
-  if(b[0]<cam-50||b[0]>cam+W+50)continue;
-  if((b[1]-a[1])/(b[0]-a[0])<-.2&&(c[1]-b[1])/(c[0]-b[0])>.05){
-   ctx.fillStyle="#e8ab60";ctx.fillRect(b[0]-28,b[1]-9,30,7);
-   ctx.strokeStyle="#633a22";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(b[0]-26,b[1]+10);ctx.lineTo(b[0]-15,b[1]-3);ctx.lineTo(b[0],b[1]+10);ctx.stroke();
-  }
- }
- // Ground hazards.
- for(const x of obstacleX){
-  if(x<cam-70||x>cam+W+70)continue;
-  const y=terrain(x);
-  ctx.fillStyle="#1e2430";ctx.beginPath();ctx.ellipse(x,y-2,29,11,0,0,7);ctx.fill();
-  ctx.fillStyle="#a33d33";ctx.fillRect(x-22,y-40,44,36);
-  ctx.fillStyle="#cfa68a";ctx.fillRect(x-18,y-33,36,7);
-  ctx.strokeStyle="#f1e8cb";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x-17,y-31);ctx.lineTo(x+15,y-7);ctx.moveTo(x+15,y-31);ctx.lineTo(x-17,y-7);ctx.stroke();
- }
- // Floating collectibles.
- for(const p of state.pickups)if(!p.taken&&p.x>cam-50&&p.x<cam+W+50){
-  const wobble=Math.sin(state.clock*5+p.phase)*4;
-  ctx.save();ctx.translate(p.x,p.y+wobble);
-  ctx.shadowColor="#ffe06a";ctx.shadowBlur=14;
-  ctx.fillStyle="#d78a16";ctx.beginPath();ctx.ellipse(0,0,17,20,0,0,7);ctx.fill();
-  ctx.fillStyle="#ffe382";ctx.beginPath();ctx.ellipse(-2,-2,13,16,0,0,7);ctx.fill();
-  ctx.shadowBlur=0;ctx.font="bold 23px system-ui";ctx.textAlign="center";ctx.fillStyle="#a76516";ctx.fillText("★",-2,6);
-  ctx.restore();
- }
- // Finish.
- const fy=terrain(FINISH);ctx.fillStyle="#e8e6dd";ctx.fillRect(FINISH,fy-220,9,218);
- for(let j=0;j<4;j++)for(let k=0;k<4;k++){ctx.fillStyle=(j+k)%2?"#f3eddf":"#20282c";ctx.fillRect(FINISH+9+j*16,fy-216+k*16,16,16);}
- ctx.fillStyle="#eea044";ctx.font="bold 20px system-ui";ctx.textAlign="center";ctx.fillText("FINISH",FINISH+40,fy-232);
- // Scooter center point at (rider.x, rider.y).
- if(rider.invuln<=0||Math.floor(state.clock*12)%2===0){
-  ctx.save();ctx.translate(rider.x,rider.y);ctx.rotate(rider.angle);
-  const im=sprite;
-  if(im.complete&&im.naturalWidth)ctx.drawImage(im,-100,-126,200,144);
-  else drawFallback();
-  if(state.boostTime>0){ctx.fillStyle="#ffbc52";ctx.beginPath();ctx.moveTo(-93,-33);ctx.lineTo(-158,-50+Math.sin(state.clock*60)*8);ctx.lineTo(-103,-21);ctx.fill();}
-  ctx.restore();
- }
- for(const p of state.particles){
-  ctx.globalAlpha=clamp((p.life-p.age)/p.life,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();
- }ctx.globalAlpha=1;
- ctx.restore();
- if(state.noticeTime>0){
-  ctx.globalAlpha=Math.min(1,state.noticeTime);
-  ctx.font="900 32px system-ui";ctx.textAlign="center";ctx.shadowColor="#633c23";ctx.shadowBlur=12;ctx.fillStyle="#fff3c5";ctx.fillText(state.notice,W/2,110);
-  ctx.globalAlpha=1;ctx.shadowBlur=0;
- }
-}
-function render(){
- ctx.save();ctx.clearRect(0,0,W,H);
- state.offset=clamp(rider.x-255,0,Math.max(0,FINISH-W+140));
- if(state.shake>0)ctx.translate((Math.random()-.5)*state.shake,(Math.random()-.5)*state.shake);
- renderWorld();ctx.restore();
-}
-const controlMap={ArrowRight:"gas",d:"gas",D:"gas",ArrowLeft:"brake",a:"brake",A:"brake",ArrowDown:"back",s:"back",S:"back",ArrowUp:"forward",w:"forward",W:"forward"};
-window.addEventListener("keydown",e=>{
- if(controlMap[e.key]){e.preventDefault();input[controlMap[e.key]]=true;}
- if(e.code==="Space"){e.preventDefault();if(state.phase==="ready"||state.phase==="over"||state.phase==="finished")start();else turbo();}
- if((e.key==="p"||e.key==="P")&&state.phase==="playing"){state.phase="paused";overlay("PAUSA","IN PAUSA","Riprendi la corsa quando vuoi.","RIPRENDI ▶",false);for(const k in input)input[k]=false;}
- else if((e.key==="p"||e.key==="P")&&state.phase==="paused")resume();
-});
-window.addEventListener("keyup",e=>{if(controlMap[e.key]){e.preventDefault();input[controlMap[e.key]]=false;}});
-function clearInput(){for(const k in input)input[k]=false;document.querySelectorAll(".ctrl").forEach(b=>b.classList.remove("held"));}
-window.addEventListener("blur",clearInput);
-document.querySelectorAll(".ctrl").forEach(button=>{
- const name=button.dataset.key;
- button.addEventListener("pointerdown",e=>{e.preventDefault();if(state.phase!=="playing")return;input[name]=true;button.classList.add("held");try{button.setPointerCapture(e.pointerId);}catch(_){}});
- function release(e){input[name]=false;button.classList.remove("held");}
- button.addEventListener("pointerup",release);button.addEventListener("pointercancel",release);button.addEventListener("lostpointercapture",release);
-});
-UI.turbo.addEventListener("click",turbo);
-function resume(){state.phase="playing";state.last=0;UI.shade.classList.add("hidden");UI.share.hidden=true;}
-UI.start.addEventListener("click",()=>{if(state.phase==="paused")resume();else start();});
-UI.sound.addEventListener("click",()=>{state.mute=!state.mute;UI.sound.textContent=state.mute?"♫ Audio OFF":"♫ Audio ON";if(!state.mute)beep(650,.1);});
-document.addEventListener("visibilitychange",()=>{if(document.hidden){clearInput();if(state.phase==="playing"){state.phase="paused";overlay("PAUSA","IN PAUSA","La partita è in pausa.","RIPRENDI ▶",false);}}});
-function frame(now){
- const dt=clamp((now-state.last)/1000||0,0,.038);state.last=now;
- if(state.phase==="playing")simulate(dt);
- render();requestAnimationFrame(frame);
-}
-init();requestAnimationFrame(frame);
-})();
-</script>
-</body></html>
+<script src="./game.js?v=2"></script>
+</body>
+</html>
