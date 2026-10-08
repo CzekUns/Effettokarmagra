@@ -109,7 +109,7 @@ a{color:inherit;text-decoration:none}
 <script>
 (function(){
 "use strict";
-const W=960,H=540,FINISH=4890,MAX_SPEED=395,G=975,BASELINE=12;
+const W=960,H=540,FINISH=6300,MAX_SPEED=275,G=975,BASELINE=12;
 const $=id=>document.getElementById(id),canvas=$("game"),ctx=canvas.getContext("2d");
 const UI={points:$("points"),clock:$("clock"),speed:$("speed"),lives:$("lives"),record:$("record"),coins:$("coins"),boost:$("boost-meter"),bar:$("distance-bar"),shade:$("shade"),kicker:$("kicker"),headline:$("headline"),message:$("message"),start:$("start"),share:$("share"),sound:$("sound"),turbo:$("boost-button")};
 const sprite=new Image();sprite.src="./assets/biagio-scooter.svg";
@@ -121,9 +121,9 @@ const stops=[
 [2745,466],[2900,367],[2980,478],[3200,483],
 [3350,468],[3500,384],[3570,492],[3750,494],
 [3940,475],[4100,377],[4180,483],[4400,479],
-[4580,458],[4770,420],[FINISH+240,420]];
-const obstacleX=[960,1525,2660,3785,4490];
-const coinX=[180,285,468,533,615,755,873,1120,1210,1305,1420,1640,1705,1780,1900,2045,2250,2380,2470,2640,2830,2910,3030,3150,3400,3520,3640,3920,4090,4210,4350,4520,4720];
+[4580,458],[4770,420],[4890,420],[5080,412],[5230,347],[5290,484],[5500,483],[5710,475],[5850,380],[5940,482],[6150,474],[FINISH+240,470]];
+const obstacleX=[960,1525,2660,3785,4490,5550,6150];
+const coinX=[180,285,468,533,615,755,873,1120,1210,1305,1420,1640,1705,1780,1900,2045,2250,2380,2470,2640,2830,2910,3030,3150,3400,3520,3640,3920,4090,4210,4350,4520,4720,4950,5160,5250,5400,5580,5800,5870,6030,6240];
 const soundNotes=[196,247,294,370,330,294,247,196,220,262,330,392,370,330,262,220];
 const input={gas:false,brake:false,back:false,forward:false};
 const state={phase:"ready",score:0,best:0,coins:0,crashes:0,clock:0,last:0,offset:0,particles:[],stars:[],pickups:[],boost:100,boostTime:0,mute:false,ac:null,lastMusic:-1,shake:0,notice:"",noticeTime:0,progress:0,finishBonus:0};
@@ -223,7 +223,7 @@ function end(win){
 }
 function crash(reason){
  if(rider.invuln>0||state.phase!=="playing")return;
- state.crashes++;rider.invuln=2.2;state.shake=13;
+ state.crashes++;rider.invuln=2.8;state.shake=13;
  newParticles(rider.x,rider.y,17,"#f9c06d");
  beep(180,.3,"sawtooth",.04,.5);
  if(state.crashes>=3){end(false);return;}
@@ -232,7 +232,7 @@ function crash(reason){
 }
 function turbo(){
  if(state.phase!=="playing"||state.boost<35||state.boostTime>0)return;
- state.boost-=35;state.boostTime=.82;rider.speed=Math.min(MAX_SPEED+95,Math.max(250,rider.speed+145));textNotice("TURBO!");beep(420,.16,"sawtooth",.023,2);
+ state.boost-=35;state.boostTime=.82;rider.speed=Math.min(MAX_SPEED+75,Math.max(235,rider.speed+95));textNotice("TURBO!");beep(420,.16,"sawtooth",.023,2);
 }
 function simulate(dt){
  state.clock+=dt;
@@ -240,19 +240,19 @@ function simulate(dt){
  state.boostTime=Math.max(0,state.boostTime-dt);
  state.boost=clamp(state.boost+dt*2.6,0,100);
  state.shake=Math.max(0,state.shake-dt*25);state.noticeTime=Math.max(0,state.noticeTime-dt);
- let throttle=input.gas?310:0;
- if(input.brake)throttle-=510;
- const drag=rider.onGround?75:25;
- rider.speed=clamp(rider.speed+(throttle-drag)*dt,0,MAX_SPEED+(state.boostTime>0?95:0));
- if(state.boostTime>0)rider.speed=Math.max(rider.speed,260);
+ let throttle=input.gas?235:0;
+ if(input.brake)throttle-=435;
+ const drag=rider.onGround?64:22;
+ rider.speed=clamp(rider.speed+(throttle-drag)*dt,0,MAX_SPEED+(state.boostTime>0?75:0));
+ if(state.boostTime>0)rider.speed=Math.max(rider.speed,245);
  const oldX=rider.x,oldSlope=slope(oldX);
  rider.x+=rider.speed*dt;
  const roadSlope=slope(rider.x),targetY=terrain(rider.x)-BASELINE;
  if(rider.onGround){
   // The sharp change after an uphill ramp launches the scooter.
-  const lip=oldSlope < -.26 && roadSlope>oldSlope+.18 && rider.speed>125;
+  const lip=stops.some((b,i)=>i>0&&i<stops.length-1&&oldX<=b[0]&&rider.x>=b[0]&&((b[1]-stops[i-1][1])/(b[0]-stops[i-1][0]))<-.18&&((stops[i+1][1]-b[1])/(stops[i+1][0]-b[0]))>.12)&&rider.speed>115;
   if(lip){
-   rider.onGround=false;rider.vy=Math.sin(oldSlope)*rider.speed*1.25-120;
+   rider.onGround=false;rider.vy=Math.sin(oldSlope)*rider.speed*1.15-95;
    rider.y=terrain(oldX)-BASELINE;
    rider.airtime=0;beep(540,.07,"triangle",.02,1.7);
   }else{
@@ -269,7 +269,7 @@ function simulate(dt){
   if(rider.y>=nowGround&&rider.vy>0){
    const error=Math.abs(rider.angle-roadSlope),impact=rider.vy;
    rider.y=nowGround;rider.vy=0;rider.onGround=true;
-   if(error>.74||impact>750){crash("ATTERRAGGIO STORTO");}
+   if(error>.96||impact>940){crash("ATTERRAGGIO STORTO");}
    else {
     if(rider.airtime>.23){const bonus=Math.round(Math.min(rider.airtime,1.8)*120);state.score+=bonus;textNotice("SALTO +"+bonus);beep(735,.09,"triangle",.025);newParticles(rider.x,rider.y+BASELINE,6,"#eed19a");}
     rider.angle=lerp(rider.angle,roadSlope,.65);rider.speed*=error>.46?.8:.99;
