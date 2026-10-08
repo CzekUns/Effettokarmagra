@@ -161,42 +161,181 @@ function tick(dt){
  if(player.x>=FINISH){end(true);return;}
  playMusic();hud();
 }
+function outlined(x,y,w,h,fill,outline="#29313b",rim="#e2c9a8"){
+ rect(outline,x-2,y-2,w+4,h+4);
+ rect(fill,x,y,w,h);
+ if(rim)rect(rim,x+2,y+2,w-5,2);
+}
+function windowBlock(x,y,variation){
+ rect("#5c554e",x-3,y-3,22,28);
+ rect("#ebdebd",x-2,y-2,20,25);
+ rect("#3c5b67",x+1,y,15,20);
+ rect("#83b4b3",x+2,y+1,12,13);
+ rect("#d7cfc0",x+8,y,2,19);
+ rect("#547178",x+1,y+13,15,2);
+ // Shutters in alternating sand/teal colors.
+ let shutter=variation%3===0?"#518476":"#aa7864";
+ rect(shutter,x-4,y,4,21);rect(shutter,x+17,y,4,21);
+ for(let k=0;k<4;k++){rect("#e2bda0",x-4,y+k*5,3,1);rect("#c5af87",x+17,y+k*5,4,1);}
+ rect("#e9cbae",x-5,y+22,27,3);
+}
+function balcony(x,y,w,variant){
+ rect("#404c56",x-5,y,w+10,4);
+ rect("#d4b3a0",x-4,y+1,w+8,2);
+ for(let i=0;i<w;i+=8)rect("#344855",x+i,y+3,2,11);
+ rect("#344855",x-5,y+12,w+10,3);
+ if(variant%2===0){
+  rect("#907063",x+5,y-3,12,4);rect("#398060",x+5,y-8,10,6);
+  rect("#548a62",x+8,y-11,3,5);
+ }
+}
+function roofAntenna(x,y,k){
+ rect("#5d6267",x+13,y-19,2,19);
+ rect("#d2dbd7",x+6,y-15,17,1);rect("#d2dbd7",x+8,y-9,12,1);
+ if(k%3===0){rect("#455869",x+32,y-13,13,12);rect("#202e43",x+30,y-14,16,3);}
+}
+function storefront(x,wallTop,w,index){
+ let theme=["#243e56","#4b3140","#28565a","#63513e","#343e60"][((index%5)+5)%5];
+ const sign=signs[((index%signs.length)+signs.length)%signs.length];
+ const shopTop=138+Math.floor(rnd(index*17+3)*9);
+ // Large shady storefronts rather than identical tiny squares.
+ rect("#d4b99a",x+4,shopTop-5,w-8,5);
+ rect("#32343d",x+5,shopTop,w-10,15);
+ rect(theme,x+7,shopTop+2,w-14,11);
+ text(sign,x+w/2,shopTop+11,Math.min(9,sign.length>8?7:8),"#ffebbd");
+ rect("#263541",x+7,shopTop+15,w-14,41);
+ rect("#8ec4bf",x+10,shopTop+18,w-20,32);
+ rect("#42636d",x+14,shopTop+18,w-28,32);
+ rect("#b8d5c7",x+18,shopTop+20,11,16);
+ rect("#718f95",x+w-27,shopTop+20,12,17);
+ rect("#c3cab5",x+29,shopTop+18,3,31);
+ if(index%3===0){
+  rect("#b66d56",x+10,shopTop+33,16,10);
+  rect("#ecb875",x+12,shopTop+35,12,7);
+ }
+ if(index%4===0){ // striped awnings hanging over the windows
+  rect("#323c43",x+2,shopTop+13,w-4,4);
+  for(let k=0;k<w-4;k+=10)rect(k%20===0?"#b94d50":"#ffe9d2",x+2+k,shopTop+17,9,10);
+  rect("#7c534b",x+2,shopTop+27,w-4,2);
+ }
+}
+function drawTownBlock(x,index){
+ const variation=((index%6)+6)%6;
+ const widths=[124,146,108,137,132,118],w=widths[variation];
+ const tops=[12,29,40,17,6,32],top=tops[variation];
+ const facade=["#d6a185","#d2c3ad","#e7b58e","#b2bab0","#e2bb93","#c9ad9f"][variation];
+ const shadow=["#986f6a","#9e9389","#af7f76","#7f9089","#bb927e","#9c8482"][variation];
+ const outline="#39434a";
+ // Different buildings with brick-red roofs, parapets and setbacks.
+ rect("#3c434c",x-4,top-3,w+9,190-top);
+ rect(shadow,x,top,w,190-top);
+ rect(facade,x+3,top+3,w-11,178-top);
+ rect("#f1d3b0",x+6,top+4,w-20,3);
+ rect("#705453",x-2,top-6,w+4,5);
+ rect("#a87164",x-1,top-9,w+2,3);
+ rect("#6e534e",x+w-8,top+2,8,178-top);
+ // Ornamental narrow façade bands.
+ for(let j=0;j<3;j++)rect(shadow,x+6+j*37,top+8,2,116-top);
+ // Balconies on upper floors.
+ const floorY=[top+19,top+65,top+105],columns=w>125?3:2;
+ for(let f=0;f<3;f++){
+  if(floorY[f]>127)continue;
+  for(let j=0;j<columns;j++){
+   const px=x+13+j*(columns===3?38:49),py=floorY[f];
+   windowBlock(px,py,variation+j+f);
+   if((j+f+variation)%3!==1)balcony(px-4,py+20,30,variation+j);
+   if((j+f+variation)%6===2){ // lowered canvas awning on some balconies
+    for(let k=0;k<4;k++)rect(k%2?"#f1d2bd":"#5d9094",px-7+k*8,py+8,7,7);
+   }
+  }
+ }
+ if(variation%2===1)roofAntenna(x+10,top,variation);
+ if(variation===3){ // inset stairwell tower on the left
+  rect("#b0a8a2",x+5,top-12,29,16);rect("#8fb8aa",x+12,top-7,15,9);
+  rect("#5f717a",x+17,top-7,2,9);
+ }
+ if(variation===2){ // Italian apartment satellite dishes
+  rect("#c7c6be",x+w-19,top-17,15,9);rect("#475968",x+w-12,top-10,2,10);
+ }
+ storefront(x,top,w, index);
+ return w;
+}
+function parkedCar(x,y,k){
+ const body=k%3===0?"#b34d4d":k%3===1?"#436884":"#dfc38f";
+ rect("#222c38",x+8,y+14,42,6);
+ rect("#262b37",x+4,y+9,8,10);rect("#262b37",x+45,y+9,8,10);
+ rect("#161d29",x+10,y+16,8,7);rect("#161d29",x+41,y+16,8,7);
+ rect("#87969a",x+12,y+17,5,4);rect("#87969a",x+43,y+17,5,4);
+ rect(body,x,y+7,56,12);
+ rect("#243340",x+8,y,34,12);rect(body,x+13,y-3,28,4);
+ rect("#b6ced1",x+11,y+1,11,7);rect("#bdd0cd",x+25,y+1,14,7);
+ rect("#d2af91",x+2,y+10,5,4);rect("#f1c86e",x+50,y+10,4,3);
+}
+function streetTree(x,y,k){
+ rect("#514d45",x-2,y-32,5,34);
+ rect("#756754",x-3,y-20,3,7);
+ for(let p of [[-12,-57,23,30],[3,-65,28,35],[-20,-48,29,26]]){
+  rect("#264c43",x+p[0]-2,y+p[1]-2,p[2]+4,p[3]+4);
+  rect((k%2)?"#46735b":"#356d57",x+p[0],y+p[1],p[2],p[3]);
+  rect("#6a9168",x+p[0]+4,y+p[1]+4,Math.max(5,p[2]-11),3);
+ }
+}
 function backdrop(){
  const cam=state.cam;
- rect("#7fb8d1",0,0,W,H);rect("#9fd4e5",0,65,W,78);
- for(let i=0;i<9;i++){let x=((i*167-Math.floor(cam*.09))%(W+150)+W+150)%(W+150)-50,y=14+i%3*20;
-  rect("#e6ecdf",x,y,36,8);rect("#f6eee0",x+8,y-4,20,5);rect("#e2ece0",x-12,y+6,58,7);}
- // Via Roma streetscape: apartment buildings, balconies, shutters, striped awnings.
- const parallax=.46,step=86,offset=Math.floor(cam*parallax),first=Math.floor(offset/step)-1;
- for(let i=first;i<first+9;i++){
-  let x=i*step-offset,variant=Math.floor(rnd(i*29)*colors.length),roof=37+Math.floor(rnd(i*31)*24);
-  rect("#4a4a55",x+1,roof,83,143);
-  rect(colors[variant],x+3,roof+2,79,137);
-  rect("#866d69",x+2,roof+2,81,4);
-  for(let row=0;row<2;row++)for(let col=0;col<3;col++){
-   const xx=x+11+col*23, yy=roof+18+row*39;
-   rect("#677b88",xx-2,yy-2,17,25);rect("#b3cec6",xx,yy,13,18);
-   rect("#5b7b75",xx,yy,4,18);rect("#c8b79c",xx,yy+15,13,3);
-   rect("#3b4c57",xx-6,yy+22,25,3);
-   for(let b=0;b<3;b++)rect("#465966",xx-5+b*8,yy+24,2,6);
+ // Original limited palette reminiscent of 1990s 16-bit arcade hardware.
+ rect("#6eafb9",0,0,W,184);
+ rect("#8cc0c5",0,45,W,61);
+ rect("#bfd6c7",0,96,W,84);
+ // Sky gradients rendered as broad color bands.
+ rect("#6a9dac",0,0,W,24);rect("#81b5bd",0,24,W,23);
+ for(let i=-1;i<7;i++){
+   const x=((i*141-Math.floor(cam*.11))%(W+160)+W+160)%(W+160)-60,y=14+(i+8)%3*17;
+   rect("#d8e6d6",x,y+7,52,9);
+   rect("#f2e7d8",x+10,y+2,34,10);rect("#f2e7d8",x+18,y-3,18,6);
+   rect("#b5ccca",x+2,y+16,60,3);
+ }
+ // Remote skyline: minarets/rooftops / flat urban silhouettes.
+ const par=.19,shift=Math.floor(cam*par);
+ for(let i=-1;i<20;i++){
+  const x=i*48-shift%48,w=33+Math.floor(rnd(i*11)*21),t=93+Math.floor(rnd(i*29)*20);
+  rect(i%2?"#899b98":"#91ada9",x,t,w,183-t);
+  rect("#637f82",x+4,t-2,16,3);
+  if(i%3===0){rect("#879992",x+12,t-12,3,12);rect("#b4c2b5",x+5,t-11,16,2);}
+ }
+ // Street-facing buildings: varied widths and silhouette.
+ const step=128,offset=Math.floor(cam*.44);
+ for(let i=Math.floor(offset/step)-1;i<Math.floor(offset/step)+7;i++){
+  const x=i*step-offset;
+  drawTownBlock(x,i);
+ }
+ // Continuous raised stone pavement with curb texture.
+ rect("#807d72",0,179,W,12);
+ rect("#c9bda7",0,181,W,8);
+ rect("#faf0da",0,179,W,2);
+ rect("#585e5f",0,190,W,7);
+ rect("#ded0b7",0,190,W,3);
+ for(let x=-(Math.floor(cam*.69)%32);x<W+32;x+=32){
+   rect("#a59886",x,185,2,6);rect("#6a6e6a",x+15,192,14,2);
+ }
+ // Near layer: trees, scooters, poles, newspaper stalls, urban street furniture.
+ const mov=Math.floor(cam*.68);
+ for(let i=Math.floor(mov/166)-2;i<Math.floor(mov/166)+7;i++){
+  const x=i*166-mov;
+  if(i%3===0){
+   streetTree(x+123,181,i);
+  }else if(i%3===1){
+   rect("#454d58",x+74,115,3,70);rect("#e8dbc4",x+65,113,19,4);
+   rect("#f9d6a3",x+81,112,6,6);rect("#48596a",x+80,115,3,2);
+   parkedCar(x-20,162,i);
+  }else{
+   rect("#5a6067",x+101,134,3,51);rect("#587c82",x+99,136,13,17);
+   rect("#c9d7c7",x+101,138,9,5);
+   parkedCar(x-22,162,i);
   }
-  rect("#3b4f5f",x+5,roof+102,75,12);
-  text(signs[((i%signs.length)+signs.length)%signs.length],x+43,roof+111,7,"#ffe5ba");
-  for(let j=0;j<9;j++)rect(j%2?"#e3e1d2":"#9c4350",x+5+j*8,roof+114,8,9);
-  rect("#405969",x+7,roof+123,31,22);rect("#a5c9c6",x+9,roof+125,27,16);
-  rect("#405969",x+45,roof+123,31,22);rect("#a5c9c6",x+47,roof+125,27,16);
  }
- rect("#a3a29c",0,183,W,9);rect("#737979",0,191,W,6);
- for(let i=Math.floor(cam*.58/165)-1;i<Math.floor(cam*.58/165)+5;i++){
-  let x=i*165-Math.floor(cam*.58);
-  rect("#4e5756",x+61,138,3,49);rect("#28394a",x+58,138,18,3);rect("#f0e0a0",x+70,139,7,5);
-  rect("#5b5549",x+110,170,4,24);rect("#3b8063",x+98,148,31,29);rect("#4a8e69",x+105,142,20,20);
-  // parked car silhouette behind pavement
-  if(i%2===0){rect("#344151",x-22,176,42,13);rect("#7f5060",x-18,170,32,11);rect("#a8cfcb",x-12,171,18,7);rect("#202a33",x-15,188,8,7);rect("#202a33",x+8,188,8,7);}
- }
- // Nameplate.
- rect("#22334a",350,4,123,26);rect("#b78c63",352,6,119,22);rect("#2b4254",354,8,115,18);
- text("VIA ROMA",412,16,10,"#ffe1a1");text("MELITO DI NAPOLI",412,24,6,"#d2e8dd");
+ // Town plate integrated into the scene (small, avoids covering gameplay).
+ rect("#263943",7,6,102,24);rect("#c2a58b",9,8,98,20);rect("#294a55",11,10,94,16);
+ text("VIA ROMA",58,18,10,"#fff0c3");text("MELITO DI NAPOLI",58,24,6,"#d4e3d8");
 }
 function track(){
  let camera=state.cam;
