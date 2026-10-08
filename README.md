@@ -7,6 +7,7 @@ Raccolta di giochi arcade indipendenti in HTML, CSS e JavaScript, ospitata da Gi
 - **Sala giochi:** https://czekuns.github.io/Effettokarmagra/
 - **Biagio Gelo in Effetto Karmagra:** https://czekuns.github.io/Effettokarmagra/games/effetto-karmagra/
 - **Biagio Gelo — Pesca Grossa:** https://czekuns.github.io/Effettokarmagra/games/pesca-grossa/
+- **Biagio Gelo: Scootercross:** https://czekuns.github.io/Effettokarmagra/games/scootercross/
 
 GitHub Pages: `Settings → Pages → Deploy from a branch → main → /(root)`.
 
@@ -23,6 +24,10 @@ GitHub Pages: `Settings → Pages → Deploy from a branch → main → /(root)`
 │   └── pesca-grossa/
 │       ├── index.html             # Pesca touch + tastiera
 │       └── fish.svg               # Icona vettoriale del gioco
+│   └── scootercross/
+│       ├── index.html             # Terzo gioco con fisica arcade
+│       └── assets/
+│           └── biagio-scooter.svg # Biagio sullo scooter bordeaux con bauletto
 ├── assets/                        # SVG condivisi del primo gioco
 │   ├── biaggio-normal.svg
 │   ├── biaggio-power.svg
@@ -77,6 +82,19 @@ Secondo arcade giocabile, con lo **stesso SVG di Biagio calvo e vestito di nero*
 - Sfida a tempo da 90 secondi, bonus per catture consecutive, record salvato nel browser.
 - Supporto mobile, mouse, frecce + spazio; piccoli effetti e accompagnamento audio sintetizzato.
 - Nessuna risorsa esterna o backend.
+
+## Biagio Gelo: Scootercross
+
+Terzo titolo di Arcade Club, in stile vecchio motocross arcade, con Biagio riconoscibile dall'abbigliamento della reference (cappellino rosso, occhiali bianchi, maglietta blu, pantaloncini beige e tracolla) su uno **scooter bordeaux con bauletto**. Il personaggio e il mezzo sono un asset SVG nativo realizzato appositamente per il gioco.
+
+- Pista mediterranea a scorrimento laterale lunga 6.300 unità, rampe, salti, barili, monete e traguardo.
+- Controlli PC: frecce o WASD per accelerare, frenare, cabrare e picchiare; barra spaziatrice per il turbo; P per la pausa.
+- Controlli smartphone: pulsanti ampi sotto il gioco, pressione continua, turbo dedicato.
+- Fisica arcade con gravità, rotazione in volo, atterraggi ed eventuali cadute; tre vite.
+- Bonus salti e monete, turbo ricaricabile, punteggio, cronometro e record nel browser.
+- Musica ed effetti sonori 8-bit generati con Web Audio e disattivabili.
+- Alla fine della corsa o dopo il game over: pulsante WhatsApp che condivide il punteggio e rimanda direttamente al gioco.
+- Il gioco è interamente statico in HTML/CSS/JS + SVG e non dipende da framework esterni.
 
 ## Tecnologia
 
