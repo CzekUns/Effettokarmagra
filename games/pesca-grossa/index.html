@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#082b35">
+<meta name="description" content="Biagio Gelo: Pesca Grossa. Un arcade di pesca con lancio, abboccata e recupero della lenza.">
+<title>Biagio Gelo — Pesca Grossa | Arcade Club</title>
+<link rel="icon" href="./fish.svg" type="image/svg+xml">
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:#051b25;color:#f5ead0}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 55% -15%,#1b6875,#072b37 55%,#03141e);overflow-x:hidden}
+button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.shell{max-width:850px;padding:12px clamp(8px,2.7vw,21px) 40px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 11px}
+.back{font-weight:800;text-decoration:none;color:#b1e4dc;border:1px solid #548d9580;background:#143744;border-radius:9px;padding:9px 10px;font-size:12px;white-space:nowrap}
+.brand{text-align:center;min-width:0}
+.brand small{display:block;font-size:9px;letter-spacing:.15em;font-weight:950;color:#92d9ce}
+.brand h1{margin:2px 0 0;font:900 clamp(22px,4.3vw,38px)/1.02 Georgia,serif;letter-spacing:-.02em;color:#fff1bf;text-shadow:2px 3px #074a59}
+.brand h1 span{color:#94f2d5}
+.sound{white-space:nowrap;border:1px solid #548d9580;color:#b5e5e3;background:#143744;border-radius:9px;padding:9px 10px;font-size:12px;font-weight:800}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:8px;border:3px solid #356f7e;border-radius:14px 14px 0 0;padding:9px 17px;background:linear-gradient(#0e414f,#082b39);box-shadow:inset 0 1px #8ab8b466}
+.hud div{display:flex;flex-direction:column;gap:2px}
+.hud div:last-child{text-align:right}
+.hud small{font-size:10px;font-weight:900;color:#8ad4d7;letter-spacing:.14em}
+.hud strong{font:bold clamp(20px,4vw,29px) monospace;color:#ffe59a}
+.hud .time strong{color:#b7f2dd;text-align:center}
+.board{position:relative;border:4px solid #356f7e;border-top:0;border-radius:0 0 14px 14px;overflow:hidden;box-shadow:0 13px 34px #00121999;background:#11566a}
+canvas{display:block;width:100%;height:auto;aspect-ratio:800/760;touch-action:none;cursor:crosshair}
+.shade{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:15px;background:#041e2bb9;backdrop-filter:blur(4px)}
+.shade.hidden{display:none}
+.dialog{border:2px solid #efc77e;border-radius:20px;text-align:center;background:linear-gradient(140deg,#15556a,#082b3b);box-shadow:0 12px 55px #0009;padding:clamp(20px,5vw,34px);max-width:430px;width:100%}
+.dialog-kicker{font-size:10px;color:#a3e6d4;letter-spacing:.17em;font-weight:900}
+.dialog h2{font:900 clamp(29px,6vw,47px)/1.06 Georgia,serif;color:#ffe7a7;margin:12px 0}
+.dialog p{line-height:1.65;font-size:14px;color:#d2eee8}
+.dialog button{border:0;border-radius:12px;background:linear-gradient(#ffe9ab,#f2b85e);color:#282327;padding:15px 27px;box-shadow:0 4px #a8783c;font-weight:1000;letter-spacing:.04em;margin-top:15px}
+.action-panel{border:2px solid #377e8a;border-radius:15px;background:linear-gradient(145deg,#103d4b,#092936);padding:13px 15px 17px;margin:13px 0 0}
+.modebar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:11px}
+#status{font-weight:900;font-size:14px;color:#ffe2a1}
+#tip{font-size:11px;color:#9dd8cf;text-align:right;line-height:1.4}
+.action-row{display:flex;align-items:stretch;gap:13px}
+.reel{flex:0 0 46%;min-height:92px;display:grid;place-items:center;border:2px solid #ffc57c;border-radius:14px;background:linear-gradient(145deg,#f9d59a,#e99e4f);color:#2b2930;font-weight:1000;font-size:clamp(17px,3.2vw,23px);box-shadow:0 5px #89532e;user-select:none;touch-action:none}
+.reel:active,.reel.active{background:linear-gradient(#fff0b9,#edb461);transform:translateY(3px);box-shadow:0 2px #89532e}
+.reel:disabled{opacity:.72;cursor:default}
+.meters{display:flex;flex:1;flex-direction:column;gap:10px;justify-content:center;min-width:0}
+.gauge-label{display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:.1em;font-weight:900;color:#b3e2df}
+.gauge-label output{color:#ffdb95}
+.track{height:13px;background:#031b27;border:1px solid #49808a;border-radius:9px;overflow:hidden}
+.track>div{height:100%;width:0%;border-radius:9px;transition:width .07s linear}
+#tension-bar{background:linear-gradient(90deg,#84da91 0%,#eecb66 56%,#f46e70 100%)}
+#reel-bar{background:linear-gradient(90deg,#51a7d5,#9bf2dc)}
+.hint{font-size:11px;text-align:center;color:#9acac8;margin:12px 0 0;line-height:1.5}
+footer{text-align:center;font-size:10px;color:#719fa5;letter-spacing:.09em;margin-top:17px}
+@media(max-width:520px){
+ .shell{padding:5px 7px 30px}
+ header{margin-bottom:6px}
+ .brand h1{font-size:clamp(19px,6.3vw,28px)}
+ .brand small{font-size:8px}
+ .back,.sound{padding:7px 6px;font-size:10px}
+ .hud{padding:7px 9px}
+ .hud small{font-size:9px}
+ .hud strong{font-size:21px}
+ .action-panel{margin-top:10px;padding:12px 10px 14px}
+ #status{font-size:13px}
+ #tip{font-size:10px}
+ .reel{min-height:99px;flex-basis:46%;font-size:18px}
+ .hint{font-size:10px}
+}
+@media(max-width:365px){
+ .brand h1{font-size:18px}
+ .back,.sound{font-size:9px}
+ #tip{max-width:135px}
+ .reel{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){.track>div{transition:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header>
+ <a class="back" href="../../index.html">← Arcade Club</a>
+ <div class="brand"><small>BIAGIO GELO PRESENTA</small><h1><span>PESCA</span> GROSSA</h1></div>
+ <button id="sound" class="sound" type="button" aria-label="Attiva o disattiva gli effetti sonori">♫ Audio ON</button>
+</header>
+<div class="hud">
+ <div><small>PUNTI</small><strong id="score">00000</strong></div>
+ <div class="time"><small>TEMPO</small><strong id="clock">01:30</strong></div>
+ <div><small>RECORD</small><strong id="best">00000</strong></div>
+</div>
+<div class="board">
+ <canvas id="lake" width="800" height="760" tabindex="0" aria-label="Lago di pesca, tocca un pesce per lanciare la lenza"></canvas>
+ <div class="shade" id="shade">
+  <div class="dialog">
+   <div class="dialog-kicker" id="kicker">ARCADE CLUB · NUOVO GIOCO</div>
+   <h2 id="headline">PESCA GROSSA!</h2>
+   <p id="message">Biagio Gelo è tornato, calvo e vestito di nero. Tocca il lago per lanciare l'amo. Quando un pesce abbocca, tieni premuto <b>RECUPERA</b> e rilascialo se la tensione sale troppo.</p>
+   <button id="start" type="button">SI VA A PESCA ▶</button>
+  </div>
+ </div>
+</div>
+<div class="action-panel">
+ <div class="modebar"><span id="status">PRONTO A PESCARE</span><span id="tip">Tocca il lago per lanciare</span></div>
+ <div class="action-row">
+  <button class="reel" id="reel" type="button" aria-label="Lancia la lenza o tieni premuto per recuperarla">🎣 LANCIA</button>
+  <div class="meters">
+   <div class="gauge-label"><span>TENSIONE</span><output id="tension-num">0%</output></div>
+   <div class="track"><div id="tension-bar"></div></div>
+   <div class="gauge-label"><span>RECUPERO</span><output id="reel-num">0%</output></div>
+   <div class="track"><div id="reel-bar"></div></div>
+  </div>
+ </div>
+ <p class="hint">TOCCA IL LAGO O USA LE FRECCE + SPAZIO · TIENI PREMUTO PER RECUPERARE · RILASCIA PRIMA DI SPEZZARE LA LENZA</p>
+</div>
+<footer>ARCADE CLUB · UN ALTRO GIRO, UN'ALTRA PESCA</footer>
+</div>
+<script>
+(function(){
+"use strict";
+var W=800,H=760,BOAT={x:400,y:165},DURATION=90;
+var E=function(id){return document.getElementById(id);},canvas=E("lake"),ctx=canvas.getContext("2d");
+var ui={score:E("score"),clock:E("clock"),best:E("best"),shade:E("shade"),kicker:E("kicker"),headline:E("headline"),message:E("message"),start:E("start"),sound:E("sound"),reel:E("reel"),status:E("status"),tip:E("tip"),tension:E("tension-bar"),tensionNum:E("tension-num"),progress:E("reel-bar"),progressNum:E("reel-num")};
+var biagio=new Image();biagio.src="../../assets/biaggio-power.svg";
+var kinds=[
+ {name:"Sardina",points:50,size:19,color:"#9ee5ed",dark:"#3285a6",chance:50,resistance:.86},
+ {name:"Orata",points:120,size:25,color:"#ffe1a2",dark:"#9c7950",chance:30,resistance:1},
+ {name:"Spigola",points:230,size:30,color:"#bfe8bd",dark:"#3c9377",chance:15,resistance:1.2},
+ {name:"Pesce d'oro",points:500,size:34,color:"#ffd55e",dark:"#ec8a30",chance:5,resistance:1.45}
+];
+var state={phase:"ready",score:0,best:0,seconds:DURATION,fish:[],floaters:[],ripples:[],aim:{x:400,y:418},hook:{mode:"idle",x:400,y:300,startX:400,startY:165,destX:400,destY:400,t:0,wait:0,fish:null,distance:0,initial:0,tension:0},press:false,elapsed:0,last:0,mute:false,actx:null,grain:null,sfxCount:0,notice:"",noticeLife:0,combo:0};
+try{state.best=Math.max(0,Number(localStorage.getItem("biagio-pesca-record")||0)||0);}catch(e){}
+function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
+function rnd(a,b){return a+Math.random()*(b-a);}
+function dist(x,y,a,b){return Math.hypot(x-a,y-b);}
+function pickKind(){var n=Math.random()*100;for(var i=0;i<kinds.length;i++){n-=kinds[i].chance;if(n<0)return kinds[i];}return kinds[0];}
+function fishSpawn(except){
+ var kind=pickKind(),x=rnd(75,725),y=rnd(255,685),dir=Math.random()<.5?-1:1;
+ return{id:Math.random(),kind:kind,x:x,y:y,dir:dir,vx:dir*rnd(24,43),vy:rnd(-12,12),turn:rnd(.4,3.5),wiggle:rnd(0,6.28),caught:false,scared:0};
+}
+function fillLake(){state.fish=[];for(var i=0;i<8;i++)state.fish.push(fishSpawn());state.floaters=[];for(var j=0;j<30;j++)state.floaters.push({x:rnd(25,770),y:rnd(195,735),r:rnd(1.5,4.2),phase:rnd(0,6.28)});}
+function resetHook(){state.hook={mode:"idle",x:BOAT.x,y:BOAT.y,startX:BOAT.x,startY:BOAT.y,destX:BOAT.x,destY:BOAT.y,t:0,wait:0,fish:null,distance:0,initial:0,tension:0};state.press=false;}
+function resetRound(){state.score=0;state.seconds=DURATION;state.combo=0;state.elapsed=0;state.ripples=[];state.notice="";state.noticeLife=0;state.aim={x:400,y:420};fillLake();resetHook();refresh();}
+function audio(){if(state.mute)return null;try{if(!state.actx){var A=window.AudioContext||window.webkitAudioContext;if(!A)return null;state.actx=new A();}if(state.actx.state==="suspended"&&state.actx.resume)state.actx.resume().catch(function(){});return state.actx;}catch(e){return null;}}
+function note(freq,length,type,volume,slide){
+ var a=audio();if(!a)return;var t=a.currentTime,osc=a.createOscillator(),gain=a.createGain();osc.type=type||"square";osc.frequency.setValueAtTime(freq,t);if(slide)osc.frequency.exponentialRampToValueAtTime(Math.max(30,freq*slide),t+length);gain.gain.setValueAtTime(volume||.018,t);gain.gain.exponentialRampToValueAtTime(.0001,t+length);osc.connect(gain).connect(a.destination);osc.start(t);osc.stop(t+length+.01);state.sfxCount++;
+}
+function melody(){
+ var seq=[330,392,440,392,294,349,392,330,262,330,392,349,294,330,262,220];
+ if(state.phase!=="playing"||state.mute)return;var index=Math.floor(state.elapsed/0.3);
+ if(index!==state.lastMusic){state.lastMusic=index;if(index%2===0)note(seq[index%seq.length],.12,"triangle",.009);}
+}
+function ripple(x,y,color){state.ripples.push({x:x,y,r:4,life:1.2,color:color||"#dcf6e7"});}
+function shout(message){state.notice=message;state.noticeLife=1.65;}
+function updateBest(){if(state.score>state.best){state.best=state.score;try{localStorage.setItem("biagio-pesca-record",String(state.best));}catch(e){}}}
+function refresh(){
+ ui.score.textContent=String(state.score).padStart(5,"0");ui.best.textContent=String(state.best).padStart(5,"0");
+ var seconds=Math.ceil(state.seconds);ui.clock.textContent=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");
+ var h=state.hook,mode=h.mode;
+ ui.tension.style.width=clamp(h.tension,0,100)+"%";
+ ui.tensionNum.textContent=Math.round(h.tension)+"%";
+ var progress=mode==="hooked"?clamp(100*(1-h.distance/Math.max(1,h.initial)),0,100):0;
+ ui.progress.style.width=progress+"%";ui.progressNum.textContent=Math.round(progress)+"%";
+ if(state.phase!=="playing"){ui.reel.textContent="🎣 LANCIA";ui.status.textContent="PRONTO A PESCARE";ui.tip.textContent="Tocca il lago per lanciare";return;}
+ if(mode==="idle"){ui.status.textContent="SCEGLI UN PESCE";ui.tip.textContent="Tocca il lago per lanciare";ui.reel.textContent="🎣 LANCIA";}
+ else if(mode==="casting"){ui.status.textContent="LANCIO IN CORSO";ui.tip.textContent="Aspetta l'amo";ui.reel.textContent="🎣 LANCIO...";}
+ else if(mode==="waiting"){ui.status.textContent="ASPETTA CHE ABBOCCHI";ui.tip.textContent="Puoi lanciare altrove";ui.reel.textContent="🎣 CAMBIA ZONA";}
+ else if(mode==="hooked"){ui.status.textContent="HA ABBOCCATO!";ui.tip.textContent="Tieni premuto • controlla la tensione";ui.reel.textContent="↟ RECUPERA";}
+}
+function show(kicker,title,message,action){ui.kicker.textContent=kicker;ui.headline.textContent=title;ui.message.textContent=message;ui.start.textContent=action;ui.shade.classList.remove("hidden");}
+function start(){resetRound();state.phase="playing";state.lastMusic=-1;ui.shade.classList.add("hidden");audio();refresh();}
+function finish(){state.phase="ended";state.press=false;ui.reel.classList.remove("active");updateBest();refresh();show("TEMPO SCADUTO","FINE DELLA PESCA","Hai fatto "+state.score+" punti. Il tuo record è "+state.best+". Pronto a tornare sul lago?","PESCA ANCORA ↻");note(294,.22,"triangle",.036); }
+function targetPoint(x,y){return{x:clamp(x,45,755),y:clamp(y,227,716)};}
+function cast(x,y){
+ if(state.phase!=="playing")return;
+ if(state.hook.mode==="hooked")return;
+ var point=targetPoint(x,y),h=state.hook;
+ state.press=false;
+ h.mode="casting";h.x=BOAT.x;h.y=BOAT.y;h.destX=point.x;h.destY=point.y;h.t=0;h.wait=0;h.fish=null;h.tension=0;
+ state.aim=point;ripple(BOAT.x,BOAT.y,"#a8e9db");note(470,.08,"triangle",.025,1.4);refresh();
+}
+function autoCast(){
+ // Aim at the closest free fish for button-only or keyboard players.
+ var options=state.fish.filter(function(f){return !f.caught;}).sort(function(a,b){return dist(a.x,a.y,BOAT.x,BOAT.y)-dist(b.x,b.y,BOAT.x,BOAT.y);});
+ var near=options[0];if(near)cast(near.x,near.y);else cast(state.aim.x,state.aim.y);
+}
+function loseFish(){var h=state.hook;var f=h.fish;if(f){f.scared=2;f.vx=f.dir*85;}state.combo=0;shout("LENZA SPEZZATA!");note(180,.29,"sawtooth",.045,.4);ripple(h.x,h.y,"#f9a5a2");resetHook();refresh();}
+function catchFish(){
+ var h=state.hook,f=h.fish;if(!f){resetHook();return;}
+ state.combo++;var bonus=Math.min(state.combo-1,4)*25,earned=f.kind.points+bonus;state.score+=earned;updateBest();shout(f.kind.name.toUpperCase()+" +"+earned+" PUNTI");
+ note(f.kind.points>=500?880:660,.18,"square",.045,1.3);ripple(BOAT.x,BOAT.y,"#ffec96");
+ var idx=state.fish.indexOf(f);if(idx>=0)state.fish.splice(idx,1);
+ state.fish.push(fishSpawn());resetHook();refresh();
+}
+function hookFish(f){var h=state.hook;h.mode="hooked";h.fish=f;h.distance=dist(h.x,h.y,BOAT.x,BOAT.y);h.initial=h.distance;h.tension=5;h.wait=0;f.caught=true;state.combo=Math.max(0,state.combo);state.press=false;shout("HA ABBOCCATO! RECUPERA!");note(790,.15,"square",.05,1.3);ripple(h.x,h.y,"#f4e2a0");refresh();}
+function updateFish(dt){
+ for(var i=0;i<state.fish.length;i++){
+  var f=state.fish[i];if(f.caught)continue;
+  f.wiggle+=dt*6;f.turn-=dt;f.scared=Math.max(0,f.scared-dt);
+  if(f.turn<=0){f.turn=rnd(1,3.5);f.vy=rnd(-25,25);}
+  var h=state.hook,nearHook=h.mode==="waiting"&&f.scared===0&&dist(f.x,f.y,h.x,h.y)<145;
+  if(nearHook){var d=Math.max(1,dist(f.x,f.y,h.x,h.y)),speed=48*dt;f.x+=(h.x-f.x)/d*speed;f.y+=(h.y-f.y)/d*speed;f.dir=h.x<f.x?-1:1;}
+  else{f.x+=f.vx*dt;f.y+=f.vy*dt;}
+  if(f.x<55){f.x=55;f.dir=1;f.vx=Math.abs(f.vx);}
+  if(f.x>745){f.x=745;f.dir=-1;f.vx=-Math.abs(f.vx);}
+  if(f.y<245){f.y=245;f.vy=Math.abs(f.vy);}
+  if(f.y>698){f.y=698;f.vy=-Math.abs(f.vy);}
+ }
+}
+function updateHook(dt){
+ var h=state.hook;if(h.mode==="casting"){
+  h.t+=dt/0.50;var progress=Math.min(1,h.t),ease=1-Math.pow(1-progress,2);
+  h.x=BOAT.x+(h.destX-BOAT.x)*ease;h.y=BOAT.y+(h.destY-BOAT.y)*ease;
+  if(progress>=1){h.mode="waiting";h.wait=0;ripple(h.x,h.y);note(280,.08,"sine",.028,.7);}
+ }else if(h.mode==="waiting"){
+  h.wait+=dt;
+  var closest=null,dd=31;
+  for(var i=0;i<state.fish.length;i++){var f=state.fish[i];if(!f.caught){var d=dist(f.x,f.y,h.x,h.y);if(d<dd){dd=d;closest=f;}}}
+  if(closest&&h.wait>.36){hookFish(closest);return;}
+  if(h.wait>5.4){shout("NESSUNA ABBOCCATA");ripple(h.x,h.y);resetHook();}
+ }else if(h.mode==="hooked"){
+  var resistance=h.fish.kind.resistance;
+  if(state.press){
+   h.distance=Math.max(0,h.distance-(98/resistance)*dt);
+   h.tension+=dt*(29+resistance*13);
+  }else{
+   h.distance=Math.min(h.initial+75,h.distance+dt*(8+resistance*4));
+   h.tension-=dt*(55/resistance);
+  }
+  // Oscillating fish resistance creates predictable waves of tension.
+  h.tension+=Math.max(0,Math.sin(state.elapsed*5.2))*resistance*dt*5;
+  h.tension=clamp(h.tension,0,110);
+  var theta=Math.atan2(h.destY-BOAT.y,h.destX-BOAT.x)+Math.sin(state.elapsed*4.4)*(.12*resistance);
+  h.x=BOAT.x+Math.cos(theta)*h.distance;
+  h.y=BOAT.y+Math.sin(theta)*h.distance;
+  h.fish.x=h.x;h.fish.y=h.y;h.fish.dir=Math.cos(theta)<0?-1:1;
+  if(h.tension>=100){loseFish();return;}
+  if(h.distance<=58){catchFish();return;}
+ }
+}
+function update(dt){
+ state.elapsed+=dt;state.seconds=Math.max(0,state.seconds-dt);
+ updateFish(dt);updateHook(dt);
+ for(var r of state.ripples){r.r+=dt*48;r.life-=dt;}
+ state.ripples=state.ripples.filter(function(r){return r.life>0;});
+ state.noticeLife=Math.max(0,state.noticeLife-dt);
+ if(state.seconds<=0){finish();return;}
+ melody();refresh();
+}
+function world(){
+ var grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,"#103e57");grad.addColorStop(.22,"#14728a");grad.addColorStop(1,"#0d4e68");ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+ for(var i=0;i<26;i++){var x=((i*103+61)%830)-15,y=195+((i*173)%590);ctx.strokeStyle=i%2?"#76cfdb17":"#cee5dd22";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(x,y,23+(i%4)*13,5+(i%3),-.1,0,Math.PI*2);ctx.stroke();}
+ // Land, deck shadow, sandy shoreline.
+ ctx.fillStyle="#143c43";ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(800,0);ctx.lineTo(800,84);ctx.bezierCurveTo(640,110,570,98,450,113);ctx.bezierCurveTo(285,128,195,104,0,108);ctx.closePath();ctx.fill();
+ ctx.fillStyle="#b79b63";ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(800,0);ctx.lineTo(800,62);ctx.bezierCurveTo(630,93,546,75,430,95);ctx.bezierCurveTo(200,105,160,80,0,92);ctx.closePath();ctx.fill();
+ ctx.fillStyle="#6c8c66";ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(800,0);ctx.lineTo(800,27);ctx.bezierCurveTo(585,47,430,32,250,48);ctx.bezierCurveTo(140,38,55,41,0,33);ctx.closePath();ctx.fill();
+ // Wooden pier coming down from land.
+ ctx.fillStyle="#422d28";ctx.fillRect(308,65,184,155);
+ ctx.fillStyle="#aa7547";ctx.fillRect(315,65,170,146);
+ for(var k=0;k<8;k++){ctx.fillStyle=k%2?"#af7c4c":"#99653d";ctx.fillRect(318,66+k*19,164,17);ctx.strokeStyle="#60402c";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(318,66+k*19);ctx.lineTo(481,66+k*19);ctx.stroke();}
+ ctx.fillStyle="#382925";ctx.fillRect(318,196,162,12);
+ // Lake reflections.
+ for(var q of state.floaters){var alpha=.15+.17*Math.sin(state.elapsed*1.3+q.phase);ctx.globalAlpha=alpha;ctx.fillStyle="#d9f4d6";ctx.beginPath();ctx.ellipse(q.x+Math.sin(state.elapsed+q.phase)*5,q.y,q.r*3,q.r*.5,0,0,Math.PI*2);ctx.fill();}
+ ctx.globalAlpha=1;
+ // Lily pads in corners.
+ for(var p of [[65,275,28],[730,275,25],[80,655,31],[720,662,35],[80,425,21],[713,472,23]]){
+  ctx.save();ctx.translate(p[0],p[1]);ctx.rotate(Math.sin(state.elapsed*.4+p[0])*.12);ctx.fillStyle="#1c6c59";ctx.beginPath();ctx.arc(0,0,p[2],.25,Math.PI*2.17);ctx.lineTo(0,0);ctx.fill();ctx.strokeStyle="#3c9f75";ctx.lineWidth=3;ctx.stroke();ctx.restore();
+ }
+}
+function drawFish(f){
+ var size=f.kind.size;
+ ctx.save();ctx.translate(f.x,f.y);ctx.rotate(Math.atan2(f.vy,f.vx)*.25);
+ if(f.dir<0)ctx.scale(-1,1);
+ ctx.globalAlpha=.30;ctx.fillStyle="#032b42";ctx.beginPath();ctx.ellipse(4,8,size*1.65,size*.85,0,0,7);ctx.fill();
+ ctx.globalAlpha=1;
+ if(f.kind.points===500){ctx.shadowBlur=17;ctx.shadowColor="#ffdc72";}
+ ctx.fillStyle=f.kind.dark;
+ ctx.beginPath();ctx.moveTo(-size*.85,0);ctx.lineTo(-size*1.7,-size*.68);ctx.lineTo(-size*1.6,size*.67);ctx.closePath();ctx.fill();
+ ctx.fillStyle=f.kind.color;ctx.beginPath();ctx.ellipse(0,0,size*1.05,size*.56,0,0,7);ctx.fill();
+ ctx.fillStyle=f.kind.dark;ctx.beginPath();ctx.moveTo(-size*.25,-size*.46);ctx.lineTo(-size*.5,-size*.95);ctx.lineTo(size*.4,-size*.47);ctx.fill();
+ ctx.fillStyle="#fff9dd";ctx.beginPath();ctx.arc(size*.6,-size*.14,Math.max(2,size*.12),0,7);ctx.fill();
+ ctx.fillStyle="#193c4a";ctx.beginPath();ctx.arc(size*.65,-size*.14,Math.max(1.2,size*.07),0,7);ctx.fill();
+ ctx.restore();
+}
+function drawPierPerson(){
+ // Bald Biagio from the original Karmagra SVG, shown above the dock.
+ ctx.save();ctx.fillStyle="#0005";ctx.beginPath();ctx.ellipse(401,161,57,19,0,0,7);ctx.fill();
+ if(biagio.complete&&biagio.naturalWidth)ctx.drawImage(biagio,334,77,132,132);
+ else{ctx.fillStyle="#27262a";ctx.beginPath();ctx.ellipse(400,131,34,43,0,0,7);ctx.fill();}
+ // Fishing rod held by Biagio; attached line comes from its tip.
+ ctx.strokeStyle="#33281e";ctx.lineCap="round";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(435,149);ctx.lineTo(419,177);ctx.stroke();
+ ctx.fillStyle="#dbc27d";ctx.beginPath();ctx.arc(419,177,5,0,7);ctx.fill();ctx.restore();
+}
+function drawHook(){
+ var h=state.hook;if(h.mode==="idle")return;
+ ctx.save();ctx.strokeStyle="#f5efcc";ctx.lineWidth=1.9;ctx.shadowColor="#d4f9ef";ctx.shadowBlur=2;
+ ctx.beginPath();ctx.moveTo(419,177);ctx.lineTo(h.x,h.y);ctx.stroke();
+ ctx.shadowBlur=0;
+ ctx.fillStyle=h.mode==="hooked"?"#ffe786":"#f6b35e";
+ ctx.beginPath();ctx.arc(h.x,h.y,8,0,7);ctx.fill();
+ ctx.strokeStyle="#fff1dd";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(h.x+2,h.y+4);ctx.quadraticCurveTo(h.x+13,h.y+18,h.x+15,h.y+6);ctx.stroke();
+ if(h.mode==="waiting"){ctx.strokeStyle="#f7e1a1a8";ctx.beginPath();ctx.arc(h.x,h.y,12+2*Math.sin(state.elapsed*5),0,7);ctx.stroke();}
+ ctx.restore();
+}
+function render(){
+ ctx.clearRect(0,0,W,H);world();
+ for(var f of state.fish){if(!f.caught)drawFish(f);}
+ for(var r of state.ripples){ctx.save();ctx.globalAlpha=Math.max(0,r.life/1.2);ctx.strokeStyle=r.color;ctx.lineWidth=2;ctx.beginPath();ctx.arc(r.x,r.y,r.r,0,7);ctx.stroke();ctx.restore();}
+ var h=state.hook;if(h.mode==="hooked"&&h.fish)drawFish(h.fish);
+ drawPierPerson();drawHook();
+ if(state.phase==="playing"&&h.mode==="idle"){
+  ctx.save();ctx.translate(state.aim.x,state.aim.y);ctx.strokeStyle="#e5f4dbac";ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,17,0,7);ctx.moveTo(-25,0);ctx.lineTo(-10,0);ctx.moveTo(10,0);ctx.lineTo(25,0);ctx.moveTo(0,-25);ctx.lineTo(0,-10);ctx.moveTo(0,10);ctx.lineTo(0,25);ctx.stroke();ctx.restore();
+ }
+ if(state.noticeLife>0){
+  ctx.save();ctx.globalAlpha=Math.min(1,state.noticeLife);ctx.textAlign="center";ctx.font="bold 26px system-ui, sans-serif";ctx.shadowColor="#022c36";ctx.shadowBlur=12;ctx.fillStyle="#fff0b7";ctx.fillText(state.notice,400,251);ctx.restore();
+ }
+}
+function lakePoint(ev){
+ var rect=canvas.getBoundingClientRect(),x=(ev.clientX-rect.left)*W/rect.width,y=(ev.clientY-rect.top)*H/rect.height;
+ return targetPoint(x,y);
+}
+canvas.addEventListener("pointermove",function(ev){if(state.phase!=="playing"||state.hook.mode!=="idle")return;state.aim=lakePoint(ev);});
+canvas.addEventListener("pointerdown",function(ev){
+ if(state.phase!=="playing")return;ev.preventDefault();
+ if(state.hook.mode==="hooked"){state.press=true;return;}
+ var p=lakePoint(ev);cast(p.x,p.y);
+});
+canvas.addEventListener("pointerup",function(){state.press=false;});
+canvas.addEventListener("pointercancel",function(){state.press=false;});
+ui.reel.addEventListener("pointerdown",function(ev){ev.preventDefault();if(state.phase!=="playing")return;if(state.hook.mode==="hooked"){state.press=true;ui.reel.classList.add("active");}else if(state.hook.mode!=="casting"){autoCast();}});
+window.addEventListener("pointerup",function(){state.press=false;ui.reel.classList.remove("active");});
+window.addEventListener("pointercancel",function(){state.press=false;ui.reel.classList.remove("active");});
+window.addEventListener("blur",function(){state.press=false;ui.reel.classList.remove("active");});
+window.addEventListener("keydown",function(ev){
+ var key=ev.key,dir={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]}[key];
+ if(dir&&state.phase==="playing"){ev.preventDefault();state.aim=targetPoint(state.aim.x+dir[0]*35,state.aim.y+dir[1]*35);}
+ if(ev.code==="Space"){ev.preventDefault();if(state.phase!=="playing"){start();return;}if(state.hook.mode==="hooked"){state.press=true;ui.reel.classList.add("active");}else if(state.hook.mode!=="casting"){cast(state.aim.x,state.aim.y);}}
+});
+window.addEventListener("keyup",function(ev){if(ev.code==="Space"){state.press=false;ui.reel.classList.remove("active");}});
+ui.sound.addEventListener("click",function(){state.mute=!state.mute;ui.sound.textContent=state.mute?"♫ Audio OFF":"♫ Audio ON";if(!state.mute)note(620,.09,"triangle",.03);});
+ui.start.addEventListener("click",start);
+document.addEventListener("visibilitychange",function(){if(document.hidden){state.press=false;ui.reel.classList.remove("active");if(state.phase==="playing")state.phase="paused";}else if(state.phase==="paused"){state.phase="playing";state.last=0;}});
+function frame(now){
+ var dt=clamp((now-state.last)/1000||0,0,.045);state.last=now;
+ if(state.phase==="playing")update(dt);
+ else if(state.phase==="ready"||state.phase==="ended"){state.elapsed+=dt;for(var f of state.fish){f.wiggle+=dt*2;}}
+ render();requestAnimationFrame(frame);
+}
+resetRound();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
