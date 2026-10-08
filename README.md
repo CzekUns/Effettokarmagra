@@ -12,14 +12,21 @@ Indirizzo previsto dopo l'attivazione: https://czekuns.github.io/Effettokarmagra
 
 Melodia originale generata in tempo reale con Web Audio: canali sintetizzati per tema principale, basso, arpeggio e percussioni. La musica parte quando premi **Gioca**, si interrompe in pausa e termina a fine livello o game over. Il pulsante **Audio ON/OFF** permette di disattivarla. Non richiede file audio esterni.
 
+## Interfaccia e grafica
+
+- Labirinto 15×15 con piazze aperte e passaggi più leggibili.
+- Personaggi SVG ingranditi a 100 pixel nel canvas 800×800.
+- Tastierino direzionale indipendente sotto il labirinto, con tasti più grandi e distanziati.
+- Eliminati i pannelli descrittivi: durante il gioco restano punteggio, vite, livello e indicatore della pillola attiva.
+
 ## Come si gioca
 
 - **Computer:** frecce oppure WASD; barra spaziatrice per pausa.
 - **Telefono:** scorri il dito sul labirinto o usa i pulsanti direzionali.
 - **Palline bianche:** +10 punti, raccoglile per finire il livello.
 - **Pillole grandi:** +50 punti, attivano l'effetto Karmagra per 9 secondi.
-- **Biaggio normale:** cappello rosso, occhiali bianchi, maglietta blu, pantaloncini beige, tracolla.
-- **Biaggio potenziato:** calvo e vestito di nero.
+- **Biagio normale:** cappello rosso, occhiali bianchi, maglietta blu, pantaloncini beige, tracolla.
+- **Biagio potenziato:** calvo e vestito di nero.
 - **Signorine:** nemiche con gonne lunghe; dopo una pillola, indossano gonne corte e possono essere catturate (+200 punti).
 - Tre vite, record salvato nel browser, livelli con labirinti differenti, audio opzionale.
 
