@@ -83,18 +83,20 @@ Secondo arcade giocabile, con lo **stesso SVG di Biagio calvo e vestito di nero*
 - Supporto mobile, mouse, frecce + spazio; piccoli effetti e accompagnamento audio sintetizzato.
 - Nessuna risorsa esterna o backend.
 
-## Biagio Gelo: Scootercross
+## Biagio Gelo: Scootercross — Corso Europa, Melito
 
-Terzo titolo di Arcade Club, in stile vecchio motocross arcade, con Biagio riconoscibile dall'abbigliamento della reference (cappellino rosso, occhiali bianchi, maglietta blu, pantaloncini beige e tracolla) su uno **scooter bordeaux con bauletto**. Il personaggio e il mezzo sono un asset SVG nativo realizzato appositamente per il gioco.
+Terzo gioco in un **cabinet verticale 8-bit**, ispirato ai classici videogiochi arcade di guida dall'alto. Il paesaggio è una **rielaborazione in pixel art del Corso Europa di Melito di Napoli**, con palazzi, negozi, marciapiedi, alberi, lampioni e strisce pedonali. È ambientazione illustrata e non una ricostruzione geograficamente esatta.
 
-- Pista mediterranea a scorrimento laterale lunga 6.300 unità, rampe, salti, barili, monete e traguardo.
-- Controlli PC: frecce o WASD per accelerare, frenare, cabrare e picchiare; barra spaziatrice per il turbo; P per la pausa.
-- Controlli smartphone: pulsanti ampi sotto il gioco, pressione continua, turbo dedicato.
-- Fisica arcade con gravità, rotazione in volo, atterraggi ed eventuali cadute; tre vite.
-- Bonus salti e monete, turbo ricaricabile, punteggio, cronometro e record nel browser.
-- Musica ed effetti sonori 8-bit generati con Web Audio e disattivabili.
-- Alla fine della corsa o dopo il game over: pulsante WhatsApp che condivide il punteggio e rimanda direttamente al gioco.
-- Il gioco è interamente statico in HTML/CSS/JS + SVG e non dipende da framework esterni.
+- Biagio con cappellino rosso, occhiali bianchi, maglia blu, pantaloncini beige e tracolla guida lo **scooter bordeaux col bauletto**. Grafica SVG a blocchi pixel, `games/scootercross/assets/biagio-top-pixel.svg`, ingrandita senza antialias.
+- Schermo di gioco Canvas **256×448** pixel, disegnato a bassa risoluzione e ingrandito tramite `image-rendering: pixelated`. Responsive e ottimizzato per smartphone in verticale.
+- Scooter in avanzamento automatico su 3 corsie, senza necessità di tenere premuto un acceleratore.
+- **Controlli sul telefono:** **SINISTRA**, **SALTA**, **DESTRA**, **TURBO** (quattro pulsanti ben distanziati sotto lo schermo).
+- **Controlli su PC:** frecce sinistra/destra oppure A/D per cambiare corsia; spazio, freccia su o W per saltare; Shift o freccia giù per turbo; P per pausa.
+- Barili e buche che fanno perdere vite quando vengono colpiti, ma che si possono **superare saltando**, oppure evitare cambiando corsia. Segnale d'avviso «PREMI SALTA!» quando un barile si avvicina.
+- Monete, bonus per i salti riusciti, tre vite, turbo ricaricabile, musica ed effetti sintetizzati in stile 8-bit, tempo, progressione e record locale.
+- Fine corsa e game over con **condivisione WhatsApp** del punteggio, contenente il link diretto al gioco.
+
+La versione precedente in prospettiva laterale è stata sostituita con questo gameplay verticale. I vecchi asset non utilizzati possono essere ripuliti successivamente.
 
 ## Tecnologia
 
