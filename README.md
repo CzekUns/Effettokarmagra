@@ -1,4 +1,4 @@
-# Effetto Karmagra — Il giovane Biaggio Gelo
+# Biagio Gelo in Effetto Karmagra
 
 Primo prototipo **giocabile** di un arcade top-down originale da labirinto, basato sul personaggio della reference.
 
@@ -7,6 +7,10 @@ Primo prototipo **giocabile** di un arcade top-down originale da labirinto, basa
 Apri `index.html` in un browser moderno, oppure attiva **Settings → Pages → Deploy from a branch → main → /(root)**.
 
 Indirizzo previsto dopo l'attivazione: https://czekuns.github.io/Effettokarmagra/
+
+## Colonna sonora 8-bit
+
+Melodia originale generata in tempo reale con Web Audio: canali sintetizzati per tema principale, basso, arpeggio e percussioni. La musica parte quando premi **Gioca**, si interrompe in pausa e termina a fine livello o game over. Il pulsante **Audio ON/OFF** permette di disattivarla. Non richiede file audio esterni.
 
 ## Come si gioca
 
