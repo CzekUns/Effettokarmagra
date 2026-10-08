@@ -31,5 +31,18 @@ window.ARCADE_CATALOG = [
     status: "live",
     accent: "aqua",
     recordKey: "biagio-pesca-record"
+  },
+  {
+    id: "scootercross",
+    title: "Biagio Gelo",
+    subtitle: "Scootercross",
+    genre: "Corsa / Salti",
+    description: "Sfida le rampe sullo scooter bordeaux con bauletto, raccogli monete e taglia il traguardo. Occhio agli atterraggi!",
+    href: "./games/scootercross/",
+    artwork: "./games/scootercross/assets/biagio-scooter.svg",
+    support: "Telefono e PC",
+    status: "live",
+    accent: "orange",
+    recordKey: "biagio-scootercross-best"
   }
 ];
