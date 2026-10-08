@@ -303,10 +303,14 @@ function backdrop(){
   if(i%3===0){rect("#879992",x+12,t-12,3,12);rect("#b4c2b5",x+5,t-11,16,2);}
  }
  // Street-facing buildings: varied widths and silhouette.
- const step=128,offset=Math.floor(cam*.44);
- for(let i=Math.floor(offset/step)-1;i<Math.floor(offset/step)+7;i++){
-  const x=i*step-offset;
-  drawTownBlock(x,i);
+ const widths=[124,146,108,137,132,118],prefix=[0,124,270,378,515,647],period=765;
+ const offset=Math.floor(cam*.44),cycle=Math.floor(offset/period);
+ for(let lap=cycle-1;lap<=cycle+1;lap++){
+  for(let j=0;j<6;j++){
+   const x=lap*period+prefix[j]-offset;
+   if(x>W+5||x+widths[j]<-5)continue;
+   drawTownBlock(x,lap*6+j);
+  }
  }
  // Continuous raised stone pavement with curb texture.
  rect("#807d72",0,179,W,12);
