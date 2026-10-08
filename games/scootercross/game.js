@@ -4,7 +4,7 @@ const W=480,H=270,FINISH=4200,G=650,MAX=208;
 const get=id=>document.getElementById(id),cv=get("game"),g=cv.getContext("2d",{alpha:false});
 g.imageSmoothingEnabled=false;
 const ui={score:get("score"),best:get("best"),time:get("time"),lives:get("lives"),progress:get("progress"),coins:get("coins"),speed:get("speed"),boost:get("boost"),status:get("status"),veil:get("veil"),tag:get("tag"),title:get("title"),message:get("message"),play:get("play"),share:get("share"),sound:get("sound")};
-const art=new Image();art.src="./assets/biagio-side-pixel.svg";
+const art=new Image();art.src="./assets/biagio-scooter-illustrated.png";art.onerror=function(){art.onerror=null;art.src="./assets/biagio-side-pixel.svg";};
 const control={gas:false,brake:false,up:false,down:false};
 const ramps=[
 [0,207],[380,207],[462,204],[560,194],[626,211],[825,211],
@@ -344,11 +344,24 @@ function track(){
  for(let x=Math.floor((camera-24)/4)*4;x<camera+W+40;x+=4)g.lineTo(x,terrain(x));
  g.lineTo(camera+W+50,H+15);g.closePath();g.fillStyle="#49545e";g.fill();
  for(let x=Math.floor(camera/48)*48-48;x<camera+W+70;x+=48){
-  let y=terrain(x);rect("#bdbbae",x,y+35,23,2);
-  rect("#5f6568",x+12,y+20,3,2);
+  let y=terrain(x);rect("#c6bbb0",x,y+34,22,2);
+  rect("#686d72",x+12,y+21,3,2);
+  rect("#586069",x+29,y+49,8,2);
+  rect("#636e75",x+7,y+27,5,1);
  }
  g.beginPath();for(let x=Math.floor((camera-15)/3)*3;x<camera+W+20;x+=3){if(x===Math.floor((camera-15)/3)*3)g.moveTo(x,terrain(x));else g.lineTo(x,terrain(x));}
- g.strokeStyle="#363e43";g.lineWidth=8;g.stroke();g.strokeStyle="#dbc398";g.lineWidth=3;g.stroke();
+ g.strokeStyle="#222e36";g.lineWidth=9;g.stroke();
+ g.strokeStyle="#f1d8b6";g.lineWidth=3;g.stroke();
+ // Lower lane stripe, road repairs and asphalt grit.
+ for(let x=Math.floor(camera/31)*31-31;x<camera+W+40;x+=31){
+  const y=terrain(x),n=Math.floor(x/31);
+  rect(n%2?"#5f696c":"#5c6369",x+12,y+12,3,1);
+  rect("#687176",x+23,y+19,7,1);
+  if(n%5===0)rect("#c4bc9e",x+4,y+27,16,2);
+  if(n%7===3){rect("#394850",x+17,y+42,18,3);rect("#8a8d85",x+18,y+42,5,1);}
+ }
+ // Motion shadows on the tarmac.
+ rect("#263740",player.x-42,terrain(player.x)+6,87,6);
  // Striped curb and decorative crossings.
  for(let i=0;i<ramps.length-1;i++){
   if(i%5!==2)continue;
@@ -359,14 +372,26 @@ function track(){
  for(const o of state.barrels){
   if(o.done||o.x<camera-40||o.x>camera+W+40)continue;
   let y=terrain(o.x);
-  if(o.type==="pothole"){rect("#222d32",o.x-18,y-2,36,9);rect("#35373c",o.x-14,y+1,28,4);}
-  else{rect("#342c31",o.x-13,y-24,26,24);rect("#a54546",o.x-11,y-23,22,20);rect("#d36854",o.x-10,y-22,20,4);rect("#e1c1a5",o.x-11,y-16,22,3);rect("#f5e0c5",o.x-11,y-6,22,3);}
+  if(o.type==="pothole"){
+    rect("#202d35",o.x-19,y-3,38,10);rect("#303a42",o.x-14,y-5,28,9);
+    rect("#171f28",o.x-10,y-2,19,4);rect("#778080",o.x-19,y-4,10,2);
+   }else{
+    rect("#152530",o.x-14,y-24,28,26);rect("#733544",o.x-12,y-25,24,23);
+    rect("#d1584e",o.x-10,y-24,20,20);rect("#ed8462",o.x-7,y-22,9,17);
+    rect("#ffb97d",o.x-8,y-22,5,5);rect("#24313b",o.x-13,y-18,26,4);
+    rect("#f7ead7",o.x-11,y-17,22,3);rect("#d58f69",o.x-10,y-13,20,2);
+    rect("#3b2733",o.x-12,y-5,24,5);rect("#f7ead7",o.x-10,y-7,20,2);
+    rect("#1a222a",o.x-8,y,16,2);
+   }
  }
  for(const p of state.pickups){
   if(p.done||p.x<camera-24||p.x>camera+W+24)continue;
   let half=4+Math.round(Math.abs(Math.cos(state.time*7+p.x*.03))*6);
-  rect("#906622",p.x-half-2,p.y-10,half*2+4,20);rect("#ffda68",p.x-half,p.y-8,half*2,16);
-  if(half>6)text("★",p.x,p.y+4,12,"#fff1b4");
+  rect("#665039",p.x-half-2,p.y-11,half*2+4,22);
+  rect("#d58b36",p.x-half-1,p.y-10,half*2+2,20);
+  rect("#ffe08a",p.x-half+1,p.y-8,half*2-2,16);
+  rect("#fff5b4",p.x-half+3,p.y-8,2,6);
+  if(half>6)text("★",p.x,p.y+4,11,"#bc832e");
  }
  let fy=terrain(FINISH);
  rect("#ddd7be",FINISH-1,fy-110,5,110);
@@ -374,7 +399,7 @@ function track(){
  text("TRAGUARDO",FINISH+21,fy-118,12,"#fff4cf");
  if(state.invincible<=0||Math.floor(state.time*12)%2===0){
   g.save();g.translate(player.x,player.y);g.rotate(player.angle);
-  if(art.complete&&art.naturalWidth){g.imageSmoothingEnabled=false;g.drawImage(art,-52,-64,105,77);}
+  if(art.complete&&art.naturalWidth){g.imageSmoothingEnabled=false;g.drawImage(art,-62,-94,124,105);}
   else{
    rect("#171e29",-36,-11,16,15);rect("#171e29",24,-11,16,15);
    rect("#8a2a46",-40,-27,78,28);rect("#3169b1",-17,-45,39,29);
