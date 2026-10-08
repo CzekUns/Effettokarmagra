@@ -12,6 +12,7 @@ window.ARCADE_CATALOG = [
     description: "Palline bianche, signorine e Karmagra. Fuggi, cambia look e punta al record.",
     href: "./games/effetto-karmagra/",
     artwork: "./assets/biaggio-normal.svg",
+    decoration: "./assets/pill.svg",
     support: "Telefono e PC",
     status: "live",
     accent: "gold",
