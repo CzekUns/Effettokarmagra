@@ -35,6 +35,13 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:800/760;touch-action:no
 .dialog h2{font:900 clamp(29px,6vw,47px)/1.06 Georgia,serif;color:#ffe7a7;margin:12px 0}
 .dialog p{line-height:1.65;font-size:14px;color:#d2eee8}
 .dialog button{border:0;border-radius:12px;background:linear-gradient(#ffe9ab,#f2b85e);color:#282327;padding:15px 27px;box-shadow:0 4px #a8783c;font-weight:1000;letter-spacing:.04em;margin-top:15px}
+
+.dialog .share-score{display:flex;align-items:center;justify-content:center;gap:9px;width:max-content;max-width:100%;margin:14px auto 0;padding:12px 17px;border-radius:11px;background:#1c8d55;border:2px solid #6ee1a1;color:white;text-decoration:none;font-size:13px;font-weight:900;line-height:1.4;box-shadow:0 4px #11643c}
+.dialog .share-score:hover,.dialog .share-score:focus-visible{background:#167748;border-color:#d3ffe0}
+.dialog .share-score[hidden]{display:none}
+.dialog .share-hint{color:#aee3ce;font-size:11px;line-height:1.5;margin:10px 0 0}
+.dialog .share-hint[hidden]{display:none}
+
 .action-panel{border:2px solid #377e8a;border-radius:15px;background:linear-gradient(145deg,#103d4b,#092936);padding:13px 15px 17px;margin:13px 0 0}
 .modebar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:11px}
 #status{font-weight:900;font-size:14px;color:#ffe2a1}
@@ -96,6 +103,8 @@ footer{text-align:center;font-size:10px;color:#719fa5;letter-spacing:.09em;margi
    <h2 id="headline">PESCA GROSSA!</h2>
    <p id="message">Biagio Gelo è tornato, calvo e vestito di nero. Tocca il lago per lanciare l'amo. Quando un pesce abbocca, tieni premuto <b>RECUPERA</b> e rilascialo se la tensione sale troppo.</p>
    <button id="start" type="button">SI VA A PESCA ▶</button>
+   <a class="share-score" id="share-score" href="#" target="_blank" rel="noopener noreferrer" hidden>↗ Condividi su WhatsApp</a>
+   <p class="share-hint" id="share-hint" hidden>Sfida un amico: il link lo porterà direttamente a questo gioco.</p>
   </div>
  </div>
 </div>
@@ -119,7 +128,7 @@ footer{text-align:center;font-size:10px;color:#719fa5;letter-spacing:.09em;margi
 "use strict";
 var W=800,H=760,BOAT={x:400,y:165},DURATION=90;
 var E=function(id){return document.getElementById(id);},canvas=E("lake"),ctx=canvas.getContext("2d");
-var ui={score:E("score"),clock:E("clock"),best:E("best"),shade:E("shade"),kicker:E("kicker"),headline:E("headline"),message:E("message"),start:E("start"),sound:E("sound"),reel:E("reel"),status:E("status"),tip:E("tip"),tension:E("tension-bar"),tensionNum:E("tension-num"),progress:E("reel-bar"),progressNum:E("reel-num")};
+var ui={score:E("score"),clock:E("clock"),best:E("best"),shade:E("shade"),kicker:E("kicker"),headline:E("headline"),message:E("message"),start:E("start"),sound:E("sound"),share:E("share-score"),shareHint:E("share-hint"),reel:E("reel"),status:E("status"),tip:E("tip"),tension:E("tension-bar"),tensionNum:E("tension-num"),progress:E("reel-bar"),progressNum:E("reel-num")};
 var biagio=new Image();biagio.src="../../assets/biaggio-power.svg";
 var kinds=[
  {name:"Sardina",points:50,size:19,color:"#9ee5ed",dark:"#3285a6",chance:50,resistance:.86},
@@ -166,8 +175,13 @@ function refresh(){
  else if(mode==="waiting"){ui.status.textContent="ASPETTA CHE ABBOCCHI";ui.tip.textContent="Puoi lanciare altrove";ui.reel.textContent="🎣 CAMBIA ZONA";}
  else if(mode==="hooked"){ui.status.textContent="HA ABBOCCATO!";ui.tip.textContent="Tieni premuto • controlla la tensione";ui.reel.textContent="↟ RECUPERA";}
 }
-function show(kicker,title,message,action){ui.kicker.textContent=kicker;ui.headline.textContent=title;ui.message.textContent=message;ui.start.textContent=action;ui.shade.classList.remove("hidden");}
-function start(){resetRound();state.phase="playing";state.lastMusic=-1;ui.shade.classList.add("hidden");audio();refresh();}
+function whatsappScoreLink(points){
+ var page="https://czekuns.github.io/Effettokarmagra/games/pesca-grossa/";
+ var message="🎣 Ho fatto "+points+" punti a *Biagio Gelo — Pesca Grossa* su Arcade Club!\nRiesci a pescare meglio di me? Accetta la sfida e gioca qui: "+page;
+ return "https://wa.me/?text="+encodeURIComponent(message);
+}
+function show(kicker,title,message,action){ui.kicker.textContent=kicker;ui.headline.textContent=title;ui.message.textContent=message;ui.start.textContent=action;var gameOver=state.phase==="ended";ui.share.hidden=!gameOver;ui.shareHint.hidden=!gameOver;if(gameOver)ui.share.href=whatsappScoreLink(state.score);ui.shade.classList.remove("hidden");}
+function start(){resetRound();state.phase="playing";state.lastMusic=-1;ui.share.hidden=true;ui.shareHint.hidden=true;ui.shade.classList.add("hidden");audio();refresh();}
 function finish(){state.phase="ended";state.press=false;ui.reel.classList.remove("active");updateBest();refresh();show("TEMPO SCADUTO","FINE DELLA PESCA","Hai fatto "+state.score+" punti. Il tuo record è "+state.best+". Pronto a tornare sul lago?","PESCA ANCORA ↻");note(294,.22,"triangle",.036); }
 function targetPoint(x,y){return{x:clamp(x,45,755),y:clamp(y,227,716)};}
 function cast(x,y){
