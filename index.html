@@ -32,7 +32,7 @@ main{width:100%;display:block}
 .dialog h2{font:bold clamp(26px,5vw,40px) Georgia,serif;line-height:1.1;color:#ffe2a3;margin:13px 0}
 .dialog p{line-height:1.6;color:#d4e0ee;font-size:14px}
 .dialog button{border:0;border-radius:10px;padding:14px 25px;background:linear-gradient(#ffe7a9,#dfad4c);color:#1d2432;font-weight:1000;box-shadow:0 4px #a2702f;margin-top:13px}
-.powerhud{position:absolute;top:10px;left:10px;z-index:2;display:none;align-items:center;gap:9px;padding:7px 11px;border-radius:9px;background:#0a1d37e8;border:1px solid #f4d689;pointer-events:none;box-shadow:0 3px 12px #0008}
+.powerhud{position:absolute;top:2px;left:10px;z-index:2;display:none;align-items:center;gap:9px;padding:7px 11px;border-radius:9px;background:#0a1d37e8;border:1px solid #f4d689;pointer-events:none;box-shadow:0 3px 12px #0008}
 #powertxt{font-size:10px;font-weight:900;letter-spacing:.06em;color:#ffe49c;white-space:nowrap}
 .bar{width:55px;height:7px;border:1px solid #be9651;border-radius:8px;overflow:hidden;background:#293044}
 .bar>div{height:100%;width:0;background:linear-gradient(90deg,#e8a12f,#fff2b6)}
@@ -119,7 +119,7 @@ for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++)if(free(x,y))s.dots.add(id(x,y));
 [[1,1],[13,1],[1,13],[13,13]].forEach(([x,y])=>{s.pills.add(id(x,y));s.dots.delete(id(x,y));});
 s.player=mob(7,11,4.35);s.dots.delete(id(7,11));s.girls=colors.map((color,i)=>{let [x,y]=[[6,6],[8,6],[6,8],[8,8]][i],a=mob(x,y,2.65+i*.10+Math.min(.55,(s.level-1)*.1));a.color=color;a.sx=x;a.sy=y;a.delay=1+i*.4;a.dir=["up","right","left","down"][i];s.dots.delete(id(x,y));return a;});drawBackground();hud();}
 function hud(){ui.score.textContent=String(s.score).padStart(6,"0");ui.best.textContent=String(s.best).padStart(6,"0");ui.level.textContent="LIVELLO "+String(s.level).padStart(2,"0");ui.lives.textContent="";for(let i=0;i<s.lives;i++){let im=document.createElement("img");im.src="assets/biaggio-normal.svg";im.alt="vita";ui.lives.appendChild(im);}powerHUD();}
-function powerHUD(){ui.pow.textContent=s.power?"PILLOLA · "+s.power.toFixed(1)+"s":"";ui.bar.style.width=(s.power/SECONDS*100)+"%";E("powerhud").style.display=s.power>0?"flex":"none";}
+function powerHUD(){ui.pow.textContent=s.power?"KARMAGRA · "+s.power.toFixed(1)+"s":"";ui.bar.style.width=(s.power/SECONDS*100)+"%";E("powerhud").style.display=s.power>0?"flex":"none";}
 function score(n){s.score+=n;if(s.score>s.best){s.best=s.score;try{localStorage.setItem("effetto-karmagra-best",s.best);}catch(_){}}hud();}
 // Original looping 8-bit score, synthesized with four Web Audio channels.
 const soundtrack={
