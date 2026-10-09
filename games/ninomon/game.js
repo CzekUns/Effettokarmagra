@@ -17,29 +17,29 @@ const ZONES=[
  {title:"STRADA DI SERVIZIO",short:"Dietro il mercato",ground:"#74706b",road:"#576069",accent:"#bd907b",sky:"#909c99",entry:[2,16]}
 ];
 const ENCOUNTERS=[
- {id:"n01",number:"001",zone:0,x:9,y:15,name:"Topo sospetto",kind:"Creatura di scalo",description:"Nino sostiene che sia un esemplare rarissimo. Gianlluca vorrebbe prima controllare se si muove.",hint:"Una piccola sagoma vicino ai binari. Nino si ferma subito.",color:"#9eb5b3",glyph:"?",label:"NOME PROVVISORIO"},
+ {id:"n01",number:"001",zone:0,x:9,y:15,name:"Topo sospetto",kind:"Creatura di scalo",description:"Nino sostiene che sia un esemplare rarissimo. Vincenzo vorrebbe prima controllare se si muove.",hint:"Una piccola sagoma vicino ai binari. Nino si ferma subito.",color:"#9eb5b3",glyph:"?",label:"NOME PROVVISORIO"},
  {id:"n02",number:"002",zone:1,x:22,y:15,name:"Piccione immobile",kind:"Creatura da sottopasso",description:"Da tre giorni occupa lo stesso posto. Secondo Nino sta usando una tecnica segreta.",hint:"C'è qualcosa accanto a una pozzanghera.",color:"#a4a9c5",glyph:"?",label:"NOME PROVVISORIO"},
  {id:"n03",number:"003",zone:2,x:24,y:14,name:"Pesce misterioso",kind:"Creatura da marciapiede",description:"Un mistero acquatico comparso lontano dall'acqua. Nino è già pronto a mandare una foto al gruppo.",hint:"Un oggetto dalla forma improbabile è finito sull'asfalto.",color:"#e1b59c",glyph:"?",label:"NOME PROVVISORIO"}
 ];
 const NPC=[
- {zone:0,x:14,y:16,name:"Gianlluca",color:"#a6d8ce",role:"?",text:"Nino, guarda bene dove metti i piedi. Per il resto, se trovi qualcosa, mandami una foto sul gruppo."},
+ {zone:0,x:14,y:16,name:"Vincenzo",color:"#a6d8ce",role:"V",text:"Nino, vieni qui. Sono il professor Vincenzo: ecco il tuo primo Ninomon, Gialluca. Usalo bene e fotografa gli altri che incontri."},
  {zone:0,x:24,y:18,name:"Capostazione",color:"#d6b890",role:"!",text:"Un treno oggi? Forse. Chiedi a quello del turno prima, se lo trovi."},
  {zone:1,x:11,y:15,name:"Passante col cappuccio",color:"#9e8dad",role:"…",text:"Qui sotto hanno trovato di tutto. Io preferisco non sapere cos'hai appena fotografato."},
  {zone:2,x:13,y:17,name:"Venditore",color:"#dab186",role:"!",text:"Nino, oggi cerchi un parcheggio o un'altra creatura? Non rispondere, ho già capito."},
  {zone:2,x:27,y:18,name:"Custode del deposito",color:"#bda784",role:"!",text:"Qui ogni settimana sparisce qualche cosa. Qualcuno pensa siano i Ninomon."}
 ];
 const intro=[
- {tag:"INTRO · 1/7",name:"GIANLLUCA",speaker:"GL",text:"Oh, Nino!\nSei arrivato finalmente!"},
- {tag:"INTRO · 2/7",name:"GIANLLUCA",speaker:"GL",text:"Benvenuto nel mondo dei NINOMON! Io sono Gianlluca. Con due L, mi raccomando."},
- {tag:"INTRO · 3/7",name:"GIANLLUCA",speaker:"GL",text:"Le creature rare si nascondono nei posti dove nessuno vuole fermarsi a guardare."},
- {tag:"INTRO · 4/7",name:"GIANLLUCA",speaker:"GL",text:"Scali ferroviari. Sottopassi. Strade di servizio. In giro trovi di tutto."},
- {tag:"INTRO · 5/7",name:"GIANLLUCA",speaker:"GL",text:"Tu sei Nino. Fotografi ogni cosa sospetta e scrivi sul gruppo: «Gianlluca, ho trovato un Ninomon!»"},
- {tag:"INTRO · 6/7",name:"GIANLLUCA",speaker:"GL",text:"Ti presto la mia mascotte. Sconfiggi gli altri Ninomon e registra gli avvistamenti."},
- {tag:"INTRO · 7/7",name:"GIANLLUCA",speaker:"GL",text:"Comincia dallo scalo. Tre Ninomon ti aspettano. Se trovi un pesce per terra, avvisami."}
+ {tag:"PROFESSOR VINCENZO · 1/7",name:"VINCENZO",speaker:"V",text:"Benvenuto, Nino! Sono il professor Vincenzo. Ti aspettavo qui al lago."},
+ {tag:"PROFESSOR VINCENZO · 2/7",name:"VINCENZO",speaker:"V",text:"Questo è il mondo dei NINOMON. Sono strane creature delle nostre strade."},
+ {tag:"PROFESSOR VINCENZO · 3/7",name:"VINCENZO",speaker:"V",text:"Li puoi trovare tra binari, sottopassi, graffiti e cassonetti. Apri bene gli occhi."},
+ {tag:"PROFESSOR VINCENZO · 4/7",name:"VINCENZO",speaker:"V",text:"Ecco il tuo primo Ninomon: GIALLUCA. È un tipo vivace e conosce il Ruttino."},
+ {tag:"PROFESSOR VINCENZO · 5/7",name:"VINCENZO",speaker:"V",text:"Tu sei Nino, il writer. Segnala sul gruppo ogni nuovo avvistamento."},
+ {tag:"PROFESSOR VINCENZO · 6/7",name:"VINCENZO",speaker:"V",text:"Porta Gialluca con te. Vinci gli incontri, fotografa i Ninomon e completa la Ninodex."},
+ {tag:"PROFESSOR VINCENZO · 7/7",name:"VINCENZO",speaker:"V",text:"Vai allo scalo ferroviario. Trova i tre Ninomon e torna a dirmi come è andata!"}
 ];
 const SCENERY=[
  {zone:0,x:18,y:13,name:"Orario sospeso",text:"Sul tabellone c'è scritto che il treno è in ritardo di 37 anni. Nino fotografa anche questo."},
- {zone:1,x:8,y:14,name:"Graffito misterioso",text:"Sul pilone qualcuno ha scritto: «I NINOMON ESISTONO». Gianlluca nega di essere stato lui."},
+ {zone:1,x:8,y:14,name:"Graffito misterioso",text:"Sul pilone qualcuno ha scritto: «I NINOMON ESISTONO». Vincenzo nega di essere stato lui."},
  {zone:2,x:19,y:15,name:"Scatola delle prove",text:"Tre sacchetti, un tappo e una foto sfocata. Qualcuno ha già cercato dei Ninomon qui."}
 ];
 for(const npc of NPC){
@@ -184,7 +184,7 @@ function wanderingEncounter(){
   state.wildCooldown=23;state.randomBattles++;
   const found=ENCOUNTERS.find(c=>c.zone===area);
   panel({mode:"encounter",tag:"INCONTRO CASUALE",title:"QUALCOSA SI MUOVE!",icon:"?",color:found.color,
-    text:"Nino ha visto un movimento tra i rifiuti. Potrebbe essere un "+found.name+". Gianlluca riceverà un'altra foto sfocata?",
+    text:"Nino ha visto un movimento tra i rifiuti. Potrebbe essere un "+found.name+". Vincenzo riceverà un'altra foto sfocata?",
     actions:[{label:"⚔ SFIDA",onClick:()=>startBattle(found)},{label:"LASCIA STARE",variant:"alt",onClick:closePanel}]});
  }
 }
@@ -246,8 +246,8 @@ function inspect(){
  if(n.kind==="person"){
   const npc=n.data;
   let message=npc.text;
-  if(npc.name==="Gianlluca"&&count()>0)message="Nino, hai già fotografato "+count()+" Ninomon. Trova anche i tre indizi nascosti nelle zone: sulla ferrovia, sotto il ponte e dietro il mercato.";
-  if(npc.name==="Gianlluca"&&Object.keys(state.clues).length===3)message="Hai trovato tutti gli indizi? Ti ho preparato un premio: tutta la tua squadra ha un punto Fiato in più in combattimento. Ora non fare altre foto sfocate!";
+  if(npc.name==="Vincenzo"&&count()>0)message="Nino, hai già fotografato "+count()+" Ninomon. Trova anche i tre indizi nascosti nelle zone: sulla ferrovia, sotto il ponte e dietro il mercato.";
+  if(npc.name==="Vincenzo"&&Object.keys(state.clues).length===3)message="Hai trovato tutti gli indizi? Ho preparato un premio: tutta la tua squadra ha un punto Fiato in più in combattimento. Ora non fare altre foto sfocate!";
   panel({mode:"talk",tag:"DIALOGO · "+ZONES[player.zone].title,title:npc.name,text:message,icon:npc.role,color:npc.color,actions:[{label:"CONTINUA",onClick:closePanel}]});
  }else if(n.kind==="clue"){
   const item=n.data,first=!state.clues[item.name];
@@ -258,7 +258,7 @@ function inspect(){
    actions:[{label:"RIPRENDI",onClick:closePanel},{label:"VEDI NINODEX",variant:"alt",onClick:openDex}]});
  }else{
   const p=n.data,seen=!!state.found[p.id];
-  panel({mode:"encounter",tag:"AVVISTAMENTO · "+p.number,title:seen?p.name:"UN NINOMON?!",icon:"?",color:p.color,text:p.hint+"\n\n"+(seen?"Lo hai già registrato. Vuoi sfidarlo ancora?":"Nino: «Gianlluca! Ho trovato un Ninomon!»\nSfidalo in battaglia per riuscire a fotografarlo."),actions:[{label:seen?"⚔ RIVINCITA":"⚔ INIZIA LA SFIDA",onClick:()=>startBattle(p)},{label:"LASCIA STARE",variant:"alt",onClick:closePanel}]});
+  panel({mode:"encounter",tag:"AVVISTAMENTO · "+p.number,title:seen?p.name:"UN NINOMON?!",icon:"?",color:p.color,text:p.hint+"\n\n"+(seen?"Lo hai già registrato. Vuoi sfidarlo ancora?":"Nino: «Ho trovato un Ninomon!»\nSfidalo in battaglia per riuscire a fotografarlo."),actions:[{label:seen?"⚔ RIVINCITA":"⚔ INIZIA LA SFIDA",onClick:()=>startBattle(p)},{label:"LASCIA STARE",variant:"alt",onClick:closePanel}]});
  }
 }
 
@@ -332,7 +332,7 @@ function battleTurn(action){
  if(outcome==="win"){
   const seen=!!state.found[target.id];
   panel({mode:"battle-result",tag:"VITTORIA · TURNO "+state.battle.round,title:"NINOMON SCONFITTO!",icon:"★",color:"#75967e",
-    text:"Hai battuto "+target.name+"! "+state.battle.log.slice(-3).join(" ")+"\\n"+(seen?"Questo Ninomon è già nella tua Ninodex.":"Ora puoi scattare la foto che Nino vuole mandare a Gianlluca."),
+    text:"Hai battuto "+target.name+"! "+state.battle.log.slice(-3).join(" ")+"\\n"+(seen?"Questo Ninomon è già nella tua Ninodex.":"Ora puoi scattare la foto che Nino vuole mandare a Vincenzo."),
     actions:[{label:seen?"TORNA ALLA MAPPA":"◎ FOTOGRAFA IL NINOMON",onClick:seen?closePanel:()=>photo(target)},{label:"UN'ALTRA SFIDA",variant:"alt",onClick:()=>{closePanel();startBattleFromMap(target);}}]});
  }else if(outcome==="lose"){
   panel({mode:"battle-result",tag:"BATTAGLIA FINITA",title:"NINO HA PERSO",icon:"!",color:"#997773",
@@ -381,7 +381,7 @@ function shareUrl(){
 }
 function finishChapter(){
  panel({mode:"complete",tag:"CAPITOLO 0 · COMPLETATO",title:"NINO, MA COS'HAI TROVATO?",icon:"★",color:"#688776",
-  text:"Hai fotografato tutti e tre i Ninomon della prima esplorazione.\nGianlluca ha ricevuto le segnalazioni. Ha chiesto soltanto: «Nino, ma sei sicuro?».\n\nIl prossimo capitolo aggiungerà personaggi e Ninomon realizzati sulle referenze originali.",
+  text:"Hai fotografato tutti e tre i Ninomon della prima esplorazione.\nVincenzo ha ricevuto le segnalazioni. Ha chiesto soltanto: «Nino, ma sei sicuro?».\n\nIl prossimo capitolo aggiungerà personaggi e Ninomon realizzati sulle referenze originali.",
   actions:[{label:"TORNA IN STRADA",onClick:closePanel},{label:"APRI NINODEX",variant:"alt",onClick:openDex},{label:"SQUADRA",variant:"alt",onClick:chooseTeam},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()}]});
 }
 function openDex(){
@@ -405,7 +405,7 @@ function confirmReset(){
 /* True 160×144 handheld framebuffer. Every environmental 16×16 metatile
    is constructed from original 8×8 four-colour pixel patterns in retro.js. */
 function render(){
- if(state.mode==="intro"){R.introLake(g,state.time);return;}
+ if(state.mode==="intro"){R.introLake(g,state.time,state.intro);return;}
  const cx=Math.floor(clamp(player.x*S-W/2,0,MW*S-W));
  const cy=Math.floor(clamp(player.y*S-H/2,0,MH*S-H));
  state.camera.x=cx;state.camera.y=cy;
@@ -437,7 +437,7 @@ function render(){
   if(xx<-20||xx>W+20||yy<-20||yy>H+20)continue;
   if(a.kind==="player")R.person(g,xx,yy,"player",player.facing,player.walk);
   else if(a.kind==="person"){
-   R.person(g,xx,yy,a.data.name==="Gianlluca"?"guide":"npc",a.data.facing,a.data.motion>0.05?state.time*10:0);
+   R.person(g,xx,yy,a.data.name==="Vincenzo"?"guide":"npc",a.data.facing,a.data.motion>0.05?state.time*10:0);
    R.text(g,a.data.role,xx-2,yy-25,p[0],7);
   }else if(a.kind==="clue"){
    g.fillStyle=p[0];g.fillRect(xx-7,yy-9,14,9);
