@@ -49,6 +49,12 @@ const floorAtlas=new Image();
 floorAtlas.decoding="async";
 floorAtlas.src="./assets/street-floor-tiles.png?v=1";
 const floorReady=()=>floorAtlas.complete&&floorAtlas.naturalWidth===320&&floorAtlas.naturalHeight===96;
+// 72 newly cropped opaque ground textures (24 per setting); source 64px version
+// is archived alongside this 32px game atlas. Existing 30-sample sheet stays as fallback.
+const floorV2=new Image();
+floorV2.decoding="async";
+floorV2.src="./assets/pavements/floor-game-32.png?v=1";
+const floorV2Ready=()=>floorV2.complete&&floorV2.naturalWidth===768&&floorV2.naturalHeight===96;
 const PAL=[
  ["#1d3034","#374d49","#596b5a","#829278","#abb58f","#d9d8b1","#90755c","#715649"],
  ["#202f3c","#3b5360","#5c7479","#849c9c","#b3bdac","#dde0c5","#8f8471","#68828b"],
@@ -104,6 +110,35 @@ function floorIndex(zone,x,y,key){
  const choices=group[bucket],selection=(jitter+Math.floor(patch/7))%choices.length;
  return choices[selection];
 }
+const FLOOR_GROUPS_V2=[
+ {regular:[0,1,1,3,4,20,22],rough:[2,3,4,15,22,23],loose:[5,6,8,9,10,11,16,17,18,19,21],wet:[22,23],grass:[6,9,17,21]},
+ {regular:[0,1,3,7,8,10,11,16,20],rough:[2,4,5,9,17,18,19],loose:[6,13,14,21,22],wet:[2,4,17],paver:[12]},
+ {regular:[0,1,4,8,10,16,17,20,21,23],rough:[2,3,8,10,20],loose:[14,15,16],wet:[10,20],paver:[6,7,18,19,22]}
+];
+function floorIndexV2(z,x,y,key){
+ // Rail, paving and lane markings are purposeful features; never randomly place
+ // these in the open asphalt/ballast. All indices correspond to floor-manifest.json.
+ if(z===0&&(key==="track"||key==="sleepers"))return [7,12,13,14][((x+Math.floor(y/2))%4+4)%4];
+ if(z===1&&key==="grate")return 12;
+ if(z===2&&key==="paver")return [6,7,18,19][Math.floor(x/4)%4];
+ if(z===2&&y===12&&x>=12&&x<=29&&x%4===2)return 9; // faded white marking
+ if(z===2&&y===16&&x>=14&&x<=24)return 5;             // continuous yellow line
+ if(z===2&&key==="grate")return 12;
+ const group=FLOOR_GROUPS_V2[z];
+ let bucket="regular";
+ if(key==="ballast"||key==="weeds"||key==="grass"||key==="shrub")bucket=z===0&&key==="grass"?"grass":"loose";
+ else if(key==="puddle")bucket="wet";
+ else if(key==="crack"||key==="grate")bucket="rough";
+ else if(z===0&&y<9)bucket="loose";
+ else if(z===1&&y>=12&&[5,6,18,19,30,31].includes(x)&&hash(Math.floor(x/4),Math.floor(y/3),z)%5<3)bucket="loose";
+ else if(hash(Math.floor(x/5),Math.floor(y/4),z)%100<19)bucket="rough";
+ const options=group[bucket];
+ // Stable 3x3 batches retain material continuity; about 1/5 of cells carry
+ // a different texture to avoid mechanically identical squares.
+ const patch=hash(Math.floor(x/3),Math.floor(y/3),z+31);
+ const detail=hash(x*11,y*13,z+19);
+ return options[(patch+(detail%5===0?detail%options.length:0))%options.length];
+}
 function fallback(c,fn,...params){
  if(typeof c.save==="function")c.save();
  if(typeof c.scale==="function")c.scale(2,2);
@@ -113,10 +148,13 @@ function fallback(c,fn,...params){
 const cache=[new Map(),new Map(),new Map()];
 floorAtlas.onload=function(){for(const memo of cache)memo.clear();};
 floorAtlas.onerror=function(){for(const memo of cache)memo.clear();};
+floorV2.onload=function(){for(const memo of cache)memo.clear();};
+floorV2.onerror=function(){for(const memo of cache)memo.clear();};
 function build(z,x,y){
  const key=old.kind(z,x,y),variant=((x*13+y*19)%7+7)%7,p=PAL[z];
- const surface=floorIndex(z,x,y,key);
- const id=key+":"+variant+":"+surface+":"+(floorReady()?1:0);
+ const sourceMode=floorV2Ready()?2:floorReady()?1:0;
+ const surface=sourceMode===2?floorIndexV2(z,x,y,key):floorIndex(z,x,y,key);
+ const id=key+":"+variant+":"+surface+":"+sourceMode;
  const memo=cache[z];if(memo.has(id))return memo.get(id);
  const tile=document.createElement("canvas");tile.width=T;tile.height=T;
  const t=tile.getContext("2d");t.imageSmoothingEnabled=false;
@@ -128,18 +166,19 @@ function build(z,x,y){
    key==="puddle"?p[3]:
    key==="wagon"||key==="roof"||key==="wall"||key==="column"?p[2]:p[3];
  rect(t,0,0,T,T,base);
- if(floorReady())t.drawImage(floorAtlas,surface*T,z*T,T,T,0,0,T,T);
+ if(sourceMode===2)t.drawImage(floorV2,surface*T,z*T,T,T,0,0,T,T);
+ else if(sourceMode===1)t.drawImage(floorAtlas,surface*T,z*T,T,T,0,0,T,T);
  // Only generate synthetic grain when the original flooring image is unavailable.
- if(!floorReady()&&(key==="asphalt"||key==="crack")){
+ if(sourceMode===0&&(key==="asphalt"||key==="crack")){
   for(let xx=0;xx<T;xx+=11)rect(t,xx,(xx*3+variant*7)%31,4,1,p[2]);
   for(let yy=5;yy<T;yy+=9)rect(t,(yy*5+variant*3)%29,yy,2,1,p[0]);
  }
- if(!floorReady()&&key==="ballast"){
+ if(sourceMode===0&&key==="ballast"){
   for(let n=0;n<18;n++){const xx=(n*17+variant*7)%30,yy=(n*11+variant*13)%30;
    rect(t,xx,yy,2,2,n%3===0?p[0]:n%3===1?p[3]:p[6]);
   }
  }
- if(!floorReady()&&(key==="grass"||key==="weeds")){
+ if(sourceMode===0&&(key==="grass"||key==="weeds")){
   for(let n=0;n<12;n++){const xx=(n*11+variant*7)%29,yy=(n*19+variant*3)%30;
    rect(t,xx,yy,1,3,p[1]);rect(t,xx-1,yy+1,3,1,p[4]);
   }
@@ -151,21 +190,21 @@ function build(z,x,y){
  if(key==="curb"){rect(t,0,0,T,5,p[5]);rect(t,0,5,T,4,p[0]);}
  if(key==="metal"){for(let yy=0;yy<T;yy+=8){rect(t,0,yy,T,3,p[0]);rect(t,0,yy+3,T,1,p[4]);}}
  const seed=hash(x,y,z);
- if(!floorReady()&&["asphalt","crack","ballast","concrete","paver","grass","weeds","puddle"].includes(key)){
+ if(sourceMode===0&&["asphalt","crack","ballast","concrete","paver","grass","weeds","puddle"].includes(key)){
   for(let n=0;n<14;n++){
    const hx=hash(variant+n,n*7+z,seed%73),hy=hash(n*3+z,variant+n*5,seed%59);
    const xx=hx%30+1,yy=hy%30+1;
    rect(t,xx,yy,n%4===0?2:1,1,n%3===0?p[4]:n%3===1?p[1]:p[6]);
   }
  }
- if(!floorReady()&&["asphalt","crack"].includes(key)&&variant%3===0){
+ if(sourceMode===0&&["asphalt","crack"].includes(key)&&variant%3===0){
   rect(t,8,11,1,7,p[0]);rect(t,9,17,6,1,p[0]);rect(t,13,17,1,5,p[0]);
   rect(t,15,21,4,1,p[1]);rect(t,2,5,2,1,p[4]);
  }
- if(key==="paver"||key==="concrete"){
+ if(sourceMode!==2&&(key==="paver"||key==="concrete")){
   for(let xx=0;xx<32;xx+=16){rect(t,xx,15,16,1,p[1]);rect(t,xx+7,1,1,14,p[3]);rect(t,xx+15,16,1,15,p[3]);}
  }
- if(!floorReady()&&(key==="ballast"||key==="grass"||key==="weeds")){
+ if(sourceMode===0&&(key==="ballast"||key==="grass"||key==="weeds")){
   for(let i=0;i<5;i++){
    const xx=(hash(i,x,z)+7)%28+2,yy=(hash(y,i,z)+5)%25+3;
    rect(t,xx,yy,1,4,p[1]);rect(t,xx-2,yy+1,2,1,p[3]);rect(t,xx+1,yy+2,2,1,p[4]);
@@ -186,7 +225,7 @@ function build(z,x,y){
   }
   rect(t,0,6,32,3,p[0]);rect(t,0,26,32,2,p[0]);
  }
- if(key==="track"||key==="sleepers"){
+ if(sourceMode!==2&&(key==="track"||key==="sleepers")){
   rect(t,0,7,32,3,p[0]);rect(t,0,21,32,3,p[0]);
   rect(t,0,8,32,1,p[5]);rect(t,0,22,32,1,p[5]);
   if(variant%2===0){for(let xx=3;xx<32;xx+=9)rect(t,xx,3,4,26,p[6]);}
@@ -205,7 +244,7 @@ function build(z,x,y){
   rect(t,0,0,32,4,p[0]);rect(t,2,5,28,25,p[1]);
   for(let yy=10;yy<30;yy+=7)rect(t,4,yy,24,1,p[6]);
  }
- if(key==="puddle"){
+ if(sourceMode!==2&&key==="puddle"){
   rect(t,4,15,23,4,p[1]);rect(t,8,13,17,2,p[3]);rect(t,10,16,10,1,p[5]);
  }
  memo.set(id,t);return t;
@@ -486,5 +525,5 @@ function introLake(c,phase=0,chapter=0){
  frame(c,22,8,158,30,0);
  text(c,"LAGO DEI NINOMON",30,15,DARK,14);
 }
-root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,introStory,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,ninoHD,ninoReady,giallucaHD,giallucaReady,largeHD,largeReady,largePortrait,revision:"snes-street-large-portraits-alpha-fixed-v2"});
+root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,introStory,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,floorV2,floorV2Ready,floorIndexV2,ninoHD,ninoReady,giallucaHD,giallucaReady,largeHD,largeReady,largePortrait,revision:"snes-overworld-72-floor-tiles-v1"});
 })(window);
