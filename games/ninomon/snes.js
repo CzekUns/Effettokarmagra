@@ -53,11 +53,17 @@ function floorIndex(zone,x,y,key){
  else if(key==="puddle")bucket="wet";
  else if(key==="crack"||key==="grate")bucket="rough";
  else if(z===0&&y<9)bucket="loose";
+ // Under the bridge, loose gravel gathers around the pillars.
+ else if(z===1&&y>=12&&([5,6,18,19,30,31].includes(x))&&patch%5<3)bucket="loose";
  // Patches of older pavement are clustered, avoiding a noisy checkerboard.
  else if((patch%100)<19)bucket="rough";
- // Shop-front paint stays in an intentional aligned street marking, not random.
+ // Puddles at the rail depot are localised near the ballast, not everywhere.
+ if(z===0&&key==="ballast"&&y>=4&&patch%23===0)return 4+jitter%2;
+ // Street lines form recognizable road markings instead of random painted squares.
  if(z===2&&y===12&&x>=12&&x<=29&&x%4===2)return 5;
  if(z===2&&y===12&&x>=12&&x<=29&&x%4===3)return 7;
+ if(z===2&&y===16&&x>=14&&x<=24&&x%4===1)return 8;
+ if(z===2&&y===16&&x>=14&&x<=24&&x%4===2)return 3;
  const choices=group[bucket],selection=(jitter+Math.floor(patch/7))%choices.length;
  return choices[selection];
 }
