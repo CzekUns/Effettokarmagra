@@ -85,18 +85,16 @@ Secondo arcade giocabile, con lo **stesso SVG di Biagio calvo e vestito di nero*
 
 ## Biagio Gelo: Scootercross — Via Roma, Melito
 
-Terzo arcade: **motocross a scorrimento laterale**, ispirato alla leggibilità e alla palette dei vecchi arcade 8-bit. Si gioca con **telefono orizzontale** o su PC. Sul telefono tenuto in verticale compare un invito a ruotarlo.
+Terzo arcade: corsa a scorrimento laterale in **telefono orizzontale** o su PC. Il gioco invita a ruotare lo smartphone quando è in verticale.
 
-- Ambientazione pixel art di **Via Roma a Melito di Napoli**, con edifici residenziali, balconi, tende da negozio, attività commerciali, lampioni, alberi, marciapiede e auto parcheggiate. Interpretazione stilizzata: non riproduzione esatta degli edifici o della geometria stradale.
-- Sprite vettoriale 8-bit laterale `games/scootercross/assets/biagio-side-pixel.svg`: Biagio con cappello rosso, occhiali bianchi, maglia blu, pantaloncini beige, sullo scooter bordeaux con bauletto.
-- Canvas **480×270**, disegnato a pixel netti e ingrandito senza antialias.
-- Fisica arcade: accelerazione, frenata, salto manuale, gravità, inclinazione dello scooter in volo, atterraggio, ostacoli e tre vite.
-- **Comandi touch**, ai lati del campo: FRENA, ACCELERA, SALTA, INCLINA SU, INCLINA GIÙ, TURBO.
-- **PC:** frecce o WASD per accelerare, frenare e inclinarsi, spazio per saltare, Shift per turbo, P per pausa.
-- Monete, bonus di salto e atterraggio, tempo, progresso, record salvato nel browser, musica elettronica 8-bit, effetti sonori sintetizzati.
-- A fine partita: condivisione WhatsApp del punteggio, con link diretto al gioco.
-
-Questo sostituisce la precedente variante a scorrimento verticale. Altri asset prototipali rimangono nella cartella del gioco, senza essere caricati dalla versione attiva.
+- Scenario 16-bit in pixel art ispirato a **Via Roma a Melito di Napoli**, con facciate differenti, balconi, tende, negozi, alberi e auto parcheggiate. È una reinterpretazione illustrata, non una ricostruzione geografica esatta.
+- Personaggio in PNG pixel art `games/scootercross/assets/biagio-scooter-illustrated.png`, con fallback allo sprite SVG: Biagio con cappellino rosso, occhiali bianchi e scooter bordeaux col bauletto.
+- Canvas 480×270 a scorrimento laterale, salti, buche, barili, monete, turbo e tre vite.
+- **Controlli touch, lato sinistro:** SALTA e IMPENNA, pulsanti tondi.
+- **Controlli touch, lato destro:** FRENO tondo più piccolo, accanto ad ACCELERA grande e tondo. TURBO rimane un pulsante compatto sotto la pista.
+- **Impennata a rischio:** tieni premuto IMPENNA mentre vai a velocità sufficiente. La barra EQUILIBRIO sale e accumuli punti; rilascia prima del rosso o ti ribalti perdendo una vita. Il punteggio rimane acquisito anche dopo un ribaltamento.
+- **PC:** → o D accelera, ← o A frena, Spazio salta, ↑ o W impenna, ↓ o S inclina avanti durante i salti, Shift turbo, P pausa.
+- Record personale in locale e suoni chiptune; a fine partita, link **Condividi il punteggio su WhatsApp**, presente anche nel menu superiore durante la corsa. Il messaggio contiene il punteggio corrente e il link diretto al gioco.
 
 ## Tecnologia
 
