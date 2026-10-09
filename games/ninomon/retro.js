@@ -250,5 +250,31 @@ function battle(c,b,z,lines){
  if(row)linesShown.push(row);
  for(let i=0;i<Math.min(3,linesShown.length);i++)text(c,linesShown[i],5,116+i*8,p[0],6);
 }
-root.NINOMON_RETRO={W,H,T,P,A,ground,person,monster,symbol,text,frame,bar,battle,kind};
+
+function introLake(c,phase=0){
+ const p=P[0];rect(c,0,0,W,H,p[2]);
+ // 16x16 lawn with 8x8 weed repetitions, winding stony shore.
+ for(let y=0;y<H;y+=16)for(let x=0;x<W;x+=16){
+  c.drawImage(builtTile(0,((x+y/2)%48===0)?"weeds":"grass",((x+y)/16)%3),x,y);
+ }
+ // Dither-free stepped lake shoreline.
+ for(let y=13;y<95;y++){
+  let delta=Math.abs(53-y);
+  const left=14+Math.floor(delta*.48),right=147-Math.floor(delta*.65);
+  rect(c,left-3,y,right-left+6,1,p[0]);
+  rect(c,left,y,right-left,1,p[1]);
+  if(y%9===0){rect(c,left+19,y,17,1,p[3]);rect(c,right-35,y,13,1,p[2]);}
+ }
+ // Stone steps, small bench, sign and two pixel pedestrians.
+ rect(c,9,98,143,3,p[0]);rect(c,9,101,143,7,p[3]);rect(c,12,105,133,1,p[1]);
+ rect(c,117,96,2,20,p[0]);rect(c,120,96,2,20,p[0]);rect(c,113,93,16,4,p[2]);
+ rect(c,111,89,20,3,p[0]);
+ rect(c,133,82,2,23,p[0]);rect(c,129,79,11,7,p[3]);rect(c,130,80,9,1,p[0]);
+ person(c,64,104,"player","up");
+ person(c,91,104,"guide","down");
+ frame(c,42,6,77,15,0);
+ text(c,"LAGO DEI NINOMON",46,11,p[0],7);
+}
+
+root.NINOMON_RETRO={W,H,T,P,A,ground,person,monster,symbol,text,frame,bar,battle,kind,introLake};
 })(window);
