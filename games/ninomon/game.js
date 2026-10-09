@@ -320,7 +320,7 @@ function showEnemyIntent(){
  const intent=state.battle&&state.battle.intent;
  const box=$("enemy-intent");
  if(!box)return;
- box.classList.toggle("danger",!!intent&&(intent.power>=27||intent.action==="rest"===false&&intent.type==="rutto"&&intent.power>=19));
+ box.classList.toggle("danger",!!intent&&(intent.power>=27||(intent.action!=="rest"&&intent.type==="rutto"&&intent.power>=19)));
  if(state.battleBusy){
   box.children[0].children[0].textContent="IL TURNO È IN CORSO";
   box.children[0].children[1].textContent="Guarda i colpi sullo schermo; tocca il display per avanzare.";
@@ -412,7 +412,7 @@ function drawBattleEvent(){
  let cue=null;
  if(fx.event){
   cue={kind:fx.event.kind,who:fx.event.who,target:fx.event.target,
-    timestamp:state.time,startedAt:fx.eventAt,type:fx.event.type,effectiveness:fx.event.effectiveness};
+    timestamp:state.time,startedAt:fx.eventAt,type:fx.event.type,effectiveness:fx.event.effectiveness,damage:fx.event.damage,status:fx.event.status};
  }
  R.battle(battleCtx,battleProjection(fx),player.zone,[fx.message],cue);
 }
@@ -431,6 +431,11 @@ function advanceBattleAnimation(){
  if(state.time>=fx.nextAt){
   if(fx.index>=fx.events.length){finishBattleAnimation();return;}
   const event=fx.events[fx.index++];
+  // Distinct sounds and visual cues reinforce which action just happened.
+  if(event.kind==="hit")tone(event.who==="player"?680:235,.065,.008);
+  else if(event.kind==="miss")tone(200,.045,.006);
+  else if(event.kind==="guard")tone(480,.075,.007);
+  else if(event.kind==="victory")tone(880,.14,.013);
   fx.event=event;fx.eventAt=state.time;fx.message=event.text||"";
   if(event.kind==="switch"){
    fx.activeId=event.id;
@@ -552,6 +557,8 @@ function confirmReset(){
 /* True 160×144 handheld framebuffer. Every environmental 16×16 metatile
    is constructed from original 8×8 four-colour pixel patterns in retro.js. */
 function render(){
+ // During battle the combat canvas renders independently; never redraw 120 street tiles per frame behind it.
+ if(state.mode==="battle")return;
  if(state.mode==="title"){
   if(R.introStory)R.introStory(g,"title",state.time,0);
   else R.introLake(g,state.time,0);
