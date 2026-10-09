@@ -108,11 +108,15 @@ Quarto titolo di Arcade Club: **RPG urbano a turni in stile console portatile an
 - Introduzione al **Lago dei Ninomon** con Nino e **Gianlluca (due L)**: sette brevi dialoghi con box inferiore.
 - Nino, Gianlluca, passanti e mostriciattoli originali a pixel. Front sprite e back sprite per ogni creatura.
 - Schermata battaglia a 160×144 con sfondi diversi per zona, PS, Fiato e finestre pixel; menu mosse 2×2.
-- Scocca NINOBOY con D-pad, pulsanti A/B, margini safe-area e pagina scorrevole per schermi piccoli. Grafica definitiva dei personaggi da creare sulle reference.
+- Scocca NINOBOY con D-pad, pulsanti A/B, margini safe-area, LCD a ingrandimento esatto 2× quando lo spazio lo permette e pagina scorrevole per schermi piccoli. Grafica definitiva dei personaggi da creare sulle reference.
 
-**Gameplay:** tre ambienti esplorabili, NPC dialoganti, tre avvistamenti, Ninodex e salvataggi nel browser. Dopo una battaglia vinta si scatta la fotografia. `battle.js`: 32 mosse in otto categorie, quattro gradi, Fiato, effetti di stato, quattro mosse equipaggiate, squadre e Fuga. Le tecniche avanzate si sbloccano con le scoperte, senza livelli esperienza.
+**Gameplay aggiornato:** tre ambienti esplorabili con movimento a passi di una casella alla volta (animazione 170 ms/tile), collisioni con ostacoli, Ninomon e NPC. I passanti effettuano piccole pattuglie con movimento interpolato; il protagonista usa due fotogrammi per i passi. Dopo il primo avvistamento sono possibili anche **incontri casuali rari**, con periodo di sicurezza tra uno e l'altro.
+- **Tre indizi di quartiere:** tabellone dei treni, graffito sotto il ponte e scatola delle prove. Si esaminano, vengono riportati nella Ninodex e danno un **bonus permanente di +1 Fiato massimo** a tutte le creature della squadra.
+- **Checkpoint automatico:** posizione, zona, indizi e avanzamento dell'introduzione salvati in locale. Una partita ripresa non ripete la scena iniziale; "Nuova partita" azzera questi progressi dopo conferma.
+- **Battaglie:** 32 mosse in otto categorie, quattro gradi, Fiato, effetti di stato, quattro mosse equipaggiate e Fuga. Le categorie hanno **vantaggi e resistenze** che influenzano il danno. Durante la lotta è possibile **cambiare Ninomon** tra quelli già fotografati: ogni cambio consuma un turno, i PS individuali restano persi fino alla fine della sfida e, se uno va KO, deve entrare un compagno ancora in piedi.
+- Fotografia e registrazione nella Ninodex soltanto dopo una vittoria; le mosse di grado superiore si sbloccano con gli avvistamenti senza livelli esperienza.
 
-**Comandi:** D-pad e A Esamina / B Ninodex su telefono. PC frecce o WASD per camminare, E/Invio per esaminare, I Ninodex, 1–4 mosse, F Fiato, Esc Fuga.
+**Comandi:** D-pad e A Esamina / B Ninodex su telefono. PC frecce o WASD per camminare, E/Invio per esaminare, I Ninodex, 1–4 mosse, C per cambiare Ninomon, F Fiato, Esc Fuga.
 
 File: `games/ninomon/index.html`, `games/ninomon/retro.js`, `games/ninomon/game.js`, `games/ninomon/battle.js`, `games/ninomon/cover.svg`.
 
