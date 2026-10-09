@@ -80,17 +80,30 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .bts span{font-size:23px;line-height:1}
 .console-signature{display:flex;align-items:center;justify-content:center;gap:12px;color:#65747b;font-size:9px;font-weight:bold;margin:8px 0 0;transform:rotate(-6deg)}
 .console-signature strong{font-size:14px;font-weight:100}
-.battle-controls{padding:7px 0 2px}
+.battle-controls{padding:8px 1px 3px}
+.enemy-intent{display:flex;align-items:center;justify-content:space-between;gap:5px;min-height:35px;margin:0 0 6px;padding:5px 8px;border:2px solid #374954;background:#eef0d4;box-shadow:inset 0 0 0 2px #b4c2ac;color:#283a45;font-size:10px}
+.enemy-intent b{font-size:10px;letter-spacing:.15px}
+.enemy-intent span{display:block;font-size:9px;color:#50645b;margin-top:2px}
+.enemy-intent strong{flex:0 0 auto;padding:4px;background:#a4bba6;border:1px solid #49614d;font-size:10px}
+.enemy-intent.danger{background:#f3dfb9;border-color:#946245}
+.enemy-intent.danger strong{background:#f2ba83;border-color:#8b4d31}
+.battle-controls.is-busy .move-btn,.battle-controls.is-busy .battle-extras button{opacity:.6;pointer-events:none}
+.battle-hint{margin:5px 0 2px;min-height:14px;color:#536359;font:bold 9px/1.2 monospace;text-align:center}
+
 .move-heading{display:flex;align-items:center;justify-content:space-between;color:#293a42;gap:5px;margin-bottom:4px}
 .move-heading b{font-size:11px}.move-heading small{font-size:9px}
 .move-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
 .move-btn{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;gap:2px;min-height:49px;min-width:0;padding:5px;background:#daddb4;border:2px solid #293a42;box-shadow:2px 2px #718279;border-radius:0;color:#293a42}
-.move-btn b{font-size:10px;max-width:100%;white-space:normal;line-height:1.15}
+.move-btn b{font-size:10px;max-width:100%;white-space:normal;line-height:1.2}
+.move-btn .move-tag{font-size:8px;border:1px solid #697c70;display:inline-block;padding:1px 3px;margin-right:3px;background:#e5e5bd}
+.move-btn.good{border-color:#476b51;background:#deeacb}
+.move-btn.bad{border-color:#937a70;background:#e0d7be}
+.move-btn:focus-visible{outline:3px solid #e9ab70;outline-offset:0}
 .move-btn small{font-size:8px;color:#52675d;max-width:100%}
 .move-btn:disabled{opacity:.45;cursor:not-allowed}
 .move-btn:active:not(:disabled){background:#8e9e80;box-shadow:none}
-.battle-extras{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:5px}
-.battle-extras button{min-height:32px;border:2px solid #293a42;background:#8e9e80;color:#293a42;font:bold 9px monospace}
+.battle-extras{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:7px}
+.battle-extras button{min-height:37px;border:2px solid #293a42;background:#8e9e80;color:#293a42;font:bold 10px monospace}
 .party-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-top:5px}
 .party-options button{display:flex;flex-direction:column;align-items:start;justify-content:center;min-height:34px;padding:4px;background:#daddb4;color:#293a42;border:2px solid #293a42;font:bold 9px monospace}
 .party-options button small{font-size:8px;color:#52675d}
@@ -155,9 +168,11 @@ footer{margin-top:5px}
  </div>
 </div>
 <div class="battle-controls" id="battle-controls" hidden>
+ <div class="enemy-intent" id="enemy-intent" aria-live="polite"><div><b>OCCHIO AL NINOMON</b><span>Sta preparando la prossima mossa...</span></div><strong>?</strong></div>
  <div class="move-heading"><b>LE TUE MOSSE</b><small id="battle-round">TURNO 1</small></div>
  <div class="move-grid" id="battle-moves"></div>
- <div class="battle-extras"><button id="rest" type="button">+ FIATO</button><button id="switch" type="button">↔ CAMBIA</button><button id="flee" type="button">↩ FUGGI</button></div>
+ <div class="battle-extras"><button id="rest" type="button">◉ RIPRENDI FIATO</button><button id="guard" type="button">◆ DIFENDI (+2 F)</button><button id="switch" type="button">↔ CAMBIA NINOMON</button><button id="flee" type="button">↩ FUGGI</button></div>
+ <p class="battle-hint" id="battle-hint">Scegli una mossa: velocità e tipo fanno la differenza.</p>
  <div id="party-options" class="party-options" hidden aria-label="Scegli il Ninomon da mandare in campo"></div>
 </div>
 <div class="console-signature"><span>▰ ▰ SELECT</span><span>▰ ▰ START</span><strong>◖ ))) ◗</strong></div>
@@ -175,7 +190,7 @@ document.addEventListener("contextmenu",function(e){e.preventDefault();});
 </script>
 <script src="./retro.js?v=7"></script>
 <script src="./snes.js?v=10"></script>
-<script src="./battle.js?v=4"></script>
-<script src="./game.js?v=14"></script>
+<script src="./battle.js?v=5"></script>
+<script src="./game.js?v=15"></script>
 </body>
 </html>
