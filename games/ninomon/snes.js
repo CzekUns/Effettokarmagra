@@ -39,11 +39,17 @@ const mobs={starter:0,n01:5,n02:3,n03:4,n04:2,n05:1,n06:6,n07:7,n08:8,n09:9};
 const chars={player:0,gialluca:1,guide:2};
 const facing={down:0,left:1,right:2,up:3};
 function rect(c,x,y,w,h,color){c.fillStyle=color;c.fillRect(Math.floor(x),Math.floor(y),Math.floor(w),Math.floor(h));}
+let spriteFaultReported=false;
 function sprite(c,sx,sy,sw,sh,dx,dy,dw,dh){
  if(!ready())return false;
- c.imageSmoothingEnabled=false;
- c.drawImage(atlas,sx,sy,sw,sh,Math.round(dx),Math.round(dy),Math.round(dw),Math.round(dh));
- return true;
+ try{
+  c.imageSmoothingEnabled=false;
+  c.drawImage(atlas,sx,sy,sw,sh,Math.round(dx),Math.round(dy),Math.round(dw),Math.round(dh));
+  return true;
+ }catch(err){
+  if(!spriteFaultReported){spriteFaultReported=true;console.warn("Ninomon: sprite temporarily unavailable",err);}
+  return false;
+ }
 }
 function hash(x,y,z){let h=Math.imul(x+17,374761393)+Math.imul(y+83,668265263)+Math.imul(z+3,1442695041);h=(h^(h>>>13))>>>0;h=Math.imul(h,1274126177);return(h^(h>>>16))>>>0;}
 function rnd(h){return h/4294967295;}
@@ -217,14 +223,17 @@ function person(c,x,y,who="player",dir="down",walk=0){
   const smoothing=c.imageSmoothingEnabled,quality=c.imageSmoothingQuality;
   c.imageSmoothingEnabled=true;
   c.imageSmoothingQuality="high";
+  let drawn=false;
   try{
    c.drawImage(source,frame*128,d*176,128,176,
      Math.round(x-21),Math.round(y-61),42,61);
-  }finally{
+   drawn=true;
+  }catch(_){/* Fall back to the old sprites while the PNG finishes decoding. */}
+  finally{
    c.imageSmoothingEnabled=smoothing;
    c.imageSmoothingQuality=quality;
   }
-  return;
+  if(drawn)return;
  }
  if(ready()&&chars[role]!==undefined){
   if(sprite(c,frame*48,(chars[role]*4+d)*64,48,64,x-17,y-49,34,49))return;
@@ -339,8 +348,9 @@ function introStory(c,scene="professor",seconds=0,step=0){
   // Original trainer and starter on the title screen, above the button panel.
   if(ninoReady()){
    const previous=c.imageSmoothingEnabled;c.imageSmoothingEnabled=true;
-   c.drawImage(ninoHD,128,0,128,176,53,133,71,97);
-   c.imageSmoothingEnabled=previous;
+   try{c.drawImage(ninoHD,128,0,128,176,53,133,71,97);}
+   catch(_){person(c,100,225,"player","down");}
+   finally{c.imageSmoothingEnabled=previous;}
   }else person(c,100,225,"player","down");
   if(ready())sprite(c,144,0,112,112,178,134+wobble,110,106);
   else monster(c,"starter",201,155,2,false);
@@ -381,8 +391,9 @@ function introStory(c,scene="professor",seconds=0,step=0){
   rect(c,47,23,228,180,mid);rect(c,53,29,216,169,cream);
   if(ninoReady()){
    const previous=c.imageSmoothingEnabled;c.imageSmoothingEnabled=true;
-   c.drawImage(ninoHD,128,0,128,176,105,16+wobble,110,188);
-   c.imageSmoothingEnabled=previous;
+   try{c.drawImage(ninoHD,128,0,128,176,105,16+wobble,110,188);}
+   catch(_){person(c,170,206,"player","down");}
+   finally{c.imageSmoothingEnabled=previous;}
   }else person(c,170,206,"player","down");
   text(c,"TRAINER",21,207,dark,13);
   text(c,"NINO",243,207,dark,14);
@@ -395,7 +406,8 @@ function introLake(c,phase=0,chapter=0){
  const p=PAL[0];rect(c,0,0,W,H,p[3]);
  for(let y=0;y<H;y+=T)for(let x=0;x<W;x+=T){
   const tx=x/32,ty=y/32;
-  c.drawImage(build(0,tx+18,ty+3),x,y);
+  try{c.drawImage(build(0,tx+18,ty+3),x,y);}
+  catch(_){rect(c,x,y,T,T,p[2]);}
  }
  for(let y=22;y<207;y++){
   const d=Math.abs(y-103),left=28+Math.round(d*.38),right=288-Math.round(d*.42);
