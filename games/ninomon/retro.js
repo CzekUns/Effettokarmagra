@@ -6,7 +6,7 @@
 const W=160,H=144,T=16;
 // Single actual image atlas produced from the user-provided transparent sprite sheets.
 // Coordinates are fixed; missing/slow images fall back to existing procedural art.
-const IMAGE_SOURCE="./assets/ninomon-atlas.png?v=1";
+const IMAGE_SOURCE="./assets/ninomon-atlas.png?v=2";
 const art=typeof Image!=="undefined"?new Image():null;
 if(art){art.decoding="async";art.src=IMAGE_SOURCE;}
 function ready(){return !!(art&&art.complete&&art.naturalWidth===328&&art.naturalHeight===456);}
@@ -18,7 +18,7 @@ function sprite(c,sx,sy,sw,sh,dx,dy,dw,dh){
 }
 const DIR={down:0,left:1,right:2,up:3};
 const CHAR={player:0,guide:2,gialluca:1};
-const MOB={starter:0,n01:5,n02:3,n03:4,n04:2,n05:1};
+const MOB={starter:0,n01:5,n02:3,n03:4,n04:2,n05:1,n06:6,n07:7,n08:8,n09:9};
 
 const P=[
  ["#26393a","#586657","#899778","#d8d8ae"], // scalo
@@ -214,7 +214,9 @@ const MON_COL={
 function monster(c,id,x,y,scale=1,back=false){
  if(ready()&&MOB[id]!==undefined){
   const size=scale>=3?48:16;
-  if(sprite(c,72+(back?56:0),MOB[id]*56,56,56,x,y,size,size))return;
+  const index=MOB[id],srcX=index<6?72+(back?56:0):184+(back?56:0);
+  const srcY=index<6?index*56:104+(index-6)*56;
+  if(sprite(c,srcX,srcY,56,56,x,y,size,size))return;
  }
  const rows=MON[id]||MON.starter,p=MON_COL[id]||MON_COL.starter;
  const altered=back?rows.map((row,i)=>i>=4&&i<=9?row.replace(/3/g,"2"):row):rows;
