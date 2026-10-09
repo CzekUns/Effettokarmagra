@@ -99,26 +99,26 @@ Terzo arcade: corsa a scorrimento laterale in **telefono orizzontale** o su PC. 
 
 ## I Ninomon — Cronache di strada (Capitolo 0)
 
-Quarto titolo di Arcade Club: **RPG urbano a turni in stile console portatile anni '90**. Disegni originali, senza copiare asset Pokémon.
+Quarto titolo di Arcade Club: **RPG urbano a turni in stile console portatile anni '90**. Sprite PNG originali forniti dall’utente, senza utilizzare materiale Pokémon.
 
 **Rifacimento grafico:**
 - Framebuffer **160×144**, reso pixelated dal browser; metatile **16×16** composti da pattern **8×8**.
 - Renderer separato `games/ninomon/retro.js`: 23 modelli di tile, tre palette da quattro colori opachi, senza sfumature né antialiasing.
 - Scalo ferroviario con binari, vagoni, recinzioni e magazzini; sottopasso con pilastri, grate e pozzanghere; strada di servizio con saracinesche e asfalto rotto.
 - Introduzione al **Lago dei Ninomon** con Nino e **professor Vincenzo**: sette brevi dialoghi con box inferiore.
-- Nino, Vincenzo, passanti e mostriciattoli originali a pixel. Front sprite e back sprite per ogni creatura.
+- **Sprite reali ricavati dai fogli forniti**: Nino trainer (12 frame), Gialluca starter (12 frame e fronte/retro battaglia), professor Vincenzo (12 frame e due pose grandi introduttive), nove Ninomon urbani con fronte e retro, e dettagli stradali. Tutti integrati nel PNG `games/ninomon/assets/ninomon-atlas.png` e documentati in `assets/atlas.json`.
 - Schermata battaglia a 160×144 con sfondi diversi per zona, PS, Fiato e finestre pixel; menu mosse 2×2.
 - Scocca NINOBOY con D-pad, pulsanti A/B, margini safe-area, LCD a ingrandimento esatto 2× quando lo spazio lo permette e pagina scorrevole per schermi piccoli. Grafica definitiva dei personaggi da creare sulle reference.
 
-**Gameplay aggiornato:** tre ambienti esplorabili con movimento a passi di una casella alla volta (animazione 170 ms/tile), collisioni con ostacoli, Ninomon e NPC. I passanti effettuano piccole pattuglie con movimento interpolato; il protagonista usa due fotogrammi per i passi. Dopo il primo avvistamento sono possibili anche **incontri casuali rari**, con periodo di sicurezza tra uno e l'altro.
+**Gameplay aggiornato:** tre ambienti esplorabili con **nove avvistamenti** e movimento a passi di una casella alla volta (animazione 170 ms/tile), collisioni con ostacoli, Ninomon e NPC. I passanti effettuano piccole pattuglie con movimento interpolato; il protagonista usa sprite multi-frame per i passi e il Ninomon attivo lo segue visivamente sulla mappa. Dopo il primo avvistamento sono possibili anche **incontri casuali rari**, con periodo di sicurezza tra uno e l'altro.
 - **Tre indizi di quartiere:** tabellone dei treni, graffito sotto il ponte e scatola delle prove. Si esaminano, vengono riportati nella Ninodex e danno un **bonus permanente di +1 Fiato massimo** a tutte le creature della squadra.
-- **Checkpoint automatico:** posizione, zona, indizi e avanzamento dell'introduzione salvati in locale. Una partita ripresa non ripete la scena iniziale; "Nuova partita" azzera questi progressi dopo conferma.
+- **Checkpoint automatico:** posizione, zona, indizi e avanzamento dell'introduzione salvati in locale. Una partita ripresa non ripete la scena iniziale; dalla Ninodex si può rivedere l’assegnazione di **Gialluca da parte del professor Vincenzo** senza perdere i progressi. "Nuova partita" azzera i progressi solo dopo conferma.
 - **Battaglie:** 32 mosse in otto categorie, quattro gradi, Fiato, effetti di stato, quattro mosse equipaggiate e Fuga. Le categorie hanno **vantaggi e resistenze** che influenzano il danno. Durante la lotta è possibile **cambiare Ninomon** tra quelli già fotografati: ogni cambio consuma un turno, i PS individuali restano persi fino alla fine della sfida e, se uno va KO, deve entrare un compagno ancora in piedi.
 - Fotografia e registrazione nella Ninodex soltanto dopo una vittoria; le mosse di grado superiore si sbloccano con gli avvistamenti senza livelli esperienza.
 
 **Comandi:** D-pad e A Esamina / B Ninodex su telefono. PC frecce o WASD per camminare, E/Invio per esaminare, I Ninodex, 1–4 mosse, C per cambiare Ninomon, F Fiato, Esc Fuga.
 
-File: `games/ninomon/index.html`, `games/ninomon/retro.js`, `games/ninomon/game.js`, `games/ninomon/battle.js`, `games/ninomon/cover.svg`.
+File: `games/ninomon/index.html`, `games/ninomon/retro.js`, `games/ninomon/game.js`, `games/ninomon/battle.js`, `games/ninomon/assets/ninomon-atlas.png`, `games/ninomon/assets/atlas.json`, `games/ninomon/cover.svg`.
 
 ## Tecnologia
 
