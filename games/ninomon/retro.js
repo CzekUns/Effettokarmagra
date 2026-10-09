@@ -4,6 +4,22 @@
 (function(root){
 "use strict";
 const W=160,H=144,T=16;
+// Single actual image atlas produced from the user-provided transparent sprite sheets.
+// Coordinates are fixed; missing/slow images fall back to existing procedural art.
+const IMAGE_SOURCE="./assets/ninomon-atlas.png?v=1";
+const art=typeof Image!=="undefined"?new Image():null;
+if(art){art.decoding="async";art.src=IMAGE_SOURCE;}
+function ready(){return !!(art&&art.complete&&art.naturalWidth===328&&art.naturalHeight===456);}
+function sprite(c,sx,sy,sw,sh,dx,dy,dw,dh){
+ if(!ready())return false;
+ c.imageSmoothingEnabled=false;
+ c.drawImage(art,sx,sy,sw,sh,Math.round(dx),Math.round(dy),Math.round(dw),Math.round(dh));
+ return true;
+}
+const DIR={down:0,left:1,right:2,up:3};
+const CHAR={player:0,guide:2,gialluca:1};
+const MOB={starter:0,n01:5,n02:3,n03:4,n04:2,n05:1};
+
 const P=[
  ["#26393a","#586657","#899778","#d8d8ae"], // scalo
  ["#253542","#526671","#879b9a","#d1d2b8"], // sottopasso
@@ -115,6 +131,13 @@ function builtTile(z,key,variant){
 function ground(c,z,x,y,screenX,screenY,blocked){
  const key=kind(z,x,y,blocked),variant=((x*23+y*13)%5+5)%5;
  c.drawImage(builtTile(z,key,variant),screenX,screenY);
+ // Reuse original urban cut-outs supplied by the user on sparse tiles.
+ // Decorative overlays do not modify blocking and cannot interrupt the route.
+ if(ready()&&key!=="wagon"&&key!=="roof"&&key!=="wall"&&key!=="column"&&key!=="track"&&key!=="sleepers"&&key!=="fence"&&
+    ((x*17+y*23+z*7)%13===0)){
+   const which=Math.abs(x*3+y*5+z)%12;
+   sprite(c,which*24,384+z*24,24,24,screenX,screenY,16,16);
+ }
  // Details constrained to same 4-colour tile palette.
  const p=P[z];
  if((x*3+y*11+z)%31===0&&key==="asphalt"){
@@ -145,6 +168,11 @@ function bitmap(c,rows,x,y,p,scale=1,flip=false){
 }
 function person(c,x,y,who="player",facing="down",walk=0){
  const role=who==="player"?"player":who==="guide"?"guide":"npc";
+ if(ready()&&(role==="player"||role==="guide")){
+  const ri=CHAR[role],di=DIR[facing]===undefined?0:DIR[facing];
+  const frame=walk?Math.floor(walk*1.4)%3:1;
+  if(sprite(c,frame*24,(ri*4+di)*32,24,32,x-8,y-24,16,24))return;
+ }
  let p=HUMAN_P[role==="player"?0:role==="guide"?1:2],rows=PERSON[role];
  const bounce=walk?Math.floor(Math.sin(walk)*1):0;
  if(walk){
@@ -184,6 +212,10 @@ const MON_COL={
  n03:["", "#35404a","#b0b5a7","#e3cfaa","#8e91a5"]
 };
 function monster(c,id,x,y,scale=1,back=false){
+ if(ready()&&MOB[id]!==undefined){
+  const size=scale>=3?48:16;
+  if(sprite(c,72+(back?56:0),MOB[id]*56,56,56,x,y,size,size))return;
+ }
  const rows=MON[id]||MON.starter,p=MON_COL[id]||MON_COL.starter;
  const altered=back?rows.map((row,i)=>i>=4&&i<=9?row.replace(/3/g,"2"):row):rows;
  bitmap(c,altered,x,y,p,scale,back);
@@ -259,7 +291,7 @@ function battle(c,b,z,lines){
  for(let i=0;i<Math.min(3,linesShown.length);i++)text(c,linesShown[i],5,116+i*8,p[0],6);
 }
 
-function introLake(c,phase=0){
+function introLake(c,phase=0,chapter=0){
  const p=P[0];rect(c,0,0,W,H,p[2]);
  // 16x16 lawn with 8x8 weed repetitions, winding stony shore.
  for(let y=0;y<H;y+=16)for(let x=0;x<W;x+=16){
@@ -278,11 +310,14 @@ function introLake(c,phase=0){
  rect(c,117,96,2,20,p[0]);rect(c,120,96,2,20,p[0]);rect(c,113,93,16,4,p[2]);
  rect(c,111,89,20,3,p[0]);
  rect(c,133,82,2,23,p[0]);rect(c,129,79,11,7,p[3]);rect(c,130,80,9,1,p[0]);
- person(c,64,104,"player","up");
- person(c,91,104,"guide","down");
+ person(c,33,105,"player","up");
+ // Professor Vincenzo's real front / pointing portraits, not a placeholder.
+ if(!sprite(c,184+(chapter%3===0?0:72),0,72,94,93,4,62,76)){
+   person(c,108,92,"guide","down");
+ }
  frame(c,42,6,77,15,0);
  text(c,"LAGO DEI NINOMON",46,11,p[0],7);
 }
 
-root.NINOMON_RETRO={W,H,T,P,A,ground,person,monster,symbol,text,frame,bar,battle,kind,introLake};
+root.NINOMON_RETRO={W,H,T,P,A,ground,person,monster,symbol,text,frame,bar,battle,kind,introLake,sprite,ready};
 })(window);
