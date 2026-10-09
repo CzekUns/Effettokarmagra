@@ -247,14 +247,14 @@ function inspect(){
   const npc=n.data;
   let message=npc.text;
   if(npc.name==="Gianlluca"&&count()>0)message="Nino, hai già fotografato "+count()+" Ninomon. Trova anche i tre indizi nascosti nelle zone: sulla ferrovia, sotto il ponte e dietro il mercato.";
-  if(npc.name==="Gianlluca"&&Object.keys(state.clues).length===3)message="Hai trovato persino tutti gli indizi? Adesso sul gruppo non si parla d'altro. Questi Ninomon sono una faccenda seria.";
+  if(npc.name==="Gianlluca"&&Object.keys(state.clues).length===3)message="Hai trovato tutti gli indizi? Ti ho preparato un premio: tutta la tua squadra ha un punto Fiato in più in combattimento. Ora non fare altre foto sfocate!";
   panel({mode:"talk",tag:"DIALOGO · "+ZONES[player.zone].title,title:npc.name,text:message,icon:npc.role,color:npc.color,actions:[{label:"CONTINUA",onClick:closePanel}]});
  }else if(n.kind==="clue"){
   const item=n.data,first=!state.clues[item.name];
   if(first){state.clues[item.name]=true;save();tone(840,.14,.021);}
   const total=Object.keys(state.clues).length;
   panel({mode:"clue",tag:"INDIZIO URBANO · "+total+"/3",title:item.name.toUpperCase(),icon:"!",color:"#899778",
-   text:item.text+"\n\n"+(first?"Indizio aggiunto agli appunti di Nino.":"Hai già osservato questo indizio.")+(total===3?"\nHai scoperto tutti e tre gli indizi urbani!":""),
+   text:item.text+"\n\n"+(first?"Indizio aggiunto agli appunti di Nino.":"Hai già osservato questo indizio.")+(total===3?"\nHai scoperto tutti e tre gli indizi urbani! Ricompensa: FIATO MASSIMO +1 per tutta la squadra.":""),
    actions:[{label:"RIPRENDI",onClick:closePanel},{label:"VEDI NINODEX",variant:"alt",onClick:openDex}]});
  }else{
   const p=n.data,seen=!!state.found[p.id];
@@ -295,6 +295,9 @@ function startBattle(p){
  if(state.mode!=="encounter"&&state.mode!=="walk")return;
  state.battleTarget=p;
  state.battle=B.make(state.activeId,p.id,p.zone,count(),["starter",...Object.keys(state.found)]);
+ if(Object.keys(state.clues).length===SCENERY.length){
+  for(const fighter of Object.values(state.battle.party)){fighter.maxFiato=7;fighter.fiato=7;}
+ }
  state.mode="battle";state.primary=null;
  ui.overlay.classList.add("hidden");battleMode(true);
  updateBattleView(["Nino manda in campo "+state.battle.player.name+"! "+p.name+" si prepara a combattere."]);
@@ -385,7 +388,7 @@ function openDex(){
  const rows=ENCOUNTERS.map(c=>state.found[c.id]?"#"+c.number+" · "+c.name+" — "+ZONES[c.zone].short:"#"+c.number+" · ??? — da scoprire");
  const notes=SCENERY.map(x=>(state.clues[x.name]?"✓ ":"? ")+x.name);
  panel({mode:"dex",tag:"LA NINODEX · "+count()+"/"+ENCOUNTERS.length,title:"ARCHIVIO DEGLI AVVISTAMENTI",icon:"▣",color:"#536d79",
- text:rows.join("\n")+"\n\nINDIZI URBANI "+Object.keys(state.clues).length+"/3:\n"+notes.join("\n")+"\n\nPuoi cambiare Ninomon attivo prima di una sfida.",
+ text:rows.join("\n")+"\n\nINDIZI URBANI "+Object.keys(state.clues).length+"/3:\n"+notes.join("\n")+"\n\nPREMIO INDIZI: "+(Object.keys(state.clues).length===3?"+1 Fiato a tutta la squadra":"Completa i 3 indizi")+".\nPuoi cambiare Ninomon attivo prima di una sfida.",
  actions:[{label:"RIPRENDI",onClick:closePanel},{label:"CAMBIA NINOMON",variant:"alt",onClick:chooseTeam},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()},{label:"NUOVA PARTITA",variant:"alt",onClick:confirmReset}]});
 }
 function confirmReset(){
