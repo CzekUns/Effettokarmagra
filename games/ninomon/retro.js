@@ -147,6 +147,14 @@ function person(c,x,y,who="player",facing="down",walk=0){
  const role=who==="player"?"player":who==="guide"?"guide":"npc";
  let p=HUMAN_P[role==="player"?0:role==="guide"?1:2],rows=PERSON[role];
  const bounce=walk?Math.floor(Math.sin(walk)*1):0;
+ if(walk){
+  const walkFrame=Math.floor(walk*1.4)%4;
+  if(walkFrame===1||walkFrame===3){
+   rows=rows.slice();
+   rows[14]=walkFrame===1?"000110001100":"001100011000";
+   rows[15]=walkFrame===1?"001110000110":"000110001110";
+  }
+ }
  if(facing==="up"){
   rows=rows.map((row,i)=>i>=3&&i<=5?row.replace(/2/g,"3"):row);
  }
