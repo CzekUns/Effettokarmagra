@@ -29,6 +29,17 @@ Overworld ispirato alla costruzione delle mappe dei JRPG portatili anni 90: **to
 
 **Non cambiare per ora** risoluzione 320×317, griglia 32, mappa 35×24, localStorage/salvataggi, punti di spawn, 9 incontri, NPC, battaglie, tasti. Evitare il rifacimento simultaneo di engine e grafica.
 
+## Stato effettivo — Pavimentazioni 72 tile (10 ottobre 2026)
+
+**Completato e integrato nel gioco:**
+- Croppati **24 pavimenti per area** (Scalo, Sottopasso, Vicolo) dalla nuova tavola ambientale, **72 in totale**, eliminando le cornici scure presenti sulle singole celle originali.
+- Aggiunti sul branch main `assets/pavements/floor-source-64.png` (atlante 64×64) e `assets/pavements/floor-game-32.png` (atlante 32×32), con `floor-manifest.json` per identificativi, categorie e coordinate. Vedere `assets/pavements/README.md` per estrarre i file singoli.
+- `snes.js` adesso pesca effettivamente dall'atlante a **72 pavimenti**: materiale per zona, raggruppamenti stabili, binari solo nelle fasce ferroviarie, segnaletica solo nelle strisce stradali, marciapiedi riservati alle relative righe.
+- Il precedente atlas da **30 tile** e il disegno procedurale restano come fallback se il nuovo PNG non viene caricato.
+- Test automatizzato del renderer sulle **2.520 caselle delle tre mappe**: nessun indice fuori intervallo, nessuna eccezione, niente binari fuori sede. Collisioni e salvataggi invariati.
+
+**Ancora da fare:** transizioni realmente seamless e autotile per materiali diversi, strutture da moduli illustrati (muri, vagoni, archi, serrande), layer foreground/collisioni legato alla grafica e verifica visiva su Chrome Android. Le 72 texture sono ritagli di una tavola illustrata; non sono automaticamente perfettamente ripetibili lungo ogni bordo.
+
 ## Architettura bersaglio: mappe dichiarative a livelli
 
 Per ciascuna zona, un JSON o modulo JS con:
