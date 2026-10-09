@@ -42,6 +42,8 @@ const CREATURES={
  n03:{id:"n03",name:"Pesce misterioso",kind:"Creatura da marciapiede",hp:115,color:"#cdb0b0",symbol:"?",types:["pipi","schiamazzo"],base:["pipi-1","schiamazzo-1","pipi-2","schiamazzo-2"],advanced:["pipi-3","schiamazzo-3"],ultimate:"pipi-4"}
 };
 const ZONE_BONUS=["rottami","rutto","pipi"];
+// Two eight-category counterplay loops. A matching counter gives a modest bonus.
+const COUNTERS={rutto:"puzza",puzza:"schiamazzo",schiamazzo:"sfiga",sfiga:"rutto",sputo:"cacca",cacca:"pipi",pipi:"rottami",rottami:"sputo"};
 function availableTier(discoveries){return discoveries>=3?4:discoveries>=2?3:2;}
 function loadout(id,discoveries=0){
  const sp=CREATURES[id]||CREATURES.starter;
@@ -54,8 +56,11 @@ function actor(id,disc=0,levelHp){
  const sp=CREATURES[id]||CREATURES.starter;
  return{id:sp.id,name:sp.name,hp:levelHp||sp.hp,maxHp:sp.hp,fiato:6,maxFiato:6,status:{},moves:loadout(id,disc)};
 }
-function make(playerId,enemyId,zone=0,discovered=0){
- return{player:actor(playerId,discovered),enemy:actor(enemyId,Math.max(discovered,zone+1)),zone:Math.max(0,Math.min(2,zone)),round:0,ended:null,log:["Un "+CREATURES[enemyId].name+" appare davanti a Nino!"],last:null};
+function make(playerId,enemyId,zone=0,discovered=0,partyIds=[playerId]){
+ const ids=[...new Set([playerId,...partyIds])].filter(id=>CREATURES[id]);
+ const party={};
+ for(const id of ids)party[id]=actor(id,discovered);
+ return{player:party[playerId]||party.starter,party,enemy:actor(enemyId,Math.max(discovered,zone+1)),zone:Math.max(0,Math.min(2,zone)),round:0,ended:null,log:["Un "+CREATURES[enemyId].name+" appare davanti a Nino!"],last:null};
 }
 const cap=(n,a,b)=>Math.max(a,Math.min(b,n));
 function rngValue(fn){const n=Number((fn||Math.random)());return cap(Number.isFinite(n)?n:.5,0,.999999);}
@@ -79,6 +84,8 @@ function applyMove(battle,who,move,random,log){
  let damage=move.power;
  if(source.status.intimorito)damage=Math.round(damage*.77);
  if(CREATURES[source.id].types.includes(move.type))damage=Math.round(damage*1.1);
+ if(CREATURES[target.id].types.includes(COUNTERS[move.type])){damage=Math.round(damage*1.16);log.push("Mossa molto efficace!");}
+ else if(CREATURES[target.id].types.some(type=>COUNTERS[type]===move.type)){damage=Math.round(damage*.88);log.push("Poco efficace...");}
  if(ZONE_BONUS[battle.zone]===move.type){damage=Math.round(damage*1.15);log.push("Il quartiere potenzia la mossa!");}
  if(who==="enemy")damage=Math.max(1,Math.round(damage*(battle.zone===0?.73:battle.zone===1?.78:.83)));
  damage=Math.max(1,damage+Math.floor(rngValue(random)*5)-2);
@@ -101,28 +108,40 @@ function chooseEnemyMove(b,random){
 function takeTurn(b,action,random=Math.random){
  if(b.ended)return{ok:false,error:"Battaglia terminata",battle:b};
  const log=[];
+ const switchId=typeof action==="string"&&action.startsWith("switch:")?action.slice(7):null;
  if(action==="flee"){b.ended="escaped";b.last=log;log.push("Nino si allontana senza registrare il Ninomon.");return{ok:true,log,battle:b};}
- if(action!=="rest"&&!b.player.moves.includes(action))return{ok:false,error:"Mossa non equipaggiata",battle:b};
+ if(switchId){
+  if(!b.party||!b.party[switchId]||switchId===b.player.id||b.party[switchId].hp<=0)return{ok:false,error:"Ninomon non disponibile",battle:b};
+ }else{
+  if(b.player.hp<=0)return{ok:false,error:"Scegli un altro Ninomon per continuare",battle:b};
+  if(action!=="rest"&&!b.player.moves.includes(action))return{ok:false,error:"Mossa non equipaggiata",battle:b};
+  if(action!=="rest"&&(!MOVE[action]||b.player.fiato<MOVE[action].cost))return{ok:false,error:"Fiato insufficiente",battle:b};
+ }
+ const forcedSwitch=b.player.hp<=0;
  const move=MOVE[action];
- if(action!=="rest"&&(!move||b.player.fiato<move.cost))return{ok:false,error:"Fiato insufficiente",battle:b};
  b.round++;
- if(action==="rest"){
+ if(switchId){
+  b.player=b.party[switchId];
+  log.push("Nino manda in campo "+b.player.name+"!");
+ }else if(action==="rest"){
   if(b.player.status.stordito>0){log.push(b.player.name+" è stordito: salta il turno.");delete b.player.status.stordito;}
   else{b.player.fiato=cap(b.player.fiato+3,0,b.player.maxFiato);log.push(b.player.name+" riprende Fiato (+3).");}
  }else applyMove(b,"player",move,random,log);
  if(b.enemy.hp===0){b.ended="win";log.push("Nino ha vinto! Ora può fotografare il Ninomon.");}
- else{
+ else if(!forcedSwitch){
   const enemyMove=chooseEnemyMove(b,random);
   if(!enemyMove){b.enemy.fiato=cap(b.enemy.fiato+3,0,b.enemy.maxFiato);log.push(b.enemy.name+" riprende Fiato.");}
   else applyMove(b,"enemy",enemyMove,random,log);
-  if(b.player.hp===0){b.ended="lose";log.push("Nino ha perso la sfida. Può riprovare.");}
  }
  if(!b.ended){
   for(const unit of [b.player,b.enemy]){
    const dot=statusEffects(unit);if(dot)log.push(dot);
   }
   if(b.enemy.hp===0){b.ended="win";log.push("Vittoria! Fotografa il Ninomon.");}
-  else if(b.player.hp===0){b.ended="lose";log.push("Sconfitta!");}
+  else if(b.player.hp===0){
+   if(Object.values(b.party).some(p=>p.hp>0))log.push("Questo Ninomon è KO. Cambia creatura per continuare!");
+   else{b.ended="lose";log.push("Squadra sconfitta!");}
+  }
  }
  // Stun is consumed on its turn, otherwise persists to the next action.
  for(const unit of [b.player,b.enemy]){
@@ -133,5 +152,5 @@ function takeTurn(b,action,random=Math.random){
  }
  b.last=log;b.log.push(...log);return{ok:true,log,battle:b};
 }
-root.NINOMON_BATTLE={TYPES,MOVES:moveList,MOVE,CREATURES,STATUS,ZONE_BONUS,make,takeTurn,loadout,availableTier};
+root.NINOMON_BATTLE={TYPES,MOVES:moveList,MOVE,CREATURES,STATUS,ZONE_BONUS,COUNTERS,make,takeTurn,loadout,availableTier};
 })(typeof window!=="undefined"?window:globalThis);
