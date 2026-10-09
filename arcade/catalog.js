@@ -49,13 +49,12 @@ window.ARCADE_CATALOG = [
     id: "ninomon",
     title: "I Ninomon",
     subtitle: "Cronache di strada",
-    genre: "Avventura / Collezione",
-    description: "Nino esplora scali ferroviari, sottopassi e strade deserte alla ricerca di Ninomon improbabili. Parla con Gianlluca, fotografa gli avvistamenti e riempi la Ninodex. Capitolo 0 giocabile.",
+    genre: "RPG / Battaglie a turni",
+    description: "Nino esplora tre quartieri urbani, incontra Gianlluca e sfida strani Ninomon: 32 mosse, Fiato, effetti di stato e foto per la Ninodex. Versione Game Boy giocabile!",
     href: "./games/ninomon/",
     artwork: "./games/ninomon/cover.svg",
-    support: "Telefono e PC · prototipo",
+    support: "Telefono e PC · Capitolo 0",
     status: "live",
-    accent: "aqua",
-    recordKey: "ninomon-discoveries"
+    accent: "aqua"
   }
 ];
