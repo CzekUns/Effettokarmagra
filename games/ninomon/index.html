@@ -35,7 +35,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6px;background:#293a42;z-index:9}
 .overlay.hidden{display:none}
 .overlay.intro-scene{align-items:flex-end;padding:2px;background:transparent}
-.overlay.intro-scene .panel{max-height:61%;padding:6px;background:#daddb4;border:3px solid #293a42;box-shadow:inset 0 0 0 2px #8e9e80}
+.overlay.intro-scene .panel{max-height:54%;padding:6px;background:#daddb4;border:3px solid #293a42;box-shadow:inset 0 0 0 2px #8e9e80}
 .overlay.intro-scene .panelhead{margin-bottom:3px}
 .overlay.intro-scene .panel h2{font-size:13px}
 .overlay.intro-scene .panel p{margin:3px 0 6px}
@@ -104,7 +104,7 @@ footer{margin-top:5px}
 </style>
 </head>
 <body>
-<div class="shell"><div class="console" aria-label="Ninoboy, console portatile"><div class="console-top"><b>● NINOBOY <em>COLOR</em></b><small>EDIZIONE STRADA</small></div><header>
+<div class="shell"><div class="console" aria-label="Ninoboy, console portatile"><div class="console-top"><b>● NINOBOY <em>STREET</em></b><small>SNES EDITION</small></div><header>
  <a class="back" href="../../index.html">← ARCADE</a>
  <h1>I NINOMON<em>CRONACHE DI STRADA · CAPITOLO 0</em></h1>
  <button class="sound" id="sound" type="button" aria-label="Attiva e disattiva effetti sonori">♫ ON</button>
@@ -112,9 +112,9 @@ footer{margin-top:5px}
 <div class="hud"><span id="place">SCALO FERROVIARIO</span><small>GIOCHI COME <strong>NINO</strong></small><small id="count">NINODEX 0/3</small></div>
 <div class="viewport">
  <span class="power-led" aria-hidden="true"></span>
- <canvas id="world" width="160" height="144" aria-label="Avventura esplorabile nei quartieri dei Ninomon; frecce per muoversi, E per esaminare"></canvas>
+ <canvas id="world" width="320" height="288" aria-label="Avventura esplorabile nei quartieri dei Ninomon; frecce per muoversi, E per esaminare"></canvas>
  <section class="battle-stage" id="battle-stage" aria-label="Battaglia a turni tra Ninomon" hidden>
-  <canvas id="combat-art" width="160" height="144" aria-label="Sprite Ninomon e indicatori PS, Fiato e dialogo in pixel art"></canvas>
+  <canvas id="combat-art" width="320" height="288" aria-label="Sprite Ninomon e indicatori PS, Fiato e dialogo in pixel art"></canvas>
  </section>
  <div class="overlay" id="overlay" role="dialog" aria-live="polite">
   <section class="panel">
@@ -151,8 +151,9 @@ footer{margin-top:5px}
  <span>Sprite originali temporanei in quattro colori: Nino, Gialluca e Ninomon saranno personalizzati sulle referenze.</span>
 </footer>
 </div>
-<script src="./retro.js?v=6"></script>
+<script src="./retro.js?v=7"></script>
+<script src="./snes.js?v=1"></script>
 <script src="./battle.js?v=4"></script>
-<script src="./game.js?v=9"></script>
+<script src="./game.js?v=10"></script>
 </body>
 </html>
