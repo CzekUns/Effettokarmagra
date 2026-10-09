@@ -1,13 +1,13 @@
 /* I Ninomon — SNES Street Edition renderer.
- * Native 320x288 framebuffer, 32px metatiles and high-detail user artwork.
- * Logical world extent remains 10 x 9 tiles, so the camera and controls do not zoom.
+ * Native 320x317 framebuffer (~10% taller), 32px metatiles and high-detail user artwork.
+ * Logical scale remains 32px/tile; camera reveals more map vertically without stretching.
  * CSS presents the framebuffer at its normal physical size on mobile.
  */
 (function(root){
 "use strict";
 const old=root.NINOMON_RETRO;
 if(!old)throw Error("retro.js must load before snes.js");
-const W=320,H=288,T=32;
+const W=320,H=317,T=32;
 const atlas=new Image();
 atlas.decoding="async";
 atlas.src="./assets/ninomon-snes-atlas.png?v=1";
@@ -336,12 +336,13 @@ function battle(c,b,z,lines){
  text(c,b.player.name.toUpperCase().slice(0,17),167,143,DARK,11);
  bar(c,167,169,138,b.player.hp/b.player.maxHp,z);
  text(c,"PS "+b.player.hp+"    F "+b.player.fiato+"/"+b.player.maxFiato,167,185,DARK,11);
- frame(c,3,224,314,61,z);
+ const dialogY=H-79;
+ frame(c,3,dialogY,314,76,z);
  let msg=(Array.isArray(lines)?lines.join(" "):String(lines||"SCEGLI UNA MOSSA")).toUpperCase();
  const words=msg.split(/\s+/),rows=[];let current="";
  for(const w of words){if((current+" "+w).trim().length>40){rows.push(current);current=w;}else current=(current+" "+w).trim();}
  if(current)rows.push(current);
- for(let i=0;i<Math.min(3,rows.length);i++)text(c,rows[i],12,232+i*16,DARK,12);
+ for(let i=0;i<Math.min(4,rows.length);i++)text(c,rows[i],12,dialogY+8+i*16,DARK,12);
 }
 /* Pokemon-era inspired opening, with original NINOBOY / Ninomon artwork.
    Story board: title, professor introduction, starter reveal, trainer, departure.
