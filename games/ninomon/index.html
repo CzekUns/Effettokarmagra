@@ -73,8 +73,13 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .move-btn small{font-size:8px;color:#52675d;max-width:100%}
 .move-btn:disabled{opacity:.45;cursor:not-allowed}
 .move-btn:active:not(:disabled){background:#8e9e80;box-shadow:none}
-.battle-extras{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px}
-.battle-extras button{min-height:32px;border:2px solid #293a42;background:#8e9e80;color:#293a42;font:bold 10px monospace}
+.battle-extras{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:5px}
+.battle-extras button{min-height:32px;border:2px solid #293a42;background:#8e9e80;color:#293a42;font:bold 9px monospace}
+.party-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-top:5px}
+.party-options button{display:flex;flex-direction:column;align-items:start;justify-content:center;min-height:34px;padding:4px;background:#daddb4;color:#293a42;border:2px solid #293a42;font:bold 9px monospace}
+.party-options button small{font-size:8px;color:#52675d}
+.party-options button:disabled{opacity:.45}
+#switch{background:#b1b991}
 #flee{background:#c3c7a3}
 footer{text-align:center;font:900 9px/1.5 monospace;color:#d4ddcc;margin:12px 1px 0}
 footer span{display:block;margin-bottom:4px}
@@ -136,17 +141,18 @@ footer{margin-top:5px}
 <div class="battle-controls" id="battle-controls" hidden>
  <div class="move-heading"><b>LE TUE MOSSE</b><small id="battle-round">TURNO 1</small></div>
  <div class="move-grid" id="battle-moves"></div>
- <div class="battle-extras"><button id="rest" type="button">+ RIPRENDI FIATO</button><button id="flee" type="button">↩ FUGGI</button></div>
+ <div class="battle-extras"><button id="rest" type="button">+ FIATO</button><button id="switch" type="button">↔ CAMBIA</button><button id="flee" type="button">↩ FUGGI</button></div>
+ <div id="party-options" class="party-options" hidden aria-label="Scegli il Ninomon da mandare in campo"></div>
 </div>
 <div class="console-signature"><span>▰ ▰ SELECT</span><span>▰ ▰ START</span><strong>◖ ))) ◗</strong></div>
 </div>
 <footer>
- <span>PC: FRECCE/WASD · E ESAMINA · I NINODEX · 1–4 MOSSE</span>
+ <span>PC: FRECCE/WASD · E ESAMINA · I NINODEX · 1–4 MOSSE · C CAMBIA</span>
  <span>Sprite originali temporanei in quattro colori: Nino, Gianlluca e Ninomon saranno personalizzati sulle referenze.</span>
 </footer>
 </div>
 <script src="./retro.js?v=3"></script>
-<script src="./battle.js?v=1"></script>
-<script src="./game.js?v=4"></script>
+<script src="./battle.js?v=2"></script>
+<script src="./game.js?v=5"></script>
 </body>
 </html>
