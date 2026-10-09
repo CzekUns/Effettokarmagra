@@ -12,6 +12,12 @@ const atlas=new Image();
 atlas.decoding="async";
 atlas.src="./assets/ninomon-snes-atlas.png?v=1";
 const ready=()=>atlas.complete&&atlas.naturalWidth===656&&atlas.naturalHeight===912;
+// Ten genuine road/ground tile samples from each of the three original street sheets.
+// These cover EVERY tile in the world. Street props are a separate, sparse overlay.
+const floorAtlas=new Image();
+floorAtlas.decoding="async";
+floorAtlas.src="./assets/street-floor-tiles.png?v=1";
+const floorReady=()=>floorAtlas.complete&&floorAtlas.naturalWidth===320&&floorAtlas.naturalHeight===96;
 const PAL=[
  ["#1d3034","#374d49","#596b5a","#829278","#abb58f","#d9d8b1","#90755c","#715649"],
  ["#202f3c","#3b5360","#5c7479","#849c9c","#b3bdac","#dde0c5","#8f8471","#68828b"],
@@ -30,6 +36,31 @@ function sprite(c,sx,sy,sw,sh,dx,dy,dw,dh){
 }
 function hash(x,y,z){let h=Math.imul(x+17,374761393)+Math.imul(y+83,668265263)+Math.imul(z+3,1442695041);h=(h^(h>>>13))>>>0;h=Math.imul(h,1274126177);return(h^(h>>>16))>>>0;}
 function rnd(h){return h/4294967295;}
+// Coherent surface patches: different pavement samples alternate without turning
+// the ground into isolated decorative squares.  No Math.random per frame.
+const FLOOR_GROUPS=[
+ {regular:[0,0,0,1,2,3,9],rough:[1,2,2,3,6,7,8],loose:[6,6,7,7,8],wet:[4,5]},
+ {regular:[0,0,0,1,2,3],rough:[1,2,3,4,6],loose:[7,7,8,8,9],wet:[4,5,5,6,9]},
+ {regular:[0,0,1,2,4,4,6,9],rough:[0,1,2,4,6,9],loose:[1,2,6,9],wet:[1,2,4]}
+];
+function floorIndex(zone,x,y,key){
+ const z=Math.max(0,Math.min(2,zone));
+ const group=FLOOR_GROUPS[z];
+ const patch=hash(Math.floor((x+2)/5),Math.floor((y+1)/4),z);
+ const jitter=hash(x*3+1,y*5+1,z+18);
+ let bucket="regular";
+ if(key==="ballast"||key==="grass"||key==="weeds"||key==="shrub")bucket="loose";
+ else if(key==="puddle")bucket="wet";
+ else if(key==="crack"||key==="grate")bucket="rough";
+ else if(z===0&&y<9)bucket="loose";
+ // Patches of older pavement are clustered, avoiding a noisy checkerboard.
+ else if((patch%100)<19)bucket="rough";
+ // Shop-front paint stays in an intentional aligned street marking, not random.
+ if(z===2&&y===12&&x>=12&&x<=29&&x%4===2)return 5;
+ if(z===2&&y===12&&x>=12&&x<=29&&x%4===3)return 7;
+ const choices=group[bucket],selection=(jitter+Math.floor(patch/7))%choices.length;
+ return choices[selection];
+}
 function fallback(c,fn,...params){
  if(typeof c.save==="function")c.save();
  if(typeof c.scale==="function")c.scale(2,2);
@@ -37,9 +68,12 @@ function fallback(c,fn,...params){
  if(typeof c.restore==="function")c.restore();
 }
 const cache=[new Map(),new Map(),new Map()];
+floorAtlas.onload=function(){for(const memo of cache)memo.clear();};
+floorAtlas.onerror=function(){for(const memo of cache)memo.clear();};
 function build(z,x,y){
  const key=old.kind(z,x,y),variant=((x*13+y*19)%7+7)%7,p=PAL[z];
- const id=key+":"+variant;
+ const surface=floorIndex(z,x,y,key);
+ const id=key+":"+variant+":"+surface+":"+(floorReady()?1:0);
  const memo=cache[z];if(memo.has(id))return memo.get(id);
  const tile=document.createElement("canvas");tile.width=T;tile.height=T;
  const t=tile.getContext("2d");t.imageSmoothingEnabled=false;
@@ -51,16 +85,18 @@ function build(z,x,y){
    key==="puddle"?p[3]:
    key==="wagon"||key==="roof"||key==="wall"||key==="column"?p[2]:p[3];
  rect(t,0,0,T,T,base);
- if(key==="asphalt"||key==="crack"){
+ if(floorReady())t.drawImage(floorAtlas,surface*T,z*T,T,T,0,0,T,T);
+ // Only generate synthetic grain when the original flooring image is unavailable.
+ if(!floorReady()&&(key==="asphalt"||key==="crack")){
   for(let xx=0;xx<T;xx+=11)rect(t,xx,(xx*3+variant*7)%31,4,1,p[2]);
   for(let yy=5;yy<T;yy+=9)rect(t,(yy*5+variant*3)%29,yy,2,1,p[0]);
  }
- if(key==="ballast"){
+ if(!floorReady()&&key==="ballast"){
   for(let n=0;n<18;n++){const xx=(n*17+variant*7)%30,yy=(n*11+variant*13)%30;
    rect(t,xx,yy,2,2,n%3===0?p[0]:n%3===1?p[3]:p[6]);
   }
  }
- if(key==="grass"||key==="weeds"){
+ if(!floorReady()&&(key==="grass"||key==="weeds")){
   for(let n=0;n<12;n++){const xx=(n*11+variant*7)%29,yy=(n*19+variant*3)%30;
    rect(t,xx,yy,1,3,p[1]);rect(t,xx-1,yy+1,3,1,p[4]);
   }
@@ -72,21 +108,21 @@ function build(z,x,y){
  if(key==="curb"){rect(t,0,0,T,5,p[5]);rect(t,0,5,T,4,p[0]);}
  if(key==="metal"){for(let yy=0;yy<T;yy+=8){rect(t,0,yy,T,3,p[0]);rect(t,0,yy+3,T,1,p[4]);}}
  const seed=hash(x,y,z);
- if(["asphalt","crack","ballast","concrete","paver","grass","weeds","puddle"].includes(key)){
+ if(!floorReady()&&["asphalt","crack","ballast","concrete","paver","grass","weeds","puddle"].includes(key)){
   for(let n=0;n<14;n++){
    const hx=hash(variant+n,n*7+z,seed%73),hy=hash(n*3+z,variant+n*5,seed%59);
    const xx=hx%30+1,yy=hy%30+1;
    rect(t,xx,yy,n%4===0?2:1,1,n%3===0?p[4]:n%3===1?p[1]:p[6]);
   }
  }
- if(["asphalt","crack"].includes(key)&&variant%3===0){
+ if(!floorReady()&&["asphalt","crack"].includes(key)&&variant%3===0){
   rect(t,8,11,1,7,p[0]);rect(t,9,17,6,1,p[0]);rect(t,13,17,1,5,p[0]);
   rect(t,15,21,4,1,p[1]);rect(t,2,5,2,1,p[4]);
  }
  if(key==="paver"||key==="concrete"){
   for(let xx=0;xx<32;xx+=16){rect(t,xx,15,16,1,p[1]);rect(t,xx+7,1,1,14,p[3]);rect(t,xx+15,16,1,15,p[3]);}
  }
- if(key==="ballast"||key==="grass"||key==="weeds"){
+ if(!floorReady()&&(key==="ballast"||key==="grass"||key==="weeds")){
   for(let i=0;i<5;i++){
    const xx=(hash(i,x,z)+7)%28+2,yy=(hash(y,i,z)+5)%25+3;
    rect(t,xx,yy,1,4,p[1]);rect(t,xx-2,yy+1,2,1,p[3]);rect(t,xx+1,yy+2,2,1,p[4]);
@@ -143,10 +179,15 @@ function ground(c,z,x,y,screenX,screenY,blocked){
   for(let k=0;k<8;k++)rect(c,px+(k*11)%30,py+(k*17)%30,2,1,PAL[z][1]);
  }
  const key=old.kind(z,x,y);
- if(ready()&&!["wagon","roof","wall","column","track","sleepers","fence"].includes(key) &&
-   (hash(x,y,z)%10===0)){
-  const tile=(hash(x*3,y+7,z)%12);
-  sprite(c,tile*48,768+z*48,48,48,screenX,screenY,32,32);
+ // Props are limited to their proper surroundings; the flooring itself is
+ // completely tiled with source textures rather than intermittent PNG stamps.
+ if(ready()){
+  const seed=hash(x,y,z);
+  let prop=-1;
+  if(z===0&&key==="ballast"&&seed%24===0)prop=3; // weeds in gravel
+  if(z===1&&(key==="puddle"||key==="crack")&&seed%18===0)prop=9; // drain
+  if(z===2&&key==="asphalt"&&y>=12&&x>=4&&seed%41===0)prop=11; // debris
+  if(prop>=0)sprite(c,prop*48,768+z*48,48,48,px,py,32,32);
  }
 }
 function person(c,x,y,who="player",dir="down",walk=0){
@@ -261,5 +302,5 @@ function introLake(c,phase=0,chapter=0){
  frame(c,22,8,158,30,0);
  text(c,"LAGO DEI NINOMON",30,15,DARK,14);
 }
-root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,ready,sprite,atlas,revision:"snes-320x288"});
+root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,revision:"snes-street-full-floors"});
 })(window);
