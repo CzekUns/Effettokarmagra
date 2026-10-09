@@ -1,6 +1,6 @@
 (function(){
 "use strict";
-const C=document.getElementById("world"),g=C.getContext("2d"),W=160,H=144,S=16,MW=35,MH=24;
+const C=document.getElementById("world"),g=C.getContext("2d"),W=320,H=288,S=32,MW=35,MH=24;
 const R=window.NINOMON_RETRO;
 if(!R||R.W!==W||R.H!==H)throw new Error("Caricare retro.js prima del gioco");
 g.imageSmoothingEnabled=false;
@@ -460,37 +460,38 @@ function render(){
  actors.sort((a,b)=>a.y-b.y);
  for(const a of actors){
   const xx=Math.round(a.x*S-cx),yy=Math.round(a.y*S-cy);
-  if(xx<-20||xx>W+20||yy<-20||yy>H+20)continue;
+  if(xx<-52||xx>W+52||yy<-52||yy>H+52)continue;
   if(a.kind==="player")R.person(g,xx,yy,"player",player.facing,player.walk);
   else if(a.kind==="companion"){
    if(state.activeId==="starter")R.person(g,xx,yy,"gialluca",player.companion.facing,player.companion.walk);
-   else R.monster(g,state.activeId,xx-8,yy-15,1,false);
+   else R.monster(g,state.activeId,xx-16,yy-30,1,false);
   }
   else if(a.kind==="person"){
    R.person(g,xx,yy,a.data.name==="Vincenzo"?"guide":"npc",a.data.facing,a.data.motion>0.05?state.time*10:0);
-   R.text(g,a.data.role,xx-2,yy-25,p[0],7);
+   R.text(g,a.data.role,xx-3,yy-55,p[0],12);
   }else if(a.kind==="clue"){
-   g.fillStyle=p[0];g.fillRect(xx-7,yy-9,14,9);
-   g.fillStyle=p[3];g.fillRect(xx-5,yy-7,10,5);
-   g.fillStyle=p[0];g.fillRect(xx-1,yy-12,2,9);
-   R.text(g,state.clues[a.data.name]?"✓":"!",xx-3,yy-23,p[0],7);
+   g.fillStyle=p[0];g.fillRect(xx-14,yy-18,28,18);
+   g.fillStyle=p[3];g.fillRect(xx-10,yy-14,20,10);
+   g.fillStyle=p[0];g.fillRect(xx-2,yy-24,4,18);
+   R.text(g,state.clues[a.data.name]?"OK":"!",xx-8,yy-43,p[0],12);
   }else{
-   R.monster(g,a.data.id,xx-8,yy-15,1,false);
-   if(!state.found[a.data.id])R.symbol(g,xx-8,yy-30,z===1);
+   R.monster(g,a.data.id,xx-16,yy-30,1,false);
+   if(!state.found[a.data.id])R.symbol(g,xx-16,yy-58,z===1);
   }
  }
- // Compact in-screen HUD drawn with the same four-colour area palette.
- g.fillStyle=p[0];g.fillRect(0,0,W,12);
- g.fillStyle=p[3];g.fillRect(1,1,W-2,10);
- R.text(g,ZONES[z].title.toUpperCase(),4,3,p[0],7);
- R.text(g,count()+"/"+ENCOUNTERS.length,135,3,p[0],7);
- if(z>0){g.fillStyle=p[0];g.fillRect(0,62,5,19);R.text(g,"<",0,65,p[3],7);}
- if(z<ZONES.length-1){g.fillStyle=p[0];g.fillRect(155,62,5,19);R.text(g,">",155,65,p[3],7);}
+ // SNES-sized in-screen HUD, scaled with the new framebuffer.
+ g.fillStyle=p[0];g.fillRect(0,0,W,24);
+ g.fillStyle=p[5];g.fillRect(2,2,W-4,19);
+ R.text(g,ZONES[z].title.toUpperCase(),8,6,p[0],13);
+ R.text(g,count()+"/"+ENCOUNTERS.length,W-53,6,p[0],13);
+ if(z>0){g.fillStyle=p[0];g.fillRect(0,124,10,39);R.text(g,"◀",0,132,p[5],15);}
+ if(z<ZONES.length-1){g.fillStyle=p[0];g.fillRect(W-10,124,10,39);R.text(g,">",W-9,132,p[5],16);}
  if(state.mode==="walk"&&nearby()){
-   g.fillStyle=p[0];g.fillRect(43,128,74,14);
-   g.fillStyle=p[3];g.fillRect(45,130,70,10);
-   R.text(g,"A : ESAMINA",48,132,p[0],7);
+   g.fillStyle=p[0];g.fillRect(85,255,150,27);
+   g.fillStyle=p[5];g.fillRect(89,258,142,20);
+   R.text(g,"A : ESAMINA",96,261,p[0],14);
  }
+
 }
 function bind(){
  window.addEventListener("keydown",e=>{
