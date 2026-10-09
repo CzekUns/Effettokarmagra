@@ -37,7 +37,7 @@ header h1 em{display:block;font:900 8px/1.5 monospace;font-style:normal;letter-s
 .hud span{font-size:9px;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hud small{font-size:7px;white-space:nowrap}
 .hud strong{color:#f4e7ac}
-.viewport{width:min(334px,100%);max-width:100%;margin-inline:auto;aspect-ratio:10/9;position:relative;background:#8e9e80;border:7px solid #3a4651;border-radius:0 0 5px 5px;overflow:hidden}
+.viewport{width:min(334px,100%);max-width:100%;margin-inline:auto;aspect-ratio:320/317;position:relative;background:#8e9e80;border:7px solid #3a4651;border-radius:0 0 5px 5px;overflow:hidden}
 canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}
 .power-led{position:absolute;top:5px;left:5px;background:#c85654;width:5px;height:5px;z-index:6;box-shadow:0 0 0 2px #33494a}
 .battle-stage{position:absolute;inset:0;z-index:4;background:var(--mid)}
@@ -50,11 +50,11 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .overlay.title-scene .panel p{font-size:10px;line-height:1.25;margin:2px 0 6px}
 .overlay.title-scene .action{min-height:28px}
 
-.overlay.intro-scene{align-items:flex-end;padding:2px;background:transparent}
-.overlay.intro-scene .panel{max-height:42%;padding:6px;background:#daddb4;border:3px solid #293a42;box-shadow:inset 0 0 0 2px #8e9e80}
+.overlay.intro-scene{align-items:flex-end;padding:0 2px 3px;background:transparent}
+.overlay.intro-scene .panel{min-height:118px;max-height:48%;padding:8px 9px;background:#daddb4;border:3px solid #293a42;box-shadow:inset 0 0 0 2px #8e9e80}
 .overlay.intro-scene .panelhead{margin-bottom:3px}
 .overlay.intro-scene .panel h2{font-size:13px}
-.overlay.intro-scene .panel p{margin:3px 0 6px}
+.overlay.intro-scene .panel p{margin:4px 0 8px;font-size:clamp(11px,2.9vw,13px);line-height:1.4}
 .overlay.intro-scene .action{min-height:27px;padding:3px 7px}
 .panel{width:100%;max-height:100%;overflow:auto;background:#daddb4;border:3px double #293a42;box-shadow:inset 0 0 0 2px #8e9e80;padding:7px;color:#293a42;overscroll-behavior:contain}
 .panelhead{display:flex;justify-content:space-between;align-items:center;gap:5px;margin-bottom:4px}
@@ -128,9 +128,9 @@ footer{margin-top:5px}
 <div class="hud"><span id="place">SCALO FERROVIARIO</span><small>GIOCHI COME <strong>NINO</strong></small><small id="count">NINODEX 0/3</small></div>
 <div class="viewport">
  <span class="power-led" aria-hidden="true"></span>
- <canvas id="world" width="320" height="288" aria-label="Avventura esplorabile nei quartieri dei Ninomon; frecce per muoversi, E per esaminare"></canvas>
+ <canvas id="world" width="320" height="317" aria-label="Avventura esplorabile nei quartieri dei Ninomon; frecce per muoversi, E per esaminare"></canvas>
  <section class="battle-stage" id="battle-stage" aria-label="Battaglia a turni tra Ninomon" hidden>
-  <canvas id="combat-art" width="320" height="288" aria-label="Sprite Ninomon e indicatori PS, Fiato e dialogo in pixel art"></canvas>
+  <canvas id="combat-art" width="320" height="317" aria-label="Sprite Ninomon e indicatori PS, Fiato e dialogo in pixel art"></canvas>
  </section>
  <div class="overlay" id="overlay" role="dialog" aria-live="polite">
   <section class="panel">
@@ -174,8 +174,8 @@ document.addEventListener("selectstart",function(e){e.preventDefault();});
 document.addEventListener("contextmenu",function(e){e.preventDefault();});
 </script>
 <script src="./retro.js?v=7"></script>
-<script src="./snes.js?v=9"></script>
+<script src="./snes.js?v=10"></script>
 <script src="./battle.js?v=4"></script>
-<script src="./game.js?v=13"></script>
+<script src="./game.js?v=14"></script>
 </body>
 </html>
