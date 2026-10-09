@@ -1,0 +1,102 @@
+{
+  "source": "a_large_detailed_pixel_art_tileset_sheet_in_a_cle.png",
+  "source_type": "illustrated atlas",
+  "atlas_size": [
+    640,
+    384
+  ],
+  "tile_size": 32,
+  "structures": [
+    {
+      "id": "cargo_wagon",
+      "atlas": [
+        0,
+        0,
+        320,
+        128
+      ],
+      "map": [
+        3,
+        5
+      ],
+      "tile_footprint": [
+        10,
+        4
+      ],
+      "foot_y": 9
+    },
+    {
+      "id": "freight_warehouse",
+      "atlas": [
+        320,
+        0,
+        288,
+        192
+      ],
+      "map": [
+        24,
+        3
+      ],
+      "tile_footprint": [
+        9,
+        6
+      ],
+      "foot_y": 9
+    },
+    {
+      "id": "tool_shed",
+      "atlas": [
+        0,
+        128,
+        192,
+        128
+      ],
+      "map": [
+        2,
+        18
+      ],
+      "tile_footprint": [
+        6,
+        4
+      ],
+      "foot_y": 22
+    },
+    {
+      "id": "rail_fence_10",
+      "atlas": [
+        0,
+        256,
+        320,
+        64
+      ],
+      "map": [
+        2,
+        10
+      ],
+      "tile_footprint": [
+        10,
+        2
+      ],
+      "foot_y": 12
+    },
+    {
+      "id": "rail_fence_8",
+      "atlas": [
+        320,
+        256,
+        256,
+        64
+      ],
+      "map": [
+        24,
+        10
+      ],
+      "tile_footprint": [
+        8,
+        2
+      ],
+      "foot_y": 12
+    }
+  ],
+  "collision": "Existing game.js walkBlocked; no change"
+}

@@ -55,6 +55,28 @@ const floorV2=new Image();
 floorV2.decoding="async";
 floorV2.src="./assets/pavements/floor-game-32.png?v=2";
 const floorV2Ready=()=>floorV2.complete&&floorV2.naturalWidth===768&&floorV2.naturalHeight===96;
+// Authentic freight yard structures extracted from the original street-art board.
+// Composite sprites match the walkBlocked rectangles on the existing 35x24 map.
+const scaloArt=new Image();
+scaloArt.decoding="async";
+scaloArt.src="./assets/pavements/scalo-structures-atlas.png?v=1";
+const scaloArtReady=()=>scaloArt.complete&&scaloArt.naturalWidth===640&&scaloArt.naturalHeight===384;
+const SCALO_RECTS={
+ cargo_wagon:[0,0,320,128],
+ freight_warehouse:[320,0,288,192],
+ tool_shed:[0,128,192,128],
+ rail_fence_10:[0,256,320,64],
+ rail_fence_8:[320,256,256,64]
+};
+function scaloStructure(c,name,x,y){
+ const area=SCALO_RECTS[name];
+ if(!area||!scaloArtReady())return false;
+ try{
+  c.imageSmoothingEnabled=false;
+  c.drawImage(scaloArt,area[0],area[1],area[2],area[3],Math.round(x),Math.round(y),area[2],area[3]);
+  return true;
+ }catch(_){return false;}
+}
 const PAL=[
  ["#1d3034","#374d49","#596b5a","#829278","#abb58f","#d9d8b1","#90755c","#715649"],
  ["#202f3c","#3b5360","#5c7479","#849c9c","#b3bdac","#dde0c5","#8f8471","#68828b"],
@@ -155,7 +177,13 @@ floorAtlas.onerror=function(){for(const memo of cache)memo.clear();};
 floorV2.onload=function(){for(const memo of cache)memo.clear();};
 floorV2.onerror=function(){for(const memo of cache)memo.clear();};
 function build(z,x,y){
- const key=old.kind(z,x,y),variant=((x*13+y*19)%7+7)%7,p=PAL[z];
+ const originalKey=old.kind(z,x,y);
+ // Render the actual structures as depth-sorted multi-tile illustrations.
+ // Existing blocked areas remain exactly unchanged in game.js.
+ const key=z===0&&scaloArtReady()&&["wagon","brick","roof","fence"].includes(originalKey)
+   ?(originalKey==="roof"||originalKey==="fence"?"asphalt":"ballast")
+   :originalKey;
+ const variant=((x*13+y*19)%7+7)%7,p=PAL[z];
  const sourceMode=floorV2Ready()?2:floorReady()?1:0;
  const surface=sourceMode===2?floorIndexV2(z,x,y,key):floorIndex(z,x,y,key);
  const id=key+":"+variant+":"+surface+":"+sourceMode;
@@ -529,5 +557,5 @@ function introLake(c,phase=0,chapter=0){
  frame(c,22,8,158,30,0);
  text(c,"LAGO DEI NINOMON",30,15,DARK,14);
 }
-root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,introStory,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,floorV2,floorV2Ready,floorIndexV2,ninoHD,ninoReady,giallucaHD,giallucaReady,largeHD,largeReady,largePortrait,revision:"snes-overworld-72-floor-tiles-v1"});
+root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,introStory,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,floorV2,floorV2Ready,floorIndexV2,ninoHD,ninoReady,giallucaHD,giallucaReady,largeHD,largeReady,largePortrait,scaloStructure,scaloArtReady,scaloArt,revision:"snes-overworld-scalo-structures-v1"});
 })(window);

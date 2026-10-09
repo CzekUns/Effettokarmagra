@@ -595,8 +595,23 @@ function render(){
    g.fillRect(tx+4,ty+5,9,2);
   }
  }
+ // Multi-tile structures share the existing solid footprints and enter the same
+ // depth sorter as Nino, Gialluca and the street NPCs.
+ const SCALO_STRUCTURES=[
+  {id:"cargo_wagon",x:3,y:5,foot:9,w:10,h:4},
+  {id:"freight_warehouse",x:24,y:3,foot:9,w:9,h:6},
+  {id:"tool_shed",x:2,y:18,foot:22,w:6,h:4},
+  {id:"rail_fence_10",x:2,y:10,foot:12,w:10,h:2},
+  {id:"rail_fence_8",x:24,y:10,foot:12,w:8,h:2}
+ ];
  // Sort actors by feet so characters can stand before or behind other sprites.
  const actors=[];
+ if(z===0&&R.scaloArtReady&&R.scaloArtReady()){
+  for(const structure of SCALO_STRUCTURES){
+   actors.push({kind:"structure",x:structure.x,y:structure.foot,
+    top:structure.y,data:structure});
+  }
+ }
  for(const encounter of ENCOUNTERS){
   if(encounter.zone===z)actors.push({y:encounter.y+.5,x:encounter.x+.5,kind:"creature",data:encounter});
  }
@@ -610,6 +625,13 @@ function render(){
  actors.push({x:player.x,y:player.y,kind:"player"});
  actors.sort((a,b)=>a.y-b.y);
  for(const a of actors){
+  if(a.kind==="structure"){
+   const sc=a.data,sx=Math.round(sc.x*S-cx),sy=Math.round(sc.y*S-cy);
+   // Cull by the full bounding box, not only the left anchor; large wagons
+   // must not disappear halfway through the camera crossing.
+   if(sx+sc.w*S>0&&sx<W&&sy+sc.h*S>0&&sy<H)R.scaloStructure(g,sc.id,sx,sy);
+   continue;
+  }
   const xx=Math.round(a.x*S-cx),yy=Math.round(a.y*S-cy);
   if(xx<-52||xx>W+52||yy<-52||yy>H+52)continue;
   if(a.kind==="player")R.person(g,xx,yy,"player",player.facing,player.walk);
