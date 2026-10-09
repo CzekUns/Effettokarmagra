@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#18233a">
+<meta name="description" content="I Ninomon: un'avventura urbana rétro con Nino, Gianlluca, scoperte strambe e la Ninodex. Primo capitolo giocabile.">
+<title>I Ninomon · Cronache di strada | Arcade Club</title>
+<link rel="icon" href="./cover.svg" type="image/svg+xml">
+<style>
+:root{background:#111b2b;color:#f5ecd5;color-scheme:dark;font:700 14px/1.5 monospace}
+*{box-sizing:border-box}
+body{margin:0;background:repeating-linear-gradient(0deg,#132038 0 8px,#17243c 8px 16px);min-height:100dvh}
+a{color:inherit}button{cursor:pointer;font:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.shell{max-width:875px;margin:0 auto;padding:10px 10px 24px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px}
+header h1{margin:0;text-align:center;font:bold clamp(24px,5vw,42px)/1 Georgia,serif;color:#f0d89f;letter-spacing:.035em;text-shadow:3px 4px #513f5d}
+header h1 em{color:#9ad1c1;font:900 10px monospace;display:block;font-style:normal;letter-spacing:.18em;margin-top:5px}
+.back,.sound{font-weight:900;font-size:11px;border:2px solid #8295a4;background:#263a53;box-shadow:2px 3px #090f1f;border-radius:4px;text-decoration:none;padding:8px 9px;white-space:nowrap}
+.hud{background:#233a4c;border:3px solid #b7a47d;border-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:7px 10px;font-size:11px}
+.hud strong{color:#f9dd96}
+.hud small{font-size:9px;white-space:nowrap;color:#c1dfd6}
+#place{font-weight:1000;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.viewport{border:5px solid #b7a47d;background:#273945;box-shadow:0 7px #080f1a,0 14px 25px #0007;position:relative;overflow:hidden}
+canvas{display:block;width:100%;aspect-ratio:8/5;image-rendering:pixelated;touch-action:none}
+.overlay{position:absolute;inset:0;background:#0a1426bf;display:flex;align-items:center;justify-content:center;padding:clamp(10px,3vw,26px)}
+.overlay.hidden{display:none}
+.panel{width:min(515px,100%);background:#213549;border:4px double #e5cb8b;box-shadow:6px 6px #06111c;padding:clamp(11px,3vw,24px);max-height:100%;overflow:auto}
+.panelhead{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:7px}
+.panelhead small{font-size:9px;color:#a6dccc;letter-spacing:.12em}
+.portrait{width:54px;height:54px;display:grid;place-items:center;background:#3d5260;border:2px solid #c5a675;color:#ffda9e;font:bold 34px Georgia,serif;flex:none}
+.panel h2{font:bold clamp(19px,4vw,30px)/1.1 Georgia,serif;color:#ffe3a2;margin:9px 0}
+.panel p{font-size:clamp(11px,2.4vw,14px);line-height:1.6;color:#f2ede0;margin:9px 0 14px;white-space:pre-line}
+.actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.action{border:2px solid #dbb981;box-shadow:2px 3px #101c2a;background:#f1d28d;color:#1a2a38;padding:9px 16px;font-size:12px;font-weight:1000;text-decoration:none;display:inline-flex;align-items:center}
+.action.alt{background:#354e5c;color:#f9edd5;border-color:#8fc0b8}
+.action.whatsapp{background:#188553;color:#fff;border-color:#a6ebbc}
+.action:active{transform:translateY(2px);box-shadow:none}
+.caption{color:#a6c4ca;font-size:10px;margin:12px 0 7px;min-height:20px;line-height:1.4}
+.controls{display:grid;grid-template-columns:minmax(0,1fr) 1fr;gap:11px;background:#17273b;border:2px solid #62798d;border-top:0;padding:10px;align-items:center}
+.dpad{display:grid;grid-template-columns:repeat(3,minmax(0,46px));grid-template-rows:repeat(3,36px);gap:3px;justify-content:start;max-width:145px}
+.dpad button{border:2px solid #7a94a4;background:#314c64;color:#f9e6be;border-radius:5px;font-size:20px;font-weight:900;padding:0;touch-action:none}
+.dpad button:active,.dpad button.active{background:#50778e}
+.dpad .up{grid-column:2;grid-row:1}.dpad .left{grid-column:1;grid-row:2}.dpad .right{grid-column:3;grid-row:2}.dpad .down{grid-column:2;grid-row:3}
+.bts{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:420px;margin-left:auto;width:100%}
+.bts button{border:3px solid #c8ad81;border-radius:8px;background:#a16665;box-shadow:2px 3px #0a1423;color:#fff4dc;font-size:11px;font-weight:1000;min-height:57px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.bts button:last-child{background:#467d79}.bts span{font-size:21px}
+.bts button:active{transform:translateY(2px);box-shadow:none}
+footer{display:flex;justify-content:space-between;gap:12px;color:#a1b3c2;font-size:10px;margin:14px 0;line-height:1.5}
+footer a{color:#ead19a}
+@media(max-width:520px){
+.shell{padding:5px 5px 16px}header{gap:5px}
+header h1{font-size:26px}header h1 em{font-size:8px}
+.back,.sound{padding:6px;font-size:10px}
+.hud{padding:6px 5px;font-size:9px}
+.hud small{font-size:8px}
+.controls{gap:6px;padding:8px}
+.dpad{grid-template-columns:repeat(3,34px);grid-template-rows:repeat(3,32px);gap:3px}
+.dpad button{font-size:18px}
+.bts button{font-size:10px;min-height:58px}
+.panel{padding:10px}.portrait{width:37px;height:37px;font-size:26px}
+.panelhead small{font-size:8px}.panel p{line-height:1.45}
+.action{padding:8px 11px;font-size:11px}
+footer{font-size:9px;display:block}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header>
+ <a class="back" href="../../index.html">← ARCADE</a>
+ <h1>I NINOMON<em>CRONACHE DI STRADA · CAPITOLO 0</em></h1>
+ <button class="sound" id="sound" type="button" aria-label="Attiva e disattiva effetti sonori">♫ ON</button>
+</header>
+<div class="hud"><span id="place">SCALO FERROVIARIO</span><small>GIOCHI COME <strong>NINO</strong></small><small id="count">NINODEX 0/3</small></div>
+<div class="viewport">
+ <canvas id="world" width="640" height="400" aria-label="Avventura esplorabile nei quartieri dei Ninomon; frecce per muoversi, E per esaminare"></canvas>
+ <div class="overlay" id="overlay" role="dialog" aria-live="polite">
+  <section class="panel">
+   <div class="panelhead"><small id="panel-tag">BENVENUTO</small><div id="portrait" class="portrait">?</div></div>
+   <h2 id="panel-title">I NINOMON</h2>
+   <p id="panel-text">Un mondo di scoperte discutibili.</p>
+   <div class="actions" id="panel-actions"><button class="action" id="go" type="button">INIZIA ▶</button></div>
+  </section>
+ </div>
+</div>
+<p class="caption" id="tip">Cammina, esplora e guarda le cose sospette. Niente foto vere: le creature sono segnaposto.</p>
+<div class="controls">
+ <div class="dpad" aria-label="Comandi di movimento">
+  <button type="button" class="up" data-move="up" aria-label="Muovi su">▲</button>
+  <button type="button" class="left" data-move="left" aria-label="Muovi a sinistra">◀</button>
+  <button type="button" class="right" data-move="right" aria-label="Muovi a destra">▶</button>
+  <button type="button" class="down" data-move="down" aria-label="Muovi giù">▼</button>
+ </div>
+ <div class="bts">
+  <button type="button" id="inspect"><span>◎</span>ESAMINA</button>
+  <button type="button" id="dex"><span>▣</span>NINODEX</button>
+ </div>
+</div>
+<footer>
+ <span>PC: FRECCE / WASD · E / INVIO = ESAMINA · I = NINODEX</span>
+ <span>Personaggi e Ninomon in grafica provvisoria, in attesa delle referenze.</span>
+</footer>
+</div>
+<script src="./game.js?v=1"></script>
+</body>
+</html>
