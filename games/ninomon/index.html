@@ -43,8 +43,15 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .battle-stage{position:absolute;inset:0;z-index:4;background:var(--mid)}
 .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6px;background:#293a42;z-index:9}
 .overlay.hidden{display:none}
+.overlay.title-scene{align-items:flex-end;padding:4px;background:transparent}
+.overlay.title-scene .panel{max-height:38%;width:100%;padding:6px;background:#ecebd2;border:3px solid #293a42;box-shadow:inset 0 0 0 2px #8e9e80}
+.overlay.title-scene .panelhead{margin-bottom:3px}
+.overlay.title-scene .panel h2{font-size:13px;margin:0 0 3px}
+.overlay.title-scene .panel p{font-size:10px;line-height:1.25;margin:2px 0 6px}
+.overlay.title-scene .action{min-height:28px}
+
 .overlay.intro-scene{align-items:flex-end;padding:2px;background:transparent}
-.overlay.intro-scene .panel{max-height:54%;padding:6px;background:#daddb4;border:3px solid #293a42;box-shadow:inset 0 0 0 2px #8e9e80}
+.overlay.intro-scene .panel{max-height:42%;padding:6px;background:#daddb4;border:3px solid #293a42;box-shadow:inset 0 0 0 2px #8e9e80}
 .overlay.intro-scene .panelhead{margin-bottom:3px}
 .overlay.intro-scene .panel h2{font-size:13px}
 .overlay.intro-scene .panel p{margin:3px 0 6px}
@@ -167,8 +174,8 @@ document.addEventListener("selectstart",function(e){e.preventDefault();});
 document.addEventListener("contextmenu",function(e){e.preventDefault();});
 </script>
 <script src="./retro.js?v=7"></script>
-<script src="./snes.js?v=5"></script>
+<script src="./snes.js?v=6"></script>
 <script src="./battle.js?v=4"></script>
-<script src="./game.js?v=11"></script>
+<script src="./game.js?v=12"></script>
 </body>
 </html>
