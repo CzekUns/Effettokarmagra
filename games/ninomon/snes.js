@@ -53,7 +53,7 @@ const floorReady=()=>floorAtlas.complete&&floorAtlas.naturalWidth===320&&floorAt
 // is archived alongside this 32px game atlas. Existing 30-sample sheet stays as fallback.
 const floorV2=new Image();
 floorV2.decoding="async";
-floorV2.src="./assets/pavements/floor-game-32.png?v=1";
+floorV2.src="./assets/pavements/floor-game-32.png?v=2";
 const floorV2Ready=()=>floorV2.complete&&floorV2.naturalWidth===768&&floorV2.naturalHeight===96;
 const PAL=[
  ["#1d3034","#374d49","#596b5a","#829278","#abb58f","#d9d8b1","#90755c","#715649"],
