@@ -265,6 +265,31 @@
         "piastrelle_pixel_art_per_sottopasso_urbano.png",
         "set_di_tile_pixel_art_per_vicolo_urbano.png"
       ]
+    },
+    "charactersHD": {
+      "screen": [
+        320,
+        288
+      ],
+      "frame": [
+        128,
+        176
+      ],
+      "displayedSize": [
+        42,
+        61
+      ],
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "threeFramesPerDirection": true,
+      "nino": "nino-overworld-hd.png",
+      "gialluca": "gialluca-overworld-hd.png",
+      "giallucaSource": "dbb42740-1ed1-523b-8513-e9741698c021.png",
+      "method": "Independent component crop from original 1536x1536 user sprite art, alpha background removed, no clipped tails"
     }
   }
 }

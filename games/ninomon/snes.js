@@ -17,6 +17,12 @@ const ninoHD=new Image();
 ninoHD.decoding="async";
 ninoHD.src="./assets/nino-overworld-hd.png?v=1";
 const ninoReady=()=>ninoHD.complete&&ninoHD.naturalWidth===384&&ninoHD.naturalHeight===704;
+// Gialluca's entire 12-frame sheet, recropped from the original 1536px artwork.
+// Separate HD asset preserves ears, curly tail, foot alignment and transparency.
+const giallucaHD=new Image();
+giallucaHD.decoding="async";
+giallucaHD.src="./assets/gialluca-overworld-hd.png?v=1";
+const giallucaReady=()=>giallucaHD.complete&&giallucaHD.naturalWidth===384&&giallucaHD.naturalHeight===704;
 // Ten genuine road/ground tile samples from each of the three original street sheets.
 // These cover EVERY tile in the world. Street props are a separate, sparse overlay.
 const floorAtlas=new Image();
@@ -204,13 +210,15 @@ function ground(c,z,x,y,screenX,screenY,blocked){
 function person(c,x,y,who="player",dir="down",walk=0){
  const role=who==="gialluca"?"gialluca":who==="guide"?"guide":who==="player"?"player":"npc";
  const d=facing[dir]??0,frame=walk?Math.floor(walk*1.4)%3:1;
- if(role==="player"&&ninoReady()){
-  // Downsample true 128x176 source detail; preserve map geometry and feet anchor.
+ if((role==="player"&&ninoReady())||(role==="gialluca"&&giallucaReady())){
+  // Render from real 128x176 source frames rather than enlarging old 48x64 pixels.
+  // Both sprites share the same world-space foot anchor and walking cadence.
+  const source=role==="player"?ninoHD:giallucaHD;
   const smoothing=c.imageSmoothingEnabled,quality=c.imageSmoothingQuality;
   c.imageSmoothingEnabled=true;
   c.imageSmoothingQuality="high";
   try{
-   c.drawImage(ninoHD,frame*128,d*176,128,176,
+   c.drawImage(source,frame*128,d*176,128,176,
      Math.round(x-21),Math.round(y-61),42,61);
   }finally{
    c.imageSmoothingEnabled=smoothing;
@@ -327,5 +335,5 @@ function introLake(c,phase=0,chapter=0){
  frame(c,22,8,158,30,0);
  text(c,"LAGO DEI NINOMON",30,15,DARK,14);
 }
-root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,ninoHD,ninoReady,revision:"snes-street-nino-hd"});
+root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,ninoHD,ninoReady,giallucaHD,giallucaReady,revision:"snes-street-writers-hd"});
 })(window);
