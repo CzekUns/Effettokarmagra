@@ -53,7 +53,6 @@ const ZONE_BONUS=["rottami","rutto","pipi"];
 const COUNTERS={rutto:"puzza",puzza:"schiamazzo",schiamazzo:"sfiga",sfiga:"rutto",sputo:"cacca",cacca:"pipi",pipi:"rottami",rottami:"sputo"};
 const SPEED={starter:15,n01:20,n02:16,n03:9,n04:18,n05:14,n06:17,n07:11,n08:19,n09:7};
 const cap=(n,a,b)=>Math.max(a,Math.min(b,n));
-const rngValue=fn=>cap(Number.isFinite(Number((fn||Math.random)()))?Number((fn||Math.random)()):.5,0,.999999);
 function roll(random){const n=Number((random||Math.random)());return cap(Number.isFinite(n)?n:.5,0,.999999);}
 function availableTier(discoveries){return discoveries>=3?4:discoveries>=2?3:2;}
 function loadout(id,discoveries=0){
@@ -142,6 +141,12 @@ function takeTurn(b,action,random=Math.random){
  const enemyAction=intent.action;
  b.round++;b.player.guarding=false;b.enemy.guarding=false;
  function impact(attacker,target,move,who){
+  if(move.startsWith("switch:")){
+   const chosen=b.party[move.slice(7)];
+   if(!chosen||chosen.hp<=0)return;
+   b.player=chosen;b.player.guarding=false;
+   emit("switch","player","Nino manda in campo "+chosen.name+"!",{id:chosen.id});return;
+  }
   if(attacker.hp<=0)return;
   if(attacker.status.stordito){
    delete attacker.status.stordito;
@@ -155,12 +160,6 @@ function takeTurn(b,action,random=Math.random){
   if(move==="guard"){
    attacker.guarding=true;attacker.fiato=cap(attacker.fiato+2,0,attacker.maxFiato);
    emit("guard",who,attacker.name+" si ripara e recupera Fiato!",{amount:2});return;
-  }
-  if(move.startsWith("switch:")){
-   const chosen=b.party[move.slice(7)];
-   if(!chosen||chosen.hp<=0)return;
-   b.player=chosen;b.player.guarding=false;
-   emit("switch","player","Nino manda in campo "+chosen.name+"!",{id:chosen.id});return;
   }
   const m=MOVE[move];
   if(!m)return;
@@ -190,7 +189,8 @@ function takeTurn(b,action,random=Math.random){
  actions.sort((a,c)=>c.priority-a.priority||c.speed-a.speed||((roll(random)<.5)?-1:1));
  let playerKnockedOut=false,enemyKnockedOut=false;
  for(const chosen of actions){
-  if(b.player.hp<=0||b.enemy.hp<=0)break;
+  if(b.enemy.hp<=0)break;
+  if(b.player.hp<=0 && !(chosen.who==="player"&&chosen.action.startsWith("switch:")))break;
   const isPlayer=chosen.who==="player";
   impact(isPlayer?b.player:b.enemy,isPlayer?b.enemy:b.player,chosen.action,chosen.who);
   if(b.enemy.hp===0){enemyKnockedOut=true;break;}
