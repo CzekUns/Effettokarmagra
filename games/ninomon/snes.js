@@ -312,6 +312,85 @@ function battle(c,b,z,lines){
  if(current)rows.push(current);
  for(let i=0;i<Math.min(3,rows.length);i++)text(c,rows[i],12,232+i*16,DARK,12);
 }
+/* Pokemon-era inspired opening, with original NINOBOY / Ninomon artwork.
+   Story board: title, professor introduction, starter reveal, trainer, departure.
+   Each scene is rendered in the SAME 320x288 LCD; no additional scrolling. */
+function introStory(c,scene="professor",seconds=0,step=0){
+ c.imageSmoothingEnabled=false;
+ const clock=Number.isFinite(seconds)?seconds:0;
+ const wobble=Math.round(Math.sin(clock*3)*2);
+ const cream="#ecebd2",dark="#293b40",mid="#a3b9ab",olive="#6d887c";
+ rect(c,0,0,W,H,cream);
+ // Subtle checker motifs and double framed miniature game card.
+ for(let y=0;y<H;y+=16)for(let x=0;x<W;x+=16){
+  if((x+y)%32===0)rect(c,x,y,8,8,"#e2e5c9");
+ }
+ rect(c,0,0,W,7,dark);rect(c,0,H-7,W,7,dark);
+ rect(c,8,8,W-16,H-16,dark);
+ rect(c,11,11,W-22,H-22,cream);
+ rect(c,15,15,W-30,2,mid);
+ if(scene==="title"){
+  rect(c,16,24,288,97,dark);
+  rect(c,20,28,280,89,"#536c69");
+  text(c,"I",155,34,"#e3e9d0",14);
+  text(c,"NINOMON",29,55,"#f9efbc",43);
+  text(c,"CRONACHE DI STRADA",66,105,"#e3e9d0",13);
+  for(let x=24;x<300;x+=28)rect(c,x,128+(x%3)*2,18,2,dark);
+  // Original trainer and starter on the title screen, above the button panel.
+  if(ninoReady()){
+   const previous=c.imageSmoothingEnabled;c.imageSmoothingEnabled=true;
+   c.drawImage(ninoHD,128,0,128,176,53,133,71,97);
+   c.imageSmoothingEnabled=previous;
+  }else person(c,100,225,"player","down");
+  if(ready())sprite(c,144,0,112,112,178,134+wobble,110,106);
+  else monster(c,"starter",201,155,2,false);
+  text(c,"© NINOBOY STREET",102,237,dark,11);
+  return;
+ }
+ // Professor's lab portrait screen: grayscale style panels with the real art.
+ if(scene==="professor"){
+  rect(c,38,30,244,179,"#d8e0c7");
+  rect(c,43,36,234,168,mid);
+  rect(c,47,40,226,160,cream);
+  for(let x=53;x<270;x+=16)rect(c,x,195,11,2,olive);
+  rect(c,18,28,84,5,dark);
+  text(c,"N. "+String(step+1).padStart(2,"0"),23,37,dark,12);
+  if(!sprite(c,368+(step===2?144:0),0,144,188,106,9+wobble,119,187)){
+   old.person(c,100,152,"guide","down",0);
+  }
+  text(c,"PROF. VINCENZO",22,213,dark,13);
+  return;
+ }
+ if(scene==="starter"){
+  rect(c,18,35,284,161,"#bed1b9");
+  rect(c,23,40,274,150,cream);
+  // A city waste-bin / street lab stand: the professor presents the very first Ninomon.
+  for(let x=43;x<278;x+=38)rect(c,x,176,23,2,mid);
+  if(ready()){
+   sprite(c,368,0,144,188,12,69,76,116);
+   sprite(c,144,0,112,112,120,47+wobble,160,155);
+  }else{
+   person(c,68,180,"guide","down");
+   monster(c,"starter",147,65,3,false);
+  }
+  text(c,"NINOMON N.000",20,204,dark,13);
+  text(c,"GIALLUCA",208,204,dark,14);
+  return;
+ }
+ if(scene==="trainer"){
+  rect(c,47,23,228,180,mid);rect(c,53,29,216,169,cream);
+  if(ninoReady()){
+   const previous=c.imageSmoothingEnabled;c.imageSmoothingEnabled=true;
+   c.drawImage(ninoHD,128,0,128,176,105,16+wobble,110,188);
+   c.imageSmoothingEnabled=previous;
+  }else person(c,170,206,"player","down");
+  text(c,"TRAINER",21,207,dark,13);
+  text(c,"NINO",243,207,dark,14);
+  return;
+ }
+ // Last scene is the lake in which Nino's journey begins.
+ introLake(c,seconds,step);
+}
 function introLake(c,phase=0,chapter=0){
  const p=PAL[0];rect(c,0,0,W,H,p[3]);
  for(let y=0;y<H;y+=T)for(let x=0;x<W;x+=T){
@@ -335,5 +414,5 @@ function introLake(c,phase=0,chapter=0){
  frame(c,22,8,158,30,0);
  text(c,"LAGO DEI NINOMON",30,15,DARK,14);
 }
-root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,ninoHD,ninoReady,giallucaHD,giallucaReady,revision:"snes-street-writers-hd"});
+root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,introStory,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,ninoHD,ninoReady,giallucaHD,giallucaReady,revision:"snes-street-writers-hd"});
 })(window);
