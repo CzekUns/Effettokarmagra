@@ -58,8 +58,8 @@
     "extraRows": {
       "n06": 0,
       "n07": 1,
-      "n08": 2,
-      "n09": 3
+      "n09": 2,
+      "n08": 3
     },
     "columns": [
       "front",
@@ -167,11 +167,11 @@
       ],
       "mainRows": {
         "gialluca": 0,
-        "n05": 1,
-        "n04": 2,
-        "n02": 3,
-        "n03": 4,
-        "n01": 5
+        "n01": 1,
+        "n03": 2,
+        "n04": 3,
+        "n02": 4,
+        "n05": 5
       },
       "extraRegion": [
         368,
@@ -182,8 +182,8 @@
       "extraRows": {
         "n06": 0,
         "n07": 1,
-        "n08": 2,
-        "n09": 3
+        "n09": 2,
+        "n08": 3
       },
       "columns": [
         "front",
@@ -291,5 +291,18 @@
       "giallucaSource": "dbb42740-1ed1-523b-8513-e9741698c021.png",
       "method": "Independent component crop from original 1536x1536 user sprite art, alpha background removed, no clipped tails"
     }
-  }
+  },
+  "creatureNames": {
+    "starter": "Gialluca",
+    "n01": "Topo sospetto",
+    "n02": "Piccione immobile",
+    "n03": "Pesce misterioso",
+    "n04": "Cane sfatto",
+    "n05": "Pagliaccio randagio",
+    "n06": "Madama Leoparda",
+    "n07": "Fumatore col cane",
+    "n08": "Scimmia in felpa",
+    "n09": "Sacco vivente"
+  },
+  "identityNote": "Mob IDs stable in savegames. SNES and legacy atlases have different row ordering; consult their independent mainRows and extraRows mappings. Never change encounter IDs to compensate for shuffled art."
 }
