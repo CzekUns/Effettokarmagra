@@ -167,8 +167,8 @@ function bitmap(c,rows,x,y,p,scale=1,flip=false){
  }
 }
 function person(c,x,y,who="player",facing="down",walk=0){
- const role=who==="player"?"player":who==="guide"?"guide":"npc";
- if(ready()&&(role==="player"||role==="guide")){
+ const role=who==="player"?"player":who==="guide"?"guide":who==="gialluca"?"gialluca":"npc";
+ if(ready()&&(role==="player"||role==="guide"||role==="gialluca")){
   const ri=CHAR[role],di=DIR[facing]===undefined?0:DIR[facing];
   const frame=walk?Math.floor(walk*1.4)%3:1;
   if(sprite(c,frame*24,(ri*4+di)*32,24,32,x-8,y-24,16,24))return;
