@@ -199,11 +199,32 @@ function frame(c,x,y,w,h,theme=0){
 function bar(c,x,y,w,pct,z=0){const p=P[z];rect(c,x,y,w,5,p[0]);rect(c,x+1,y+1,w-2,3,p[1]);rect(c,x+1,y+1,Math.floor((w-2)*Math.max(0,Math.min(1,pct))),3,pct<.28?p[0]:p[2]);}
 function battle(c,b,z,lines){
  const p=P[z];rect(c,0,0,W,H,p[3]);
- // Simple 8px-tiled railway/bridge silhouette and horizontal split, no smooth shading.
- for(let x=0;x<W;x+=16){
-  rect(c,x,0,16,8,p[1]);rect(c,x+2,1,12,5,p[2]);
-  rect(c,x+3,56,11,2,p[1]);rect(c,x+6,59,8,1,p[2]);
-  if((x/16)%3===0){rect(c,x+6,8,4,61,p[1]);rect(c,x+7,11,2,57,p[2]);}
+ // Separate 4-colour environmental backdrops for the station, bridge and market.
+ if(z===0){
+  rect(c,0,0,W,54,p[2]);
+  for(let x=0;x<W;x+=24){
+   rect(c,x,0,2,54,p[1]);rect(c,x+4,15,19,2,p[1]);
+   rect(c,x+6,5,11,8,p[3]);rect(c,x+8,8,7,3,p[1]);
+  }
+  rect(c,0,52,W,4,p[0]);rect(c,0,57,W,3,p[3]);
+  for(let x=0;x<W;x+=16){rect(c,x+5,61,3,39,p[1]);rect(c,x+7,64,2,35,p[3]);}
+ }else if(z===1){
+  rect(c,0,0,W,55,p[1]);rect(c,0,0,W,12,p[0]);
+  for(let x=0;x<W;x+=33){
+   rect(c,x+6,12,9,75,p[0]);rect(c,x+8,12,5,70,p[2]);
+   rect(c,x+8,30,5,3,p[1]);rect(c,x+8,49,5,3,p[1]);
+  }
+  rect(c,0,54,W,4,p[0]);rect(c,0,58,W,2,p[3]);
+  for(let x=0;x<W;x+=22){rect(c,x+4,67,11,2,p[1]);rect(c,x+8,72,4,1,p[3]);}
+ }else{
+  rect(c,0,0,W,58,p[2]);rect(c,0,0,W,4,p[0]);
+  for(let x=0;x<W;x+=29){
+   rect(c,x,4,27,49,p[1]);rect(c,x+2,5,23,46,p[2]);
+   rect(c,x+4,13,18,15,p[0]);rect(c,x+6,15,14,11,p[3]);
+   rect(c,x+3,35,21,4,p[0]);
+   for(let i=0;i<4;i++)rect(c,x+3,39+i*3,21,1,p[1]);
+  }
+  rect(c,0,53,W,5,p[3]);rect(c,0,58,W,3,p[0]);
  }
  rect(c,0,64,W,2,p[0]);rect(c,0,66,W,46,p[2]);
  for(let x=0;x<W;x+=16){rect(c,x+2,71,7,1,p[1]);rect(c,x+9,93,5,1,p[1]);}
