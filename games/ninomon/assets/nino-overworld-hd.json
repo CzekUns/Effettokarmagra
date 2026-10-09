@@ -1,0 +1,33 @@
+{
+  "name": "Nino overworld HD",
+  "size": [
+    384,
+    704
+  ],
+  "format": "RGBA PNG",
+  "layout": {
+    "columns": 3,
+    "rows": 4,
+    "cell": [
+      128,
+      176
+    ]
+  },
+  "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+  ],
+  "animation": "Three frames per direction, center cell used for idle.",
+  "source": "Recropped from user-supplied 1536x1536 Nino sprite sheet",
+  "render": {
+    "display": [
+      42,
+      61
+    ],
+    "anchor": "feet",
+    "sampling": "high-quality downscale",
+    "fallback": "Ninomon original 48x64 character atlas"
+  }
+}
