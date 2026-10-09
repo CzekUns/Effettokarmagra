@@ -50,9 +50,9 @@ window.ARCADE_CATALOG = [
     title: "I Ninomon",
     subtitle: "Cronache di strada",
     genre: "RPG / Battaglie a turni",
-    description: "Nino esplora tre quartieri urbani, incontra Gianlluca e sfida strani Ninomon: 32 mosse, Fiato, effetti di stato e foto per la Ninodex. Versione Game Boy giocabile!",
+    description: "Un JRPG urbano a quattro colori: esplora stazioni e sottopassi in pixel art 160×144, incontra Gianlluca, sfida strani mostriciattoli e riempi la Ninodex!",
     href: "./games/ninomon/",
-    artwork: "./games/ninomon/cover.svg",
+    artwork: "./games/ninomon/cover.svg?v=2",
     support: "Telefono e PC · Capitolo 0",
     status: "live",
     accent: "aqua"
