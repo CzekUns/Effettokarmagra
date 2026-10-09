@@ -10,7 +10,7 @@ const B=window.NINOMON_BATTLE;
 if(!B)throw new Error("battle.js deve essere caricato prima di game.js");
 const battleCanvas=$("combat-art"),battleCtx=battleCanvas.getContext("2d");
 battleCtx.imageSmoothingEnabled=false;
-const battleUI={stage:$("battle-stage"),controls:$("battle-controls"),explore:$("explore-controls"),moves:$("battle-moves"),round:$("battle-round"),rest:$("rest"),flee:$("flee")};
+const battleUI={stage:$("battle-stage"),controls:$("battle-controls"),explore:$("explore-controls"),moves:$("battle-moves"),round:$("battle-round"),rest:$("rest"),switch:$("switch"),partyOptions:$("party-options"),flee:$("flee")};
 const ZONES=[
  {title:"SCALO FERROVIARIO",short:"Binari fuori servizio",ground:"#6c6764",road:"#54585b",accent:"#ae9571",sky:"#83847d",entry:[16,18]},
  {title:"SOTTOPASSO",short:"Sotto la tangenziale",ground:"#49535b",road:"#424d56",accent:"#89adad",sky:"#62697b",entry:[2,16]},
@@ -263,7 +263,7 @@ function battleMode(on){
  battleUI.stage.hidden=!on;
  battleUI.controls.hidden=!on;
  battleUI.explore.hidden=on;
- if(!on)battleUI.moves.textContent="";
+ if(!on){battleUI.moves.textContent="";battleUI.partyOptions.hidden=true;}
 }
 function updateBattleView(lines){
  const fight=state.battle;if(!fight)return;
@@ -278,25 +278,42 @@ function updateBattleView(lines){
   const title=document.createElement("b");title.textContent=(i+1)+" ▶ "+move.name;
   const note=document.createElement("small");note.textContent=move.type.toUpperCase()+" · G"+move.tier+" · "+move.power+" PT · "+move.cost+" F";
   button.appendChild(title);button.appendChild(note);
-  button.disabled=friendly.fiato<move.cost||!!fight.ended;
+  button.disabled=friendly.fiato<move.cost||fight.player.hp<=0||!!fight.ended;
   button.addEventListener("click",()=>battleTurn(move.id));
   battleUI.moves.appendChild(button);
  }
- battleUI.rest.disabled=!!fight.ended;
+ battleUI.rest.disabled=!!fight.ended||fight.player.hp<=0;
+ battleUI.switch.disabled=!!fight.ended||!Object.values(fight.party).some(p=>p.id!==fight.player.id&&p.hp>0);
  battleUI.flee.disabled=!!fight.ended;
 }
 function startBattle(p){
  if(state.mode!=="encounter"&&state.mode!=="walk")return;
  state.battleTarget=p;
- state.battle=B.make(state.activeId,p.id,p.zone,count());
+ state.battle=B.make(state.activeId,p.id,p.zone,count(),["starter",...Object.keys(state.found)]);
  state.mode="battle";state.primary=null;
  ui.overlay.classList.add("hidden");battleMode(true);
  updateBattleView(["Nino manda in campo "+state.battle.player.name+"! "+p.name+" si prepara a combattere."]);
  for(const k in input)input[k]=false;
  tone(480,.1,.022);
 }
+function pickBattleParty(){
+ if(state.mode!=="battle"||!state.battle||state.battle.ended)return;
+ const p=battleUI.partyOptions;
+ if(!p.hidden){p.hidden=true;return;}
+ p.textContent="";
+ for(const unit of Object.values(state.battle.party)){
+  const btn=document.createElement("button"),lab=document.createElement("b"),info=document.createElement("small");
+  lab.textContent=unit.name;info.textContent="PS "+unit.hp+"/"+unit.maxHp;
+  btn.type="button";btn.disabled=unit.id===state.battle.player.id||unit.hp<=0;
+  btn.appendChild(lab);btn.appendChild(info);
+  btn.addEventListener("click",()=>battleTurn("switch:"+unit.id));
+  p.appendChild(btn);
+ }
+ p.hidden=false;
+}
 function battleTurn(action){
  if(state.mode!=="battle"||!state.battle)return;
+ battleUI.partyOptions.hidden=true;
  const result=B.takeTurn(state.battle,action);
  if(!result.ok){R.battle(battleCtx,state.battle,player.zone,[result.error]);tone(180,.07);return;}
  updateBattleView(result.log);
@@ -442,6 +459,7 @@ function bind(){
   if(state.mode==="battle"){
    if(["1","2","3","4"].includes(e.key)){e.preventDefault();if(!e.repeat){const id=state.battle.player.moves[Number(e.key)-1];if(id)battleTurn(id);}return;}
    if(e.key==="f"||e.key==="F"){e.preventDefault();if(!e.repeat)battleTurn("rest");return;}
+   if(e.key==="c"||e.key==="C"){e.preventDefault();if(!e.repeat)pickBattleParty();return;}
    if(e.key==="Escape"){e.preventDefault();if(!e.repeat)battleTurn("flee");return;}
    return;
   }
@@ -463,7 +481,7 @@ function bind(){
   for(const type of ["pointerup","pointercancel","lostpointercapture"])b.addEventListener(type,()=>{input[key]=false;b.classList.remove("active");});
  }
  ui.inspect.addEventListener("click",inspect);ui.dex.addEventListener("click",openDex);
- battleUI.rest.addEventListener("click",()=>battleTurn("rest"));battleUI.flee.addEventListener("click",()=>battleTurn("flee"));
+ battleUI.rest.addEventListener("click",()=>battleTurn("rest"));battleUI.switch.addEventListener("click",pickBattleParty);battleUI.flee.addEventListener("click",()=>battleTurn("flee"));
  ui.sound.addEventListener("click",()=>{state.mute=!state.mute;ui.sound.textContent=state.mute?"♫ OFF":"♫ ON";tone(645,.1);});
  window.addEventListener("blur",()=>{for(const k in input)input[k]=false;});
  document.addEventListener("visibilitychange",()=>{if(document.hidden)for(const k in input)input[k]=false;});
