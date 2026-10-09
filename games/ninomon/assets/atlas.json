@@ -100,5 +100,146 @@
     ],
     "columns": 12
   },
-  "usage": "All coordinates are pixel locations in the shared atlas. Keep source image and atlas.json synchronized when updating it."
+  "usage": "All coordinates are pixel locations in the shared atlas. Keep source image and atlas.json synchronized when updating it.",
+  "snes": {
+    "revision": 1,
+    "file": "ninomon-snes-atlas.png",
+    "nativeResolution": [
+      656,
+      912
+    ],
+    "screen": [
+      320,
+      288
+    ],
+    "tile": [
+      32,
+      32
+    ],
+    "worldVisibleTiles": [
+      10,
+      9
+    ],
+    "spriteSources": "High-resolution original user-provided PNG frames; re-cut and color reduced at 48-color palette, transparent alpha.",
+    "characters": {
+      "cell": [
+        48,
+        64
+      ],
+      "region": [
+        0,
+        0,
+        144,
+        768
+      ],
+      "columns": [
+        "step-left",
+        "idle",
+        "step-right"
+      ],
+      "rowsPerCharacter": 4,
+      "characters": [
+        "nino",
+        "gialluca",
+        "vincenzo"
+      ],
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "displayedSize": [
+        34,
+        49
+      ]
+    },
+    "creatures": {
+      "cell": [
+        112,
+        112
+      ],
+      "mainRegion": [
+        144,
+        0,
+        224,
+        672
+      ],
+      "mainRows": {
+        "gialluca": 0,
+        "n05": 1,
+        "n04": 2,
+        "n02": 3,
+        "n03": 4,
+        "n01": 5
+      },
+      "extraRegion": [
+        368,
+        208,
+        224,
+        448
+      ],
+      "extraRows": {
+        "n06": 0,
+        "n07": 1,
+        "n08": 2,
+        "n09": 3
+      },
+      "columns": [
+        "front",
+        "back"
+      ],
+      "displayedBattleSize": [
+        100,
+        100
+      ],
+      "displayedOverworldSize": [
+        32,
+        32
+      ]
+    },
+    "professor": {
+      "region": [
+        368,
+        0,
+        288,
+        188
+      ],
+      "cell": [
+        144,
+        188
+      ],
+      "poses": [
+        "neutral",
+        "pointing"
+      ],
+      "displayedSize": [
+        124,
+        176
+      ]
+    },
+    "street": {
+      "region": [
+        0,
+        768,
+        576,
+        144
+      ],
+      "cell": [
+        48,
+        48
+      ],
+      "rows": [
+        "railway",
+        "underpass",
+        "service_street"
+      ],
+      "columns": 12,
+      "displayedSize": [
+        32,
+        32
+      ]
+    },
+    "renderer": "snes.js loads after retro.js and before game.js. Native 320x288 composition with per-pixel street microdetail. Old retro.js is a loading fallback."
+  }
 }
