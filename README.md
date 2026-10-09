@@ -8,6 +8,7 @@ Raccolta di giochi arcade indipendenti in HTML, CSS e JavaScript, ospitata da Gi
 - **Biagio Gelo in Effetto Karmagra:** https://czekuns.github.io/Effettokarmagra/games/effetto-karmagra/
 - **Biagio Gelo — Pesca Grossa:** https://czekuns.github.io/Effettokarmagra/games/pesca-grossa/
 - **Biagio Gelo: Scootercross:** https://czekuns.github.io/Effettokarmagra/games/scootercross/
+- **I Ninomon — Cronache di strada:** https://czekuns.github.io/Effettokarmagra/games/ninomon/
 
 GitHub Pages: `Settings → Pages → Deploy from a branch → main → /(root)`.
 
@@ -95,6 +96,21 @@ Terzo arcade: corsa a scorrimento laterale in **telefono orizzontale** o su PC. 
 - **Impennata a rischio:** tieni premuto IMPENNA mentre vai a velocità sufficiente. La barra EQUILIBRIO sale e accumuli punti; rilascia prima del rosso o ti ribalti perdendo una vita. Il punteggio rimane acquisito anche dopo un ribaltamento.
 - **PC:** → o D accelera, ← o A frena, Spazio salta, ↑ o W impenna, ↓ o S inclina avanti durante i salti, Shift turbo, P pausa.
 - Record personale in locale e suoni chiptune; a fine partita, link **Condividi il punteggio su WhatsApp**, presente anche nel menu superiore durante la corsa. Il messaggio contiene il punteggio corrente e il link diretto al gioco.
+
+## I Ninomon — Cronache di strada (Capitolo 0)
+
+Quarto arcade e primo capitolo giocabile di un gioco di esplorazione e raccolta, con ispirazione ai classici RPG portatili. Protagonista Nino; guida iniziale **Gianlluca (due L)**.
+
+- Introduzione a dialoghi di tre scene: Gianlluca spiega il mondo dei Ninomon e la missione di Nino.
+- Tre zone urbane collegate da percorsi esplorabili: **Scalo ferroviario**, **Sottopasso della tangenziale**, **Strada di servizio**.
+- Ambientazioni disegnate in pixel art con treni fermi, magazzini, piloni, graffiti, negozi e luoghi trascurati. Quattro NPC dialoganti.
+- Tre avvistamenti iniziali, con **nomi e icone provvisori**: topo sospetto, piccione immobile, pesce misterioso. Sono rappresentati con segnaposto stilizzati, senza scene cruente.
+- Meccanica narrativa: Nino esamina gli oggetti sospetti, li **fotografa in modo simulato** e li registra nella **Ninodex** (non accede alla fotocamera reale).
+- D-pad e pulsanti ESAMINA / NINODEX su telefono; frecce o WASD, E/Invio, I su PC.
+- Salvataggio locale delle tre registrazioni, riepilogo del Capitolo 0 e condivisione WhatsApp con collegamento al gioco.
+- I personaggi, gli avvistamenti e le creature definitivi verranno creati quando saranno disponibili le **referenze originali dell'utente**. Nessuna copia degli sprite, personaggi o ambientazioni del franchise Pokémon.
+
+File principali: `games/ninomon/index.html`, `games/ninomon/game.js`, `games/ninomon/cover.svg`.
 
 ## Tecnologia
 
