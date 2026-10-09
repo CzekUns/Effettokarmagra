@@ -1,0 +1,104 @@
+{
+  "version": 2,
+  "file": "ninomon-atlas.png",
+  "size": [
+    328,
+    456
+  ],
+  "format": "PNG with transparency, nearest-neighbour downsampled from user-supplied sprites",
+  "characters": {
+    "rect": [
+      0,
+      0,
+      72,
+      384
+    ],
+    "cell": [
+      24,
+      32
+    ],
+    "framesPerDirection": 3,
+    "characters": [
+      "nino",
+      "gialluca",
+      "vincenzo"
+    ],
+    "directions": [
+      "down",
+      "left",
+      "right",
+      "up"
+    ]
+  },
+  "creatures": {
+    "cell": [
+      56,
+      56
+    ],
+    "mainRect": [
+      72,
+      0,
+      112,
+      336
+    ],
+    "mainRows": {
+      "gialluca": 0,
+      "n01-pagliaccio": 1,
+      "n04-cane": 2,
+      "n02-piccione": 3,
+      "n03-pesce": 4,
+      "n01-topo": 5
+    },
+    "extraRect": [
+      184,
+      104,
+      112,
+      224
+    ],
+    "extraRows": {
+      "n06": 0,
+      "n07": 1,
+      "n08": 2,
+      "n09": 3
+    },
+    "columns": [
+      "front",
+      "back"
+    ]
+  },
+  "professorIntro": {
+    "rect": [
+      184,
+      0,
+      144,
+      94
+    ],
+    "cell": [
+      72,
+      94
+    ],
+    "poses": [
+      "neutra",
+      "gesto"
+    ]
+  },
+  "street": {
+    "rect": [
+      0,
+      384,
+      288,
+      72
+    ],
+    "cell": [
+      24,
+      24
+    ],
+    "rows": [
+      "scalo_ferroviario",
+      "sottopasso",
+      "strada_di_servizio"
+    ],
+    "columns": 12
+  },
+  "usage": "All coordinates are pixel locations in the shared atlas. Keep source image and atlas.json synchronized when updating it."
+}
