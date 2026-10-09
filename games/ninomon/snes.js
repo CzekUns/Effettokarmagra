@@ -321,26 +321,58 @@ function environment(c,z){
  rect(c,0,136,W,86,p[3]);rect(c,0,137,W,3,p[0]);
  for(let x=0;x<W;x+=34){rect(c,x+7,151,18,1,p[1]);rect(c,x+21,172,10,1,p[2]);rect(c,x+2,196,12,1,p[1]);}
 }
-function battle(c,b,z,lines){
+function battle(c,b,z,lines,fx=null){
  const p=PAL[z];
  environment(c,z);
- rect(c,16,126,109,6,p[1]);rect(c,21,132,101,3,p[2]);
- rect(c,205,119,111,6,p[1]);rect(c,207,125,102,3,p[5]);
- monster(c,b.enemy.id,206,30,3,false);
- monster(c,b.player.id,16,123,3,true);
- frame(c,4,8,174,72,z);
- text(c,b.enemy.name.toUpperCase().slice(0,21),12,13,DARK,11);
- bar(c,12,39,133,b.enemy.hp/b.enemy.maxHp,z);
- text(c,"PS "+b.enemy.hp+"/"+b.enemy.maxHp,12,55,DARK,12);
- frame(c,159,139,157,74,z);
- text(c,b.player.name.toUpperCase().slice(0,17),167,143,DARK,11);
- bar(c,167,169,138,b.player.hp/b.player.maxHp,z);
- text(c,"PS "+b.player.hp+"    F "+b.player.fiato+"/"+b.player.maxFiato,167,185,DARK,11);
+ // Retro battlefield perspective: two pavements, shadow rings, visible opponent on top.
+ rect(c,9,130,117,6,p[1]);rect(c,18,136,103,3,p[2]);
+ rect(c,198,117,117,6,p[1]);rect(c,209,123,99,3,p[5]);
+ const phase=fx?Math.max(0,fx.timestamp-fx.startedAt):2;
+ const spring=fx&&fx.kind==="move"?Math.round(Math.sin(Math.min(1,phase/.17)*Math.PI)*11):0;
+ const shake=fx&&fx.kind==="hit"?Math.round(Math.sin(phase*87)*4*(1-Math.min(1,phase/.28))):0;
+ const enemyDx=fx&&fx.who==="enemy"?-spring:0,playerDx=fx&&fx.who==="player"?spring:0;
+ const enemyShake=fx&&fx.target==="enemy"?shake:0,playerShake=fx&&fx.target==="player"?shake:0;
+ // Soft shadows under feet make the battle stage easier to read.
+ c.save();c.globalAlpha=.28;rect(c,24,217,83,5,p[0]);rect(c,217,130,83,5,p[0]);c.restore();
+ monster(c,b.enemy.id,206+enemyDx+enemyShake,26,3,false);
+ monster(c,b.player.id,13+playerDx+playerShake,121,3,true);
+ // Pulse a hit over its target; preserve canvas state for every other renderer.
+ if(fx&&fx.kind==="hit"){
+  const alpha=.35*(1-Math.min(1,phase/.26));
+  if(alpha>0){
+   c.save();c.globalAlpha=alpha;c.fillStyle=fx.effectiveness>1?"#ffda72":"#fff0e0";
+   const x=fx.target==="enemy"?217:27,y=fx.target==="enemy"?49:145;
+   c.fillRect(x,y,72,60);c.restore();
+  }
+  const impactX=fx.target==="enemy"?223:26,impactY=fx.target==="enemy"?107:189;
+  if(phase<.2){text(c,"-"+(fx.damage||0),impactX,impactY-Math.round(phase*30),"#7f2934",18);}
+ }
+ if(fx&&fx.kind==="miss"&&phase<.22)text(c,"MANCATO!",142,113,"#6c3b4b",12);
+ if(fx&&fx.kind==="guard"&&phase<.24){
+  c.save();c.globalAlpha=.36;c.strokeStyle="#527d81";c.lineWidth=5;
+  c.strokeRect(16,120,100,102);c.restore();
+ }
+ // HP panels never cover large sprite faces or the dialogue box.
+ frame(c,3,8,177,76,z);
+ text(c,b.enemy.name.toUpperCase().slice(0,20),11,14,DARK,11);
+ bar(c,11,40,135,b.enemy.maxHp?b.enemy.hp/b.enemy.maxHp:0,z);
+ text(c,"PS "+b.enemy.hp+"/"+b.enemy.maxHp,11,56,DARK,11);
+ const enemyEffects=Object.keys(b.enemy.status||{}).filter(k=>b.enemy.status[k]>0);
+ if(enemyEffects.length)text(c,enemyEffects.slice(0,2).join(" ").toUpperCase().slice(0,20),11,70,"#8e493e",9);
+ frame(c,155,139,162,76,z);
+ text(c,b.player.name.toUpperCase().slice(0,18),163,145,DARK,11);
+ bar(c,163,169,143,b.player.maxHp?b.player.hp/b.player.maxHp:0,z);
+ text(c,"PS "+b.player.hp+"  F "+b.player.fiato+"/"+b.player.maxFiato,163,187,DARK,11);
+ const playerEffects=Object.keys(b.player.status||{}).filter(k=>b.player.status[k]>0);
+ if(playerEffects.length)text(c,playerEffects.slice(0,2).join(" ").toUpperCase().slice(0,22),163,202,"#8e493e",9);
  const dialogY=H-79;
  frame(c,3,dialogY,314,76,z);
- let msg=(Array.isArray(lines)?lines.join(" "):String(lines||"SCEGLI UNA MOSSA")).toUpperCase();
+ const msg=(Array.isArray(lines)?lines.join(" "):String(lines||"SCEGLI UNA MOSSA")).toUpperCase();
  const words=msg.split(/\s+/),rows=[];let current="";
- for(const w of words){if((current+" "+w).trim().length>40){rows.push(current);current=w;}else current=(current+" "+w).trim();}
+ for(const word of words){
+  if((current+" "+word).trim().length>38){if(current)rows.push(current);current=word;}
+  else current=(current+" "+word).trim();
+ }
  if(current)rows.push(current);
  for(let i=0;i<Math.min(4,rows.length);i++)text(c,rows[i],12,dialogY+8+i*16,DARK,12);
 }
