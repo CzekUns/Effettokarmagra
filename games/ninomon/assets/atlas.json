@@ -43,11 +43,11 @@
     ],
     "mainRows": {
       "gialluca": 0,
-      "n01-pagliaccio": 1,
-      "n04-cane": 2,
-      "n02-piccione": 3,
-      "n03-pesce": 4,
-      "n01-topo": 5
+      "n05": 1,
+      "n04": 2,
+      "n02": 3,
+      "n03": 4,
+      "n01": 5
     },
     "extraRect": [
       184,
