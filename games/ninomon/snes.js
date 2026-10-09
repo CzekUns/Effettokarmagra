@@ -27,7 +27,7 @@ const giallucaReady=()=>giallucaHD.complete&&giallucaHD.naturalWidth===384&&gial
 // bottom row Professor Vincenzo idle/point. Separate from overworld sprites.
 const largeHD=new Image();
 largeHD.decoding="async";
-largeHD.src="./assets/large-characters-hd.png?v=1";
+largeHD.src="./assets/large-characters-hd-v2.png?v=2";
 const largeReady=()=>largeHD.complete&&largeHD.naturalWidth===576&&largeHD.naturalHeight===832;
 function largePortrait(c,who,pose,x,y,w,h){
  if(!largeReady())return false;
@@ -453,5 +453,5 @@ function introLake(c,phase=0,chapter=0){
  frame(c,22,8,158,30,0);
  text(c,"LAGO DEI NINOMON",30,15,DARK,14);
 }
-root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,introStory,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,ninoHD,ninoReady,giallucaHD,giallucaReady,largeHD,largeReady,largePortrait,revision:"snes-street-large-portraits-v1"});
+root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,introStory,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,ninoHD,ninoReady,giallucaHD,giallucaReady,largeHD,largeReady,largePortrait,revision:"snes-street-large-portraits-alpha-fixed-v2"});
 })(window);
