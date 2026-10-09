@@ -341,7 +341,10 @@ function updateBattleView(lines,preview){
  if(!preview)R.battle(battleCtx,fight,player.zone,lines||fight.last||fight.log.slice(-1));
  const active=!!state.battleBusy;
  battleUI.controls.classList.toggle("is-busy",active);
- battleUI.round.textContent="TURNO "+(fight.round+1)+" · PS "+friendly.hp+"/"+friendly.maxHp+" · FIATO "+friendly.fiato+"/"+friendly.maxFiato;
+ const battlePreview=active&&state.battleFx;
+ const shownHp=battlePreview?(state.battleFx.partyHp[state.battleFx.activeId]??friendly.hp):friendly.hp;
+ const shownFiato=battlePreview?(state.battleFx.partyFiato[state.battleFx.activeId]??friendly.fiato):friendly.fiato;
+ battleUI.round.textContent="TURNO "+(active?fight.round:fight.round+1)+" · PS "+shownHp+"/"+friendly.maxHp+" · FIATO "+shownFiato+"/"+friendly.maxFiato;
  showEnemyIntent();
  battleUI.moves.textContent="";
  const isKO=friendly.hp<=0;
