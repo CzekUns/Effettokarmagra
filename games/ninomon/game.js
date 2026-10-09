@@ -46,7 +46,7 @@ for(const npc of NPC){
  npc.home={x:npc.x,y:npc.y};npc.patrol=npc.name==="Capostazione"?[[24,18],[25,18],[25,17],[24,17]]:
  npc.name==="Passante col cappuccio"?[[11,15],[12,15],[13,15],[12,15]]:
  npc.name==="Custode del deposito"?[[27,18],[27,17],[28,17],[28,18]]:null;
- npc.patrolIndex=0;npc.patrolClock=0;
+ npc.patrolIndex=0;npc.patrolClock=0;npc.visualX=npc.x;npc.visualY=npc.y;npc.facing="down";npc.motion=0;
 }
 const input={up:false,down:false,left:false,right:false};
 const player={zone:0,x:16.5,y:18.5,facing:"down",walk:0,step:null};
@@ -158,6 +158,10 @@ function changeZone(direction){
 function patrolNPCs(dt){
  for(const n of NPC){
   if(!n.patrol||n.zone!==player.zone)continue;
+  const t=Math.min(1,dt/.17);
+  n.visualX+=(n.x-n.visualX)*t;
+  n.visualY+=(n.y-n.visualY)*t;
+  n.motion=Math.abs(n.x-n.visualX)+Math.abs(n.y-n.visualY);
   if(Math.hypot(n.x+.5-player.x,n.y+.5-player.y)<2.4)continue;
   n.patrolClock+=dt;
   if(n.patrolClock<.75)continue;
@@ -166,6 +170,7 @@ function patrolNPCs(dt){
   const [x,y]=n.patrol[next];
   if(!canStand(n.zone,x+.5,y+.5,true))continue;
   if(Math.abs(player.x-(x+.5))<1&&Math.abs(player.y-(y+.5))<1)continue;
+  n.facing=x>n.x?"right":x<n.x?"left":y<n.y?"up":"down";
   n.x=x;n.y=y;n.patrolIndex=next;
  }
 }
@@ -200,7 +205,7 @@ function move(dt){
   player.y=step.fromY+(step.toY-step.fromY)*k;
   player.walk+=dt*12;
   if(k>=1){
-   player.x=step.toX;player.y=step.toY;player.step=null;
+   player.x=step.toX;player.y=step.toY;player.step=null;player.walk=0;
    completeStep();
   }
   return;
@@ -389,7 +394,7 @@ function confirmReset(){
  actions:[{label:"ANNULLA",variant:"alt",onClick:openDex},{label:"SÌ, RICOMINCIA",onClick:()=>{
    state.found={};state.clues={};state.steps=0;state.introSeen=false;state.activeId="starter";state.wildCooldown=15;
   player.zone=0;player.x=16.5;player.y=18.5;player.step=null;
-  for(const n of NPC){n.x=n.home.x;n.y=n.home.y;n.patrolIndex=0;n.patrolClock=0;}
+  for(const n of NPC){n.x=n.home.x;n.y=n.home.y;n.patrolIndex=0;n.patrolClock=0;n.visualX=n.x;n.visualY=n.y;n.facing="down";n.motion=0;}
   try{localStorage.setItem("ninomon-active-v1","starter");}catch(_){}
   save();state.intro=0;introPanel();updateHud();
  }}]});
@@ -417,7 +422,7 @@ function render(){
   if(encounter.zone===z)actors.push({y:encounter.y+.5,x:encounter.x+.5,kind:"creature",data:encounter});
  }
  for(const npc of NPC){
-  if(npc.zone===z)actors.push({y:npc.y+.5,x:npc.x+.5,kind:"person",data:npc});
+  if(npc.zone===z)actors.push({y:npc.visualY+.5,x:npc.visualX+.5,kind:"person",data:npc});
  }
  for(const thing of SCENERY){
   if(thing.zone===z)actors.push({y:thing.y+.5,x:thing.x+.5,kind:"clue",data:thing});
@@ -429,7 +434,7 @@ function render(){
   if(xx<-20||xx>W+20||yy<-20||yy>H+20)continue;
   if(a.kind==="player")R.person(g,xx,yy,"player",player.facing,player.walk);
   else if(a.kind==="person"){
-   R.person(g,xx,yy,a.data.name==="Gianlluca"?"guide":"npc");
+   R.person(g,xx,yy,a.data.name==="Gianlluca"?"guide":"npc",a.data.facing,a.data.motion>0.05?state.time*10:0);
    R.text(g,a.data.role,xx-2,yy-25,p[0],7);
   }else if(a.kind==="clue"){
    g.fillStyle=p[0];g.fillRect(xx-7,yy-9,14,9);
