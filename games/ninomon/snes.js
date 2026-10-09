@@ -23,6 +23,26 @@ const giallucaHD=new Image();
 giallucaHD.decoding="async";
 giallucaHD.src="./assets/gialluca-overworld-hd.png?v=1";
 const giallucaReady=()=>giallucaHD.complete&&giallucaHD.naturalWidth===384&&giallucaHD.naturalHeight===704;
+// Detail-preserving large portraits: top row Gialluca front/back,
+// bottom row Professor Vincenzo idle/point. Separate from overworld sprites.
+const largeHD=new Image();
+largeHD.decoding="async";
+largeHD.src="./assets/large-characters-hd.png?v=1";
+const largeReady=()=>largeHD.complete&&largeHD.naturalWidth===576&&largeHD.naturalHeight===832;
+function largePortrait(c,who,pose,x,y,w,h){
+ if(!largeReady())return false;
+ const col=(pose==="back"||pose==="point")?1:0;
+ const row=who==="vincenzo"?1:0;
+ const smooth=c.imageSmoothingEnabled,quality=c.imageSmoothingQuality;
+ try{
+  c.imageSmoothingEnabled=true;c.imageSmoothingQuality="high";
+  c.drawImage(largeHD,col*288,row*416,288,416,
+    Math.round(x),Math.round(y),Math.round(w),Math.round(h));
+  return true;
+ }catch(_){return false;}
+ finally{c.imageSmoothingEnabled=smooth;c.imageSmoothingQuality=quality;}
+}
+
 // Ten genuine road/ground tile samples from each of the three original street sheets.
 // These cover EVERY tile in the world. Street props are a separate, sparse overlay.
 const floorAtlas=new Image();
@@ -243,6 +263,8 @@ function person(c,x,y,who="player",dir="down",walk=0){
 function monster(c,id,x,y,scale=1,back=false){
  const cell=mobs[id];
  const size=scale>=3?100:32;
+ if(id==="starter"&&scale>=3&&largePortrait(c,"gialluca",back?"back":"front",
+   x+7,y-17,86,117))return;
  if(ready()&&cell!==undefined){
   const left=cell<6?144:368, top=cell<6?cell*112:208+(cell-6)*112;
   if(sprite(c,left+(back?112:0),top,112,112,x,y,size,size))return;
@@ -352,8 +374,10 @@ function introStory(c,scene="professor",seconds=0,step=0){
    catch(_){person(c,100,225,"player","down");}
    finally{c.imageSmoothingEnabled=previous;}
   }else person(c,100,225,"player","down");
-  if(ready())sprite(c,144,0,112,112,178,134+wobble,110,106);
-  else monster(c,"starter",201,155,2,false);
+  if(!largePortrait(c,"gialluca","front",188,135+wobble,93,112)){
+   if(ready())sprite(c,144,0,112,112,178,134+wobble,110,106);
+   else monster(c,"starter",201,155,2,false);
+  }
   text(c,"© NINOBOY STREET",102,237,dark,11);
   return;
  }
@@ -365,7 +389,8 @@ function introStory(c,scene="professor",seconds=0,step=0){
   for(let x=53;x<270;x+=16)rect(c,x,195,11,2,olive);
   rect(c,18,28,84,5,dark);
   text(c,"N. "+String(step+1).padStart(2,"0"),23,37,dark,12);
-  if(!sprite(c,368+(step===2?144:0),0,144,188,106,9+wobble,119,187)){
+  if(!largePortrait(c,"vincenzo",step===2?"point":"idle",106,9+wobble,119,187)
+   &&!sprite(c,368+(step===2?144:0),0,144,188,106,9+wobble,119,187)){
    old.person(c,100,152,"guide","down",0);
   }
   text(c,"PROF. VINCENZO",22,213,dark,13);
@@ -376,12 +401,11 @@ function introStory(c,scene="professor",seconds=0,step=0){
   rect(c,23,40,274,150,cream);
   // A city waste-bin / street lab stand: the professor presents the very first Ninomon.
   for(let x=43;x<278;x+=38)rect(c,x,176,23,2,mid);
-  if(ready()){
-   sprite(c,368,0,144,188,12,69,76,116);
-   sprite(c,144,0,112,112,120,47+wobble,160,155);
-  }else{
-   person(c,68,180,"guide","down");
-   monster(c,"starter",147,65,3,false);
+  if(!largePortrait(c,"vincenzo","idle",10,70,78,117)){
+   if(!sprite(c,368,0,144,188,12,69,76,116))person(c,68,180,"guide","down");
+  }
+  if(!largePortrait(c,"gialluca","front",128,45+wobble,139,157)){
+   if(!sprite(c,144,0,112,112,120,47+wobble,160,155))monster(c,"starter",147,65,3,false);
   }
   text(c,"NINOMON N.000",20,204,dark,13);
   text(c,"GIALLUCA",208,204,dark,14);
@@ -418,13 +442,16 @@ function introLake(c,phase=0,chapter=0){
  for(let x=7;x<W;x+=42){rect(c,x,229,32,2,p[1]);rect(c,x+6,243,10,2,p[6]);}
  // Intro art from the supplied professor sprite, with more pixels than on Game Boy.
  const profX=189,profY=5;
- if(!sprite(c,368+(chapter%3===0?0:144),0,144,188,profX,profY,124,176)){
+ if(!largePortrait(c,"vincenzo",chapter%3===0?"idle":"point",profX,profY,124,176)
+   &&!sprite(c,368+(chapter%3===0?0:144),0,144,188,profX,profY,124,176)){
   fallback(c,old.introLake,phase,chapter);
  }
  person(c,76,218,"player","up");
- if(ready())sprite(c,144,0,112,112,118,157,64,64); // Starter Gialluca
+ if(!largePortrait(c,"gialluca","front",122,156,61,66)){
+  if(ready())sprite(c,144,0,112,112,118,157,64,64);
+ } // Starter Gialluca
  frame(c,22,8,158,30,0);
  text(c,"LAGO DEI NINOMON",30,15,DARK,14);
 }
-root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,introStory,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,ninoHD,ninoReady,giallucaHD,giallucaReady,revision:"snes-street-writers-hd"});
+root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,introStory,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,ninoHD,ninoReady,giallucaHD,giallucaReady,largeHD,largeReady,largePortrait,revision:"snes-street-large-portraits-v1"});
 })(window);
