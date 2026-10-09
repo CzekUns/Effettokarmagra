@@ -111,9 +111,12 @@ function floorIndex(zone,x,y,key){
  return choices[selection];
 }
 const FLOOR_GROUPS_V2=[
- {regular:[0,1,1,3,4,20,22],rough:[2,3,4,15,22,23],loose:[5,6,8,9,10,11,16,17,18,19,21],wet:[22,23],grass:[6,9,17,21]},
- {regular:[0,1,3,7,8,10,11,16,20],rough:[2,4,5,9,17,18,19],loose:[6,13,14,21,22],wet:[2,4,17],paver:[12]},
- {regular:[0,1,4,8,10,16,17,20,21,23],rough:[2,3,8,10,20],loose:[14,15,16],wet:[10,20],paver:[6,7,18,19,22]}
+ // Freight yard: the main path is dark asphalt, with separate gravel beds above the tracks.
+ {regular:[4,4,22,23],rough:[4,22,23],loose:[5,8,9,10,11,16,18,19,20],wet:[22,23],grass:[6,9,17,21]},
+ // Underpass: light concrete near the viaduct, worn asphalt below; reserve vertical edge tiles.
+ {regular:[8,10,20],concrete:[0,1,3,11,16],rough:[2,4,17,18,19],loose:[6,13,14,21,22],wet:[2,4,17],paver:[12]},
+ // Alley: dark asphalt throughout; pale paving stones belong on the sidewalk only.
+ {regular:[0,1,4,21,23],rough:[2,8,10,20],loose:[14,15],wet:[10,20],paver:[6,7,18,19,22]}
 ];
 function floorIndexV2(z,x,y,key){
  // Rail, paving and lane markings are purposeful features; never randomly place
@@ -127,6 +130,7 @@ function floorIndexV2(z,x,y,key){
  const group=FLOOR_GROUPS_V2[z];
  let bucket="regular";
  if(key==="ballast"||key==="weeds"||key==="grass"||key==="shrub")bucket=z===0&&key==="grass"?"grass":"loose";
+ else if(z===1&&key==="concrete")bucket="concrete";
  else if(key==="puddle")bucket="wet";
  else if(key==="crack"||key==="grate")bucket="rough";
  else if(z===0&&y<9)bucket="loose";
