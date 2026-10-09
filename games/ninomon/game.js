@@ -55,7 +55,7 @@ for(const npc of NPC){
  npc.patrolIndex=0;npc.patrolClock=0;npc.visualX=npc.x;npc.visualY=npc.y;npc.facing="down";npc.motion=0;
 }
 const input={up:false,down:false,left:false,right:false};
-const player={zone:0,x:16.5,y:18.5,facing:"down",walk:0,step:null};
+const player={zone:0,x:16.5,y:18.5,facing:"down",walk:0,step:null,companion:{x:16.5,y:19.5,facing:"down",walk:0},companionStep:null};
 const state={mode:"intro",intro:0,found:{},camera:{x:0,y:0},last:0,time:0,mute:false,ac:null,primary:null,discovered:0,firstComplete:false,lastInteract:0,battle:null,battleTarget:null,activeId:"starter",steps:0,wildCooldown:15,randomBattles:0,clues:{},introSeen:false,autosave:0};
 try{const saved=JSON.parse(localStorage.getItem("ninomon-captured-v1")||"[]");if(Array.isArray(saved))for(const id of saved){if(ENCOUNTERS.some(e=>e.id===id))state.found[id]=true;}}catch(_){}
 try{const id=localStorage.getItem("ninomon-active-v1");if(B.CREATURES[id]&&(id==="starter"||state.found[id]))state.activeId=id;}catch(_){}
@@ -70,6 +70,8 @@ try{
   if(checkpoint.clues&&typeof checkpoint.clues==="object")for(const name of Object.keys(checkpoint.clues))if(SCENERY.some(item=>item.name===name))state.clues[name]=true;
  }
 }catch(_){} 
+player.companion.x=player.x;
+player.companion.y=Math.min(MH-2.5,player.y+1);
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const count=()=>ENCOUNTERS.filter(a=>state.found[a.id]).length;
 function save(){
@@ -158,6 +160,9 @@ function changeZone(direction){
  if(direction>0&&player.zone<ZONES.length-1){player.zone++;player.x=1.5;player.y=16.5;tone(620,.12);}
  else if(direction<0&&player.zone>0){player.zone--;player.x=MW-1.5;player.y=16.5;tone(390,.12);}
  player.step=null;
+ player.companionStep=null;
+ player.companion.x=Math.max(.5,Math.min(MW-.5,player.x+(direction>0?-1:1)));
+ player.companion.y=player.y;
  state.wildCooldown=8;
  save();updateHud();
 }
@@ -209,9 +214,16 @@ function move(dt){
   const k=Math.min(1,step.elapsed/.17);
   player.x=step.fromX+(step.toX-step.fromX)*k;
   player.y=step.fromY+(step.toY-step.fromY)*k;
+  if(player.companionStep){
+   const f=player.companionStep;
+   player.companion.x=f.fromX+(f.toX-f.fromX)*k;
+   player.companion.y=f.fromY+(f.toY-f.fromY)*k;
+   player.companion.walk+=dt*12;
+  }
   player.walk+=dt*12;
   if(k>=1){
    player.x=step.toX;player.y=step.toY;player.step=null;player.walk=0;
+   player.companionStep=null;player.companion.walk=0;
    completeStep();
   }
   return;
@@ -226,6 +238,8 @@ function move(dt){
  if(tx<.5&&dir==="left"&&player.zone>0){changeZone(-1);return;}
  if(tx>MW-.5&&dir==="right"&&player.zone<ZONES.length-1){changeZone(1);return;}
  if(!canStand(player.zone,tx,ty))return;
+ player.companionStep={fromX:player.companion.x,fromY:player.companion.y,toX:player.x,toY:player.y};
+ player.companion.facing=player.facing;
  player.step={fromX:player.x,fromY:player.y,toX:tx,toY:ty,elapsed:0};
 }
 function nearby(){
@@ -407,7 +421,7 @@ function confirmReset(){
  text:"Vuoi cancellare i avvistamenti salvati su questo dispositivo e ricominciare la storia dall'inizio?",
  actions:[{label:"ANNULLA",variant:"alt",onClick:openDex},{label:"SÌ, RICOMINCIA",onClick:()=>{
    state.found={};state.clues={};state.steps=0;state.introSeen=false;state.activeId="starter";state.wildCooldown=15;
-  player.zone=0;player.x=16.5;player.y=18.5;player.step=null;
+  player.zone=0;player.x=16.5;player.y=18.5;player.step=null;player.companion.x=16.5;player.companion.y=19.5;player.companionStep=null;
   for(const n of NPC){n.x=n.home.x;n.y=n.home.y;n.patrolIndex=0;n.patrolClock=0;n.visualX=n.x;n.visualY=n.y;n.facing="down";n.motion=0;}
   try{localStorage.setItem("ninomon-active-v1","starter");}catch(_){}
   save();state.intro=0;introPanel();updateHud();
@@ -441,12 +455,17 @@ function render(){
  for(const thing of SCENERY){
   if(thing.zone===z)actors.push({y:thing.y+.5,x:thing.x+.5,kind:"clue",data:thing});
  }
+ actors.push({x:player.companion.x,y:player.companion.y,kind:"companion"});
  actors.push({x:player.x,y:player.y,kind:"player"});
  actors.sort((a,b)=>a.y-b.y);
  for(const a of actors){
   const xx=Math.round(a.x*S-cx),yy=Math.round(a.y*S-cy);
   if(xx<-20||xx>W+20||yy<-20||yy>H+20)continue;
   if(a.kind==="player")R.person(g,xx,yy,"player",player.facing,player.walk);
+  else if(a.kind==="companion"){
+   if(state.activeId==="starter")R.person(g,xx,yy,"gialluca",player.companion.facing,player.companion.walk);
+   else R.monster(g,state.activeId,xx-8,yy-15,1,false);
+  }
   else if(a.kind==="person"){
    R.person(g,xx,yy,a.data.name==="Vincenzo"?"guide":"npc",a.data.facing,a.data.motion>0.05?state.time*10:0);
    R.text(g,a.data.role,xx-2,yy-25,p[0],7);
