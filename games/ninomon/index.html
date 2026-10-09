@@ -10,6 +10,15 @@
 
 :root{--ink:#293a42;--shade:#52675d;--mid:#8e9e80;--paper:#daddb4;color:var(--ink);background:#283f50;font-family:monospace;font-size:12px}
 *{box-sizing:border-box}
+/* NINOBOY: the entire page behaves as a handheld game, not selectable web copy. */
+html,body,body *{
+ -webkit-user-select:none;
+ user-select:none;
+ -webkit-touch-callout:none;
+ -webkit-tap-highlight-color:transparent;
+}
+img,canvas{ -webkit-user-drag:none; user-drag:none; }
+
 html{min-width:270px;overscroll-behavior-y:contain}
 body{margin:0;min-height:100dvh;background:#283f50;overscroll-behavior-y:contain}
 button{font:inherit;font-weight:900;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
@@ -151,6 +160,12 @@ footer{margin-top:5px}
  <span>Grafica SNES street: sprite originali di Nino, Gialluca, Vincenzo e Ninomon integrati nel gioco.</span>
 </footer>
 </div>
+<script>
+// Prevent Android long-press selection handles and contextual copy popups.
+// These listeners do not cancel taps, pointer input, D-pad presses or scrolling.
+document.addEventListener("selectstart",function(e){e.preventDefault();});
+document.addEventListener("contextmenu",function(e){e.preventDefault();});
+</script>
 <script src="./retro.js?v=7"></script>
 <script src="./snes.js?v=3"></script>
 <script src="./battle.js?v=4"></script>
