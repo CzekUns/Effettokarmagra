@@ -4,6 +4,9 @@ const C=document.getElementById("world"),g=C.getContext("2d"),W=640,H=400,S=32,M
 g.imageSmoothingEnabled=false;
 const $=id=>document.getElementById(id);
 const ui={place:$("place"),count:$("count"),tip:$("tip"),overlay:$("overlay"),tag:$("panel-tag"),title:$("panel-title"),text:$("panel-text"),actions:$("panel-actions"),portrait:$("portrait"),inspect:$("inspect"),dex:$("dex"),sound:$("sound")};
+const B=window.NINOMON_BATTLE;
+if(!B)throw new Error("battle.js deve essere caricato prima di game.js");
+const battleUI={stage:$("battle-stage"),controls:$("battle-controls"),explore:$("explore-controls"),moves:$("battle-moves"),round:$("battle-round"),message:$("battle-message"),enemyName:$("enemy-name"),enemyHP:$("enemy-hp"),enemyHPText:$("enemy-hp-text"),enemyEffect:$("enemy-effect"),enemySymbol:$("enemy-symbol"),allyName:$("ally-name"),allyHP:$("ally-hp"),allyHPText:$("ally-hp-text"),allyEffect:$("ally-effect"),allySymbol:$("ally-symbol"),allyFiato:$("ally-fiato"),fiatoText:$("fiato-text"),rest:$("rest"),flee:$("flee")};
 const ZONES=[
  {title:"SCALO FERROVIARIO",short:"Binari fuori servizio",ground:"#6c6764",road:"#54585b",accent:"#ae9571",sky:"#83847d",entry:[16,18]},
  {title:"SOTTOPASSO",short:"Sotto la tangenziale",ground:"#49535b",road:"#424d56",accent:"#89adad",sky:"#62697b",entry:[2,16]},
@@ -23,12 +26,13 @@ const NPC=[
 const intro=[
  {tag:"INTRODUZIONE · 01",name:"GIANLLUCA",speaker:"GL",text:"Oh, Nino! Benvenuto nel mondo dei NINOMON.\nIo sono Gianlluca. Sì, con due L.\nQui le creature più rare si incontrano nei posti dove nessuno si ferma a guardare."},
  {tag:"INTRODUZIONE · 02",name:"GIANLLUCA",speaker:"GL",text:"Tra binari deserti, sottopassi e strade di servizio, c'è sempre qualcosa da scoprire.\nAlcune persone le chiamano semplicemente cose trovate per terra. Nino ha una sua teoria."},
- {tag:"INTRODUZIONE · 03",name:"GIANLLUCA",speaker:"GL",text:"Quello lì sei tu: Nino. Il tuo talento è fotografare una cosa sospetta e scrivermi: «Gianlluca, ho trovato un Ninomon!».\nComincia dallo scalo ferroviario. Tre avvistamenti bastano per aprire la prima Ninodex."}
+ {tag:"INTRODUZIONE · 03",name:"GIANLLUCA",speaker:"GL",text:"Quello lì sei tu: Nino. Il tuo talento è fotografare una cosa sospetta e scrivermi: «Gianlluca, ho trovato un Ninomon!».\nTi presto la mia mascotte per sfidarli. Comincia dallo scalo ferroviario: vinci, fotografa e riempi la tua Ninodex."}
 ];
 const input={up:false,down:false,left:false,right:false};
 const player={zone:0,x:16,y:18,facing:"down",walk:0};
-const state={mode:"intro",intro:0,found:{},camera:{x:0,y:0},last:0,time:0,mute:false,ac:null,primary:null,discovered:0,firstComplete:false,lastInteract:0};
+const state={mode:"intro",intro:0,found:{},camera:{x:0,y:0},last:0,time:0,mute:false,ac:null,primary:null,discovered:0,firstComplete:false,lastInteract:0,battle:null,battleTarget:null,activeId:"starter"};
 try{const saved=JSON.parse(localStorage.getItem("ninomon-captured-v1")||"[]");if(Array.isArray(saved))for(const id of saved){if(ENCOUNTERS.some(e=>e.id===id))state.found[id]=true;}}catch(_){}
+try{const id=localStorage.getItem("ninomon-active-v1");if(B.CREATURES[id]&&(id==="starter"||state.found[id]))state.activeId=id;}catch(_){}
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const count=()=>ENCOUNTERS.filter(a=>state.found[a.id]).length;
 function save(){try{localStorage.setItem("ninomon-captured-v1",JSON.stringify(Object.keys(state.found)));localStorage.setItem("ninomon-discoveries",String(count()));}catch(_){}}
@@ -47,7 +51,7 @@ function updateHud(){
  ui.count.textContent="NINODEX "+count()+"/"+ENCOUNTERS.length;
  const obj=nearby();
  if(state.mode==="walk"){
-  ui.tip.textContent=obj?(obj.kind==="creature"?(state.found[obj.data.id]?"Già fotografato.":"Avvistamento sospetto!"):"Vuoi parlare con "+obj.data.name+"?")+" Premi ESAMINA.":"Esplora la zona. Vai verso destra per raggiungere la zona successiva. Oggetti con ? = possibili Ninomon.";
+  ui.tip.textContent=obj?(obj.kind==="creature"?(state.found[obj.data.id]?"Avvistato: puoi sfidarlo di nuovo.":"Ninomon sospetto: SFIDALO per poterlo fotografare!"):"Vuoi parlare con "+obj.data.name+"?")+" Premi ESAMINA.":"SQUADRA: "+B.CREATURES[state.activeId].name+". Segui i ? e sfida i Ninomon; poi fotografali.";
  }
 }
 function addAction(label,callback,kind="main",href){
@@ -143,9 +147,111 @@ function inspect(){
   panel({mode:"talk",tag:"DIALOGO · "+ZONES[player.zone].title,title:n.data.name,text:n.data.text,icon:n.data.role,color:n.data.color,actions:[{label:"CONTINUA",onClick:closePanel}]});
  }else{
   const p=n.data,seen=!!state.found[p.id];
-  panel({mode:"encounter",tag:"AVVISTAMENTO · "+p.number,title:seen?p.name:"UN NINOMON?!",icon:"?",color:p.color,text:p.hint+"\n\n"+(seen?"Questo avvistamento è già nella Ninodex.":"Nino: «Gianlluca! Ho trovato un Ninomon!»\nScatta una foto per registrarlo nella Ninodex."),actions:seen?[{label:"TORNA A ESPLORARE",onClick:closePanel}]:[{label:"◎ SCATTA FOTO",onClick:()=>photo(p)},{label:"LASCIA STARE",variant:"alt",onClick:closePanel}]});
+  panel({mode:"encounter",tag:"AVVISTAMENTO · "+p.number,title:seen?p.name:"UN NINOMON?!",icon:"?",color:p.color,text:p.hint+"\n\n"+(seen?"Lo hai già registrato. Vuoi sfidarlo ancora?":"Nino: «Gianlluca! Ho trovato un Ninomon!»\nSfidalo in battaglia per riuscire a fotografarlo."),actions:[{label:seen?"⚔ RIVINCITA":"⚔ INIZIA LA SFIDA",onClick:()=>startBattle(p)},{label:"LASCIA STARE",variant:"alt",onClick:closePanel}]});
  }
 }
+
+/* Each encounter is now a proper fight before the photo is recorded.
+ * Action buttons remain below the LCD inside the Game Boy safety bezel. */
+function battleMode(on){
+ battleUI.stage.hidden=!on;
+ battleUI.controls.hidden=!on;
+ battleUI.explore.hidden=on;
+ if(!on)battleUI.moves.textContent="";
+}
+function updateBattleView(lines){
+ const fight=state.battle;if(!fight)return;
+ const friendly=fight.player,enemy=fight.enemy;
+ battleUI.enemyName.textContent=enemy.name.toUpperCase();
+ battleUI.allyName.textContent=friendly.name.toUpperCase();
+ battleUI.enemyHP.style.width=(100*enemy.hp/enemy.maxHp)+"%";
+ battleUI.allyHP.style.width=(100*friendly.hp/friendly.maxHp)+"%";
+ battleUI.enemyHP.style.background=enemy.hp/enemy.maxHp<.28?"#b9565b":"#56a17b";
+ battleUI.allyHP.style.background=friendly.hp/friendly.maxHp<.28?"#b9565b":"#56a17b";
+ battleUI.enemyHPText.textContent="PS "+enemy.hp+"/"+enemy.maxHp;
+ battleUI.allyHPText.textContent="PS "+friendly.hp+"/"+friendly.maxHp;
+ battleUI.enemyEffect.textContent=Object.keys(enemy.status).join(", ")||"NESSUNO STATO";
+ battleUI.allyEffect.textContent=Object.keys(friendly.status).join(", ")||"NESSUNO STATO";
+ battleUI.fiatoText.textContent=friendly.fiato+"/"+friendly.maxFiato;
+ battleUI.allyFiato.style.width=(100*friendly.fiato/friendly.maxFiato)+"%";
+ battleUI.round.textContent="TURNO "+(fight.round+1);
+ battleUI.allySymbol.textContent=B.CREATURES[friendly.id].symbol;
+ battleUI.enemySymbol.textContent=B.CREATURES[enemy.id].symbol;
+ battleUI.allySymbol.style.background=B.CREATURES[friendly.id].color;
+ battleUI.enemySymbol.style.background=B.CREATURES[enemy.id].color;
+ battleUI.message.textContent=(lines||fight.log.slice(-2)).join(" ");
+ battleUI.moves.textContent="";
+ for(let i=0;i<friendly.moves.length;i++){
+  const move=B.MOVE[friendly.moves[i]],button=document.createElement("button");
+  button.type="button";button.className="move-btn";
+  const title=document.createElement("b");title.textContent=(i+1)+". "+move.name;
+  const note=document.createElement("small");note.textContent=move.type.toUpperCase()+" · G"+move.tier+" · "+move.power+" POT · "+move.cost+" F";
+  button.appendChild(title);button.appendChild(note);
+  button.disabled=friendly.fiato<move.cost||!!fight.ended;
+  button.addEventListener("click",()=>battleTurn(move.id));
+  battleUI.moves.appendChild(button);
+ }
+ battleUI.rest.disabled=!!fight.ended;
+ battleUI.flee.disabled=!!fight.ended;
+}
+function startBattle(p){
+ if(state.mode!=="encounter"&&state.mode!=="walk")return;
+ state.battleTarget=p;
+ state.battle=B.make(state.activeId,p.id,p.zone,count());
+ state.mode="battle";state.primary=null;
+ ui.overlay.classList.add("hidden");battleMode(true);
+ updateBattleView(["Nino manda in campo "+state.battle.player.name+"! "+p.name+" si prepara a combattere."]);
+ for(const k in input)input[k]=false;
+ tone(480,.1,.022);
+}
+function battleTurn(action){
+ if(state.mode!=="battle"||!state.battle)return;
+ const result=B.takeTurn(state.battle,action);
+ if(!result.ok){battleUI.message.textContent=result.error;return;}
+ updateBattleView(result.log);
+ tone(state.battle.ended?760:action==="rest"?350:520,.08);
+ if(!state.battle.ended)return;
+ const outcome=state.battle.ended,target=state.battleTarget;
+ battleMode(false);
+ if(outcome==="win"){
+  const seen=!!state.found[target.id];
+  panel({mode:"battle-result",tag:"VITTORIA · TURNO "+state.battle.round,title:"NINOMON SCONFITTO!",icon:"★",color:"#75967e",
+    text:"Hai battuto "+target.name+"! "+state.battle.log.slice(-3).join(" ")+"\\n"+(seen?"Questo Ninomon è già nella tua Ninodex.":"Ora puoi scattare la foto che Nino vuole mandare a Gianlluca."),
+    actions:[{label:seen?"TORNA ALLA MAPPA":"◎ FOTOGRAFA IL NINOMON",onClick:seen?closePanel:()=>photo(target)},{label:"UN'ALTRA SFIDA",variant:"alt",onClick:()=>{closePanel();startBattleFromMap(target);}}]});
+ }else if(outcome==="lose"){
+  panel({mode:"battle-result",tag:"BATTAGLIA FINITA",title:"NINO HA PERSO",icon:"!",color:"#997773",
+    text:"Il Ninomon ha resistito. Recupera il Fiato e prova un'altra combinazione di mosse.",
+    actions:[{label:"RIPROVA",onClick:()=>{closePanel();startBattleFromMap(target);}},{label:"TORNA IN STRADA",variant:"alt",onClick:closePanel}]});
+ }else{
+  panel({mode:"battle-result",tag:"RITIRATA",title:"NINO SI ALLONTANA",icon:"↩",color:"#7c8891",
+    text:"Questo avvistamento non è stato ancora registrato.",actions:[{label:"TORNA IN STRADA",onClick:closePanel}]});
+ }
+}
+function startBattleFromMap(p){
+ state.mode="walk";
+ startBattle(p);
+}
+function chooseTeam(){
+ const options=[{label:"◎ MASCOTTE",onClick:()=>selectTeam("starter")}];
+ for(const creature of ENCOUNTERS)if(state.found[creature.id]){
+  options.push({label:"▣ "+creature.name.toUpperCase(),onClick:()=>selectTeam(creature.id)});
+ }
+ options.push({label:"TORNA ALLA NINODEX",variant:"alt",onClick:openDex});
+ panel({mode:"team",tag:"SQUADRA NINOMON · "+count()+" SCOPERTI",title:"SCEGLI CHI COMBATTE",icon:"◎",color:"#658b78",
+  text:"Attivo: "+B.CREATURES[state.activeId].name+".\\nOgni Ninomon può avere 4 mosse. Le tecniche più potenti si sbloccano registrando altri Ninomon, senza salire di livello.",
+  actions:options});
+}
+function selectTeam(id){
+ if(id!=="starter"&&!state.found[id])return;
+ state.activeId=id;
+ try{localStorage.setItem("ninomon-active-v1",id);}catch(_){}
+ tone(730,.11);
+ panel({mode:"team-select",tag:"SQUADRA AGGIORNATA",title:B.CREATURES[id].name.toUpperCase(),icon:B.CREATURES[id].symbol,color:B.CREATURES[id].color,
+  text:"Mosse equipaggiate:\\n"+B.loadout(id,count()).map(key=>{const m=B.MOVE[key];return m.name+" (Grado "+m.tier+")";}).join("\\n"),
+  actions:[{label:"RIPRENDI L'ESPLORAZIONE",onClick:closePanel},{label:"CAMBIA NINOMON",variant:"alt",onClick:chooseTeam}]});
+ updateHud();
+}
+
 function photo(p){
  if(!state.found[p.id]){state.found[p.id]=true;save();tone(850,.15,.025);}
  const total=count(),done=total===ENCOUNTERS.length;
@@ -160,19 +266,19 @@ function shareUrl(){
 function finishChapter(){
  panel({mode:"complete",tag:"CAPITOLO 0 · COMPLETATO",title:"NINO, MA COS'HAI TROVATO?",icon:"★",color:"#688776",
   text:"Hai fotografato tutti e tre i Ninomon della prima esplorazione.\nGianlluca ha ricevuto le segnalazioni. Ha chiesto soltanto: «Nino, ma sei sicuro?».\n\nIl prossimo capitolo aggiungerà personaggi e Ninomon realizzati sulle referenze originali.",
-  actions:[{label:"TORNA IN STRADA",onClick:closePanel},{label:"APRI NINODEX",variant:"alt",onClick:openDex},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()}]});
+  actions:[{label:"TORNA IN STRADA",onClick:closePanel},{label:"APRI NINODEX",variant:"alt",onClick:openDex},{label:"SQUADRA",variant:"alt",onClick:chooseTeam},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()}]});
 }
 function openDex(){
  const rows=ENCOUNTERS.map(c=>state.found[c.id]?"#"+c.number+" · "+c.name+" — "+ZONES[c.zone].short:"#"+c.number+" · ??? — da scoprire");
  panel({mode:"dex",tag:"LA NINODEX · "+count()+"/"+ENCOUNTERS.length,title:"ARCHIVIO DEGLI AVVISTAMENTI",icon:"▣",color:"#536d79",
  text:rows.join("\n")+"\n\nLe immagini definitive arriveranno con le referenze di Nino, Gianlluca e dei Ninomon.",
- actions:[{label:"RIPRENDI",onClick:closePanel},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()},{label:"NUOVA PARTITA",variant:"alt",onClick:confirmReset}]});
+ actions:[{label:"RIPRENDI",onClick:closePanel},{label:"CAMBIA NINOMON",variant:"alt",onClick:chooseTeam},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()},{label:"NUOVA PARTITA",variant:"alt",onClick:confirmReset}]});
 }
 function confirmReset(){
  panel({mode:"confirm",tag:"RIPARTIRE DA ZERO?",title:"NUOVA ESPLORAZIONE",icon:"!",color:"#755f55",
  text:"Vuoi cancellare i tre avvistamenti salvati su questo dispositivo e ricominciare la storia dall'inizio?",
  actions:[{label:"ANNULLA",variant:"alt",onClick:openDex},{label:"SÌ, RICOMINCIA",onClick:()=>{
-   state.found={};save();player.zone=0;player.x=16;player.y=18;state.intro=0;introPanel();updateHud();
+   state.found={};state.activeId="starter";try{localStorage.setItem("ninomon-active-v1","starter");}catch(_){}save();player.zone=0;player.x=16;player.y=18;state.intro=0;introPanel();updateHud();
  }}]});
 }
 function tile(z,x,y){
@@ -304,6 +410,12 @@ function render(){
 }
 function bind(){
  window.addEventListener("keydown",e=>{
+  if(state.mode==="battle"){
+   if(["1","2","3","4"].includes(e.key)){e.preventDefault();if(!e.repeat){const id=state.battle.player.moves[Number(e.key)-1];if(id)battleTurn(id);}return;}
+   if(e.key==="f"||e.key==="F"){e.preventDefault();if(!e.repeat)battleTurn("rest");return;}
+   if(e.key==="Escape"){e.preventDefault();if(!e.repeat)battleTurn("flee");return;}
+   return;
+  }
   const directions={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",w:"up",W:"up",s:"down",S:"down",a:"left",A:"left",d:"right",D:"right"};
   if(directions[e.key]){e.preventDefault();if(state.mode==="walk")input[directions[e.key]]=true;return;}
   if(e.key==="e"||e.key==="E"||e.key==="Enter"||e.key===" "){
@@ -322,6 +434,7 @@ function bind(){
   for(const type of ["pointerup","pointercancel","lostpointercapture"])b.addEventListener(type,()=>{input[key]=false;b.classList.remove("active");});
  }
  ui.inspect.addEventListener("click",inspect);ui.dex.addEventListener("click",openDex);
+ battleUI.rest.addEventListener("click",()=>battleTurn("rest"));battleUI.flee.addEventListener("click",()=>battleTurn("flee"));
  ui.sound.addEventListener("click",()=>{state.mute=!state.mute;ui.sound.textContent=state.mute?"♫ OFF":"♫ ON";tone(645,.1);});
  window.addEventListener("blur",()=>{for(const k in input)input[k]=false;});
  document.addEventListener("visibilitychange",()=>{if(document.hidden)for(const k in input)input[k]=false;});
