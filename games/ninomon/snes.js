@@ -43,12 +43,34 @@ function build(z,x,y){
  const memo=cache[z];if(memo.has(id))return memo.get(id);
  const tile=document.createElement("canvas");tile.width=T;tile.height=T;
  const t=tile.getContext("2d");t.imageSmoothingEnabled=false;
- // 16px classic geometry remains underneath a higher-frequency 32px surface.
- const coarse=document.createElement("canvas");coarse.width=16;coarse.height=16;
- const tc=coarse.getContext("2d");tc.imageSmoothingEnabled=false;
- // representative tiles preserve the zone, material and classic tile rules.
- old.ground(tc,z,x,y,0,0,false);
- t.drawImage(coarse,0,0,16,16,0,0,T,T);
+ // Render these 32x32 tiles natively. Never draw a legacy 16px canvas into
+ // a second canvas: that path can fail on mobile and produces coarse pixels.
+ const base=key==="ballast"||key==="asphalt"||key==="crack"?p[1]:
+   key==="grass"||key==="weeds"?p[2]:
+   key==="track"||key==="sleepers"?p[1]:
+   key==="puddle"?p[3]:
+   key==="wagon"||key==="roof"||key==="wall"||key==="column"?p[2]:p[3];
+ rect(t,0,0,T,T,base);
+ if(key==="asphalt"||key==="crack"){
+  for(let xx=0;xx<T;xx+=11)rect(t,xx,(xx*3+variant*7)%31,4,1,p[2]);
+  for(let yy=5;yy<T;yy+=9)rect(t,(yy*5+variant*3)%29,yy,2,1,p[0]);
+ }
+ if(key==="ballast"){
+  for(let n=0;n<18;n++){const xx=(n*17+variant*7)%30,yy=(n*11+variant*13)%30;
+   rect(t,xx,yy,2,2,n%3===0?p[0]:n%3===1?p[3]:p[6]);
+  }
+ }
+ if(key==="grass"||key==="weeds"){
+  for(let n=0;n<12;n++){const xx=(n*11+variant*7)%29,yy=(n*19+variant*3)%30;
+   rect(t,xx,yy,1,3,p[1]);rect(t,xx-1,yy+1,3,1,p[4]);
+  }
+ }
+ if(key==="brick"||key==="wall")rect(t,0,0,T,3,p[0]);
+ if(key==="grate"){rect(t,4,5,24,21,p[0]);for(let xx=8;xx<27;xx+=5)rect(t,xx,7,2,17,p[4]);}
+ if(key==="shrub"){rect(t,3,4,26,24,p[1]);for(let n=0;n<12;n++)rect(t,(n*9)%23+5,(n*17)%19+7,5,2,p[n%2?4:2]);}
+ if(key==="tar"){rect(t,3,4,26,24,p[0]);rect(t,6,5,17,2,p[2]);}
+ if(key==="curb"){rect(t,0,0,T,5,p[5]);rect(t,0,5,T,4,p[0]);}
+ if(key==="metal"){for(let yy=0;yy<T;yy+=8){rect(t,0,yy,T,3,p[0]);rect(t,0,yy+3,T,1,p[4]);}}
  const seed=hash(x,y,z);
  if(["asphalt","crack","ballast","concrete","paver","grass","weeds","puddle"].includes(key)){
   for(let n=0;n<14;n++){
@@ -109,9 +131,17 @@ function build(z,x,y){
  }
  memo.set(id,t);return t;
 }
+let firstTileError=false;
 function ground(c,z,x,y,screenX,screenY,blocked){
  c.imageSmoothingEnabled=false;
- c.drawImage(build(z,x,y),Math.round(screenX),Math.round(screenY));
+ const px=Math.round(screenX),py=Math.round(screenY);
+ try{c.drawImage(build(z,x,y),px,py);}
+ catch(err){
+  // A bad offscreen tile should never blank the full mobile LCD.
+  if(!firstTileError){firstTileError=true;console.error("Ninomon tile fallback",err);}
+  rect(c,px,py,T,T,PAL[z][2]);
+  for(let k=0;k<8;k++)rect(c,px+(k*11)%30,py+(k*17)%30,2,1,PAL[z][1]);
+ }
  const key=old.kind(z,x,y);
  if(ready()&&!["wagon","roof","wall","column","track","sleepers","fence"].includes(key) &&
    (hash(x,y,z)%10===0)){
