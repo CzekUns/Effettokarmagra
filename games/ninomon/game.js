@@ -32,7 +32,7 @@ const intro=[
  {tag:"INTRO · 2/7",name:"GIANLLUCA",speaker:"GL",text:"Benvenuto nel mondo dei NINOMON! Io sono Gianlluca. Con due L, mi raccomando."},
  {tag:"INTRO · 3/7",name:"GIANLLUCA",speaker:"GL",text:"Le creature rare si nascondono nei posti dove nessuno vuole fermarsi a guardare."},
  {tag:"INTRO · 4/7",name:"GIANLLUCA",speaker:"GL",text:"Scali ferroviari. Sottopassi. Strade di servizio. In giro trovi di tutto."},
- {tag:"INTRO · 5/7",name:"GIANLLUCA",speaker:"GL",text:"Tu sei Nino. FotografI ogni cosa sospetta e scrivi sul gruppo: «Gianlluca, ho trovato un Ninomon!»"},
+ {tag:"INTRO · 5/7",name:"GIANLLUCA",speaker:"GL",text:"Tu sei Nino. Fotografi ogni cosa sospetta e scrivi sul gruppo: «Gianlluca, ho trovato un Ninomon!»"},
  {tag:"INTRO · 6/7",name:"GIANLLUCA",speaker:"GL",text:"Ti presto la mia mascotte. Sconfiggi gli altri Ninomon e registra gli avvistamenti."},
  {tag:"INTRO · 7/7",name:"GIANLLUCA",speaker:"GL",text:"Comincia dallo scalo. Tre Ninomon ti aspettano. Se trovi un pesce per terra, avvisami."}
 ];
@@ -82,6 +82,7 @@ function panel(options){
  ui.actions.textContent="";
  for(const action of options.actions)addAction(action.label,action.onClick,action.variant,action.href);
  ui.overlay.classList.remove("hidden");
+ ui.overlay.classList.toggle("intro-scene",state.mode==="intro");
  for(const k in input)input[k]=false;
 }
 function closePanel(){state.mode="walk";state.primary=null;ui.overlay.classList.add("hidden");updateHud();}
@@ -277,6 +278,7 @@ function confirmReset(){
 /* True 160×144 handheld framebuffer. Every environmental 16×16 metatile
    is constructed from original 8×8 four-colour pixel patterns in retro.js. */
 function render(){
+ if(state.mode==="intro"){R.introLake(g,state.time);return;}
  const cx=Math.floor(clamp(player.x*S-W/2,0,MW*S-W));
  const cy=Math.floor(clamp(player.y*S-H/2,0,MH*S-H));
  state.camera.x=cx;state.camera.y=cy;
