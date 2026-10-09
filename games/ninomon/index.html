@@ -130,12 +130,14 @@ header{margin-bottom:3px}
 .controls{padding-top:3px}
 footer{margin-top:5px}
 }
+.city-map{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:2px;margin:7px 0}.map-cell{padding:0;height:22px;min-width:0;border:1px solid #637574;font:bold 9px monospace;color:#e8e4c8;background:#465d62}.map-cell.theme-0{background:#616f55}.map-cell.theme-2{background:#816f5b}.map-cell.visited{border:2px solid #e1d4a8}.map-cell.current{background:#a14f59;color:white;border:2px solid #ffc887}.map-cell.selected{outline:2px solid #e8bf72;outline-offset:-3px}.map-details{font-size:9px!important;line-height:1.3!important;min-height:35px}.overlay:has(.city-map) .panel{padding:5px}.overlay:has(.city-map) .panel h2{font-size:12px}.overlay:has(.city-map) .panel p{font-size:9px;line-height:1.2;margin:4px 0}.overlay:has(.city-map) .action{min-height:24px;padding:3px 5px}
 </style>
 </head>
 <body>
 <div class="shell"><div class="console" aria-label="Ninoboy, console portatile"><div class="console-top"><b>● NINOBOY <em>STREET</em></b><small>SNES EDITION</small></div><header>
  <a class="back" href="../../index.html">← ARCADE</a>
  <h1>I NINOMON<em>CRONACHE DI STRADA · CAPITOLO 0</em></h1>
+ <button class="sound" id="map" type="button" aria-label="Apri la mappa dei 64 quadranti">MAPPA</button>
  <button class="sound" id="sound" type="button" aria-label="Attiva e disattiva effetti sonori">♫ ON</button>
 </header>
 <div class="hud"><span id="place">SCALO FERROVIARIO</span><small>GIOCHI COME <strong>NINO</strong></small><small id="count">NINODEX 0/3</small></div>
@@ -190,7 +192,9 @@ document.addEventListener("contextmenu",function(e){e.preventDefault();});
 </script>
 <script src="./retro.js?v=8"></script>
 <script src="./snes.js?v=14"></script>
+<script src="./world.js?v=1"></script>
+<script src="./street.js?v=1"></script>
 <script src="./battle.js?v=6"></script>
-<script src="./game.js?v=18"></script>
+<script src="./game.js?v=19"></script>
 </body>
 </html>

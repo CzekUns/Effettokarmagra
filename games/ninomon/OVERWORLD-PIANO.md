@@ -1,3 +1,31 @@
+# Città giocabile — aggiornamento 10 ottobre 2026
+
+Questa versione supera il limite delle tre mappe descritto nel piano storico qui sotto.
+
+- **64 quadranti** disposti 8×8, da 35×24 caselle: **53.760 caselle**, 224 uscite direzionali reciproche (112 collegamenti).
+- Gli ID 0–2 conservano Scalo, Sottopasso e Vicolo. Gli altri sono stabili, A1–H8; non riordinarli, vengono salvati nelle partite.
+- Otto famiglie di ambienti, piante a blocchi variate e landmark regionali: ferrovia, officine, mercati, piazze, case, cortili, parchi e servizi. Gli edifici sono scenografia esterna; questa versione non introduce interni visitabili.
+- **192 allenatori umani**, tre per quadrante, con sfida facoltativa, rivincita e vittoria persistente. Usano le nove specie esistenti; nessun nuovo Ninomon o livello inventato.
+- **198 abitanti**, 11 aspetti umani più Vincenzo; passanti con percorsi brevi verificati. Gli avversari statici in strada sono allenatori. Il Ninomon della squadra continua a seguire Nino; gli incontri selvatici sono rari e limitati a ghiaia, erba e terreni abbandonati.
+- Tasto **MAPPA** o **M**: posizione, nomi, quadranti visitati, sfide completate e collegamenti N/E/S/O. Nessun teletrasporto.
+- `world.js` definisce mappa, superfici, personaggi, portali e footprint solidi. `street.js` usa gli stessi footprint per il disegno, con oggetti ordinati per profondità, sprite umani e cache dei moduli.
+- Sprite e ID dei mostri restano negli atlanti già corretti. Gli asset originali dello scalo vengono riutilizzati; facciate, arredo urbano e abitanti aggiunti sono disegnati con canvas a pixel netti.
+- Salvataggi `ninomon-save-v2` compatibili, con `visited` e `defeated` opzionali. Una vecchia posizione occupata dalla nuova geometria viene spostata sulla casella libera più vicina senza azzerare i progressi.
+
+## Verifiche riproducibili
+
+```sh
+node games/ninomon/world.test.js
+node games/ninomon/battle.test.js
+node games/ninomon/sprite-identity.test.js
+```
+
+Il test mondo verifica tutti i quadranti, unicità ID, sovrapposizioni degli attori, raggiungibilità di personaggi e uscite, percorsi NPC, collisioni e ricollocazione dei vecchi salvataggi. Sono stati eseguiti anche rendering con gli asset PNG effettivi e una prova del runtime con movimento fra quadranti, dialogo allenatore, avvio lotta, gestione vittoria, foto, salvataggio e mappa. Questi controlli non equivalgono a una prova su un telefono Android fisico.
+
+---
+
+## Piano storico (riferimento delle versioni precedenti)
+
 # I Ninomon — Revisione dell'overworld (9 ottobre 2026)
 
 ## Diagnosi verificata sul codice e sugli asset
