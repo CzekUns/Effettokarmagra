@@ -528,7 +528,7 @@ function quadrantCode(z){return String.fromCharCode(65+z%8)+(Math.floor(z/8)+1);
 function openMap(){
  if(state.mode==="battle"||state.mode==="intro"||state.mode==="title")return;
  panel({mode:"map",tag:"CITTÀ · "+Object.keys(state.visited).length+"/64 QUADRANTI",title:"MAPPA DEI QUARTIERI",icon:"▦",
-  text:"Sei in "+quadrantCode(player.zone)+" · "+M.zones[player.zone].name+".\nAllenatori battuti: "+trainerCount()+"/"+TRAINERS.length+". Tocca un quadrante per i dettagli.",
+  text:"Sei in "+quadrantCode(player.zone)+" · "+M.zones[player.zone].name+".\nAllenatori battuti: "+trainerCount()+"/"+TRAINERS.length+". Tocca un quadrante.",
   actions:[{label:"RIPRENDI",onClick:closePanel},{label:"NINODEX",variant:"alt",onClick:openDex}]});
  const grid=document.createElement("div");grid.className="city-map";grid.setAttribute("role","group");grid.setAttribute("aria-label","64 quadranti: nord in alto");
  const details=document.createElement("p");details.className="map-details";details.setAttribute("aria-live","polite");
@@ -691,7 +691,7 @@ function bind(){
   b.addEventListener("pointerdown",e=>{e.preventDefault();if(state.mode!=="walk")return;input[key]=true;b.classList.add("active");try{b.setPointerCapture(e.pointerId);}catch(_){}});
   for(const type of ["pointerup","pointercancel","lostpointercapture"])b.addEventListener(type,()=>{input[key]=false;b.classList.remove("active");});
  }
- ui.inspect.addEventListener("click",()=>{if(state.mode==="intro"||state.mode==="title"){if(state.primary)state.primary();}else inspect();});
+ ui.inspect.addEventListener("click",()=>{if(state.mode==="walk")inspect();else if(state.mode!=="battle"&&state.primary)state.primary();});
  ui.dex.addEventListener("click",openDex);
  $("map").addEventListener("click",()=>{if(state.mode!=="intro"&&state.mode!=="title"&&state.mode!=="battle")openMap();});
  battleUI.rest.addEventListener("click",()=>battleTurn("rest"));battleUI.guard.addEventListener("click",()=>battleTurn("guard"));battleUI.stage.addEventListener("click",()=>{if(state.battleBusy)finishBattleAnimation();});battleUI.switch.addEventListener("click",pickBattleParty);battleUI.flee.addEventListener("click",()=>battleTurn("flee"));
