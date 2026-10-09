@@ -346,7 +346,7 @@ function battle(c,b,z,lines){
 }
 /* Pokemon-era inspired opening, with original NINOBOY / Ninomon artwork.
    Story board: title, professor introduction, starter reveal, trainer, departure.
-   Each scene is rendered in the SAME 320x288 LCD; no additional scrolling. */
+   Each scene is rendered in the SAME 320x317 LCD; dialogue is anchored at the bottom. */
 function introStory(c,scene="professor",seconds=0,step=0){
  c.imageSmoothingEnabled=false;
  const clock=Number.isFinite(seconds)?seconds:0;
