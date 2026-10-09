@@ -18,7 +18,8 @@ function sprite(c,sx,sy,sw,sh,dx,dy,dw,dh){
 }
 const DIR={down:0,left:1,right:2,up:3};
 const CHAR={player:0,guide:2,gialluca:1};
-const MOB={starter:0,n01:5,n02:3,n03:4,n04:2,n05:1,n06:6,n07:7,n08:8,n09:9};
+// Legacy atlas order differs from SNES; last two creatures are bag, then hoodie monkey.
+const MOB={starter:0,n01:5,n02:3,n03:4,n04:2,n05:1,n06:6,n07:7,n08:9,n09:8};
 
 const P=[
  ["#26393a","#586657","#899778","#d8d8ae"], // scalo
@@ -321,5 +322,5 @@ function introLake(c,phase=0,chapter=0){
  text(c,"LAGO DEI NINOMON",46,11,p[0],7);
 }
 
-root.NINOMON_RETRO={W,H,T,P,A,ground,person,monster,symbol,text,frame,bar,battle,kind,introLake,sprite,ready};
+root.NINOMON_RETRO={W,H,T,P,A,ground,person,monster,symbol,text,frame,bar,battle,kind,introLake,sprite,ready,legacyMobIndices:MOB};
 })(window);
