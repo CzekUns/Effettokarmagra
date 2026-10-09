@@ -1,6 +1,6 @@
 (function(){
 "use strict";
-const C=document.getElementById("world"),g=C.getContext("2d"),W=320,H=288,S=32,MW=35,MH=24;
+const C=document.getElementById("world"),g=C.getContext("2d"),W=320,H=317,S=32,MW=35,MH=24;
 const R=window.NINOMON_RETRO;
 if(!R||R.W!==W||R.H!==H)throw new Error("Caricare retro.js prima del gioco");
 g.imageSmoothingEnabled=false;
