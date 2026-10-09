@@ -118,12 +118,25 @@ function panel(options){
  ui.portrait.style.background=options.color||"#3d5260";
  ui.actions.textContent="";
  for(const action of options.actions)addAction(action.label,action.onClick,action.variant,action.href);
+ ui.overlay.style.display="";
  ui.overlay.classList.remove("hidden");
  ui.overlay.classList.toggle("intro-scene",state.mode==="intro");
  ui.overlay.classList.toggle("title-scene",state.mode==="title");
  for(const k in input)input[k]=false;
 }
-function closePanel(){state.mode="walk";state.primary=null;state.introSeen=true;ui.overlay.classList.add("hidden");save();updateHud();}
+function closePanel(){
+ state.mode="walk";
+ state.primary=null;
+ state.introSeen=true;
+ ui.overlay.classList.remove("intro-scene","title-scene");
+ ui.overlay.classList.add("hidden");
+ ui.overlay.style.display="none";
+ for(const key in input)input[key]=false;
+ save();updateHud();
+ // Force a map draw on the same tap that ends the professor's speech.
+ // This works even on phones that paused requestAnimationFrame during the intro.
+ try{render();}catch(err){reportRenderFault(err);drawEmergencyWorld();}
+}
 function titlePanel(){
  state.intro=0;
  panel({mode:"title",tag:"NINOBOY STREET · NUOVA PARTITA",title:"I NINOMON",icon:"★",color:"#617a70",
@@ -552,10 +565,49 @@ function bind(){
  window.addEventListener("blur",()=>{for(const k in input)input[k]=false;});
  document.addEventListener("visibilitychange",()=>{if(document.hidden)for(const k in input)input[k]=false;});
 }
+let renderFaultReported=false;
+function reportRenderFault(error){
+ if(!renderFaultReported){renderFaultReported=true;console.error("Ninomon display recovery",error);}
+}
+// Minimal street fallback uses only solid canvas drawing operations, so an
+// unavailable image cannot leave the LCD blank after the intro on Android.
+function drawEmergencyWorld(){
+ const z=player.zone,p=R.P[z]||R.P[0];
+ const cx=Math.floor(clamp(player.x*S-W/2,0,MW*S-W));
+ const cy=Math.floor(clamp(player.y*S-H/2,0,MH*S-H));
+ g.imageSmoothingEnabled=false;
+ g.fillStyle=p[2];g.fillRect(0,0,W,H);
+ const x0=Math.max(0,Math.floor(cx/S)),x1=Math.min(MW-1,Math.ceil((cx+W)/S));
+ const y0=Math.max(0,Math.floor(cy/S)),y1=Math.min(MH-1,Math.ceil((cy+H)/S));
+ for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+  const sx=x*S-cx,sy=y*S-cy,wall=walkBlocked(z,x+.5,y+.5);
+  g.fillStyle=wall?p[1]:((x*11+y*7)%5===0?p[3]:p[2]);g.fillRect(sx,sy,S,S);
+  g.fillStyle=p[1];g.fillRect(sx+2,sy+2,2,2);
+  if(wall){g.fillStyle=p[0];g.fillRect(sx+3,sy+3,S-6,3);}
+ }
+ const px=Math.round(player.x*S-cx),py=Math.round(player.y*S-cy);
+ const fx=Math.round(player.companion.x*S-cx),fy=Math.round(player.companion.y*S-cy);
+ g.fillStyle="#6c4836";g.fillRect(fx-10,fy-17,20,16);
+ g.fillStyle="#e8b886";g.fillRect(px-7,py-28,14,14);
+ g.fillStyle="#a36a48";g.fillRect(px-10,py-13,20,14);
+ g.fillStyle=p[0];g.fillRect(0,0,W,24);
+ g.fillStyle=p[5];g.fillRect(2,2,W-4,19);
+ g.font="bold 13px monospace";g.textAlign="left";g.textBaseline="top";
+ g.fillStyle=p[0];g.fillText(ZONES[z].title,8,6);
+}
 function frame(now){
  const dt=state.last?clamp((now-state.last)/1000,0,.042):0;state.last=now;
- state.time+=dt;if(state.mode==="walk"){patrolNPCs(dt);move(dt);}
- render();requestAnimationFrame(frame);
+ try{
+  state.time+=dt;
+  if(state.mode==="walk"){patrolNPCs(dt);move(dt);}
+  render();
+ }catch(err){
+  reportRenderFault(err);
+  try{if(state.mode==="walk")drawEmergencyWorld();}
+  catch(_){g.fillStyle="#536c69";g.fillRect(0,0,W,H);}
+ }finally{
+  requestAnimationFrame(frame);
+ }
 }
 bind();
 if(state.introSeen){state.mode="walk";ui.overlay.classList.add("hidden");}
