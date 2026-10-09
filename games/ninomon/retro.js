@@ -173,7 +173,7 @@ function person(c,x,y,who="player",facing="down",walk=0){
   const frame=walk?Math.floor(walk*1.4)%3:1;
   if(sprite(c,frame*24,(ri*4+di)*32,24,32,x-8,y-24,16,24))return;
  }
- let p=HUMAN_P[role==="player"?0:role==="guide"?1:2],rows=PERSON[role];
+ let p=HUMAN_P[role==="player"?0:role==="guide"?1:2],rows=PERSON[role]||PERSON.npc;
  const bounce=walk?Math.floor(Math.sin(walk)*1):0;
  if(walk){
   const walkFrame=Math.floor(walk*1.4)%4;
