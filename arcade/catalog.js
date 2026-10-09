@@ -50,7 +50,7 @@ window.ARCADE_CATALOG = [
     title: "I Ninomon",
     subtitle: "Cronache di strada",
     genre: "RPG / Battaglie a turni",
-    description: "Nino e il suo Ninomon Gialluca esplorano nove creature street fra binari e sottopassi. Il professor Vincenzo ti affida il primo compagno: nuove sprite originali, battaglie e Ninodex!",
+    description: "I Ninomon: SNES Street Edition! Stessa console, pixel più piccoli e più dettagli; nove Ninomon, sprite originali di Nino e Gialluca, prof. Vincenzo e battaglie a turni.",
     href: "./games/ninomon/",
     artwork: "./games/ninomon/cover.svg?v=2",
     support: "Telefono e PC · Capitolo 0",
