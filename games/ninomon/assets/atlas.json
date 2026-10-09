@@ -241,5 +241,30 @@
       ]
     },
     "renderer": "snes.js loads after retro.js and before game.js. Native 320x288 composition with per-pixel street microdetail. Old retro.js is a loading fallback."
+  },
+  "snesEdition": {
+    "floorAtlas": {
+      "file": "street-floor-tiles.png",
+      "width": 320,
+      "height": 96,
+      "cell": [
+        32,
+        32
+      ],
+      "columns": 10,
+      "rows": [
+        "scalo",
+        "sottopasso",
+        "vicolo"
+      ],
+      "textureMode": "whole contiguous floor",
+      "sampling": "repeat whole surface with stable spatial clusters, not random props",
+      "fallback": "native procedural tiles until image loads",
+      "sourceSheets": [
+        "tileset_pixel_art_del_deposito_ferroviario_urbano.png",
+        "piastrelle_pixel_art_per_sottopasso_urbano.png",
+        "set_di_tile_pixel_art_per_vicolo_urbano.png"
+      ]
+    }
   }
 }
