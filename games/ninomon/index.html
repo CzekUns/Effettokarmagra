@@ -24,11 +24,11 @@ header{display:flex;align-items:center;justify-content:space-between;gap:5px;mar
 header h1{text-align:center;font:bold clamp(18px,5vw,24px)/1.1 monospace;letter-spacing:1px;color:#465366;margin:0;min-width:0}
 header h1 em{display:block;font:900 8px/1.5 monospace;font-style:normal;letter-spacing:0;color:#88526a}
 .back,.sound{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:#f0e9cf;background:#46556a;border:2px solid #829296;box-shadow:2px 2px #7c8986;min-height:31px;padding:3px 5px;font-size:9px;white-space:nowrap}
-.hud{background:#60756a;border:7px solid #3a4651;border-bottom:0;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:space-between;gap:4px;padding:4px 6px;color:#f2eed1}
+.hud{width:min(320px,100%);margin-inline:auto;background:#60756a;border:7px solid #3a4651;border-bottom:0;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:space-between;gap:4px;padding:4px 6px;color:#f2eed1}
 .hud span{font-size:9px;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hud small{font-size:7px;white-space:nowrap}
 .hud strong{color:#f4e7ac}
-.viewport{width:100%;max-width:100%;aspect-ratio:10/9;position:relative;background:#8e9e80;border:7px solid #3a4651;border-radius:0 0 5px 5px;overflow:hidden}
+.viewport{width:min(320px,100%);max-width:100%;margin-inline:auto;aspect-ratio:10/9;position:relative;background:#8e9e80;border:7px solid #3a4651;border-radius:0 0 5px 5px;overflow:hidden}
 canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}
 .power-led{position:absolute;top:5px;left:5px;background:#c85654;width:5px;height:5px;z-index:6;box-shadow:0 0 0 2px #33494a}
 .battle-stage{position:absolute;inset:0;z-index:4;background:var(--mid)}
@@ -125,7 +125,7 @@ footer{margin-top:5px}
   </section>
  </div>
 </div>
-<p class="caption" id="tip">Cammina, esplora e guarda le cose sospette. Niente foto vere: le creature sono segnaposto.</p>
+<p class="caption" id="tip">Muoviti per caselle, scopri indizi, sfida Ninomon e scegli la tua squadra.</p>
 <div class="controls" id="explore-controls">
  <div class="dpad" aria-label="Comandi di movimento">
   <button type="button" class="up" data-move="up" aria-label="Muovi su">▲</button>
@@ -147,12 +147,12 @@ footer{margin-top:5px}
 <div class="console-signature"><span>▰ ▰ SELECT</span><span>▰ ▰ START</span><strong>◖ ))) ◗</strong></div>
 </div>
 <footer>
- <span>PC: FRECCE/WASD · E ESAMINA · I NINODEX · 1–4 MOSSE · C CAMBIA</span>
+ <span>PC: FRECCE/WASD · E ESAMINA · I NINODEX · 1–4 MOSSE · C CAMBIA · F FIATO</span>
  <span>Sprite originali temporanei in quattro colori: Nino, Gianlluca e Ninomon saranno personalizzati sulle referenze.</span>
 </footer>
 </div>
-<script src="./retro.js?v=3"></script>
+<script src="./retro.js?v=4"></script>
 <script src="./battle.js?v=2"></script>
-<script src="./game.js?v=5"></script>
+<script src="./game.js?v=6"></script>
 </body>
 </html>
