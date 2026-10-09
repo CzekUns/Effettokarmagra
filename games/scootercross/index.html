@@ -90,6 +90,66 @@ header{margin-bottom:2px}
 .orientation a{border:2px solid #d9af77;padding:10px 15px}
 }
 @media(prefers-reduced-motion:reduce){.orientation .phone{transform:none}}
+
+/* Scootercross hand controls: landscape thumb-friendly wheel layout */
+.header-actions{display:flex;align-items:center;gap:7px}
+.share-top{display:inline-flex;align-items:center;justify-content:center;padding:9px 11px;min-height:36px;border:2px solid #94e9ae;color:#efffef;background:#137649;box-shadow:2px 3px #06151a;border-radius:3px;font-size:11px;letter-spacing:.025em;white-space:nowrap}
+.share-top:hover,.share-top:focus-visible,.dialog .share:hover{background:#159654;outline:1px solid #ecf8ca}
+.layout{grid-template-columns:minmax(0,1fr) minmax(0,4fr) minmax(0,1fr);align-items:stretch;column-gap:7px}
+.group{display:flex;flex-direction:row;justify-content:center;align-items:flex-end;gap:clamp(3px,.6vw,10px);padding-bottom:12px}
+.pedal{display:flex;flex:none;align-items:center;justify-content:center;flex-direction:column;gap:2px;border-radius:50%;border:3px solid #12263b;outline:2px solid #8f9bab;box-shadow:inset 0 3px #ffffff45,0 5px #071020;color:#fff8e5;font-size:clamp(7px,.95vw,12px);font-weight:1000;line-height:1.05;user-select:none;touch-action:none}
+.pedal .glyph{font-size:clamp(18px,2.65vw,30px);line-height:1}
+.pedal:active,.pedal.pressed{transform:translateY(3px);box-shadow:inset 0 2px #ffffff55,0 2px #071020;filter:brightness(1.2)}
+.jump-pedal{width:clamp(49px,8vw,90px);height:clamp(49px,8vw,90px);background:linear-gradient(140deg,#e78369,#b43b42)}
+.wheelie-pedal{width:clamp(49px,8vw,90px);height:clamp(49px,8vw,90px);background:linear-gradient(140deg,#9b80d0,#593d91)}
+.brake-pedal{width:clamp(35px,6.2vw,62px);height:clamp(35px,6.2vw,62px);background:linear-gradient(145deg,#e1a473,#a84f40);font-size:clamp(7px,.85vw,10px)}
+.brake-pedal .glyph{font-size:clamp(13px,1.8vw,23px)}
+.gas-pedal{width:clamp(57px,10vw,115px);height:clamp(57px,10vw,115px);background:linear-gradient(145deg,#80da93,#25834c);border-color:#153b33;outline-color:#a7eec5;box-shadow:inset 0 4px #cbffbe65,0 6px #071c18}
+.gas-pedal .glyph{font-size:clamp(21px,3.3vw,40px)}
+.group.right{justify-content:flex-end}
+.group.left{justify-content:flex-start}
+.turbo-mini{padding:4px 8px;background:#c49b52;color:#172239;border:2px solid #543e22;font-size:10px;font-weight:1000;border-radius:3px;white-space:nowrap}
+.turbo-mini:active{background:#ffe6a1}
+.bottom{gap:5px}
+.bottom #status{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bottom #speed{white-space:nowrap}
+.wheelie-hud{position:absolute;left:50%;transform:translateX(-50%);top:5px;z-index:3;width:clamp(155px,40%,240px);background:#142840ed;border:2px solid #e8c68b;box-shadow:2px 3px #071522;border-radius:3px;padding:5px 6px;color:#ffefc4;text-align:center;pointer-events:none}
+.wheelie-hud[hidden]{display:none}
+.balance-top{display:flex;justify-content:space-between;align-items:center;gap:4px;font:bold clamp(8px,1.5vw,11px) monospace}
+.balance-top strong{color:#ffed93;font-size:12px}
+.balance-rail{position:relative;overflow:hidden;height:12px;margin:4px 0;background:#263e59;border:1px solid #8ba8a4}
+.balance-rail>div{width:0;height:100%;background:linear-gradient(90deg,#5ece87 0%,#dfc26d 57%,#ee6262 100%)}
+.risk-mark{position:absolute;left:82%;top:0;bottom:0;border-left:2px solid #fff3e5;box-shadow:1px 0 #8c1b30}
+.wheelie-hud small{display:block;font-size:clamp(7px,1vw,9px);color:#ebdda7}
+.wheelie-hud.danger{border-color:#fb7d76;animation:wheeliePulse .24s steps(2) infinite}
+.wheelie-hud.danger small{color:#ffc4b4}
+@keyframes wheeliePulse{50%{background:#6d2e3d}}
+.dialog .share{font-size:clamp(10px,1.25vw,13px);padding:13px 9px;border-width:3px;background:#16844c;letter-spacing:.015em;margin-top:12px;box-shadow:2px 3px #03251a}
+@media(max-width:890px) and (orientation:landscape){
+ .layout{grid-template-columns:minmax(0,1fr) minmax(0,4.1fr) minmax(0,1fr);gap:3px}
+ .group{gap:3px;padding-bottom:9px}
+ .header-actions{gap:3px}
+ .share-top{padding:5px 6px;min-height:26px;font-size:9px}
+ .pedal{border-width:2px;outline-width:1px;font-size:clamp(7px,1.12vw,11px)}
+ .jump-pedal,.wheelie-pedal{width:clamp(44px,7.55vw,74px);height:clamp(44px,7.55vw,74px)}
+ .gas-pedal{width:clamp(55px,9.2vw,91px);height:clamp(55px,9.2vw,91px)}
+ .brake-pedal{width:clamp(33px,5.3vw,53px);height:clamp(33px,5.3vw,53px)}
+ .pedal .glyph{font-size:clamp(17px,2.6vw,24px)}
+ .gas-pedal .glyph{font-size:clamp(20px,3.1vw,31px)}
+ .brake-pedal .glyph{font-size:clamp(12px,2vw,18px)}
+ .turbo-mini{padding:2px 4px;font-size:9px}
+ .wheelie-hud{top:3px;padding:3px 5px}
+ .balance-rail{height:10px;margin:2px 0}
+ .wheelie-hud small{font-size:7px}
+ .dialog .share{font-size:10px;padding:8px}
+}
+@media(max-height:380px) and (orientation:landscape){
+ .group{padding-bottom:5px}
+ .gas-pedal{width:clamp(48px,8.4vw,70px);height:clamp(48px,8.4vw,70px)}
+ .brake-pedal{width:clamp(31px,5vw,45px);height:clamp(31px,5vw,45px)}
+ .jump-pedal,.wheelie-pedal{width:clamp(42px,6.9vw,65px);height:clamp(42px,6.9vw,65px)}
+}
+
 </style>
 </head>
 <body>
@@ -103,13 +163,12 @@ header{margin-bottom:2px}
 <header>
  <a class="toplink" href="../../index.html">← ARCADE CLUB</a>
  <div><h1>BIAGIO GELO <span>· SCOOTERCROSS</span></h1><small>VIA ROMA · MELITO DI NAPOLI · 8-BIT</small></div>
- <button class="audio" id="sound" type="button">♫ ON</button>
+ <div class="header-actions"><a class="share-top" id="share-top" href="https://wa.me/" target="_blank" rel="noopener noreferrer" aria-label="Condividi il punteggio su WhatsApp">↗ WHATSAPP</a><button class="audio" id="sound" type="button">♫ ON</button></div>
 </header>
 <main class="layout">
- <div class="group left">
-  <h2>GUIDA</h2>
-  <button class="pad" data-control="brake" type="button"><span>◀</span>FRENA</button>
-  <button class="pad go" data-control="gas" type="button"><span>▶</span>ACCELERA</button>
+ <div class="group left" aria-label="Comandi a sinistra: salta e impenna">
+   <button class="pedal jump-pedal" id="jump" type="button"><span class="glyph">↑</span><span>SALTA</span></button>
+   <button class="pedal wheelie-pedal" id="wheelie" data-control="wheelie" type="button"><span class="glyph">↶</span><span>IMPENNA</span></button>
  </div>
  <section class="machine" aria-label="Biagio Gelo Scootercross">
   <div class="hud">
@@ -120,31 +179,29 @@ header{margin-bottom:2px}
    <div><small>RECORD</small><strong id="best">00000</strong></div>
   </div>
   <div class="frame">
+   <div class="wheelie-hud" id="wheelie-hud" hidden><div class="balance-top"><span>IMPENNATA · EQUILIBRIO</span><strong id="wheelie-score">+0</strong></div><div class="balance-rail"><div id="wheelie-fill"></div><i class="risk-mark" aria-hidden="true"></i></div><small id="wheelie-tip">TIENI PREMUTO · RILASCIA PRIMA DEL ROSSO</small></div>
    <canvas id="game" width="480" height="270" aria-label="Pista a scorrimento laterale in Via Roma, Melito di Napoli"></canvas>
    <div class="overlay" id="veil">
     <div class="dialog">
      <div class="tag" id="tag">ARCADE CLUB · MELITO 8-BIT</div>
      <h2 id="title">SCOOTERCROSS!</h2>
-     <p id="message">Guida lo scooter bordeaux con bauletto lungo Via Roma. Tieni premuto ACCELERA, premi SALTA prima dei barili e usa INCLINA durante i salti. Raggiungi il traguardo!</p>
+     <p id="message">Guida lo scooter bordeaux lungo Via Roma. ACCELERA e SALTA i barili. Tieni premuto IMPENNA per guadagnare punti: guarda la barra di equilibrio e rilascia prima di ribaltarti!</p>
      <button id="play" type="button">INIZIA ▶</button>
-     <a class="share" id="share" href="#" target="_blank" rel="noopener noreferrer" hidden>↗ CONDIVIDI SU WHATSAPP</a>
+     <a class="share" id="share" href="#" target="_blank" rel="noopener noreferrer" hidden>📲 CONDIVIDI IL PUNTEGGIO SU WHATSAPP</a>
     </div>
    </div>
   </div>
   <div class="progress"><div id="progress"></div></div>
-  <div class="bottom"><span id="status">VIA ROMA · MELITO DI NAPOLI</span><span id="speed">0 km/h</span></div>
+  <div class="bottom"><span id="status">VIA ROMA · MELITO DI NAPOLI</span><button class="turbo-mini" id="turbo" type="button"><span id="boost">TURBO 100%</span> ⚡</button><span id="speed">0 km/h</span></div>
  </section>
- <div class="group right">
-  <h2>SALTO</h2>
-  <button class="pad jump" id="jump" type="button"><span>▲</span>SALTA</button>
-  <button class="pad tilt" data-control="up" type="button"><span>↶</span>INCLINA SU</button>
-  <button class="pad tilt" data-control="down" type="button"><span>↷</span>INCLINA GIÙ</button>
-  <button class="pad boost" id="turbo" type="button"><span>⚡</span><span id="boost">TURBO 100%</span></button>
+ <div class="group right" aria-label="Comandi a destra: freno e acceleratore">
+  <button class="pedal brake-pedal" data-control="brake" type="button"><span class="glyph">■</span><span>FRENO</span></button>
+  <button class="pedal gas-pedal" data-control="gas" type="button"><span class="glyph">▶</span><span>ACCELERA</span></button>
  </div>
 </main>
-<p class="instructions">PC: FRECCE / WASD · SPAZIO SALTA · SHIFT TURBO · P PAUSA · SMARTPHONE: SCHERMO ORIZZONTALE</p>
+<p class="instructions">PC: → ACCELERA · ← FRENA · SPAZIO SALTA · W IMPENNA · SHIFT TURBO · P PAUSA · TELEFONO ORIZZONTALE</p>
 </div>
-<script src="./game.js?v=6"></script>
+<script src="./game.js?v=7"></script>
 <script>
 (function(){
  const cabinet=document.querySelector(".machine");
@@ -152,7 +209,7 @@ header{margin-bottom:2px}
  function fit(){
   if(window.innerWidth>window.innerHeight&&window.innerWidth<=890){
     // Leave vertical room for the top bar, score, progress and safe-area in landscape.
-    cabinet.style.maxWidth=Math.max(260,Math.floor((window.innerHeight-100)*16/9))+"px";
+    cabinet.style.maxWidth=Math.max(225,Math.floor((window.innerHeight-100)*16/9))+"px";
   }else cabinet.style.maxWidth="";
  }
  window.addEventListener("resize",fit);
