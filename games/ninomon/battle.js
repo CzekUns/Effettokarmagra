@@ -39,7 +39,13 @@ const CREATURES={
  starter:{id:"starter",name:"Gialluca",kind:"Ninomon di Nino",hp:115,color:"#dfc18a",symbol:"◎",types:["rutto","rottami"],base:["rutto-1","rottami-1","sputo-2","sfiga-2"],advanced:["rutto-3","rottami-3"],ultimate:"rutto-4"},
  n01:{id:"n01",name:"Topo sospetto",kind:"Creatura di scalo",hp:96,color:"#a4a6a9",symbol:"?",types:["cacca","puzza"],base:["cacca-1","puzza-1","puzza-2","cacca-2"],advanced:["puzza-3","cacca-3"],ultimate:"cacca-4"},
  n02:{id:"n02",name:"Piccione immobile",kind:"Creatura da sottopasso",hp:106,color:"#8e9eb6",symbol:"?",types:["sputo","sfiga"],base:["sputo-1","sfiga-1","sputo-2","sfiga-2"],advanced:["sputo-3","sfiga-3"],ultimate:"sfiga-4"},
- n03:{id:"n03",name:"Pesce misterioso",kind:"Creatura da marciapiede",hp:115,color:"#cdb0b0",symbol:"?",types:["pipi","schiamazzo"],base:["pipi-1","schiamazzo-1","pipi-2","schiamazzo-2"],advanced:["pipi-3","schiamazzo-3"],ultimate:"pipi-4"}
+ n03:{id:"n03",name:"Pesce misterioso",kind:"Creatura da marciapiede",hp:115,color:"#cdb0b0",symbol:"?",types:["pipi","schiamazzo"],base:["pipi-1","schiamazzo-1","pipi-2","schiamazzo-2"],advanced:["pipi-3","schiamazzo-3"],ultimate:"pipi-4"},
+ n04:{id:"n04",name:"Cane sfatto",kind:"Bestia di scalo",hp:98,color:"#b0a28a",symbol:"!",types:["puzza","rottami"],base:["puzza-1","rottami-1","puzza-2","rottami-2"],advanced:["puzza-3","rottami-3"],ultimate:"puzza-4"},
+ n05:{id:"n05",name:"Pagliaccio randagio",kind:"Creatura da tunnel",hp:97,color:"#bd8aa6",symbol:"!",types:["schiamazzo","sfiga"],base:["schiamazzo-1","sfiga-1","schiamazzo-2","sfiga-2"],advanced:["schiamazzo-3","sfiga-3"],ultimate:"schiamazzo-4"},
+ n06:{id:"n06",name:"Madama Leoparda",kind:"Divinità del marciapiede",hp:102,color:"#d4a8b2",symbol:"!",types:["sfiga","sputo"],base:["sfiga-1","sputo-1","sfiga-2","sputo-2"],advanced:["sfiga-3","sputo-3"],ultimate:"sfiga-4"},
+ n07:{id:"n07",name:"Fumatore col cane",kind:"Coppia dello scalo",hp:112,color:"#a4a17c",symbol:"!",types:["puzza","schiamazzo"],base:["puzza-1","schiamazzo-1","puzza-2","schiamazzo-2"],advanced:["puzza-3","schiamazzo-3"],ultimate:"puzza-4"},
+ n08:{id:"n08",name:"Scimmia in felpa",kind:"Abitante del sottopasso",hp:109,color:"#a96f5d",symbol:"!",types:["rutto","rottami"],base:["rutto-1","rottami-1","rutto-2","rottami-2"],advanced:["rutto-3","rottami-3"],ultimate:"rottami-4"},
+ n09:{id:"n09",name:"Sacco vivente",kind:"Ninomon da cassonetto",hp:122,color:"#878989",symbol:"!",types:["cacca","puzza"],base:["cacca-1","puzza-1","cacca-2","puzza-2"],advanced:["cacca-3","puzza-3"],ultimate:"cacca-4"}
 };
 const ZONE_BONUS=["rottami","rutto","pipi"];
 // Two eight-category counterplay loops. A matching counter gives a modest bonus.
