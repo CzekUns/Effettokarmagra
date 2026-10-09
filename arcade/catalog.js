@@ -44,5 +44,18 @@ window.ARCADE_CATALOG = [
     status: "live",
     accent: "orange",
     recordKey: "biagio-scootercross-best"
+  },
+  {
+    id: "ninomon",
+    title: "I Ninomon",
+    subtitle: "Cronache di strada",
+    genre: "Avventura / Collezione",
+    description: "Nino esplora scali ferroviari, sottopassi e strade deserte alla ricerca di Ninomon improbabili. Parla con Gianlluca, fotografa gli avvistamenti e riempi la Ninodex. Capitolo 0 giocabile.",
+    href: "./games/ninomon/",
+    artwork: "./games/ninomon/cover.svg",
+    support: "Telefono e PC · prototipo",
+    status: "live",
+    accent: "aqua",
+    recordKey: "ninomon-discoveries"
   }
 ];
