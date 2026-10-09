@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" shape-rendering="crispEdges" role="img" aria-labelledby="a b">
+<title id="a">I Ninomon — quartiere urbano retro 16 bit</title><desc id="b">Sottopasso notturno, rotaie, tre enigmatiche creature stilizzate, insegna Ninomon in caratteri pixel</desc>
+<defs><linearGradient id="g" x2=".4" y2="1"><stop stop-color="#43496f"/><stop offset="1" stop-color="#111c35"/></linearGradient></defs>
+<rect width="480" height="320" fill="url(#g)"/><path fill="#26314c" d="M0 100H480V288H0z"/>
+<path fill="#56627b" d="M0 77H480V104H0z"/><path fill="#a3a2a0" d="M0 77H480V83H0z"/>
+<path fill="#394967" d="M18 104H67V273H18zM407 104H459V273H407z"/>
+<path fill="#777b87" d="M26 110H38V263H26zM420 110H435V264H420z"/>
+<path fill="#3a5770" d="M65 146H407V267H65z"/>
+<path fill="#527d8d" d="M65 157H407V170H65z"/>
+<path fill="#93b0aa" d="M74 177H113V181H74zM134 180H163V184H134zM304 185H357V188H304z"/>
+<path fill="#74716c" d="M0 262H480V320H0z"/><path fill="#4a545b" d="M0 276H480V320H0z"/>
+<path stroke="#968c76" stroke-width="6" d="M32 320L118 271M445 320L367 271"/><path stroke="#c4a880" stroke-width="3" d="M32 320L118 271M445 320L367 271"/>
+<g stroke="#58595a" stroke-width="5"><path d="M36 315H448M44 296H439M59 285H420M72 278H404"/></g>
+<!-- creature 1 rodent silhouette -->
+<g fill="#a6aab0" stroke="#202c3a" stroke-width="5"><path d="M76 232L73 198L91 210L105 199L124 215L143 216L159 237L155 258L111 264L80 253Z"/><path d="M154 248Q193 219 198 255" fill="none" stroke="#a6aab0" stroke-width="8"/></g>
+<circle cx="106" cy="232" r="5" fill="#f5d58b"/><circle cx="132" cy="230" r="5" fill="#f5d58b"/>
+<!-- creature 2 bird silhouette -->
+<g fill="#728fb0" stroke="#1f3148" stroke-width="5"><path d="M250 259L234 240L234 215L245 200L260 207L270 190L279 217L286 239L277 261Z"/><path d="M248 225L221 231L244 245Z"/></g>
+<path d="M274 221L291 228L273 234Z" fill="#e5b77b"/><circle cx="264" cy="214" r="5" fill="#e5d7c8"/>
+<!-- creature 3 mystery fish -->
+<g fill="#b8a2b5" stroke="#293346" stroke-width="5"><path d="M331 238L351 214L391 216L415 237L389 258L354 259Z"/><path d="M333 239L315 212L316 265Z"/></g><path d="M372 216L381 195L393 216Z" fill="#827c9c"/><circle cx="391" cy="234" r="6" fill="#f9de98"/>
+<!-- hanging sign -->
+<rect x="78" y="9" width="323" height="72" rx="7" fill="#18263c" stroke="#e9c16b" stroke-width="5"/>
+<text x="241" y="55" text-anchor="middle" fill="#ffe1a4" stroke="#643e5b" stroke-width="2" paint-order="stroke" style="font:bold 46px monospace">NINOMON</text>
+<text x="240" y="73" text-anchor="middle" fill="#90d9c5" style="font:bold 11px monospace;letter-spacing:3px">CRONACHE DI STRADA</text>
+<path d="M23 130H56V153H23zM419 130H452V153H419z" fill="#d3b880"/><text x="40" y="146" text-anchor="middle" fill="#263748" style="font:bold 10px monospace">?</text><text x="435" y="146" text-anchor="middle" fill="#263748" style="font:bold 10px monospace">?</text>
+</svg>
