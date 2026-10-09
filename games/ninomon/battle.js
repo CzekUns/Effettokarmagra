@@ -36,7 +36,7 @@ for(const cat of TYPES)for(let t=1;t<=4;t++){
  moveList.push(move);MOVE[move.id]=move;
 }
 const CREATURES={
- starter:{id:"starter",name:"Mascotte di Gianlluca",kind:"Mascotte provvisoria",hp:115,color:"#dfc18a",symbol:"◎",types:["rutto","rottami"],base:["rutto-1","rottami-1","sputo-2","sfiga-2"],advanced:["rutto-3","rottami-3"],ultimate:"rutto-4"},
+ starter:{id:"starter",name:"Gialluca",kind:"Ninomon di Nino",hp:115,color:"#dfc18a",symbol:"◎",types:["rutto","rottami"],base:["rutto-1","rottami-1","sputo-2","sfiga-2"],advanced:["rutto-3","rottami-3"],ultimate:"rutto-4"},
  n01:{id:"n01",name:"Topo sospetto",kind:"Creatura di scalo",hp:96,color:"#a4a6a9",symbol:"?",types:["cacca","puzza"],base:["cacca-1","puzza-1","puzza-2","cacca-2"],advanced:["puzza-3","cacca-3"],ultimate:"cacca-4"},
  n02:{id:"n02",name:"Piccione immobile",kind:"Creatura da sottopasso",hp:106,color:"#8e9eb6",symbol:"?",types:["sputo","sfiga"],base:["sputo-1","sfiga-1","sputo-2","sfiga-2"],advanced:["sputo-3","sfiga-3"],ultimate:"sfiga-4"},
  n03:{id:"n03",name:"Pesce misterioso",kind:"Creatura da marciapiede",hp:115,color:"#cdb0b0",symbol:"?",types:["pipi","schiamazzo"],base:["pipi-1","schiamazzo-1","pipi-2","schiamazzo-2"],advanced:["pipi-3","schiamazzo-3"],ultimate:"pipi-4"}
