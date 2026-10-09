@@ -1,12 +1,16 @@
 (function(){
 "use strict";
-const C=document.getElementById("world"),g=C.getContext("2d"),W=640,H=400,S=32,MW=35,MH=24;
+const C=document.getElementById("world"),g=C.getContext("2d"),W=160,H=144,S=16,MW=35,MH=24;
+const R=window.NINOMON_RETRO;
+if(!R||R.W!==W||R.H!==H)throw new Error("Caricare retro.js prima del gioco");
 g.imageSmoothingEnabled=false;
 const $=id=>document.getElementById(id);
 const ui={place:$("place"),count:$("count"),tip:$("tip"),overlay:$("overlay"),tag:$("panel-tag"),title:$("panel-title"),text:$("panel-text"),actions:$("panel-actions"),portrait:$("portrait"),inspect:$("inspect"),dex:$("dex"),sound:$("sound")};
 const B=window.NINOMON_BATTLE;
 if(!B)throw new Error("battle.js deve essere caricato prima di game.js");
-const battleUI={stage:$("battle-stage"),controls:$("battle-controls"),explore:$("explore-controls"),moves:$("battle-moves"),round:$("battle-round"),message:$("battle-message"),enemyName:$("enemy-name"),enemyHP:$("enemy-hp"),enemyHPText:$("enemy-hp-text"),enemyEffect:$("enemy-effect"),enemySymbol:$("enemy-symbol"),allyName:$("ally-name"),allyHP:$("ally-hp"),allyHPText:$("ally-hp-text"),allyEffect:$("ally-effect"),allySymbol:$("ally-symbol"),allyFiato:$("ally-fiato"),fiatoText:$("fiato-text"),rest:$("rest"),flee:$("flee")};
+const battleCanvas=$("combat-art"),battleCtx=battleCanvas.getContext("2d");
+battleCtx.imageSmoothingEnabled=false;
+const battleUI={stage:$("battle-stage"),controls:$("battle-controls"),explore:$("explore-controls"),moves:$("battle-moves"),round:$("battle-round"),rest:$("rest"),flee:$("flee")};
 const ZONES=[
  {title:"SCALO FERROVIARIO",short:"Binari fuori servizio",ground:"#6c6764",road:"#54585b",accent:"#ae9571",sky:"#83847d",entry:[16,18]},
  {title:"SOTTOPASSO",short:"Sotto la tangenziale",ground:"#49535b",road:"#424d56",accent:"#89adad",sky:"#62697b",entry:[2,16]},
@@ -24,9 +28,13 @@ const NPC=[
  {zone:2,x:13,y:17,name:"Venditore",color:"#dab186",role:"!",text:"Nino, oggi cerchi un parcheggio o un'altra creatura? Non rispondere, ho già capito."}
 ];
 const intro=[
- {tag:"INTRODUZIONE · 01",name:"GIANLLUCA",speaker:"GL",text:"Oh, Nino! Benvenuto nel mondo dei NINOMON.\nIo sono Gianlluca. Sì, con due L.\nQui le creature più rare si incontrano nei posti dove nessuno si ferma a guardare."},
- {tag:"INTRODUZIONE · 02",name:"GIANLLUCA",speaker:"GL",text:"Tra binari deserti, sottopassi e strade di servizio, c'è sempre qualcosa da scoprire.\nAlcune persone le chiamano semplicemente cose trovate per terra. Nino ha una sua teoria."},
- {tag:"INTRODUZIONE · 03",name:"GIANLLUCA",speaker:"GL",text:"Quello lì sei tu: Nino. Il tuo talento è fotografare una cosa sospetta e scrivermi: «Gianlluca, ho trovato un Ninomon!».\nTi presto la mia mascotte per sfidarli. Comincia dallo scalo ferroviario: vinci, fotografa e riempi la tua Ninodex."}
+ {tag:"INTRO · 1/7",name:"GIANLLUCA",speaker:"GL",text:"Oh, Nino!\nSei arrivato finalmente!"},
+ {tag:"INTRO · 2/7",name:"GIANLLUCA",speaker:"GL",text:"Benvenuto nel mondo dei NINOMON! Io sono Gianlluca. Con due L, mi raccomando."},
+ {tag:"INTRO · 3/7",name:"GIANLLUCA",speaker:"GL",text:"Le creature rare si nascondono nei posti dove nessuno vuole fermarsi a guardare."},
+ {tag:"INTRO · 4/7",name:"GIANLLUCA",speaker:"GL",text:"Scali ferroviari. Sottopassi. Strade di servizio. In giro trovi di tutto."},
+ {tag:"INTRO · 5/7",name:"GIANLLUCA",speaker:"GL",text:"Tu sei Nino. FotografI ogni cosa sospetta e scrivi sul gruppo: «Gianlluca, ho trovato un Ninomon!»"},
+ {tag:"INTRO · 6/7",name:"GIANLLUCA",speaker:"GL",text:"Ti presto la mia mascotte. Sconfiggi gli altri Ninomon e registra gli avvistamenti."},
+ {tag:"INTRO · 7/7",name:"GIANLLUCA",speaker:"GL",text:"Comincia dallo scalo. Tre Ninomon ti aspettano. Se trovi un pesce per terra, avvisami."}
 ];
 const input={up:false,down:false,left:false,right:false};
 const player={zone:0,x:16,y:18,facing:"down",walk:0};
@@ -161,31 +169,16 @@ function battleMode(on){
 }
 function updateBattleView(lines){
  const fight=state.battle;if(!fight)return;
- const friendly=fight.player,enemy=fight.enemy;
- battleUI.enemyName.textContent=enemy.name.toUpperCase();
- battleUI.allyName.textContent=friendly.name.toUpperCase();
- battleUI.enemyHP.style.width=(100*enemy.hp/enemy.maxHp)+"%";
- battleUI.allyHP.style.width=(100*friendly.hp/friendly.maxHp)+"%";
- battleUI.enemyHP.style.background=enemy.hp/enemy.maxHp<.28?"#b9565b":"#56a17b";
- battleUI.allyHP.style.background=friendly.hp/friendly.maxHp<.28?"#b9565b":"#56a17b";
- battleUI.enemyHPText.textContent="PS "+enemy.hp+"/"+enemy.maxHp;
- battleUI.allyHPText.textContent="PS "+friendly.hp+"/"+friendly.maxHp;
- battleUI.enemyEffect.textContent=Object.keys(enemy.status).join(", ")||"NESSUNO STATO";
- battleUI.allyEffect.textContent=Object.keys(friendly.status).join(", ")||"NESSUNO STATO";
- battleUI.fiatoText.textContent=friendly.fiato+"/"+friendly.maxFiato;
- battleUI.allyFiato.style.width=(100*friendly.fiato/friendly.maxFiato)+"%";
- battleUI.round.textContent="TURNO "+(fight.round+1);
- battleUI.allySymbol.textContent=B.CREATURES[friendly.id].symbol;
- battleUI.enemySymbol.textContent=B.CREATURES[enemy.id].symbol;
- battleUI.allySymbol.style.background=B.CREATURES[friendly.id].color;
- battleUI.enemySymbol.style.background=B.CREATURES[enemy.id].color;
- battleUI.message.textContent=(lines||fight.log.slice(-2)).join(" ");
+ const friendly=fight.player;
+ battleCtx.imageSmoothingEnabled=false;
+ R.battle(battleCtx,fight,player.zone,lines||fight.log.slice(-2));
+ battleUI.round.textContent="TURNO "+(fight.round+1)+" · PS "+friendly.hp+"/"+friendly.maxHp+" · FIATO "+friendly.fiato+"/"+friendly.maxFiato;
  battleUI.moves.textContent="";
  for(let i=0;i<friendly.moves.length;i++){
   const move=B.MOVE[friendly.moves[i]],button=document.createElement("button");
   button.type="button";button.className="move-btn";
-  const title=document.createElement("b");title.textContent=(i+1)+". "+move.name;
-  const note=document.createElement("small");note.textContent=move.type.toUpperCase()+" · G"+move.tier+" · "+move.power+" POT · "+move.cost+" F";
+  const title=document.createElement("b");title.textContent=(i+1)+" ▶ "+move.name;
+  const note=document.createElement("small");note.textContent=move.type.toUpperCase()+" · G"+move.tier+" · "+move.power+" PT · "+move.cost+" F";
   button.appendChild(title);button.appendChild(note);
   button.disabled=friendly.fiato<move.cost||!!fight.ended;
   button.addEventListener("click",()=>battleTurn(move.id));
@@ -281,131 +274,55 @@ function confirmReset(){
    state.found={};state.activeId="starter";try{localStorage.setItem("ninomon-active-v1","starter");}catch(_){}save();player.zone=0;player.x=16;player.y=18;state.intro=0;introPanel();updateHud();
  }}]});
 }
-function tile(z,x,y){
- if(y<0||y>=MH||x<0||x>=MW)return;
- let color=ZONES[z].road,fx=x*S,fy=y*S,r=hash(x*127+y*19+z*17);
- if(z===0){
-  color=y<11?"#827d74":y<14?"#606264":"#52565b";
-  if(y===9||y===10)color="#5a6063";
- }else if(z===1){
-  color=y<11?"#3c444e":"#47535b";
- }else{
-  color=y<10?"#978d81":"#60636a";
- }
- g.fillStyle=color;g.fillRect(fx,fy,S,S);
- if(r>.65){g.fillStyle=z===1?"#576671":"#8b8880";g.fillRect(fx+5,fy+24,3,2);g.fillRect(fx+23,fy+8,2,2);}
- if(r<.18){g.fillStyle="#334750";g.fillRect(fx+19,fy+20,8,2);}
- if(z===0&&(y===9||y===10)){
-  g.fillStyle="#343f48";g.fillRect(fx,fy+8,S,3);g.fillRect(fx,fy+25,S,3);
-  if(x%2===0){g.fillStyle="#ae9676";g.fillRect(fx+3,fy+6,5,25);g.fillRect(fx+21,fy+6,5,25);}
-  g.fillStyle="#a9acaf";g.fillRect(fx,fy+8,S,2);g.fillRect(fx,fy+25,S,2);
- }
- if(z===0&&y===11&&((x>=2&&x<=11)||(x>=24&&x<=31))){
-  g.fillStyle="#d2c2a2";g.fillRect(fx,fy+10,32,3);g.fillRect(fx,fy+22,32,3);
-  g.fillStyle="#4c484a";g.fillRect(fx+4,fy+2,3,30);
- }
- if(z===1&&y<=10){
-  g.fillStyle="#293646";g.fillRect(fx,fy,32,7);
-  if(x%5===0){g.fillStyle="#8e8082";g.fillRect(fx+8,fy+4,7,5);}
- }
- if(z===2&&y===9){g.fillStyle="#bcb2a2";g.fillRect(fx,fy,32,4);g.fillStyle="#494f58";g.fillRect(fx,fy+27,32,4);}
- if((z===1||z===2)&&r>.86){g.fillStyle="#598084";g.fillRect(fx+8,fy+26,15,3);g.fillStyle="#729698";g.fillRect(fx+12,fy+27,5,2);}
-}
-function hash(n){let h=n|0;h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return ((h^h>>>16)>>>0)/4294967295;}
-function rect(x,y,w,h,color){g.fillStyle=color;g.fillRect(x,y,w,h);}
-function drawWorldTile(z,x,y){
- const xx=x*S,yy=y*S;
- if(!walkBlocked(z,x+.5,y+.5))return;
- // Rail wagons, warehouses, bridge piers and market stores.
- if(z===0&&x>=3&&x<=12&&y>=5&&y<=8){
-  rect(xx+1,yy+1,30,30,"#685a56");rect(xx+4,yy+3,24,24,"#995b50");
-  rect(xx+4,yy+7,24,4,"#be7f6c");
-  if(x%3===0){rect(xx+7,yy+12,17,4,"#5a4d50");rect(xx+6,yy+26,7,4,"#272f3a");}
- }else if(z===0&&x>=24&&x<=32&&y>=3&&y<=8){
-  rect(xx,yy,32,32,"#555f62");rect(xx+3,yy+2,26,24,"#8f8c82");
-  if(y%2===0)rect(xx+5,yy+10,19,3,"#bcc2b8");
- }else if(z===1){
-  rect(xx,yy,32,32,"#222e3e");rect(xx+4,yy,23,32,"#4e5760");rect(xx+11,yy+2,5,30,"#6f6b71");
- }else{
-  rect(xx+1,yy+1,30,30,"#594f51");rect(xx+4,yy+3,24,26,"#ad9380");
-  rect(xx+7,yy+6,17,15,"#516574");
-  rect(xx+10,yy+7,13,7,"#84a39d");rect(xx+4,yy+25,24,4,"#66565a");
- }
-}
-function drawDecor(z,x,y){
- const xx=x*S,yy=y*S,seed=hash(x*85+y*157+z*263);
- if(walkBlocked(z,x+.5,y+.5))return;
- if((x+y*3)%17===0&&y>12){
-  rect(xx+10,yy+6,3,21,"#887a65");rect(xx+5,yy+8,15,5,"#a3997d");
-  rect(xx+7,yy+2,11,7,"#d9bd84");rect(xx+8,yy+3,9,5,"#ffe3aa");
- }
- if(z===1&&y===12&&x%7===2){
-  rect(xx+4,yy+4,25,8,"#516477");rect(xx+6,yy+6,21,4,["#bd8880","#7bb7a2","#ad9aba"][x%3]);
- }
- if(z===2&&y===11&&x%5===1){
-  rect(xx,yy+12,30,7,"#d0c7b6");rect(xx+4,yy+15,12,2,"#8c8c89");
- }
- if(seed>.91&&y>=13&&y<=20){
-  rect(xx+18,yy+19,5,3,"#b0a08c");
- }
- if(z===0&&y===14&&x%8===2){
-  rect(xx+2,yy+15,21,14,"#3a5360");
-  rect(xx+4,yy+15,17,4,"#71959a");
- }
-}
-function drawAvatar(px,py,kind,color,facing="down",walk=0){
- const bounce=walk?Math.floor(Math.sin(walk)*2):0;
- const x=Math.round(px),y=Math.round(py)+bounce;
- // Placeholder tokens; replace with reference-based sprites later.
- rect(x-9,y-2,18,5,"#293b44");
- rect(x-8,y-15,16,18,color);
- rect(x-10,y-15,20,4,"#1b3041");
- rect(x-7,y-29,14,13,"#e4b58b");
- rect(x-8,y-31,16,5,kind==="player"?"#b47c48":"#404756");
- if(kind==="player"){rect(x-6,y-26,12,4,"#252e40");rect(x-5,y-24,10,2,"#e9e9da");rect(x-6,y-6,5,6,"#302f39");rect(x+1,y-6,5,6,"#302f39");}
- else{rect(x-4,y-6,5,6,"#3f4149");rect(x+2,y-6,5,6,"#3f4149");}
- if(facing==="up"){rect(x-7,y-28,14,7,kind==="player"?"#b47c48":"#505566");}
- if(facing==="left"||facing==="right")rect(x+(facing==="left"?-11:7),y-13,4,9,"#dfb48d");
-}
-function drawMarker(x,y,found,color,phase){
- const wobble=Math.sin(phase*3)*2;
- if(found){rect(x-9,y-8,18,9,"#556971");rect(x-5,y-13,10,6,"#95aa9c");}
- else{
-  rect(x-12,y-6,24,12,"#293745");rect(x-10,y-9,20,13,color);
-  rect(x-7,y-16,14,4,"#d3d1c0");
-  g.font="bold 20px monospace";g.textAlign="center";g.fillStyle="#ffe4a8";g.fillText("?",x,y-19+wobble);
- }
-}
+/* True 160×144 handheld framebuffer. Every environmental 16×16 metatile
+   is constructed from original 8×8 four-colour pixel patterns in retro.js. */
 function render(){
- const cx=clamp(player.x*S-W/2,0,MW*S-W),cy=clamp(player.y*S-H/2,0,MH*S-H);
+ const cx=Math.floor(clamp(player.x*S-W/2,0,MW*S-W));
+ const cy=Math.floor(clamp(player.y*S-H/2,0,MH*S-H));
  state.camera.x=cx;state.camera.y=cy;
- g.clearRect(0,0,W,H);g.save();g.translate(-Math.floor(cx),-Math.floor(cy));
- const startX=Math.max(0,Math.floor(cx/S)),endX=Math.min(MW-1,Math.floor((cx+W)/S));
- const startY=Math.max(0,Math.floor(cy/S)),endY=Math.min(MH-1,Math.floor((cy+H)/S));
- for(let y=startY;y<=endY;y++)for(let x=startX;x<=endX;x++)tile(player.zone,x,y);
- for(let y=startY;y<=endY;y++)for(let x=startX;x<=endX;x++)drawWorldTile(player.zone,x,y);
- for(let y=startY;y<=endY;y++)for(let x=startX;x<=endX;x++)drawDecor(player.zone,x,y);
- for(const m of ENCOUNTERS.filter(e=>e.zone===player.zone)){
-   drawMarker(Math.round((m.x+.5)*S),Math.round((m.y+.5)*S),!!state.found[m.id],m.color,state.time);
+ const z=player.zone,p=R.P[z];
+ g.imageSmoothingEnabled=false;
+ g.fillStyle=p[1];g.fillRect(0,0,W,H);
+ const left=Math.max(0,Math.floor(cx/S));
+ const top=Math.max(0,Math.floor(cy/S));
+ const right=Math.min(MW-1,Math.ceil((cx+W)/S));
+ const bottom=Math.min(MH-1,Math.ceil((cy+H)/S));
+ for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
+  R.ground(g,z,x,y,x*S-cx,y*S-cy,walkBlocked(z,x+.5,y+.5));
  }
- for(const n of NPC.filter(e=>e.zone===player.zone)){
-  const x=Math.round((n.x+.5)*S),y=Math.round((n.y+.5)*S);
-  drawAvatar(x,y,"npc",n.color);
-  rect(x-7,y-42,14,11,"#e5ca91");
-  g.font="bold 9px monospace";g.fillStyle="#344454";g.textAlign="center";g.fillText(n.role,x,y-34);
+ // Sort actors by feet so characters can stand before or behind other sprites.
+ const actors=[];
+ for(const encounter of ENCOUNTERS){
+  if(encounter.zone===z)actors.push({y:encounter.y+.5,x:encounter.x+.5,kind:"creature",data:encounter});
  }
- drawAvatar(Math.round(player.x*S),Math.round(player.y*S),"player","#b3a27d",player.facing,player.walk);
- g.restore();
- // Exits are visually indicated on the right and left edge.
- if(player.zone<ZONES.length-1){
-  rect(W-23,H/2-24,21,48,"#192f3bc8");g.textAlign="center";g.fillStyle="#f0dc9e";g.font="bold 22px monospace";g.fillText("›",W-12,H/2+7);
+ for(const npc of NPC){
+  if(npc.zone===z)actors.push({y:npc.y+.5,x:npc.x+.5,kind:"person",data:npc});
  }
- if(player.zone>0){
-  rect(2,H/2-24,21,48,"#192f3bc8");g.textAlign="center";g.fillStyle="#f0dc9e";g.font="bold 22px monospace";g.fillText("‹",13,H/2+7);
+ actors.push({x:player.x,y:player.y,kind:"player"});
+ actors.sort((a,b)=>a.y-b.y);
+ for(const a of actors){
+  const xx=Math.round(a.x*S-cx),yy=Math.round(a.y*S-cy);
+  if(xx<-20||xx>W+20||yy<-20||yy>H+20)continue;
+  if(a.kind==="player")R.person(g,xx,yy,"player",player.facing,player.walk);
+  else if(a.kind==="person"){
+   R.person(g,xx,yy,a.data.name==="Gianlluca"?"guide":"npc");
+   R.text(g,a.data.role,xx-2,yy-25,p[0],7);
+  }else{
+   R.monster(g,a.data.id,xx-8,yy-15,1,false);
+   if(!state.found[a.data.id])R.symbol(g,xx-8,yy-30,z===1);
+  }
  }
- const nearbyNow=nearby();
- if(state.mode==="walk"&&nearbyNow){
-  rect(W/2-57,H-28,114,22,"#20394bed");g.font="bold 11px monospace";g.textAlign="center";g.fillStyle="#ffe0a5";g.fillText("◎ ESAMINA",W/2,H-12);
+ // Compact in-screen HUD drawn with the same four-colour area palette.
+ g.fillStyle=p[0];g.fillRect(0,0,W,12);
+ g.fillStyle=p[3];g.fillRect(1,1,W-2,10);
+ R.text(g,ZONES[z].title.toUpperCase(),4,3,p[0],7);
+ R.text(g,count()+"/"+ENCOUNTERS.length,135,3,p[0],7);
+ if(z>0){g.fillStyle=p[0];g.fillRect(0,62,5,19);R.text(g,"<",0,65,p[3],7);}
+ if(z<ZONES.length-1){g.fillStyle=p[0];g.fillRect(155,62,5,19);R.text(g,">",155,65,p[3],7);}
+ if(state.mode==="walk"&&nearby()){
+   g.fillStyle=p[0];g.fillRect(43,128,74,14);
+   g.fillStyle=p[3];g.fillRect(45,130,70,10);
+   R.text(g,"A : ESAMINA",48,132,p[0],7);
  }
 }
 function bind(){
