@@ -101,14 +101,14 @@ Terzo arcade: corsa a scorrimento laterale in **telefono orizzontale** o su PC. 
 
 Quarto titolo di Arcade Club: **RPG urbano a turni in stile console portatile anni '90**. Sprite PNG originali forniti dall’utente, senza utilizzare materiale Pokémon.
 
-**Rifacimento grafico:**
-- Framebuffer **160×144**, reso pixelated dal browser; metatile **16×16** composti da pattern **8×8**.
-- Renderer separato `games/ninomon/retro.js`: 23 modelli di tile, tre palette da quattro colori opachi, senza sfumature né antialiasing.
-- Scalo ferroviario con binari, vagoni, recinzioni e magazzini; sottopasso con pilastri, grate e pozzanghere; strada di servizio con saracinesche e asfalto rotto.
-- Introduzione al **Lago dei Ninomon** con Nino e **professor Vincenzo**: sette brevi dialoghi con box inferiore.
-- **Sprite reali ricavati dai fogli forniti**: Nino trainer (12 frame), Gialluca starter (12 frame e fronte/retro battaglia), professor Vincenzo (12 frame e due pose grandi introduttive), nove Ninomon urbani con fronte e retro, e dettagli stradali. Tutti integrati nel PNG `games/ninomon/assets/ninomon-atlas.png` e documentati in `assets/atlas.json`.
-- Schermata battaglia a 160×144 con sfondi diversi per zona, PS, Fiato e finestre pixel; menu mosse 2×2.
-- Scocca NINOBOY con D-pad, pulsanti A/B, margini safe-area, LCD a ingrandimento esatto 2× quando lo spazio lo permette e pagina scorrevole per schermi piccoli. Grafica definitiva dei personaggi da creare sulle reference.
+**Grafica SNES Street Edition (9 ottobre 2026):**
+- **Framebuffer nativo 320×288 pixel**; guscio NINOBOY e schermo sul telefono mantengono le stesse dimensioni fisiche. L'area visibile rimane **10×9 caselle**, quindi non cambia lo zoom né il movimento.
+- **Metatile 32×32** con microdettagli a livello di singolo pixel. Sei-otto colori di scena per zona; asfalto crepato, traversine, recinzioni, cemento, saracinesche, graffiti e dettagli del quartiere. Nessun filtro sfocato o gradiente.
+- **Atlante ad alta definizione 656×912** `games/ninomon/assets/ninomon-snes-atlas.png` derivato dalle reference originali fornite dall'utente: 36 frame dei tre personaggi, i mostri fronte/retro, due pose del professor Vincenzo e i dettagli stradali. La palette PNG è ottimizzata a 48 colori con trasparenza conservata.
+- **Sprite più fini, stessa grandezza apparente:** Nino, Gialluca e Vincenzo sono disegnati sul nuovo framebuffer con sprite sorgente 48×64, proiettati a circa 34×49; in battaglia gli avversari utilizzano sprite sorgente 112×112 e visualizzazione 100×100.
+- **Battaglie SNES-like a 320×288:** ambientazioni ferroviarie, sottopasso e saracinesche; pannelli PS/Fiato, nuove dimensioni del testo e menu mosse 2×2.
+- **Introduzione al Lago dei Ninomon** con le pose del professor Vincenzo, Nino, Gialluca e sette dialoghi. Rimane disponibile la funzione per rivederla dalla Ninodex.
+- `retro.js` resta come fallback grafico; `snes.js` abilita la nuova qualità quando gli asset sono disponibili. L'interfaccia HTML conserva la croce direzionale, A/B, safe-area e scorrimento sui display piccoli.
 
 **Gameplay aggiornato:** tre ambienti esplorabili con **nove avvistamenti** e movimento a passi di una casella alla volta (animazione 170 ms/tile), collisioni con ostacoli, Ninomon e NPC. I passanti effettuano piccole pattuglie con movimento interpolato; il protagonista usa sprite multi-frame per i passi e il Ninomon attivo lo segue visivamente sulla mappa. Dopo il primo avvistamento sono possibili anche **incontri casuali rari**, con periodo di sicurezza tra uno e l'altro.
 - **Tre indizi di quartiere:** tabellone dei treni, graffito sotto il ponte e scatola delle prove. Si esaminano, vengono riportati nella Ninodex e danno un **bonus permanente di +1 Fiato massimo** a tutte le creature della squadra.
@@ -118,7 +118,7 @@ Quarto titolo di Arcade Club: **RPG urbano a turni in stile console portatile an
 
 **Comandi:** D-pad e A Esamina / B Ninodex su telefono. PC frecce o WASD per camminare, E/Invio per esaminare, I Ninodex, 1–4 mosse, C per cambiare Ninomon, F Fiato, Esc Fuga.
 
-File: `games/ninomon/index.html`, `games/ninomon/retro.js`, `games/ninomon/game.js`, `games/ninomon/battle.js`, `games/ninomon/assets/ninomon-atlas.png`, `games/ninomon/assets/atlas.json`, `games/ninomon/cover.svg`.
+File: `games/ninomon/index.html`, `games/ninomon/retro.js`, `games/ninomon/snes.js`, `games/ninomon/game.js`, `games/ninomon/battle.js`, `games/ninomon/assets/ninomon-atlas.png`, `games/ninomon/assets/ninomon-snes-atlas.png`, `games/ninomon/assets/atlas.json`, `games/ninomon/cover.svg`.
 
 ## Tecnologia
 
