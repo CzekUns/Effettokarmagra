@@ -19,7 +19,13 @@ const ZONES=[
 const ENCOUNTERS=[
  {id:"n01",number:"001",zone:0,x:9,y:15,name:"Topo sospetto",kind:"Creatura di scalo",description:"Nino sostiene che sia un esemplare rarissimo. Vincenzo vorrebbe prima controllare se si muove.",hint:"Una piccola sagoma vicino ai binari. Nino si ferma subito.",color:"#9eb5b3",glyph:"?",label:"NOME PROVVISORIO"},
  {id:"n02",number:"002",zone:1,x:22,y:15,name:"Piccione immobile",kind:"Creatura da sottopasso",description:"Da tre giorni occupa lo stesso posto. Secondo Nino sta usando una tecnica segreta.",hint:"C'è qualcosa accanto a una pozzanghera.",color:"#a4a9c5",glyph:"?",label:"NOME PROVVISORIO"},
- {id:"n03",number:"003",zone:2,x:24,y:14,name:"Pesce misterioso",kind:"Creatura da marciapiede",description:"Un mistero acquatico comparso lontano dall'acqua. Nino è già pronto a mandare una foto al gruppo.",hint:"Un oggetto dalla forma improbabile è finito sull'asfalto.",color:"#e1b59c",glyph:"?",label:"NOME PROVVISORIO"}
+ {id:"n03",number:"003",zone:2,x:24,y:14,name:"Pesce misterioso",kind:"Creatura da marciapiede",description:"Un mistero acquatico comparso lontano dall'acqua. Nino è già pronto a mandare una foto al gruppo.",hint:"Un oggetto dalla forma improbabile è finito sull'asfalto.",color:"#e1b59c",glyph:"?",label:"NOME PROVVISORIO"},
+ {id:"n04",number:"004",zone:0,x:20,y:18,name:"Cane sfatto",kind:"Bestia di scalo",description:"Da quando gira intorno al magazzino, persino i treni hanno smesso di avvicinarsi.",hint:"Un cane spelacchiato ti fissa dalla strada sterrata.",color:"#b0a28a",glyph:"!",label:"SPRITE ORIGINALE"},
+ {id:"n05",number:"005",zone:1,x:25,y:17,name:"Pagliaccio randagio",kind:"Creatura da tunnel",description:"Ride da solo sotto i piloni. Nessuno gli ha mai chiesto perché.",hint:"Una sagoma colorata dondola accanto a un pilone.",color:"#bd8aa6",glyph:"!",label:"SPRITE ORIGINALE"},
+ {id:"n06",number:"006",zone:2,x:11,y:15,name:"Madama Leoparda",kind:"Divinità del marciapiede",description:"Si presenta sempre vestita per una serata che non inizia mai.",hint:"Tacco alto, orecchini enormi e un'aria poco rassicurante.",color:"#d4a8b2",glyph:"!",label:"SPRITE ORIGINALE"},
+ {id:"n07",number:"007",zone:0,x:29,y:16,name:"Fumatore col cane",kind:"Coppia dello scalo",description:"Loro due pattugliano i binari dismessi, ognuno con il proprio odore.",hint:"Un tipo con le treccine non smette di fumare, nemmeno quando ti guarda.",color:"#a4a17c",glyph:"!",label:"SPRITE ORIGINALE"},
+ {id:"n08",number:"008",zone:1,x:27,y:19,name:"Scimmia in felpa",kind:"Abitante del sottopasso",description:"Ha trovato una felpa rossa e da allora considera il ponte casa sua.",hint:"Una piccola figura col cappuccio sbuca da dietro un muro.",color:"#a96f5d",glyph:"!",label:"SPRITE ORIGINALE"},
+ {id:"n09",number:"009",zone:2,x:31,y:16,name:"Sacco vivente",kind:"Ninomon da cassonetto",description:"La leggenda racconta che qualcuno abbia provato a portarlo via con l'umido.",hint:"Un sacco nero si muove controvento vicino ai cassonetti.",color:"#878989",glyph:"!",label:"SPRITE ORIGINALE"}
 ];
 const NPC=[
  {zone:0,x:14,y:16,name:"Vincenzo",color:"#a6d8ce",role:"V",text:"Nino, vieni qui. Sono il professor Vincenzo: ecco il tuo primo Ninomon, Gialluca. Usalo bene e fotografa gli altri che incontri."},
@@ -35,7 +41,7 @@ const intro=[
  {tag:"PROFESSOR VINCENZO · 4/7",name:"VINCENZO",speaker:"V",text:"Ecco il tuo primo Ninomon: GIALLUCA. È un tipo vivace e conosce il Ruttino."},
  {tag:"PROFESSOR VINCENZO · 5/7",name:"VINCENZO",speaker:"V",text:"Tu sei Nino, il writer. Segnala sul gruppo ogni nuovo avvistamento."},
  {tag:"PROFESSOR VINCENZO · 6/7",name:"VINCENZO",speaker:"V",text:"Porta Gialluca con te. Vinci gli incontri, fotografa i Ninomon e completa la Ninodex."},
- {tag:"PROFESSOR VINCENZO · 7/7",name:"VINCENZO",speaker:"V",text:"Vai allo scalo ferroviario. Trova i tre Ninomon e torna a dirmi come è andata!"}
+ {tag:"PROFESSOR VINCENZO · 7/7",name:"VINCENZO",speaker:"V",text:"Vai allo scalo ferroviario. Trova i nove Ninomon e torna a dirmi come è andata!"}
 ];
 const SCENERY=[
  {zone:0,x:18,y:13,name:"Orario sospeso",text:"Sul tabellone c'è scritto che il treno è in ritardo di 37 anni. Nino fotografa anche questo."},
@@ -381,7 +387,7 @@ function shareUrl(){
 }
 function finishChapter(){
  panel({mode:"complete",tag:"CAPITOLO 0 · COMPLETATO",title:"NINO, MA COS'HAI TROVATO?",icon:"★",color:"#688776",
-  text:"Hai fotografato tutti e tre i Ninomon della prima esplorazione.\nVincenzo ha ricevuto le segnalazioni. Ha chiesto soltanto: «Nino, ma sei sicuro?».\n\nIl prossimo capitolo aggiungerà personaggi e Ninomon realizzati sulle referenze originali.",
+  text:"Hai fotografato tutti e nove i Ninomon della prima esplorazione.\nVincenzo ha ricevuto le segnalazioni. Ha chiesto soltanto: «Nino, ma sei sicuro?».\n\nIl prossimo capitolo aggiungerà personaggi e Ninomon realizzati sulle referenze originali.",
   actions:[{label:"TORNA IN STRADA",onClick:closePanel},{label:"APRI NINODEX",variant:"alt",onClick:openDex},{label:"SQUADRA",variant:"alt",onClick:chooseTeam},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()}]});
 }
 function openDex(){
@@ -389,11 +395,16 @@ function openDex(){
  const notes=SCENERY.map(x=>(state.clues[x.name]?"✓ ":"? ")+x.name);
  panel({mode:"dex",tag:"LA NINODEX · "+count()+"/"+ENCOUNTERS.length,title:"ARCHIVIO DEGLI AVVISTAMENTI",icon:"▣",color:"#536d79",
  text:rows.join("\n")+"\n\nINDIZI URBANI "+Object.keys(state.clues).length+"/3:\n"+notes.join("\n")+"\n\nPREMIO INDIZI: "+(Object.keys(state.clues).length===3?"+1 Fiato a tutta la squadra":"Completa i 3 indizi")+".\nPuoi cambiare Ninomon attivo prima di una sfida.",
- actions:[{label:"RIPRENDI",onClick:closePanel},{label:"CAMBIA NINOMON",variant:"alt",onClick:chooseTeam},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()},{label:"NUOVA PARTITA",variant:"alt",onClick:confirmReset}]});
+ actions:[{label:"RIPRENDI",onClick:closePanel},{label:"CAMBIA NINOMON",variant:"alt",onClick:chooseTeam},{label:"RIVEDI PROF. VINCENZO",variant:"alt",onClick:replayIntro},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()},{label:"NUOVA PARTITA",variant:"alt",onClick:confirmReset}]});
+}
+function replayIntro(){
+ state.intro=0;
+ state.mode="intro";
+ introPanel();
 }
 function confirmReset(){
  panel({mode:"confirm",tag:"RIPARTIRE DA ZERO?",title:"NUOVA ESPLORAZIONE",icon:"!",color:"#755f55",
- text:"Vuoi cancellare i tre avvistamenti salvati su questo dispositivo e ricominciare la storia dall'inizio?",
+ text:"Vuoi cancellare i avvistamenti salvati su questo dispositivo e ricominciare la storia dall'inizio?",
  actions:[{label:"ANNULLA",variant:"alt",onClick:openDex},{label:"SÌ, RICOMINCIA",onClick:()=>{
    state.found={};state.clues={};state.steps=0;state.introSeen=false;state.activeId="starter";state.wildCooldown=15;
   player.zone=0;player.x=16.5;player.y=18.5;player.step=null;
