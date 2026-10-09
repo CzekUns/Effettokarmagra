@@ -442,7 +442,16 @@ function render(){
  const right=Math.min(MW-1,Math.ceil((cx+W)/S));
  const bottom=Math.min(MH-1,Math.ceil((cy+H)/S));
  for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
-  R.ground(g,z,x,y,x*S-cx,y*S-cy,walkBlocked(z,x+.5,y+.5));
+  const tx=x*S-cx,ty=y*S-cy;
+  try{
+   R.ground(g,z,x,y,tx,ty,walkBlocked(z,x+.5,y+.5));
+  }catch(err){
+   // Keep the street visible and input responsive if a phone rejects a tile.
+   if(!state.rendererWarning){state.rendererWarning=true;console.error("Ninomon overworld tile",err);}
+   g.fillStyle=p[2];g.fillRect(tx,ty,S,S);
+   g.fillStyle=p[1];g.fillRect(tx,ty+S-3,S,2);
+   g.fillRect(tx+4,ty+5,9,2);
+  }
  }
  // Sort actors by feet so characters can stand before or behind other sprites.
  const actors=[];
