@@ -99,21 +99,22 @@ Terzo arcade: corsa a scorrimento laterale in **telefono orizzontale** o su PC. 
 
 ## I Ninomon — Cronache di strada (Capitolo 0)
 
-Quarto gioco di Arcade Club. Un RPG urbano con Nino, Gianlluca (due L), esplorazione, combattimenti a turni e raccolta di fotografie nella Ninodex.
+Quarto titolo di Arcade Club: **RPG urbano a turni in stile console portatile anni '90**. Disegni originali, senza copiare asset Pokémon.
 
-- **Tre zone** con personaggi ed esplorazione: scalo ferroviario, sottopasso, strada di servizio.
-- **Il combattimento è reale:** si attiva quando Nino esamina un Ninomon, premendo SFIDA. La foto viene registrata nella Ninodex soltanto dopo una vittoria.
-- **32 mosse** (`8 categorie × 4 gradi`): Rutto, Sputo, Cacca, Puzza, Pipì, Rottami, Schiamazzo e Sfiga. Grado = complessità/potenza della mossa; il Ninomon non sale di livello.
-- **4 mosse equipaggiate** per Ninomon, con potenza, precisione, consumo di Fiato, vantaggio ambientale ed effetti di stato (stordito, impiastricciato, appestato, scivoloso, intimorito).
-- **Fiato:** 6 punti iniziali e massimi, recupero +1 per round. Azione Riprendi Fiato recupera ulteriori 3 punti; Fuga interrompe la sfida senza fotografia.
-- **Tecniche avanzate:** un set di Grado 3 si sblocca con due avvistamenti, quello di Grado 4 con tre; non esiste una progressione per livelli del personaggio.
-- **Squadra:** un Ninomon provvisorio prestato da Gianlluca apre la partita; le creature fotografate possono essere scelte come Ninomon attivo dalla Ninodex. Scelta e catture vengono salvate in locale.
-- **Interfaccia mobile Game Boy:** scocca NINOBOY con schermo interno, quattro tasti direzionali, A/B, cornice di sicurezza, gestione safe-area del telefono; modalità battaglia con quattro grandi pulsanti delle mosse, Riprendi Fiato e Fuga.
-- Gestione dello zoom nel gioco: meta viewport a scala iniziale bloccata, touch-action sullo schermo e sulla croce direzionale per evitare zoom accidentale. L'interfaccia resta nel normale flusso della pagina e può scorrere su display estremamente piccoli, senza tagliare i comandi.
-- **PC:** frecce/WASD per camminare, E/Invio per esaminare, I per la Ninodex, numeri 1–4 per le mosse, F per il Fiato, Esc per fuggire.
-- I personaggi e i Ninomon hanno ancora **grafica provvisoria**, in attesa delle reference originali. Nessuna risorsa Pokémon copiata.
+**Rifacimento grafico:**
+- Framebuffer **160×144**, reso pixelated dal browser; metatile **16×16** composti da pattern **8×8**.
+- Renderer separato `games/ninomon/retro.js`: 23 modelli di tile, tre palette da quattro colori opachi, senza sfumature né antialiasing.
+- Scalo ferroviario con binari, vagoni, recinzioni e magazzini; sottopasso con pilastri, grate e pozzanghere; strada di servizio con saracinesche e asfalto rotto.
+- Introduzione al **Lago dei Ninomon** con Nino e **Gianlluca (due L)**: sette brevi dialoghi con box inferiore.
+- Nino, Gianlluca, passanti e mostriciattoli originali a pixel. Front sprite e back sprite per ogni creatura.
+- Schermata battaglia a 160×144 con sfondi diversi per zona, PS, Fiato e finestre pixel; menu mosse 2×2.
+- Scocca NINOBOY con D-pad, pulsanti A/B, margini safe-area e pagina scorrevole per schermi piccoli. Grafica definitiva dei personaggi da creare sulle reference.
 
-File principali: `games/ninomon/index.html` (scocca e UI), `games/ninomon/game.js` (avventura), `games/ninomon/battle.js` (regole dei turni e catalogo mosse), `games/ninomon/cover.svg`.
+**Gameplay:** tre ambienti esplorabili, NPC dialoganti, tre avvistamenti, Ninodex e salvataggi nel browser. Dopo una battaglia vinta si scatta la fotografia. `battle.js`: 32 mosse in otto categorie, quattro gradi, Fiato, effetti di stato, quattro mosse equipaggiate, squadre e Fuga. Le tecniche avanzate si sbloccano con le scoperte, senza livelli esperienza.
+
+**Comandi:** D-pad e A Esamina / B Ninodex su telefono. PC frecce o WASD per camminare, E/Invio per esaminare, I Ninodex, 1–4 mosse, F Fiato, Esc Fuga.
+
+File: `games/ninomon/index.html`, `games/ninomon/retro.js`, `games/ninomon/game.js`, `games/ninomon/battle.js`, `games/ninomon/cover.svg`.
 
 ## Tecnologia
 
