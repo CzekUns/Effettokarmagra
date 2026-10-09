@@ -105,8 +105,8 @@ Quarto titolo di Arcade Club: **RPG urbano a turni in stile console portatile an
 - Framebuffer **160×144**, reso pixelated dal browser; metatile **16×16** composti da pattern **8×8**.
 - Renderer separato `games/ninomon/retro.js`: 23 modelli di tile, tre palette da quattro colori opachi, senza sfumature né antialiasing.
 - Scalo ferroviario con binari, vagoni, recinzioni e magazzini; sottopasso con pilastri, grate e pozzanghere; strada di servizio con saracinesche e asfalto rotto.
-- Introduzione al **Lago dei Ninomon** con Nino e **Gianlluca (due L)**: sette brevi dialoghi con box inferiore.
-- Nino, Gianlluca, passanti e mostriciattoli originali a pixel. Front sprite e back sprite per ogni creatura.
+- Introduzione al **Lago dei Ninomon** con Nino e **professor Vincenzo**: sette brevi dialoghi con box inferiore.
+- Nino, Vincenzo, passanti e mostriciattoli originali a pixel. Front sprite e back sprite per ogni creatura.
 - Schermata battaglia a 160×144 con sfondi diversi per zona, PS, Fiato e finestre pixel; menu mosse 2×2.
 - Scocca NINOBOY con D-pad, pulsanti A/B, margini safe-area, LCD a ingrandimento esatto 2× quando lo spazio lo permette e pagina scorrevole per schermi piccoli. Grafica definitiva dei personaggi da creare sulle reference.
 
