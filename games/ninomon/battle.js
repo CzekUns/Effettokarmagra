@@ -47,116 +47,183 @@ const CREATURES={
  n08:{id:"n08",name:"Scimmia in felpa",kind:"Abitante del sottopasso",hp:109,color:"#a96f5d",symbol:"!",types:["rutto","rottami"],base:["rutto-1","rottami-1","rutto-2","rottami-2"],advanced:["rutto-3","rottami-3"],ultimate:"rottami-4"},
  n09:{id:"n09",name:"Sacco vivente",kind:"Ninomon da cassonetto",hp:122,color:"#878989",symbol:"!",types:["cacca","puzza"],base:["cacca-1","puzza-1","cacca-2","puzza-2"],advanced:["cacca-3","puzza-3"],ultimate:"cacca-4"}
 };
+
 const ZONE_BONUS=["rottami","rutto","pipi"];
-// Two eight-category counterplay loops. A matching counter gives a modest bonus.
+// Two linked counter loops: a weakness can be exploited without making a low-level fight unwinnable.
 const COUNTERS={rutto:"puzza",puzza:"schiamazzo",schiamazzo:"sfiga",sfiga:"rutto",sputo:"cacca",cacca:"pipi",pipi:"rottami",rottami:"sputo"};
+const SPEED={starter:15,n01:20,n02:16,n03:9,n04:18,n05:14,n06:17,n07:11,n08:19,n09:7};
+const cap=(n,a,b)=>Math.max(a,Math.min(b,n));
+const rngValue=fn=>cap(Number.isFinite(Number((fn||Math.random)()))?Number((fn||Math.random)()):.5,0,.999999);
+function roll(random){const n=Number((random||Math.random)());return cap(Number.isFinite(n)?n:.5,0,.999999);}
 function availableTier(discoveries){return discoveries>=3?4:discoveries>=2?3:2;}
 function loadout(id,discoveries=0){
- const sp=CREATURES[id]||CREATURES.starter;
- const moves=sp.base.slice();
+ const sp=CREATURES[id]||CREATURES.starter, moves=sp.base.slice();
  if(discoveries>=2)moves[2]=sp.advanced[0];
  if(discoveries>=3)moves[3]=sp.ultimate;
  return moves;
 }
 function actor(id,disc=0,levelHp){
- const sp=CREATURES[id]||CREATURES.starter;
- return{id:sp.id,name:sp.name,hp:levelHp||sp.hp,maxHp:sp.hp,fiato:6,maxFiato:6,status:{},moves:loadout(id,disc)};
+ const sp=CREATURES[id]||CREATURES.starter, hp=levelHp==null?sp.hp:cap(levelHp,0,sp.hp);
+ return{id:sp.id,name:sp.name,hp,maxHp:sp.hp,fiato:6,maxFiato:6,speed:SPEED[sp.id]||12,
+  guarding:false,status:{},moves:loadout(id,disc)};
 }
-function make(playerId,enemyId,zone=0,discovered=0,partyIds=[playerId]){
- const ids=[...new Set([playerId,...partyIds])].filter(id=>CREATURES[id]);
- const party={};
- for(const id of ids)party[id]=actor(id,discovered);
- return{player:party[playerId]||party.starter,party,enemy:actor(enemyId,Math.max(discovered,zone+1)),zone:Math.max(0,Math.min(2,zone)),round:0,ended:null,log:["Un "+CREATURES[enemyId].name+" appare davanti a Nino!"],last:null};
+function previewAttack(b,move,by="enemy"){
+ const attacker=b[by],target=b[by==="enemy"?"player":"enemy"];
+ if(!move||!attacker||!target)return{min:0,max:0,effectiveness:1};
+ let base=move.power;
+ if(CREATURES[attacker.id].types.includes(move.type))base*=1.1;
+ let multiplier=1;
+ if(CREATURES[target.id].types.includes(COUNTERS[move.type]))multiplier=1.18;
+ else if(CREATURES[target.id].types.some(t=>COUNTERS[t]===move.type))multiplier=.84;
+ if(ZONE_BONUS[b.zone]===move.type)base*=1.12;
+ if(by==="enemy")base*=.76+b.zone*.035;
+ if(attacker.status.intimorito)base*=.8;
+ return{min:Math.max(1,Math.round(base*multiplier)-2),max:Math.max(1,Math.round(base*multiplier)+2),
+  effectiveness:multiplier};
 }
-const cap=(n,a,b)=>Math.max(a,Math.min(b,n));
-function rngValue(fn){const n=Number((fn||Math.random)());return cap(Number.isFinite(n)?n:.5,0,.999999);}
-function statusEffects(unit){
- if(unit.status.appestato>0){unit.hp=cap(unit.hp-5,0,unit.maxHp);return unit.name+" perde 5 PS per il fetore.";}
- return "";
-}
-function advanceStatus(unit){for(const k of STATUS){if(unit.status[k]>0)unit.status[k]--;if(unit.status[k]===0)delete unit.status[k];}}
-function applyMove(battle,who,move,random,log){
- const source=battle[who],target=battle[who==="player"?"enemy":"player"];
- if(source.hp<=0)return;
- if(source.status.stordito>0){
-  log.push(source.name+" è stordito e salta il turno!");
-  delete source.status.stordito;return;
- }
- if(source.fiato<move.cost){log.push(source.name+" è senza Fiato!");return;}
- source.fiato-=move.cost;
- log.push(source.name+" usa "+move.name+"!");
- let accuracy=move.accuracy-(source.status.impiastricciato?22:0)-(source.status.scivoloso&&move.type==="rottami"?20:0);
- if(rngValue(random)*100>=accuracy){log.push("Attacco mancato.");return;}
- let damage=move.power;
- if(source.status.intimorito)damage=Math.round(damage*.77);
- if(CREATURES[source.id].types.includes(move.type))damage=Math.round(damage*1.1);
- if(CREATURES[target.id].types.includes(COUNTERS[move.type])){damage=Math.round(damage*1.16);log.push("Mossa molto efficace!");}
- else if(CREATURES[target.id].types.some(type=>COUNTERS[type]===move.type)){damage=Math.round(damage*.88);log.push("Poco efficace...");}
- if(ZONE_BONUS[battle.zone]===move.type){damage=Math.round(damage*1.15);log.push("Il quartiere potenzia la mossa!");}
- if(who==="enemy")damage=Math.max(1,Math.round(damage*(battle.zone===0?.73:battle.zone===1?.78:.83)));
- damage=Math.max(1,damage+Math.floor(rngValue(random)*5)-2);
- target.hp=cap(target.hp-damage,0,target.maxHp);
- log.push("−"+damage+" PS a "+target.name+".");
- if(move.effect&&target.hp>0&&rngValue(random)*100<move.chance){
-  const duration=move.effect==="stordito"?1:move.effect==="appestato"?3:2;
-  target.status[move.effect]=Math.max(target.status[move.effect]||0,duration);
-  log.push(target.name+" è "+move.effect+"!");
- }
-}
-function chooseEnemyMove(b,random){
- const options=b.enemy.moves.map(id=>MOVE[id]).filter(m=>m&&m.cost<=b.enemy.fiato&&m.tier<=Math.max(2,Math.min(3,b.zone+2)));
+function chooseEnemyMove(b,random=Math.random){
+ const unit=b.enemy,options=unit.moves.map(id=>MOVE[id]).filter(m=>m&&m.cost<=unit.fiato&&m.tier<=Math.min(4,Math.max(2,b.zone+2)));
  if(!options.length)return null;
- // Weighted simple AI: strong moves when healthy, cheap moves when low on energy.
- const best=options.slice().sort((a,d)=>(d.power/(d.cost+1)*.4+d.power*.6)-(a.power/(a.cost+1)*.4+a.power*.6));
- const max=Math.min(3,best.length);
- return best[Math.floor(rngValue(random)*max)];
+ const rival=CREATURES[b.player.id];
+ const scored=options.map(m=>{
+  const estimate=previewAttack(b,m);
+  let score=estimate.max*.52+(m.effect&&!b.player.status[m.effect]?4:0)+(m.tier===1?2:0)-m.cost*1.2;
+  if(m.type===ZONE_BONUS[b.zone])score+=2;
+  if(b.enemy.fiato<=2)score-=m.cost*2;
+  if(rival.types.includes(COUNTERS[m.type]))score+=4;
+  score+=(roll(random)-.5)*5;
+  return{m,score};
+ }).sort((a,c)=>c.score-a.score);
+ return scored[0].m;
 }
+function planEnemy(b,random=Math.random){
+ const move=chooseEnemyMove(b,random);
+ if(!move)return{action:"rest",name:"Riprende Fiato",type:"fiato",cost:0,power:0,
+  priority:2,accuracy:100,warning:"Sta riprendendo fiato."};
+ const warn=move.tier>=3?"Sta preparando un colpo potente!":move.effect&&move.chance>=38?"Potrebbe infliggere uno stato!":"Si prepara ad attaccare.";
+ return{action:move.id,name:move.name,type:move.type,cost:move.cost,power:move.power,
+  priority:move.tier===1?1:move.tier===4?-1:0,accuracy:move.accuracy,warning:warn};
+}
+function make(playerId,enemyId,zone=0,discovered=0,partyIds=[playerId],random=Math.random){
+ const ids=[...new Set([playerId,...partyIds])].filter(id=>CREATURES[id]);
+ const party={};for(const id of ids)party[id]=actor(id,discovered);
+ const sp=CREATURES[enemyId]||CREATURES.n01;
+ const b={player:party[playerId]||party.starter,party,enemy:actor(sp.id,Math.max(discovered,zone+1)),
+  zone:cap(zone,0,2),round:0,ended:null,log:["Appare "+sp.name+"!"],last:null,intent:null,events:[]};
+ b.intent=planEnemy(b,random);return b;
+}
+function movePriority(action){
+ if(action==="guard")return 3;
+ if(action==="rest")return 2;
+ if(action.startsWith("switch:"))return 4;
+ const m=MOVE[action];return m?(m.tier===1?1:m.tier===4?-1:0):0;
+}
+function effectiveSpeed(unit){return Math.max(1,unit.speed-(unit.status.scivoloso?5:0));}
+function statuses(unit){return Object.keys(unit.status).filter(k=>unit.status[k]>0).map(k=>({id:k,turns:unit.status[k]}));}
 function takeTurn(b,action,random=Math.random){
  if(b.ended)return{ok:false,error:"Battaglia terminata",battle:b};
- const log=[];
  const switchId=typeof action==="string"&&action.startsWith("switch:")?action.slice(7):null;
- if(action==="flee"){b.ended="escaped";b.last=log;log.push("Nino si allontana senza registrare il Ninomon.");return{ok:true,log,battle:b};}
- if(switchId){
-  if(!b.party||!b.party[switchId]||switchId===b.player.id||b.party[switchId].hp<=0)return{ok:false,error:"Ninomon non disponibile",battle:b};
- }else{
-  if(b.player.hp<=0)return{ok:false,error:"Scegli un altro Ninomon per continuare",battle:b};
-  if(action!=="rest"&&!b.player.moves.includes(action))return{ok:false,error:"Mossa non equipaggiata",battle:b};
-  if(action!=="rest"&&(!MOVE[action]||b.player.fiato<MOVE[action].cost))return{ok:false,error:"Fiato insufficiente",battle:b};
- }
  const forcedSwitch=b.player.hp<=0;
- const move=MOVE[action];
- b.round++;
+ if(action==="flee"){
+  b.ended="escaped";b.last=["Nino si allontana senza registrare il Ninomon."];
+  b.events=[{kind:"message",who:"player",text:b.last[0]}];
+  return{ok:true,log:b.last,events:b.events,battle:b};
+ }
  if(switchId){
-  b.player=b.party[switchId];
-  log.push("Nino manda in campo "+b.player.name+"!");
- }else if(action==="rest"){
-  if(b.player.status.stordito>0){log.push(b.player.name+" è stordito: salta il turno.");delete b.player.status.stordito;}
-  else{b.player.fiato=cap(b.player.fiato+3,0,b.player.maxFiato);log.push(b.player.name+" riprende Fiato (+3).");}
- }else applyMove(b,"player",move,random,log);
- if(b.enemy.hp===0){b.ended="win";log.push("Nino ha vinto! Ora può fotografare il Ninomon.");}
- else if(!forcedSwitch){
-  const enemyMove=chooseEnemyMove(b,random);
-  if(!enemyMove){b.enemy.fiato=cap(b.enemy.fiato+3,0,b.enemy.maxFiato);log.push(b.enemy.name+" riprende Fiato.");}
-  else applyMove(b,"enemy",enemyMove,random,log);
- }
- if(!b.ended){
-  for(const unit of [b.player,b.enemy]){
-   const dot=statusEffects(unit);if(dot)log.push(dot);
+  if(!b.party[switchId]||switchId===b.player.id||b.party[switchId].hp<=0)
+   return{ok:false,error:"Ninomon non disponibile",battle:b};
+ }else if(forcedSwitch)return{ok:false,error:"Il tuo Ninomon è KO: cambia creatura!",battle:b};
+ else if(action!=="guard"&&action!=="rest"&&(!b.player.moves.includes(action)||!MOVE[action]))
+   return{ok:false,error:"Mossa non equipaggiata",battle:b};
+ else if(MOVE[action]&&b.player.fiato<MOVE[action].cost)return{ok:false,error:"Fiato insufficiente",battle:b};
+ const log=[],events=[];
+ const emit=(kind,who,text,extra={})=>{events.push({kind,who,text,...extra});if(text)log.push(text)};
+ const intent=b.intent||planEnemy(b,random);
+ const enemyAction=intent.action;
+ b.round++;b.player.guarding=false;b.enemy.guarding=false;
+ function impact(attacker,target,move,who){
+  if(attacker.hp<=0)return;
+  if(attacker.status.stordito){
+   delete attacker.status.stordito;
+   emit("status",who,attacker.name+" è stordito: salta il turno!",{status:"stordito"});return;
   }
-  if(b.enemy.hp===0){b.ended="win";log.push("Vittoria! Fotografa il Ninomon.");}
-  else if(b.player.hp===0){
-   if(Object.values(b.party).some(p=>p.hp>0))log.push("Questo Ninomon è KO. Cambia creatura per continuare!");
-   else{b.ended="lose";log.push("Squadra sconfitta!");}
+  if(move==="rest"){
+   const regained=cap(attacker.maxFiato-attacker.fiato,0,3);
+   attacker.fiato=cap(attacker.fiato+3,0,attacker.maxFiato);
+   emit("rest",who,attacker.name+" riprende Fiato (+"+regained+").",{amount:regained});return;
+  }
+  if(move==="guard"){
+   attacker.guarding=true;attacker.fiato=cap(attacker.fiato+2,0,attacker.maxFiato);
+   emit("guard",who,attacker.name+" si ripara e recupera Fiato!",{amount:2});return;
+  }
+  if(move.startsWith("switch:")){
+   const chosen=b.party[move.slice(7)];
+   if(!chosen||chosen.hp<=0)return;
+   b.player=chosen;b.player.guarding=false;
+   emit("switch","player","Nino manda in campo "+chosen.name+"!",{id:chosen.id});return;
+  }
+  const m=MOVE[move];
+  if(!m)return;
+  attacker.fiato=cap(attacker.fiato-m.cost,0,attacker.maxFiato);
+  emit("move",who,attacker.name+" usa "+m.name+"!",{move:m.id,type:m.type,tier:m.tier});
+  let accuracy=m.accuracy-(attacker.status.impiastricciato?18:0);
+  if(roll(random)*100>=accuracy){emit("miss",who,"Il colpo va a vuoto!");return;}
+  const prev=target.hp,power=previewAttack(b,m,who),damageBeforeGuard=cap(power.min+Math.floor(roll(random)*5),1,99);
+  const damage=target.guarding?Math.max(1,Math.round(damageBeforeGuard*.45)):damageBeforeGuard;
+  target.hp=cap(target.hp-damage,0,target.maxHp);
+  let msg=target.name+" perde "+(prev-target.hp)+" PS.";
+  if(target.guarding)msg+=" Difesa riuscita!";
+  if(power.effectiveness>1)msg+=" Superefficace!";
+  if(power.effectiveness<1)msg+=" Poco efficace.";
+  emit("hit",who,msg,{target:who==="player"?"enemy":"player",before:prev,after:target.hp,
+    damage:prev-target.hp,effectiveness:power.effectiveness,guarded:target.guarding,move:m.id,type:m.type});
+  if(m.effect&&target.hp>0&&roll(random)*100<m.chance){
+   const turns=m.effect==="stordito"?1:m.effect==="appestato"?4:3;
+   target.status[m.effect]=Math.max(target.status[m.effect]||0,turns);
+   emit("status",who,target.name+" è "+m.effect+"!",{target:who==="player"?"enemy":"player",status:m.effect});
   }
  }
- // Stun is consumed on its turn, otherwise persists to the next action.
- for(const unit of [b.player,b.enemy]){
-  const stun=unit.status.stordito;
-  advanceStatus(unit);
-  if(stun)unit.status.stordito=stun; // mark remains for the next action unless it was consumed
-  if(!b.ended)unit.fiato=cap(unit.fiato+1,0,unit.maxFiato);
+ const actions=[];
+ if(!forcedSwitch)actions.push({who:"enemy",action:enemyAction,priority:movePriority(enemyAction),speed:effectiveSpeed(b.enemy)});
+ actions.push({who:"player",action,priority:movePriority(action),speed:effectiveSpeed(b.player)});
+ // Priority then speed then a seeded/random tie break; stable choice cannot change after the player clicks.
+ actions.sort((a,c)=>c.priority-a.priority||c.speed-a.speed||((roll(random)<.5)?-1:1));
+ let playerKnockedOut=false,enemyKnockedOut=false;
+ for(const chosen of actions){
+  if(b.player.hp<=0||b.enemy.hp<=0)break;
+  const isPlayer=chosen.who==="player";
+  impact(isPlayer?b.player:b.enemy,isPlayer?b.enemy:b.player,chosen.action,chosen.who);
+  if(b.enemy.hp===0){enemyKnockedOut=true;break;}
+  if(b.player.hp===0){playerKnockedOut=true;break;}
  }
- b.last=log;b.log.push(...log);return{ok:true,log,battle:b};
+ // Effects damage at the end of a completed round; newly applied non-stun conditions count down.
+ for(const [who,unit] of [["player",b.player],["enemy",b.enemy]]){
+  if(unit.hp<=0)continue;
+  if(unit.status.appestato){
+   const before=unit.hp;
+   unit.hp=cap(unit.hp-4,0,unit.maxHp);
+   emit("dot",who,unit.name+" perde "+(before-unit.hp)+" PS per il fetore!",{
+    target:who,before,after:unit.hp,damage:before-unit.hp});
+  }
+  for(const key of Object.keys(unit.status)){
+   if(key==="stordito")continue;
+   unit.status[key]--;
+   if(unit.status[key]<=0){delete unit.status[key];emit("cure",who,unit.name+" non è più "+key+".",{status:key});}
+  }
+  unit.fiato=cap(unit.fiato+1,0,unit.maxFiato);
+  unit.guarding=false;
+ }
+ if(b.enemy.hp===0){
+  b.ended="win";emit("victory","player","Vittoria! Ora puoi fotografare il Ninomon.");
+ }else if(b.player.hp===0){
+  const reserves=Object.values(b.party).some(unit=>unit.id!==b.player.id&&unit.hp>0);
+  emit("ko","player",b.player.name+" è KO!"+(reserves?" Scegli un compagno.":""));
+  if(!reserves){b.ended="lose";emit("defeat","enemy","La squadra è sconfitta!");}
+ }
+ b.intent=b.ended?null:planEnemy(b,random);
+ b.last=log;b.events=events;b.log.push(...log);if(b.log.length>80)b.log.splice(0,b.log.length-80);
+ return{ok:true,log,events,battle:b};
 }
-root.NINOMON_BATTLE={TYPES,MOVES:moveList,MOVE,CREATURES,STATUS,ZONE_BONUS,COUNTERS,make,takeTurn,loadout,availableTier};
+root.NINOMON_BATTLE={TYPES,MOVES:moveList,MOVE,CREATURES,STATUS,ZONE_BONUS,COUNTERS,SPEED,
+ make,takeTurn,loadout,availableTier,planEnemy,previewAttack,statuses};
 })(typeof window!=="undefined"?window:globalThis);
