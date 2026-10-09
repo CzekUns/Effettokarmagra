@@ -34,6 +34,12 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .battle-stage{position:absolute;inset:0;z-index:4;background:var(--mid)}
 .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6px;background:#293a42;z-index:9}
 .overlay.hidden{display:none}
+.overlay.intro-scene{align-items:flex-end;padding:2px;background:transparent}
+.overlay.intro-scene .panel{max-height:61%;padding:6px;background:#daddb4;border:3px solid #293a42;box-shadow:inset 0 0 0 2px #8e9e80}
+.overlay.intro-scene .panelhead{margin-bottom:3px}
+.overlay.intro-scene .panel h2{font-size:13px}
+.overlay.intro-scene .panel p{margin:3px 0 6px}
+.overlay.intro-scene .action{min-height:27px;padding:3px 7px}
 .panel{width:100%;max-height:100%;overflow:auto;background:#daddb4;border:3px double #293a42;box-shadow:inset 0 0 0 2px #8e9e80;padding:7px;color:#293a42;overscroll-behavior:contain}
 .panelhead{display:flex;justify-content:space-between;align-items:center;gap:5px;margin-bottom:4px}
 .panelhead small{font-size:8px;font-weight:900}
@@ -139,8 +145,8 @@ footer{margin-top:5px}
  <span>Sprite originali temporanei in quattro colori: Nino, Gianlluca e Ninomon saranno personalizzati sulle referenze.</span>
 </footer>
 </div>
-<script src="./retro.js?v=1"></script>
+<script src="./retro.js?v=3"></script>
 <script src="./battle.js?v=1"></script>
-<script src="./game.js?v=3"></script>
+<script src="./game.js?v=4"></script>
 </body>
 </html>
