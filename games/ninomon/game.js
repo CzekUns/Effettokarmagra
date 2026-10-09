@@ -25,7 +25,8 @@ const NPC=[
  {zone:0,x:14,y:16,name:"Gianlluca",color:"#a6d8ce",role:"?",text:"Nino, guarda bene dove metti i piedi. Per il resto, se trovi qualcosa, mandami una foto sul gruppo."},
  {zone:0,x:24,y:18,name:"Capostazione",color:"#d6b890",role:"!",text:"Un treno oggi? Forse. Chiedi a quello del turno prima, se lo trovi."},
  {zone:1,x:11,y:15,name:"Passante col cappuccio",color:"#9e8dad",role:"…",text:"Qui sotto hanno trovato di tutto. Io preferisco non sapere cos'hai appena fotografato."},
- {zone:2,x:13,y:17,name:"Venditore",color:"#dab186",role:"!",text:"Nino, oggi cerchi un parcheggio o un'altra creatura? Non rispondere, ho già capito."}
+ {zone:2,x:13,y:17,name:"Venditore",color:"#dab186",role:"!",text:"Nino, oggi cerchi un parcheggio o un'altra creatura? Non rispondere, ho già capito."},
+ {zone:2,x:27,y:18,name:"Custode del deposito",color:"#bda784",role:"!",text:"Qui ogni settimana sparisce qualche cosa. Qualcuno pensa siano i Ninomon."}
 ];
 const intro=[
  {tag:"INTRO · 1/7",name:"GIANLLUCA",speaker:"GL",text:"Oh, Nino!\nSei arrivato finalmente!"},
@@ -36,14 +37,42 @@ const intro=[
  {tag:"INTRO · 6/7",name:"GIANLLUCA",speaker:"GL",text:"Ti presto la mia mascotte. Sconfiggi gli altri Ninomon e registra gli avvistamenti."},
  {tag:"INTRO · 7/7",name:"GIANLLUCA",speaker:"GL",text:"Comincia dallo scalo. Tre Ninomon ti aspettano. Se trovi un pesce per terra, avvisami."}
 ];
+const SCENERY=[
+ {zone:0,x:18,y:13,name:"Orario sospeso",text:"Sul tabellone c'è scritto che il treno è in ritardo di 37 anni. Nino fotografa anche questo."},
+ {zone:1,x:8,y:14,name:"Graffito misterioso",text:"Sul pilone qualcuno ha scritto: «I NINOMON ESISTONO». Gianlluca nega di essere stato lui."},
+ {zone:2,x:19,y:15,name:"Scatola delle prove",text:"Tre sacchetti, un tappo e una foto sfocata. Qualcuno ha già cercato dei Ninomon qui."}
+];
+for(const npc of NPC){
+ npc.home={x:npc.x,y:npc.y};npc.patrol=npc.name==="Capostazione"?[[24,18],[25,18],[25,17],[24,17]]:
+ npc.name==="Passante col cappuccio"?[[11,15],[12,15],[13,15],[12,15]]:
+ npc.name==="Custode del deposito"?[[27,18],[27,17],[28,17],[28,18]]:null;
+ npc.patrolIndex=0;npc.patrolClock=0;
+}
 const input={up:false,down:false,left:false,right:false};
-const player={zone:0,x:16,y:18,facing:"down",walk:0};
-const state={mode:"intro",intro:0,found:{},camera:{x:0,y:0},last:0,time:0,mute:false,ac:null,primary:null,discovered:0,firstComplete:false,lastInteract:0,battle:null,battleTarget:null,activeId:"starter"};
+const player={zone:0,x:16.5,y:18.5,facing:"down",walk:0,step:null};
+const state={mode:"intro",intro:0,found:{},camera:{x:0,y:0},last:0,time:0,mute:false,ac:null,primary:null,discovered:0,firstComplete:false,lastInteract:0,battle:null,battleTarget:null,activeId:"starter",steps:0,wildCooldown:15,randomBattles:0,clues:{},introSeen:false,autosave:0};
 try{const saved=JSON.parse(localStorage.getItem("ninomon-captured-v1")||"[]");if(Array.isArray(saved))for(const id of saved){if(ENCOUNTERS.some(e=>e.id===id))state.found[id]=true;}}catch(_){}
 try{const id=localStorage.getItem("ninomon-active-v1");if(B.CREATURES[id]&&(id==="starter"||state.found[id]))state.activeId=id;}catch(_){}
+try{
+ const checkpoint=JSON.parse(localStorage.getItem("ninomon-save-v2")||"null");
+ if(checkpoint&&Number.isInteger(checkpoint.zone)&&checkpoint.zone>=0&&checkpoint.zone<3&&Number.isFinite(checkpoint.x)&&Number.isFinite(checkpoint.y)){
+  if(checkpoint.x>=.5&&checkpoint.x<=MW-.5&&checkpoint.y>=2.5&&checkpoint.y<=MH-2.5){
+   player.zone=checkpoint.zone;player.x=Math.floor(checkpoint.x)+.5;player.y=Math.floor(checkpoint.y)+.5;
+  }
+  state.steps=Math.max(0,Number(checkpoint.steps)||0);
+  state.introSeen=checkpoint.introSeen===true;
+  if(checkpoint.clues&&typeof checkpoint.clues==="object")for(const name of Object.keys(checkpoint.clues))if(SCENERY.some(item=>item.name===name))state.clues[name]=true;
+ }
+}catch(_){} 
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const count=()=>ENCOUNTERS.filter(a=>state.found[a.id]).length;
-function save(){try{localStorage.setItem("ninomon-captured-v1",JSON.stringify(Object.keys(state.found)));localStorage.setItem("ninomon-discoveries",String(count()));}catch(_){}}
+function save(){
+ try{
+  localStorage.setItem("ninomon-captured-v1",JSON.stringify(Object.keys(state.found)));
+  localStorage.setItem("ninomon-discoveries",String(count()));
+  localStorage.setItem("ninomon-save-v2",JSON.stringify({zone:player.zone,x:player.x,y:player.y,steps:state.steps,introSeen:state.introSeen,clues:state.clues}));
+ }catch(_){}
+}
 function tone(freq=550,dur=.085,volume=.012){
  if(state.mute)return;
  try{
@@ -85,7 +114,7 @@ function panel(options){
  ui.overlay.classList.toggle("intro-scene",state.mode==="intro");
  for(const k in input)input[k]=false;
 }
-function closePanel(){state.mode="walk";state.primary=null;ui.overlay.classList.add("hidden");updateHud();}
+function closePanel(){state.mode="walk";state.primary=null;state.introSeen=true;ui.overlay.classList.add("hidden");save();updateHud();}
 function introPanel(){
  const t=intro[state.intro];
  panel({mode:"intro",tag:t.tag,title:t.name,text:t.text,icon:t.speaker,color:"#49646b",actions:[{label:state.intro===intro.length-1?"INIZIA L'AVVENTURA ▶":"AVANTI ▶",onClick(){
@@ -112,28 +141,81 @@ function walkBlocked(zone,x,y){
  }
  return false;
 }
-function canStand(zone,x,y){
- const radius=.25;
- return !walkBlocked(zone,x-radius,y-radius)&&!walkBlocked(zone,x+radius,y-radius)&&!walkBlocked(zone,x-radius,y+radius)&&!walkBlocked(zone,x+radius,y+radius);
+function canStand(zone,x,y,ignoreNPC=false){
+ const r=.22;
+ if(walkBlocked(zone,x-r,y-r)||walkBlocked(zone,x+r,y-r)||walkBlocked(zone,x-r,y+r)||walkBlocked(zone,x+r,y+r))return false;
+ if(!ignoreNPC&&NPC.some(n=>n.zone===zone&&Math.abs(n.x+.5-x)<.65&&Math.abs(n.y+.5-y)<.65))return false;
+ if(ENCOUNTERS.some(n=>n.zone===zone&&Math.abs(n.x+.5-x)<.65&&Math.abs(n.y+.5-y)<.65))return false;
+ return true;
 }
 function changeZone(direction){
- if(direction>0&&player.zone<ZONES.length-1){player.zone++;player.x=1.2;player.y=16;state.lastInteract=0;tone(620,.12);}
- else if(direction<0&&player.zone>0){player.zone--;player.x=MW-1.3;player.y=16;state.lastInteract=0;tone(390,.12);}
- player.x=clamp(player.x,1,MW-1.1);updateHud();
+ if(direction>0&&player.zone<ZONES.length-1){player.zone++;player.x=1.5;player.y=16.5;tone(620,.12);}
+ else if(direction<0&&player.zone>0){player.zone--;player.x=MW-1.5;player.y=16.5;tone(390,.12);}
+ player.step=null;
+ state.wildCooldown=8;
+ save();updateHud();
+}
+function patrolNPCs(dt){
+ for(const n of NPC){
+  if(!n.patrol||n.zone!==player.zone)continue;
+  if(Math.hypot(n.x+.5-player.x,n.y+.5-player.y)<2.4)continue;
+  n.patrolClock+=dt;
+  if(n.patrolClock<.75)continue;
+  n.patrolClock=0;
+  const next=(n.patrolIndex+1)%n.patrol.length;
+  const [x,y]=n.patrol[next];
+  if(!canStand(n.zone,x+.5,y+.5,true))continue;
+  if(Math.abs(player.x-(x+.5))<1&&Math.abs(player.y-(y+.5))<1)continue;
+  n.x=x;n.y=y;n.patrolIndex=next;
+ }
+}
+function wanderingEncounter(){
+ if(count()===0||state.wildCooldown>0)return;
+ // Rare secondary sightings in abandoned ground after the first discovery.
+ const area=player.zone;
+ const terrain=R.kind(area,Math.floor(player.x),Math.floor(player.y));
+ const likely=["ballast","weeds","crack","puddle","asphalt"].includes(terrain);
+ if(likely&&Math.random()<.11){
+  state.wildCooldown=23;state.randomBattles++;
+  const found=ENCOUNTERS.find(c=>c.zone===area);
+  panel({mode:"encounter",tag:"INCONTRO CASUALE",title:"QUALCOSA SI MUOVE!",icon:"?",color:found.color,
+    text:"Nino ha visto un movimento tra i rifiuti. Potrebbe essere un "+found.name+". Gianlluca riceverà un'altra foto sfocata?",
+    actions:[{label:"⚔ SFIDA",onClick:()=>startBattle(found)},{label:"LASCIA STARE",variant:"alt",onClick:closePanel}]});
+ }
+}
+function completeStep(){
+ player.x=Math.floor(player.x)+.5;player.y=Math.floor(player.y)+.5;
+ state.steps++;
+ state.wildCooldown=Math.max(0,state.wildCooldown-1);
+ if(state.steps%2===0)save();
+ wanderingEncounter();
+ updateHud();
 }
 function move(dt){
- const dx=Number(input.right)-Number(input.left),dy=Number(input.down)-Number(input.up);
- if(!dx&&!dy)return;
- let vx=dx,vy=dy;if(dx&&dy){vx*=.7071;vy*=.7071;}
- const speed=3.1;
- if(Math.abs(dx)>Math.abs(dy))player.facing=dx>0?"right":"left";
- else player.facing=dy>0?"down":"up";
- const nextX=player.x+vx*dt*speed,nextY=player.y+vy*dt*speed;
- if(nextX>MW-.5&&player.zone<ZONES.length-1){changeZone(1);return;}
- if(nextX<.4&&player.zone>0){changeZone(-1);return;}
- if(canStand(player.zone,nextX,player.y))player.x=nextX;
- if(canStand(player.zone,player.x,nextY))player.y=nextY;
- player.walk+=dt*9;updateHud();
+ if(player.step){
+  const step=player.step;
+  step.elapsed+=dt;
+  const k=Math.min(1,step.elapsed/.17);
+  player.x=step.fromX+(step.toX-step.fromX)*k;
+  player.y=step.fromY+(step.toY-step.fromY)*k;
+  player.walk+=dt*12;
+  if(k>=1){
+   player.x=step.toX;player.y=step.toY;player.step=null;
+   completeStep();
+  }
+  return;
+ }
+ let dir=null;
+ if(input.up)dir="up";else if(input.down)dir="down";
+ else if(input.left)dir="left";else if(input.right)dir="right";
+ if(!dir)return;
+ player.facing=dir;
+ const [dx,dy]={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir];
+ const tx=Math.floor(player.x)+.5+dx,ty=Math.floor(player.y)+.5+dy;
+ if(tx<.5&&dir==="left"&&player.zone>0){changeZone(-1);return;}
+ if(tx>MW-.5&&dir==="right"&&player.zone<ZONES.length-1){changeZone(1);return;}
+ if(!canStand(player.zone,tx,ty))return;
+ player.step={fromX:player.x,fromY:player.y,toX:tx,toY:ty,elapsed:0};
 }
 function nearby(){
  let nearest=null,min=1.55;
