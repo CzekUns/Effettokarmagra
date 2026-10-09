@@ -10,7 +10,7 @@ const B=window.NINOMON_BATTLE;
 if(!B)throw new Error("battle.js deve essere caricato prima di game.js");
 const battleCanvas=$("combat-art"),battleCtx=battleCanvas.getContext("2d");
 battleCtx.imageSmoothingEnabled=false;
-const battleUI={stage:$("battle-stage"),controls:$("battle-controls"),explore:$("explore-controls"),moves:$("battle-moves"),round:$("battle-round"),rest:$("rest"),switch:$("switch"),partyOptions:$("party-options"),flee:$("flee")};
+const battleUI={stage:$("battle-stage"),controls:$("battle-controls"),explore:$("explore-controls"),moves:$("battle-moves"),round:$("battle-round"),rest:$("rest"),guard:$("guard"),switch:$("switch"),partyOptions:$("party-options"),flee:$("flee")};
 const ZONES=[
  {title:"SCALO FERROVIARIO",short:"Binari fuori servizio",ground:"#6c6764",road:"#54585b",accent:"#ae9571",sky:"#83847d",entry:[16,18]},
  {title:"SOTTOPASSO",short:"Sotto la tangenziale",ground:"#49535b",road:"#424d56",accent:"#89adad",sky:"#62697b",entry:[2,16]},
@@ -304,32 +304,71 @@ function inspect(){
 
 /* Each encounter is now a proper fight before the photo is recorded.
  * Action buttons remain below the LCD inside the Game Boy safety bezel. */
+// Battle actions resolve as ordered narrated events; visuals can be skipped by tapping the LCD.
 function battleMode(on){
  battleUI.stage.hidden=!on;
  battleUI.controls.hidden=!on;
  battleUI.explore.hidden=on;
- if(!on){battleUI.moves.textContent="";battleUI.partyOptions.hidden=true;}
+ if(!on){
+  battleUI.moves.textContent="";
+  battleUI.partyOptions.hidden=true;
+  battleUI.controls.classList.remove("is-busy");
+  state.battleBusy=false;state.battleFx=null;
+ }
 }
-function updateBattleView(lines){
+function showEnemyIntent(){
+ const intent=state.battle&&state.battle.intent;
+ const box=$("enemy-intent");
+ if(!box)return;
+ box.classList.toggle("danger",!!intent&&(intent.power>=27||intent.action==="rest"===false&&intent.type==="rutto"&&intent.power>=19));
+ if(state.battleBusy){
+  box.children[0].children[0].textContent="IL TURNO È IN CORSO";
+  box.children[0].children[1].textContent="Guarda i colpi sullo schermo; tocca il display per avanzare.";
+  box.children[1].textContent="▶";
+  return;
+ }
+ if(!intent){box.children[0].children[0].textContent="SCONTRO CONCLUSO";box.children[0].children[1].textContent="";box.children[1].textContent="★";return;}
+ const move=B.MOVE[intent.action];
+ const estimate=move?B.previewAttack(state.battle,move):null;
+ box.children[0].children[0].textContent="NEMICO: "+intent.name.toUpperCase();
+ box.children[0].children[1].textContent=intent.warning;
+ box.children[1].textContent=move?(estimate.min+"–"+estimate.max+" PS"):"+ FIATO";
+}
+function updateBattleView(lines,preview){
  const fight=state.battle;if(!fight)return;
  const friendly=fight.player;
  battleCtx.imageSmoothingEnabled=false;
- R.battle(battleCtx,fight,player.zone,lines||fight.log.slice(-2));
+ if(!preview)R.battle(battleCtx,fight,player.zone,lines||fight.last||fight.log.slice(-1));
+ const active=!!state.battleBusy;
+ battleUI.controls.classList.toggle("is-busy",active);
  battleUI.round.textContent="TURNO "+(fight.round+1)+" · PS "+friendly.hp+"/"+friendly.maxHp+" · FIATO "+friendly.fiato+"/"+friendly.maxFiato;
+ showEnemyIntent();
  battleUI.moves.textContent="";
+ const isKO=friendly.hp<=0;
  for(let i=0;i<friendly.moves.length;i++){
-  const move=B.MOVE[friendly.moves[i]],button=document.createElement("button");
-  button.type="button";button.className="move-btn";
-  const title=document.createElement("b");title.textContent=(i+1)+" ▶ "+move.name;
-  const note=document.createElement("small");note.textContent=move.type.toUpperCase()+" · G"+move.tier+" · "+move.power+" PT · "+move.cost+" F";
-  button.appendChild(title);button.appendChild(note);
-  button.disabled=friendly.fiato<move.cost||fight.player.hp<=0||!!fight.ended;
-  button.addEventListener("click",()=>battleTurn(move.id));
-  battleUI.moves.appendChild(button);
+  const move=B.MOVE[friendly.moves[i]],btn=document.createElement("button");
+  btn.type="button";btn.className="move-btn";
+  const prediction=B.previewAttack(fight,move,"player");
+  if(prediction.effectiveness>1)btn.classList.add("good");
+  if(prediction.effectiveness<1)btn.classList.add("bad");
+  const title=document.createElement("b");
+  title.textContent=(i+1)+" · "+move.name;
+  const tag=document.createElement("small");
+  const priority=move.tier===1?" · VELOCE":move.tier===4?" · LENTA":"";
+  const eff=prediction.effectiveness>1?" ↑":prediction.effectiveness<1?" ↓":"";
+  tag.textContent=move.type.toUpperCase()+eff+" · POT "+move.power+" · "+move.cost+" F · "+move.accuracy+"%"+priority;
+  btn.appendChild(title);btn.appendChild(tag);
+  btn.disabled=active||friendly.fiato<move.cost||isKO||!!fight.ended;
+  btn.addEventListener("click",()=>battleTurn(move.id));
+  battleUI.moves.appendChild(btn);
  }
- battleUI.rest.disabled=!!fight.ended||fight.player.hp<=0;
- battleUI.switch.disabled=!!fight.ended||!Object.values(fight.party).some(p=>p.id!==fight.player.id&&p.hp>0);
- battleUI.flee.disabled=!!fight.ended;
+ battleUI.rest.disabled=active||!!fight.ended||isKO;
+ battleUI.guard.disabled=active||!!fight.ended||isKO;
+ battleUI.switch.disabled=active||!!fight.ended||!Object.values(fight.party).some(p=>p.id!==fight.player.id&&p.hp>0);
+ battleUI.flee.disabled=active||!!fight.ended;
+ const hint=$("battle-hint");
+ if(hint)hint.textContent=active?"Turno in corso · tocca lo schermo per saltare i messaggi.":isKO?"Ninomon KO! Scegli un compagno per continuare.":"▲ tipo efficace  ·  VELOCE agisce prima  ·  DIFENDI riduce i danni.";
+ if(!active&&isKO&&!fight.ended)pickBattleParty(true);
 }
 function startBattle(p){
  if(state.mode!=="encounter"&&state.mode!=="walk")return;
@@ -339,19 +378,22 @@ function startBattle(p){
   for(const fighter of Object.values(state.battle.party)){fighter.maxFiato=7;fighter.fiato=7;}
  }
  state.mode="battle";state.primary=null;
- ui.overlay.classList.add("hidden");battleMode(true);
+ state.battleBusy=false;state.battleFx=null;
+ ui.overlay.classList.add("hidden");ui.overlay.style.display="none";battleMode(true);
  updateBattleView(["Nino manda in campo "+state.battle.player.name+"! "+p.name+" si prepara a combattere."]);
  for(const k in input)input[k]=false;
  tone(480,.1,.022);
 }
-function pickBattleParty(){
- if(state.mode!=="battle"||!state.battle||state.battle.ended)return;
+function pickBattleParty(force=false){
+ if(state.mode!=="battle"||!state.battle||state.battle.ended||state.battleBusy)return;
  const p=battleUI.partyOptions;
- if(!p.hidden){p.hidden=true;return;}
+ if(!force&&!p.hidden){p.hidden=true;return;}
  p.textContent="";
  for(const unit of Object.values(state.battle.party)){
   const btn=document.createElement("button"),lab=document.createElement("b"),info=document.createElement("small");
-  lab.textContent=unit.name;info.textContent="PS "+unit.hp+"/"+unit.maxHp;
+  lab.textContent=unit.name;
+  const marks=Object.keys(unit.status).filter(k=>unit.status[k]>0).join(" · ");
+  info.textContent="PS "+unit.hp+"/"+unit.maxHp+(marks?" · "+marks:"");
   btn.type="button";btn.disabled=unit.id===state.battle.player.id||unit.hp<=0;
   btn.appendChild(lab);btn.appendChild(info);
   btn.addEventListener("click",()=>battleTurn("switch:"+unit.id));
@@ -359,14 +401,74 @@ function pickBattleParty(){
  }
  p.hidden=false;
 }
+function battleProjection(fx){
+ const b=state.battle,id=fx.activeId;
+ return {...b,enemy:{...b.enemy,hp:fx.enemyHp},
+  player:{...b.party[id],hp:fx.partyHp[id]??b.party[id].hp,fiato:fx.partyFiato[id]??b.party[id].fiato}};
+}
+function drawBattleEvent(){
+ const fx=state.battleFx;
+ if(!fx)return;
+ let cue=null;
+ if(fx.event){
+  cue={kind:fx.event.kind,who:fx.event.who,target:fx.event.target,
+    timestamp:state.time,startedAt:fx.eventAt,type:fx.event.type,effectiveness:fx.event.effectiveness};
+ }
+ R.battle(battleCtx,battleProjection(fx),player.zone,[fx.message],cue);
+}
+function finishBattleAnimation(){
+ const fx=state.battleFx;
+ if(!fx)return;
+ state.battleFx=null;state.battleBusy=false;
+ updateBattleView(state.battle.last);
+ const ended=state.battle.ended;
+ if(ended)finishBattleResult();
+ else if(state.battle.player.hp<=0)pickBattleParty(true);
+}
+function advanceBattleAnimation(){
+ const fx=state.battleFx;
+ if(!fx||state.mode!=="battle")return;
+ if(state.time>=fx.nextAt){
+  if(fx.index>=fx.events.length){finishBattleAnimation();return;}
+  const event=fx.events[fx.index++];
+  fx.event=event;fx.eventAt=state.time;fx.message=event.text||"";
+  if(event.kind==="switch"){
+   fx.activeId=event.id;
+  }else if(event.kind==="hit"||event.kind==="dot"){
+   if(event.target==="enemy")fx.enemyHp=event.after;
+   else fx.partyHp[fx.activeId]=event.after;
+  }else if(event.kind==="rest"){
+   const who=event.who==="player"?fx.activeId:state.battle.enemy.id;
+   if(event.who==="player")fx.partyFiato[who]=Math.min(state.battle.party[who].maxFiato,fx.partyFiato[who]+event.amount);
+  }
+  const duration=event.kind==="hit"?.26:event.kind==="move"?.17:event.kind==="status"?.21:
+   event.kind==="miss"?.24:event.kind==="ko"?.30:event.kind==="victory"?.38:.17;
+  fx.nextAt=state.time+duration;
+ }
+ drawBattleEvent();
+}
 function battleTurn(action){
- if(state.mode!=="battle"||!state.battle)return;
+ if(state.mode!=="battle"||!state.battle||state.battleBusy)return;
+ const b=state.battle;
+ const hpParty=Object.fromEntries(Object.values(b.party).map(unit=>[unit.id,unit.hp]));
+ const fiatoParty=Object.fromEntries(Object.values(b.party).map(unit=>[unit.id,unit.fiato]));
+ const enemyHp=b.enemy.hp,activeId=b.player.id;
  battleUI.partyOptions.hidden=true;
- const result=B.takeTurn(state.battle,action);
- if(!result.ok){R.battle(battleCtx,state.battle,player.zone,[result.error]);tone(180,.07);return;}
- updateBattleView(result.log);
- tone(state.battle.ended?760:action==="rest"?350:520,.08);
- if(!state.battle.ended)return;
+ const result=B.takeTurn(b,action);
+ if(!result.ok){
+  R.battle(battleCtx,b,player.zone,[result.error]);
+  const tip=$("battle-hint");if(tip)tip.textContent=result.error;
+  tone(180,.07);updateBattleView([result.error]);return;
+ }
+ state.battleBusy=true;
+ state.battleFx={events:result.events||[],index:0,event:null,eventAt:0,
+  message:"Si decide il turno...",nextAt:state.time+.03,activeId,hpParty,partyHp:hpParty,
+  partyFiato:fiatoParty,enemyHp};
+ updateBattleView(null,true);
+ drawBattleEvent();
+ tone(b.ended?760:action==="rest"||action==="guard"?350:520,.08);
+}
+function finishBattleResult(){
  const outcome=state.battle.ended,target=state.battleTarget;
  battleMode(false);
  if(outcome==="win"){
@@ -535,6 +637,11 @@ function render(){
 function bind(){
  window.addEventListener("keydown",e=>{
   if(state.mode==="battle"){
+   if(state.battleBusy){
+    if(e.key==="Enter"||e.key===" "||e.key==="Escape"){e.preventDefault();if(!e.repeat)finishBattleAnimation();}
+    return;
+   }
+   if(e.key==="g"||e.key==="G"){e.preventDefault();if(!e.repeat)battleTurn("guard");return;}
    if(["1","2","3","4"].includes(e.key)){e.preventDefault();if(!e.repeat){const id=state.battle.player.moves[Number(e.key)-1];if(id)battleTurn(id);}return;}
    if(e.key==="f"||e.key==="F"){e.preventDefault();if(!e.repeat)battleTurn("rest");return;}
    if(e.key==="c"||e.key==="C"){e.preventDefault();if(!e.repeat)pickBattleParty();return;}
@@ -560,7 +667,7 @@ function bind(){
  }
  ui.inspect.addEventListener("click",()=>{if(state.mode==="intro"||state.mode==="title"){if(state.primary)state.primary();}else inspect();});
  ui.dex.addEventListener("click",openDex);
- battleUI.rest.addEventListener("click",()=>battleTurn("rest"));battleUI.switch.addEventListener("click",pickBattleParty);battleUI.flee.addEventListener("click",()=>battleTurn("flee"));
+ battleUI.rest.addEventListener("click",()=>battleTurn("rest"));battleUI.guard.addEventListener("click",()=>battleTurn("guard"));battleUI.stage.addEventListener("click",()=>{if(state.battleBusy)finishBattleAnimation();});battleUI.switch.addEventListener("click",pickBattleParty);battleUI.flee.addEventListener("click",()=>battleTurn("flee"));
  ui.sound.addEventListener("click",()=>{state.mute=!state.mute;ui.sound.textContent=state.mute?"♫ OFF":"♫ ON";tone(645,.1);});
  window.addEventListener("blur",()=>{for(const k in input)input[k]=false;});
  document.addEventListener("visibilitychange",()=>{if(document.hidden)for(const k in input)input[k]=false;});
@@ -600,6 +707,7 @@ function frame(now){
  try{
   state.time+=dt;
   if(state.mode==="walk"){patrolNPCs(dt);move(dt);}
+  if(state.mode==="battle"&&state.battleFx)advanceBattleAnimation();
   render();
  }catch(err){
   reportRenderFault(err);
