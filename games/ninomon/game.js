@@ -35,13 +35,13 @@ const NPC=[
  {zone:2,x:27,y:18,name:"Custode del deposito",color:"#bda784",role:"!",text:"Qui ogni settimana sparisce qualche cosa. Qualcuno pensa siano i Ninomon."}
 ];
 const intro=[
- {tag:"PROFESSOR VINCENZO · 1/7",name:"VINCENZO",speaker:"V",text:"Benvenuto, Nino! Sono il professor Vincenzo. Ti aspettavo qui al lago."},
- {tag:"PROFESSOR VINCENZO · 2/7",name:"VINCENZO",speaker:"V",text:"Questo è il mondo dei NINOMON. Sono strane creature delle nostre strade."},
- {tag:"PROFESSOR VINCENZO · 3/7",name:"VINCENZO",speaker:"V",text:"Li puoi trovare tra binari, sottopassi, graffiti e cassonetti. Apri bene gli occhi."},
- {tag:"PROFESSOR VINCENZO · 4/7",name:"VINCENZO",speaker:"V",text:"Ecco il tuo primo Ninomon: GIALLUCA. È un tipo vivace e conosce il Ruttino."},
- {tag:"PROFESSOR VINCENZO · 5/7",name:"VINCENZO",speaker:"V",text:"Tu sei Nino, il writer. Segnala sul gruppo ogni nuovo avvistamento."},
- {tag:"PROFESSOR VINCENZO · 6/7",name:"VINCENZO",speaker:"V",text:"Porta Gialluca con te. Vinci gli incontri, fotografa i Ninomon e completa la Ninodex."},
- {tag:"PROFESSOR VINCENZO · 7/7",name:"VINCENZO",speaker:"V",text:"Vai allo scalo ferroviario. Trova i nove Ninomon e torna a dirmi come è andata!"}
+ {tag:"PROF. VINCENZO · 1/7",name:"PROF. VINCENZO",speaker:"V",text:"Oh, finalmente sei arrivato! Sono il professor Vincenzo. Ti aspettavo."},
+ {tag:"PROF. VINCENZO · 2/7",name:"PROF. VINCENZO",speaker:"V",text:"Per le nostre strade vivono creature molto strane. Noi le chiamiamo NINOMON."},
+ {tag:"PROF. VINCENZO · 3/7",name:"PROF. VINCENZO",speaker:"V",text:"Si nascondono fra i binari, sotto i ponti e nei vicoli pieni di graffiti."},
+ {tag:"IL PRIMO NINOMON · 4/7",name:"GIALLUCA",speaker:"G",text:"Ti presento GIALLUCA! Da oggi è il tuo primo Ninomon. Occhio al Ruttino."},
+ {tag:"IL TRAINER · 5/7",name:"NINO",speaker:"N",text:"Tu sei Nino, il writer. Sei sempre il primo ad accorgerti di cose strane per strada."},
+ {tag:"LA NINODEX · 6/7",name:"PROF. VINCENZO",speaker:"V",text:"Ti affido la NINODEX. Sfida i Ninomon, fotografali e registra gli avvistamenti."},
+ {tag:"SI PARTE · 7/7",name:"PROF. VINCENZO",speaker:"V",text:"Comincia dallo scalo ferroviario. In giro ci sono nove Ninomon da scoprire. Buona fortuna!"}
 ];
 const SCENERY=[
  {zone:0,x:18,y:13,name:"Orario sospeso",text:"Sul tabellone c'è scritto che il treno è in ritardo di 37 anni. Nino fotografa anche questo."},
@@ -120,9 +120,16 @@ function panel(options){
  for(const action of options.actions)addAction(action.label,action.onClick,action.variant,action.href);
  ui.overlay.classList.remove("hidden");
  ui.overlay.classList.toggle("intro-scene",state.mode==="intro");
+ ui.overlay.classList.toggle("title-scene",state.mode==="title");
  for(const k in input)input[k]=false;
 }
 function closePanel(){state.mode="walk";state.primary=null;state.introSeen=true;ui.overlay.classList.add("hidden");save();updateHud();}
+function titlePanel(){
+ state.intro=0;
+ panel({mode:"title",tag:"NINOBOY STREET · NUOVA PARTITA",title:"I NINOMON",icon:"★",color:"#617a70",
+  text:"Cronache di strada.\nIl professor Vincenzo ti aspetta.",
+  actions:[{label:"INIZIA ▶",onClick:()=>{state.intro=0;introPanel();}}]});
+}
 function introPanel(){
  const t=intro[state.intro];
  panel({mode:"intro",tag:t.tag,title:t.name,text:t.text,icon:t.speaker,color:"#49646b",actions:[{label:state.intro===intro.length-1?"INIZIA L'AVVENTURA ▶":"AVANTI ▶",onClick(){
@@ -405,6 +412,7 @@ function finishChapter(){
   actions:[{label:"TORNA IN STRADA",onClick:closePanel},{label:"APRI NINODEX",variant:"alt",onClick:openDex},{label:"SQUADRA",variant:"alt",onClick:chooseTeam},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()}]});
 }
 function openDex(){
+ if(state.mode==="title"||state.mode==="intro")return;
  const rows=ENCOUNTERS.map(c=>state.found[c.id]?"#"+c.number+" · "+c.name+" — "+ZONES[c.zone].short:"#"+c.number+" · ??? — da scoprire");
  const notes=SCENERY.map(x=>(state.clues[x.name]?"✓ ":"? ")+x.name);
  panel({mode:"dex",tag:"LA NINODEX · "+count()+"/"+ENCOUNTERS.length,title:"ARCHIVIO DEGLI AVVISTAMENTI",icon:"▣",color:"#536d79",
@@ -413,24 +421,33 @@ function openDex(){
 }
 function replayIntro(){
  state.intro=0;
- state.mode="intro";
  introPanel();
 }
 function confirmReset(){
  panel({mode:"confirm",tag:"RIPARTIRE DA ZERO?",title:"NUOVA ESPLORAZIONE",icon:"!",color:"#755f55",
- text:"Vuoi cancellare i avvistamenti salvati su questo dispositivo e ricominciare la storia dall'inizio?",
+ text:"Vuoi cancellare gli avvistamenti salvati e ricominciare dall'introduzione di Vincenzo?",
  actions:[{label:"ANNULLA",variant:"alt",onClick:openDex},{label:"SÌ, RICOMINCIA",onClick:()=>{
    state.found={};state.clues={};state.steps=0;state.introSeen=false;state.activeId="starter";state.wildCooldown=15;
   player.zone=0;player.x=16.5;player.y=18.5;player.step=null;player.companion.x=16.5;player.companion.y=19.5;player.companionStep=null;
   for(const n of NPC){n.x=n.home.x;n.y=n.home.y;n.patrolIndex=0;n.patrolClock=0;n.visualX=n.x;n.visualY=n.y;n.facing="down";n.motion=0;}
   try{localStorage.setItem("ninomon-active-v1","starter");}catch(_){}
-  save();state.intro=0;introPanel();updateHud();
+  save();state.intro=0;titlePanel();updateHud();
  }}]});
 }
 /* True 160×144 handheld framebuffer. Every environmental 16×16 metatile
    is constructed from original 8×8 four-colour pixel patterns in retro.js. */
 function render(){
- if(state.mode==="intro"){R.introLake(g,state.time,state.intro);return;}
+ if(state.mode==="title"){
+  if(R.introStory)R.introStory(g,"title",state.time,0);
+  else R.introLake(g,state.time,0);
+  return;
+ }
+ if(state.mode==="intro"){
+  const stage=state.intro<=2?"professor":state.intro===3||state.intro===5?"starter":state.intro===4?"trainer":"departure";
+  if(R.introStory)R.introStory(g,stage,state.time,state.intro);
+  else R.introLake(g,state.time,state.intro);
+  return;
+ }
  const cx=Math.floor(clamp(player.x*S-W/2,0,MW*S-W));
  const cy=Math.floor(clamp(player.y*S-H/2,0,MH*S-H));
  state.camera.x=cx;state.camera.y=cy;
@@ -517,7 +534,7 @@ function bind(){
    e.preventDefault();if(e.repeat)return;
    if(state.mode==="walk")inspect();else if(state.primary)state.primary();
   }else if(e.key==="i"||e.key==="I"||e.key==="Tab"){e.preventDefault();openDex();}
-  else if(e.key==="Escape"&&state.mode!=="intro"){e.preventDefault();closePanel();}
+  else if(e.key==="Escape"&&state.mode!=="intro"&&state.mode!=="title"){e.preventDefault();closePanel();}
  });
  window.addEventListener("keyup",e=>{
   const key={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",w:"up",W:"up",s:"down",S:"down",a:"left",A:"left",d:"right",D:"right"}[e.key];
@@ -528,7 +545,8 @@ function bind(){
   b.addEventListener("pointerdown",e=>{e.preventDefault();if(state.mode!=="walk")return;input[key]=true;b.classList.add("active");try{b.setPointerCapture(e.pointerId);}catch(_){}});
   for(const type of ["pointerup","pointercancel","lostpointercapture"])b.addEventListener(type,()=>{input[key]=false;b.classList.remove("active");});
  }
- ui.inspect.addEventListener("click",inspect);ui.dex.addEventListener("click",openDex);
+ ui.inspect.addEventListener("click",()=>{if(state.mode==="intro"||state.mode==="title"){if(state.primary)state.primary();}else inspect();});
+ ui.dex.addEventListener("click",openDex);
  battleUI.rest.addEventListener("click",()=>battleTurn("rest"));battleUI.switch.addEventListener("click",pickBattleParty);battleUI.flee.addEventListener("click",()=>battleTurn("flee"));
  ui.sound.addEventListener("click",()=>{state.mute=!state.mute;ui.sound.textContent=state.mute?"♫ OFF":"♫ ON";tone(645,.1);});
  window.addEventListener("blur",()=>{for(const k in input)input[k]=false;});
@@ -539,5 +557,8 @@ function frame(now){
  state.time+=dt;if(state.mode==="walk"){patrolNPCs(dt);move(dt);}
  render();requestAnimationFrame(frame);
 }
-bind();if(state.introSeen){state.mode="walk";ui.overlay.classList.add("hidden");}else introPanel();updateHud();requestAnimationFrame(frame);
+bind();
+if(state.introSeen){state.mode="walk";ui.overlay.classList.add("hidden");}
+else titlePanel();
+updateHud();requestAnimationFrame(frame);
 })();
