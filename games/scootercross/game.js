@@ -3,9 +3,9 @@
 const W=480,H=270,FINISH=4200,G=650,MAX=208;
 const get=id=>document.getElementById(id),cv=get("game"),g=cv.getContext("2d",{alpha:false});
 g.imageSmoothingEnabled=false;
-const ui={score:get("score"),best:get("best"),time:get("time"),lives:get("lives"),progress:get("progress"),coins:get("coins"),speed:get("speed"),boost:get("boost"),status:get("status"),veil:get("veil"),tag:get("tag"),title:get("title"),message:get("message"),play:get("play"),share:get("share"),sound:get("sound")};
+const ui={score:get("score"),best:get("best"),time:get("time"),lives:get("lives"),progress:get("progress"),coins:get("coins"),speed:get("speed"),boost:get("boost"),status:get("status"),veil:get("veil"),tag:get("tag"),title:get("title"),message:get("message"),play:get("play"),share:get("share"),shareTop:get("share-top"),wheelie:get("wheelie-hud"),wheelieFill:get("wheelie-fill"),wheelieScore:get("wheelie-score"),wheelieTip:get("wheelie-tip"),sound:get("sound")};
 const art=new Image();art.src="./assets/biagio-scooter-illustrated.png";art.onerror=function(){art.onerror=null;art.src="./assets/biagio-side-pixel.svg";};
-const control={gas:false,brake:false,up:false,down:false};
+const control={gas:false,brake:false,up:false,down:false,wheelie:false};
 const ramps=[
 [0,207],[380,207],[462,204],[560,194],[626,211],[825,211],
 [952,206],[1025,183],[1102,209],[1300,209],[1410,204],[1490,185],[1562,210],
@@ -15,7 +15,7 @@ const ramps=[
 const obstacles=[455,852,1338,1740,2178,2585,3000,3460,3860];
 const colors=["#dfb488","#c7b1a5","#e5c39b","#bfc2b6","#ccad99","#deb98c"];
 const signs=["CAFFE","PANIFICIO","BAR","TABACCHI","MARKET","OTTICA","PIZZERIA","EDICOLA"];
-const state={mode:"ready",dist:0,time:0,score:0,best:0,coins:0,lives:3,cam:0,mute:false,audio:null,lastBeat:-1,last:0,invincible:0,jumpCount:0,boost:100,boostTime:0,notice:"",noticeTimer:0,particles:[],pickups:[],barrels:[],screenShake:0};
+const state={mode:"ready",dist:0,time:0,score:0,best:0,coins:0,lives:3,cam:0,mute:false,audio:null,lastBeat:-1,last:0,invincible:0,jumpCount:0,boost:100,boostTime:0,notice:"",noticeTimer:0,particles:[],pickups:[],barrels:[],screenShake:0,wheelieBalance:0,wheelieStreak:0,wheelieFraction:0,wheelieVisibleFor:0,wheelieFallTimer:0,wheelieLocked:false};
 const player={x:70,y:195,vy:0,speed:0,angle:0,ground:true,airTime:0};
 try{state.best=Math.max(0,Number(localStorage.getItem("biagio-scootercross-best")||0));}catch(_){}
 const clamp=(a,lo,hi)=>Math.max(lo,Math.min(hi,a));
@@ -57,11 +57,12 @@ function reset(){
  state.mode="ready";state.time=0;state.score=0;state.coins=0;state.lives=3;state.cam=0;
  state.last=0;state.lastBeat=-1;state.invincible=0;state.jumpCount=0;state.boost=100;state.boostTime=0;
  state.notice="";state.noticeTimer=0;state.screenShake=0;state.particles=[];
+ state.wheelieBalance=0;state.wheelieStreak=0;state.wheelieFraction=0;state.wheelieVisibleFor=0;state.wheelieFallTimer=0;state.wheelieLocked=false;
  state.barrels=obstacles.map((x,i)=>({x,type:i%4===3?"pothole":"barrel",done:false}));
  state.pickups=Array.from({length:38},(_,i)=>{let x=180+i*101;return{x,y:terrain(x)-(i%4===1?69:48),done:false};});
  Object.assign(player,{x:70,y:terrain(70)-11,vy:0,speed:0,angle:0,ground:true,airTime:0});
  for(const k in control)control[k]=false;
- if(ui.share)ui.share.hidden=true;hud();
+ if(ui.share)ui.share.hidden=true;ui.wheelie.hidden=true;ui.wheelie.classList.remove("danger");hud();
 }
 function earn(v){
  state.score+=v;if(state.score>state.best){state.best=state.score;
@@ -80,6 +81,13 @@ function hud(){
  ui.progress.style.width=(clamp(100*player.x/FINISH,0,100))+"%";
  const approaching=state.barrels.find(b=>!b.done&&b.x-player.x>15&&b.x-player.x<105);
  ui.status.textContent=state.noticeTimer>0?state.notice:approaching?"⚠ "+(approaching.type==="pothole"?"BUCA":"BARILE")+" · PREMI SALTA!":"VIA ROMA · MELITO DI NAPOLI";
+ ui.wheelie.hidden=state.wheelieVisibleFor<=0&&state.wheelieBalance<1;
+ ui.wheelieFill.style.width=clamp(state.wheelieBalance,0,100)+"%";
+ ui.wheelieScore.textContent="+"+Math.floor(state.wheelieStreak);
+ const danger=state.wheelieBalance>=80;
+ ui.wheelie.classList.toggle("danger",danger);
+ ui.wheelieTip.textContent=danger?"PERICOLO! RILASCIA IMPENNA":player.speed<68?"ACCELERA PER IMPENNARE":"TIENI PREMUTO · RILASCIA PRIMA DEL ROSSO";
+ ui.shareTop.href=whatsAppUrl();
 }
 function whatsAppUrl(){
  const url="https://czekuns.github.io/Effettokarmagra/games/scootercross/";
@@ -87,7 +95,7 @@ function whatsAppUrl(){
 }
 function popup(tag,title,message,btn,share){
  ui.tag.textContent=tag;ui.title.textContent=title;ui.message.textContent=message;ui.play.textContent=btn;
- ui.share.hidden=!share;if(share)ui.share.href=whatsAppUrl();ui.veil.classList.remove("hidden");
+ ui.share.hidden=!share;if(share)ui.share.href=whatsAppUrl();ui.shareTop.href=whatsAppUrl();ui.veil.classList.remove("hidden");
 }
 function start(){reset();state.mode="playing";ui.veil.classList.add("hidden");audio();note(560,.13,.023);}
 function resume(){state.mode="playing";state.last=0;ui.veil.classList.add("hidden");}
@@ -109,12 +117,39 @@ function boost(){
  state.boost-=30;state.boostTime=1.3;player.speed=Math.min(250,player.speed+45);
  callout("TURBO!");note(365,.17,.022,"sawtooth",2);
 }
-function crash(){
+function crash(reason="AHI! VITA PERSA"){
  if(state.invincible>0||state.mode!=="playing")return;
  state.lives--;state.invincible=1.6;state.screenShake=5;player.speed=Math.min(player.speed,65);
- particles(player.x,player.y,12,"#ffe2b1");callout("AHI! VITA PERSA");
+ state.wheelieBalance=0;state.wheelieFraction=0;state.wheelieVisibleFor=reason.includes("RIBALTATO")?1.5:0;
+ particles(player.x,player.y,12,"#ffe2b1");callout(reason,1.6);
  note(180,.24,.034,"sawtooth",.45);
  if(state.lives<=0)end(false);
+}
+function updateWheelie(dt){
+ state.wheelieVisibleFor=Math.max(0,state.wheelieVisibleFor-dt);
+ state.wheelieFallTimer=Math.max(0,state.wheelieFallTimer-dt);
+ const canWheelie=state.mode==="playing"&&player.ground&&player.speed>=68&&state.invincible<=0&&state.wheelieFallTimer<=0;
+ const pulling=control.wheelie&&!state.wheelieLocked&&canWheelie;
+ if(control.wheelie)state.wheelieVisibleFor=Math.max(state.wheelieVisibleFor,1.1);
+ if(pulling){
+  state.wheelieBalance+=dt*(17+player.speed*.14);
+  const gained=dt*(14+state.wheelieBalance*.85);
+  state.wheelieFraction+=gained;
+  const whole=Math.floor(state.wheelieFraction);
+  if(whole>0){earn(whole);state.wheelieStreak+=whole;state.wheelieFraction-=whole;}
+  if(state.wheelieBalance>=100){
+   state.wheelieBalance=100;state.wheelieLocked=true;
+   crash("RIBALTATO ALL'INDIETRO!");
+   state.wheelieFallTimer=.75;
+   state.wheelieVisibleFor=1.8;
+   note(115,.3,.045,"sawtooth",.36);
+  }
+ }else{
+  state.wheelieBalance=Math.max(0,state.wheelieBalance-dt*53);
+  if(state.wheelieBalance<=.1&&state.wheelieVisibleFor<=0){
+   state.wheelieStreak=0;state.wheelieFraction=0;
+  }
+ }
 }
 function tick(dt){
  state.time+=dt;state.invincible=Math.max(0,state.invincible-dt);
@@ -124,9 +159,14 @@ function tick(dt){
  player.speed=clamp(player.speed+(acceleration-(control.brake?240:0)-friction)*dt,0,MAX+(state.boostTime>0?45:0));
  if(state.boostTime>0)player.speed=Math.max(165,player.speed);
  player.x+=player.speed*dt;
+ updateWheelie(dt);
  const road=terrain(player.x)-11,groundAngle=slope(player.x);
  if(player.ground){
-  player.y=road;player.angle+=(groundAngle-player.angle)*Math.min(1,dt*6);
+  player.y=road;
+  // Lift the front wheel when balancing, and show a brief overturn animation on failure.
+  const tilt=state.wheelieFallTimer>0?-1.37-(.75-state.wheelieFallTimer)*1.75:-(state.wheelieBalance/100)*.85;
+  const target=groundAngle+tilt;
+  player.angle+=(target-player.angle)*Math.min(1,dt*(state.wheelieFallTimer>0?16:7));
  }else{
   player.airTime+=dt;player.vy+=G*dt;player.y+=player.vy*dt;
   if(control.up)player.angle-=1.8*dt;
@@ -422,23 +462,24 @@ function render(){
  backdrop();track();g.restore();
  if(state.noticeTimer>0){rect("#172c42",140,30,200,18);text(state.notice,240,43,10,"#ffe2a0");}
 }
-function release(){for(const k in control)control[k]=false;document.querySelectorAll("[data-control]").forEach(el=>el.classList.remove("pressed"));}
+function release(){for(const k in control)control[k]=false;state.wheelieLocked=false;document.querySelectorAll("[data-control]").forEach(el=>el.classList.remove("pressed"));}
 function events(){
- const map={ArrowRight:"gas",d:"gas",D:"gas",ArrowLeft:"brake",a:"brake",A:"brake",ArrowUp:"up",w:"up",W:"up",ArrowDown:"down",s:"down",S:"down"};
+ const map={ArrowRight:"gas",d:"gas",D:"gas",ArrowLeft:"brake",a:"brake",A:"brake",ArrowUp:"wheelie",w:"wheelie",W:"wheelie",ArrowDown:"down",s:"down",S:"down"};
  window.addEventListener("keydown",e=>{
   if(map[e.key]){e.preventDefault();control[map[e.key]]=true;}
   if(e.code==="Space"){e.preventDefault();if(state.mode==="ready"||state.mode==="won"||state.mode==="lost")start();else if(!e.repeat)jump();}
   if(e.key==="Shift"){e.preventDefault();if(!e.repeat)boost();}
   if((e.key==="p"||e.key==="P")&&!e.repeat)pause();
  });
- window.addEventListener("keyup",e=>{if(map[e.key]){e.preventDefault();control[map[e.key]]=false;}});
+ window.addEventListener("keyup",e=>{if(map[e.key]){e.preventDefault();control[map[e.key]]=false;if(map[e.key]==="wheelie")state.wheelieLocked=false;}});
  document.querySelectorAll("[data-control]").forEach(el=>{
   const c=el.dataset.control;
   el.addEventListener("pointerdown",e=>{e.preventDefault();if(state.mode!=="playing")return;control[c]=true;el.classList.add("pressed");try{el.setPointerCapture(e.pointerId);}catch(_){}});
-  for(const key of ["pointerup","pointercancel","lostpointercapture"])el.addEventListener(key,()=>{control[c]=false;el.classList.remove("pressed");});
+  for(const key of ["pointerup","pointercancel","lostpointercapture"])el.addEventListener(key,()=>{control[c]=false;if(c==="wheelie")state.wheelieLocked=false;el.classList.remove("pressed");});
  });
  get("jump").addEventListener("pointerdown",e=>{e.preventDefault();jump();});
  get("turbo").addEventListener("pointerdown",e=>{e.preventDefault();boost();});
+ ui.shareTop.addEventListener("click",()=>{ui.shareTop.href=whatsAppUrl();});
  ui.play.addEventListener("click",()=>{if(state.mode==="paused")resume();else start();});
  ui.sound.addEventListener("click",()=>{state.mute=!state.mute;ui.sound.textContent=state.mute?"♫ OFF":"♫ ON";if(!state.mute)note(660,.08);});
  window.addEventListener("blur",release);
