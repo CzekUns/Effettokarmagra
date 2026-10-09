@@ -88,7 +88,7 @@ function updateHud(){
  ui.count.textContent="NINODEX "+count()+"/"+ENCOUNTERS.length;
  const obj=nearby();
  if(state.mode==="walk"){
-  ui.tip.textContent=obj?(obj.kind==="creature"?(state.found[obj.data.id]?"Avvistato: puoi sfidarlo di nuovo.":"Ninomon sospetto: SFIDALO per poterlo fotografare!"):"Vuoi parlare con "+obj.data.name+"?")+" Premi ESAMINA.":"SQUADRA: "+B.CREATURES[state.activeId].name+". Segui i ? e sfida i Ninomon; poi fotografali.";
+  ui.tip.textContent=obj?(obj.kind==="creature"?(state.found[obj.data.id]?"Avvistato: puoi sfidarlo di nuovo.":"Ninomon sospetto: SFIDALO per poterlo fotografare!"):obj.kind==="clue"?"Qualcosa da esaminare: "+obj.data.name:"Vuoi parlare con "+obj.data.name+"?")+" Premi ESAMINA.":"SQUADRA: "+B.CREATURES[state.activeId].name+". Segui i ? e sfida i Ninomon; poi fotografali.";
  }
 }
 function addAction(label,callback,kind="main",href){
@@ -227,15 +227,30 @@ function nearby(){
   const d=Math.hypot(c.x+.5-player.x,c.y+.5-player.y);
   if(d<min){nearest={kind:"person",data:c};min=d;}
  }
+ for(const c of SCENERY.filter(x=>x.zone===player.zone)){
+  const d=Math.hypot(c.x+.5-player.x,c.y+.5-player.y);
+  if(d<min){nearest={kind:"clue",data:c};min=d;}
+ }
  return nearest;
 }
 function inspect(){
  if(state.mode!=="walk")return;
  const n=nearby();
- if(!n){ui.tip.textContent="Qui non c'è nulla da esaminare. Avvicinati a un punto interrogativo o a una persona.";tone(230,.08);return;}
+ if(!n){ui.tip.textContent="Qui non c'è nulla da esaminare. Avvicinati a un Ninomon, una persona oppure un cartello.";tone(230,.08);return;}
  tone(735,.09);
  if(n.kind==="person"){
-  panel({mode:"talk",tag:"DIALOGO · "+ZONES[player.zone].title,title:n.data.name,text:n.data.text,icon:n.data.role,color:n.data.color,actions:[{label:"CONTINUA",onClick:closePanel}]});
+  const npc=n.data;
+  let message=npc.text;
+  if(npc.name==="Gianlluca"&&count()>0)message="Nino, hai già fotografato "+count()+" Ninomon. Trova anche i tre indizi nascosti nelle zone: sulla ferrovia, sotto il ponte e dietro il mercato.";
+  if(npc.name==="Gianlluca"&&Object.keys(state.clues).length===3)message="Hai trovato persino tutti gli indizi? Adesso sul gruppo non si parla d'altro. Questi Ninomon sono una faccenda seria.";
+  panel({mode:"talk",tag:"DIALOGO · "+ZONES[player.zone].title,title:npc.name,text:message,icon:npc.role,color:npc.color,actions:[{label:"CONTINUA",onClick:closePanel}]});
+ }else if(n.kind==="clue"){
+  const item=n.data,first=!state.clues[item.name];
+  if(first){state.clues[item.name]=true;save();tone(840,.14,.021);}
+  const total=Object.keys(state.clues).length;
+  panel({mode:"clue",tag:"INDIZIO URBANO · "+total+"/3",title:item.name.toUpperCase(),icon:"!",color:"#899778",
+   text:item.text+"\n\n"+(first?"Indizio aggiunto agli appunti di Nino.":"Hai già osservato questo indizio.")+(total===3?"\nHai scoperto tutti e tre gli indizi urbani!":""),
+   actions:[{label:"RIPRENDI",onClick:closePanel},{label:"VEDI NINODEX",variant:"alt",onClick:openDex}]});
  }else{
   const p=n.data,seen=!!state.found[p.id];
   panel({mode:"encounter",tag:"AVVISTAMENTO · "+p.number,title:seen?p.name:"UN NINOMON?!",icon:"?",color:p.color,text:p.hint+"\n\n"+(seen?"Lo hai già registrato. Vuoi sfidarlo ancora?":"Nino: «Gianlluca! Ho trovato un Ninomon!»\nSfidalo in battaglia per riuscire a fotografarlo."),actions:[{label:seen?"⚔ RIVINCITA":"⚔ INIZIA LA SFIDA",onClick:()=>startBattle(p)},{label:"LASCIA STARE",variant:"alt",onClick:closePanel}]});
@@ -283,7 +298,7 @@ function startBattle(p){
 function battleTurn(action){
  if(state.mode!=="battle"||!state.battle)return;
  const result=B.takeTurn(state.battle,action);
- if(!result.ok){battleUI.message.textContent=result.error;return;}
+ if(!result.ok){R.battle(battleCtx,state.battle,player.zone,[result.error]);tone(180,.07);return;}
  updateBattleView(result.log);
  tone(state.battle.ended?760:action==="rest"?350:520,.08);
  if(!state.battle.ended)return;
@@ -346,15 +361,20 @@ function finishChapter(){
 }
 function openDex(){
  const rows=ENCOUNTERS.map(c=>state.found[c.id]?"#"+c.number+" · "+c.name+" — "+ZONES[c.zone].short:"#"+c.number+" · ??? — da scoprire");
+ const notes=SCENERY.map(x=>(state.clues[x.name]?"✓ ":"? ")+x.name);
  panel({mode:"dex",tag:"LA NINODEX · "+count()+"/"+ENCOUNTERS.length,title:"ARCHIVIO DEGLI AVVISTAMENTI",icon:"▣",color:"#536d79",
- text:rows.join("\n")+"\n\nLe immagini definitive arriveranno con le referenze di Nino, Gianlluca e dei Ninomon.",
+ text:rows.join("\n")+"\n\nINDIZI URBANI "+Object.keys(state.clues).length+"/3:\n"+notes.join("\n")+"\n\nPuoi cambiare Ninomon attivo prima di una sfida.",
  actions:[{label:"RIPRENDI",onClick:closePanel},{label:"CAMBIA NINOMON",variant:"alt",onClick:chooseTeam},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()},{label:"NUOVA PARTITA",variant:"alt",onClick:confirmReset}]});
 }
 function confirmReset(){
  panel({mode:"confirm",tag:"RIPARTIRE DA ZERO?",title:"NUOVA ESPLORAZIONE",icon:"!",color:"#755f55",
  text:"Vuoi cancellare i tre avvistamenti salvati su questo dispositivo e ricominciare la storia dall'inizio?",
  actions:[{label:"ANNULLA",variant:"alt",onClick:openDex},{label:"SÌ, RICOMINCIA",onClick:()=>{
-   state.found={};state.activeId="starter";try{localStorage.setItem("ninomon-active-v1","starter");}catch(_){}save();player.zone=0;player.x=16;player.y=18;state.intro=0;introPanel();updateHud();
+   state.found={};state.clues={};state.steps=0;state.introSeen=false;state.activeId="starter";state.wildCooldown=15;
+  player.zone=0;player.x=16.5;player.y=18.5;player.step=null;
+  for(const n of NPC){n.x=n.home.x;n.y=n.home.y;n.patrolIndex=0;n.patrolClock=0;}
+  try{localStorage.setItem("ninomon-active-v1","starter");}catch(_){}
+  save();state.intro=0;introPanel();updateHud();
  }}]});
 }
 /* True 160×144 handheld framebuffer. Every environmental 16×16 metatile
@@ -382,6 +402,9 @@ function render(){
  for(const npc of NPC){
   if(npc.zone===z)actors.push({y:npc.y+.5,x:npc.x+.5,kind:"person",data:npc});
  }
+ for(const thing of SCENERY){
+  if(thing.zone===z)actors.push({y:thing.y+.5,x:thing.x+.5,kind:"clue",data:thing});
+ }
  actors.push({x:player.x,y:player.y,kind:"player"});
  actors.sort((a,b)=>a.y-b.y);
  for(const a of actors){
@@ -391,6 +414,11 @@ function render(){
   else if(a.kind==="person"){
    R.person(g,xx,yy,a.data.name==="Gianlluca"?"guide":"npc");
    R.text(g,a.data.role,xx-2,yy-25,p[0],7);
+  }else if(a.kind==="clue"){
+   g.fillStyle=p[0];g.fillRect(xx-7,yy-9,14,9);
+   g.fillStyle=p[3];g.fillRect(xx-5,yy-7,10,5);
+   g.fillStyle=p[0];g.fillRect(xx-1,yy-12,2,9);
+   R.text(g,state.clues[a.data.name]?"✓":"!",xx-3,yy-23,p[0],7);
   }else{
    R.monster(g,a.data.id,xx-8,yy-15,1,false);
    if(!state.found[a.data.id])R.symbol(g,xx-8,yy-30,z===1);
@@ -442,8 +470,8 @@ function bind(){
 }
 function frame(now){
  const dt=state.last?clamp((now-state.last)/1000,0,.042):0;state.last=now;
- state.time+=dt;if(state.mode==="walk")move(dt);
+ state.time+=dt;if(state.mode==="walk"){patrolNPCs(dt);move(dt);}
  render();requestAnimationFrame(frame);
 }
-bind();introPanel();updateHud();requestAnimationFrame(frame);
+bind();if(state.introSeen){state.mode="walk";ui.overlay.classList.add("hidden");}else introPanel();updateHud();requestAnimationFrame(frame);
 })();
