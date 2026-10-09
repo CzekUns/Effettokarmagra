@@ -99,18 +99,21 @@ Terzo arcade: corsa a scorrimento laterale in **telefono orizzontale** o su PC. 
 
 ## I Ninomon — Cronache di strada (Capitolo 0)
 
-Quarto arcade e primo capitolo giocabile di un gioco di esplorazione e raccolta, con ispirazione ai classici RPG portatili. Protagonista Nino; guida iniziale **Gianlluca (due L)**.
+Quarto gioco di Arcade Club. Un RPG urbano con Nino, Gianlluca (due L), esplorazione, combattimenti a turni e raccolta di fotografie nella Ninodex.
 
-- Introduzione a dialoghi di tre scene: Gianlluca spiega il mondo dei Ninomon e la missione di Nino.
-- Tre zone urbane collegate da percorsi esplorabili: **Scalo ferroviario**, **Sottopasso della tangenziale**, **Strada di servizio**.
-- Ambientazioni disegnate in pixel art con treni fermi, magazzini, piloni, graffiti, negozi e luoghi trascurati. Quattro NPC dialoganti.
-- Tre avvistamenti iniziali, con **nomi e icone provvisori**: topo sospetto, piccione immobile, pesce misterioso. Sono rappresentati con segnaposto stilizzati, senza scene cruente.
-- Meccanica narrativa: Nino esamina gli oggetti sospetti, li **fotografa in modo simulato** e li registra nella **Ninodex** (non accede alla fotocamera reale).
-- D-pad e pulsanti ESAMINA / NINODEX su telefono; frecce o WASD, E/Invio, I su PC.
-- Salvataggio locale delle tre registrazioni, riepilogo del Capitolo 0 e condivisione WhatsApp con collegamento al gioco.
-- I personaggi, gli avvistamenti e le creature definitivi verranno creati quando saranno disponibili le **referenze originali dell'utente**. Nessuna copia degli sprite, personaggi o ambientazioni del franchise Pokémon.
+- **Tre zone** con personaggi ed esplorazione: scalo ferroviario, sottopasso, strada di servizio.
+- **Il combattimento è reale:** si attiva quando Nino esamina un Ninomon, premendo SFIDA. La foto viene registrata nella Ninodex soltanto dopo una vittoria.
+- **32 mosse** (`8 categorie × 4 gradi`): Rutto, Sputo, Cacca, Puzza, Pipì, Rottami, Schiamazzo e Sfiga. Grado = complessità/potenza della mossa; il Ninomon non sale di livello.
+- **4 mosse equipaggiate** per Ninomon, con potenza, precisione, consumo di Fiato, vantaggio ambientale ed effetti di stato (stordito, impiastricciato, appestato, scivoloso, intimorito).
+- **Fiato:** 6 punti iniziali e massimi, recupero +1 per round. Azione Riprendi Fiato recupera ulteriori 3 punti; Fuga interrompe la sfida senza fotografia.
+- **Tecniche avanzate:** un set di Grado 3 si sblocca con due avvistamenti, quello di Grado 4 con tre; non esiste una progressione per livelli del personaggio.
+- **Squadra:** un Ninomon provvisorio prestato da Gianlluca apre la partita; le creature fotografate possono essere scelte come Ninomon attivo dalla Ninodex. Scelta e catture vengono salvate in locale.
+- **Interfaccia mobile Game Boy:** scocca NINOBOY con schermo interno, quattro tasti direzionali, A/B, cornice di sicurezza, gestione safe-area del telefono; modalità battaglia con quattro grandi pulsanti delle mosse, Riprendi Fiato e Fuga.
+- Gestione dello zoom nel gioco: meta viewport a scala iniziale bloccata, touch-action sullo schermo e sulla croce direzionale per evitare zoom accidentale. L'interfaccia resta nel normale flusso della pagina e può scorrere su display estremamente piccoli, senza tagliare i comandi.
+- **PC:** frecce/WASD per camminare, E/Invio per esaminare, I per la Ninodex, numeri 1–4 per le mosse, F per il Fiato, Esc per fuggire.
+- I personaggi e i Ninomon hanno ancora **grafica provvisoria**, in attesa delle reference originali. Nessuna risorsa Pokémon copiata.
 
-File principali: `games/ninomon/index.html`, `games/ninomon/game.js`, `games/ninomon/cover.svg`.
+File principali: `games/ninomon/index.html` (scocca e UI), `games/ninomon/game.js` (avventura), `games/ninomon/battle.js` (regole dei turni e catalogo mosse), `games/ninomon/cover.svg`.
 
 ## Tecnologia
 
