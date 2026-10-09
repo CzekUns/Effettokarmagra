@@ -83,7 +83,10 @@ const PAL=[
  ["#292f34","#4c524c","#777761","#ad9f83","#d4c4a3","#f0e0bb","#936755","#a2856a"]
 ];
 const DARK="#1e3037",PANEL="#eee9c9",PANEL_MID="#879581",PANEL_EDGE="#435965";
-const mobs={starter:0,n01:5,n02:3,n03:4,n04:2,n05:1,n06:6,n07:7,n08:8,n09:9};
+// SNES atlas order differs from the legacy atlas. Keep in sync with atlas.json.
+// Index 0 Gialluca, 1 rat, 2 fish, 3 dog, 4 pigeon, 5 clown,
+// 6 leopard, 7 punk and dog, 8 sentient bag, 9 hooded monkey.
+const mobs={starter:0,n01:1,n02:4,n03:2,n04:3,n05:5,n06:6,n07:7,n08:9,n09:8};
 const chars={player:0,gialluca:1,guide:2};
 const facing={down:0,left:1,right:2,up:3};
 function rect(c,x,y,w,h,color){c.fillStyle=color;c.fillRect(Math.floor(x),Math.floor(y),Math.floor(w),Math.floor(h));}
@@ -557,5 +560,5 @@ function introLake(c,phase=0,chapter=0){
  frame(c,22,8,158,30,0);
  text(c,"LAGO DEI NINOMON",30,15,DARK,14);
 }
-root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,introStory,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,floorV2,floorV2Ready,floorIndexV2,ninoHD,ninoReady,giallucaHD,giallucaReady,largeHD,largeReady,largePortrait,scaloStructure,scaloArtReady,scaloArt,revision:"snes-overworld-scalo-structures-v1"});
+root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,introStory,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,floorV2,floorV2Ready,floorIndexV2,ninoHD,ninoReady,giallucaHD,giallucaReady,largeHD,largeReady,largePortrait,scaloStructure,scaloArtReady,scaloArt,mobIndices:mobs,revision:"snes-overworld-scalo-structures-v1"});
 })(window);
