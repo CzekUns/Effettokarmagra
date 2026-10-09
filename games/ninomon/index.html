@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#18233a">
 <meta name="description" content="I Ninomon: un'avventura urbana rétro con Nino, Gianlluca, scoperte strambe e la Ninodex. Primo capitolo giocabile.">
 <title>I Ninomon · Cronache di strada | Arcade Club</title>
@@ -66,15 +66,26 @@ footer{font-size:9px;display:block}
 </style>
 </head>
 <body>
-<div class="shell">
-<header>
+<div class="shell"><div class="console" aria-label="Ninoboy, console portatile"><div class="console-top"><b>● NINOBOY <em>COLOR</em></b><small>EDIZIONE STRADA</small></div><header>
  <a class="back" href="../../index.html">← ARCADE</a>
  <h1>I NINOMON<em>CRONACHE DI STRADA · CAPITOLO 0</em></h1>
  <button class="sound" id="sound" type="button" aria-label="Attiva e disattiva effetti sonori">♫ ON</button>
 </header>
 <div class="hud"><span id="place">SCALO FERROVIARIO</span><small>GIOCHI COME <strong>NINO</strong></small><small id="count">NINODEX 0/3</small></div>
 <div class="viewport">
+ <span class="power-led" aria-hidden="true"></span>
  <canvas id="world" width="640" height="400" aria-label="Avventura esplorabile nei quartieri dei Ninomon; frecce per muoversi, E per esaminare"></canvas>
+ <section class="battle-stage" id="battle-stage" aria-label="Battaglia dei Ninomon" hidden>
+  <div class="battle-pavement" aria-hidden="true"></div>
+  <div class="fighter foe"><div class="fighter-stats">
+    <b id="enemy-name">NINOMON SELVATICO</b><div class="meter"><span id="enemy-hp"></span></div><small id="enemy-hp-text">PS 100/100</small><small id="enemy-effect" class="effect"></small>
+   </div><div class="fighter-art"><div class="fighter-body" id="enemy-symbol">?</div><div class="fighter-shadow"></div></div></div>
+  <div class="fighter ally"><div class="fighter-art"><div class="fighter-body" id="ally-symbol">◎</div><div class="fighter-shadow"></div></div>
+   <div class="fighter-stats"><b id="ally-name">MASCOTTE</b><div class="meter"><span id="ally-hp"></span></div><small id="ally-hp-text">PS 100/100</small>
+    <div class="fiato-caption">FIATO <span id="fiato-text">6/6</span></div><div class="meter fiato-meter"><span id="ally-fiato"></span></div><small id="ally-effect" class="effect"></small></div>
+  </div>
+  <div class="battle-message" id="battle-message" aria-live="polite">Nino è pronto alla sfida.</div>
+ </section>
  <div class="overlay" id="overlay" role="dialog" aria-live="polite">
   <section class="panel">
    <div class="panelhead"><small id="panel-tag">BENVENUTO</small><div id="portrait" class="portrait">?</div></div>
@@ -85,7 +96,7 @@ footer{font-size:9px;display:block}
  </div>
 </div>
 <p class="caption" id="tip">Cammina, esplora e guarda le cose sospette. Niente foto vere: le creature sono segnaposto.</p>
-<div class="controls">
+<div class="controls" id="explore-controls">
  <div class="dpad" aria-label="Comandi di movimento">
   <button type="button" class="up" data-move="up" aria-label="Muovi su">▲</button>
   <button type="button" class="left" data-move="left" aria-label="Muovi a sinistra">◀</button>
@@ -93,15 +104,23 @@ footer{font-size:9px;display:block}
   <button type="button" class="down" data-move="down" aria-label="Muovi giù">▼</button>
  </div>
  <div class="bts">
-  <button type="button" id="inspect"><span>◎</span>ESAMINA</button>
-  <button type="button" id="dex"><span>▣</span>NINODEX</button>
+  <button type="button" id="inspect"><span>A</span>ESAMINA</button>
+  <button type="button" id="dex"><span>B</span>NINODEX</button>
  </div>
 </div>
+<div class="battle-controls" id="battle-controls" hidden>
+ <div class="move-heading"><b>LE TUE MOSSE</b><small id="battle-round">TURNO 1</small></div>
+ <div class="move-grid" id="battle-moves"></div>
+ <div class="battle-extras"><button id="rest" type="button">+ RIPRENDI FIATO</button><button id="flee" type="button">↩ FUGGI</button></div>
+</div>
+<div class="console-signature"><span>▰ ▰ SELECT</span><span>▰ ▰ START</span><strong>◖ ))) ◗</strong></div>
+</div>
 <footer>
- <span>PC: FRECCE / WASD · E / INVIO = ESAMINA · I = NINODEX</span>
+ <span>PC: FRECCE / WASD · E / INVIO ESAMINA · I NINODEX · MOSSE 1–4</span>
  <span>Personaggi e Ninomon in grafica provvisoria, in attesa delle referenze.</span>
 </footer>
 </div>
-<script src="./game.js?v=1"></script>
+<script src="./battle.js?v=1"></script>
+<script src="./game.js?v=2"></script>
 </body>
 </html>
