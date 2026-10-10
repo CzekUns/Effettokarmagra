@@ -523,25 +523,66 @@ function finishChapter(){
   text:"Hai fotografato tutti e nove i Ninomon della prima esplorazione.\nVincenzo ha ricevuto le segnalazioni. Ha chiesto soltanto: «Nino, ma sei sicuro?».\n\nLa città continua: esplora i 64 quadranti e sfida le altre crew. La mappa tiene traccia dei luoghi visitati e degli allenatori battuti.",
   actions:[{label:"TORNA IN STRADA",onClick:closePanel},{label:"APRI NINODEX",variant:"alt",onClick:openDex},{label:"SQUADRA",variant:"alt",onClick:chooseTeam},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()}]});
 }
+
+function talkQuest(q,npc){
+ const result=Q.talk(state.quests,q.id,npc.name,npc.zone,questSnapshot());
+ if(!result)return;
+ save();tone(result.done?950:770,.15,.021);
+ const reward=q.reward;
+ const message=result.done?"MISSIONE COMPLETATA!\nRicompensa: "+reward.item+" · "+reward.cred+" reputazione"+(reward.fiato?" · Fiato massimo +"+reward.fiato:"")+".":"PROSSIMA TAPPA: "+questGoal(q);
+ panel({mode:"quest-talk",tag:(result.done?"MISSIONE COMPLETATA":result.started?"NUOVA MISSIONE":"MISSIONE AGGIORNATA")+" · "+q.kind,
+  title:q.title,icon:result.done?"★":"!",color:result.done?"#688776":"#9d8e5f",
+  text:result.step.line+"\n\n"+message,
+  actions:[{label:"DIARIO MISSIONI",onClick:openQuests},{label:"TORNA IN STRADA",variant:"alt",onClick:closePanel}]});
+ updateHud();
+}
+function questDetail(q){
+ const unlocked=Q.unlocked(state.quests,q),progress=state.quests.progress[q.id]??0,done=Q.complete(state.quests,q.id);
+ const where=done?"Completata. Puoi continuare a girare la città.":!unlocked?"Completa prima: "+q.requires.map(id=>Q.get(id).title).join(", ")+".":state.quests.progress[q.id]===undefined?"Inizia parlando con il personaggio indicato.":questGoal(q);
+ const steps=q.steps.map((step,i)=>(i<progress?"✓ ":i===progress?"→ ":"· ")+step.hint).join("\n");
+ const reward=q.reward.item+" · "+q.reward.cred+" reputazione"+(q.reward.fiato?" · +"+q.reward.fiato+" Fiato massimo":"");
+ const actions=[];
+ if(!done&&unlocked&&state.quests.progress[q.id]!==undefined&&state.quests.tracked!==q.id)actions.push({label:"★ SEGUI QUESTA",onClick:()=>{state.quests.tracked=q.id;save();updateHud();questDetail(q);}});
+ actions.push({label:"TORNA AL DIARIO",onClick:openQuests},{label:"MAPPA",variant:"alt",onClick:openMap});
+ panel({mode:"quest-detail",tag:q.kind+" · "+Q.stageLabel(state.quests,q),title:q.title,icon:done?"✓":"★",color:"#8a906c",
+  text:where+"\n\n"+steps+"\n\nPREMIO: "+reward,actions});
+}
+function openQuests(){
+ if(state.mode==="battle"||state.mode==="intro"||state.mode==="title")return;
+ const active=Q.quests.filter(q=>!Q.complete(state.quests,q.id)&&state.quests.progress[q.id]!==undefined);
+ const done=Q.quests.filter(q=>Q.complete(state.quests,q.id));
+ const available=Q.quests.filter(q=>Q.unlocked(state.quests,q)&&state.quests.progress[q.id]===undefined);
+ const locked=Q.quests.filter(q=>!Q.unlocked(state.quests,q));
+ const followed=trackedQuest();
+ panel({mode:"quests",tag:"DIARIO DI NINO · "+done.length+"/"+Q.quests.length+" COMPLETE",title:"MISSIONI DI STRADA",icon:"★",color:"#80775e",
+  text:"REPUTAZIONE: "+Q.cred(state.quests)+" · BONUS FIATO: +"+Q.fiatoBonus(state.quests)+
+    "\n\nIN CORSO\n"+(active.length?active.map(q=>(followed===q?"★ ":"• ")+q.title+" — "+questGoal(q)).join("\n"):"Nessuna missione attiva.")+
+    "\n\nDA INIZIARE\n"+(available.length?available.map(q=>"• "+q.title+" — "+q.steps[0].hint).join("\n"):"Nessuna.")+
+    "\n\nCOMPLETATE\n"+(done.length?done.map(q=>"✓ "+q.title).join("\n"):"Nessuna.")+
+    (locked.length?"\n\nDA SBLOCCARE: "+locked.length:""),
+  actions:[...Q.quests.filter(q=>Q.unlocked(state.quests,q)||Q.complete(state.quests,q.id)).map(q=>({label:(Q.complete(state.quests,q.id)?"✓ ":"★ ")+q.title,onClick:()=>questDetail(q),variant:"alt"})),
+   {label:"RIPRENDI",onClick:closePanel},{label:"NINODEX",variant:"alt",onClick:openDex}]});
+}
 function openDex(){
  if(state.mode==="title"||state.mode==="intro")return;
  const rows=ENCOUNTERS.map(c=>state.found[c.id]?"#"+c.number+" · "+c.name+" — "+ZONES[c.zone].short:"#"+c.number+" · ??? — da scoprire");
  const notes=SCENERY.map(x=>(state.clues[x.name]?"✓ ":"? ")+x.name);
  panel({mode:"dex",tag:"LA NINODEX · "+count()+"/"+ENCOUNTERS.length,title:"ARCHIVIO DEGLI AVVISTAMENTI",icon:"▣",color:"#536d79",
  text:rows.join("\n")+"\n\nINDIZI URBANI "+Object.keys(state.clues).length+"/3:\n"+notes.join("\n")+"\n\nPREMIO INDIZI: "+(Object.keys(state.clues).length===3?"+1 Fiato a tutta la squadra":"Completa i 3 indizi")+".\nPuoi cambiare Ninomon attivo prima di una sfida.",
- actions:[{label:"RIPRENDI",onClick:closePanel},{label:"MAPPA CITTÀ",variant:"alt",onClick:openMap},{label:"CAMBIA NINOMON",variant:"alt",onClick:chooseTeam},{label:"RIVEDI PROF. VINCENZO",variant:"alt",onClick:replayIntro},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()},{label:"NUOVA PARTITA",variant:"alt",onClick:confirmReset}]});
+ actions:[{label:"RIPRENDI",onClick:closePanel},{label:"★ MISSIONI",variant:"alt",onClick:openQuests},{label:"MAPPA CITTÀ",variant:"alt",onClick:openMap},{label:"CAMBIA NINOMON",variant:"alt",onClick:chooseTeam},{label:"RIVEDI PROF. VINCENZO",variant:"alt",onClick:replayIntro},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()},{label:"NUOVA PARTITA",variant:"alt",onClick:confirmReset}]});
 }
 function quadrantCode(z){return String.fromCharCode(65+z%8)+(Math.floor(z/8)+1);}
 function openMap(){
  if(state.mode==="battle"||state.mode==="intro"||state.mode==="title")return;
  panel({mode:"map",tag:"CITTÀ · "+Object.keys(state.visited).length+"/64 QUADRANTI",title:"MAPPA DEI QUARTIERI",icon:"▦",
-  text:"Sei in "+quadrantCode(player.zone)+" · "+M.zones[player.zone].name+".\nAllenatori battuti: "+trainerCount()+"/"+TRAINERS.length+". Tocca un quadrante.",
+  text:"Sei in "+quadrantCode(player.zone)+" · "+M.zones[player.zone].name+".\nAllenatori battuti: "+trainerCount()+"/"+TRAINERS.length+". Tocca un quadrante."+(trackedQuest()?"\n★ Missione: "+questGoal(trackedQuest()):""),
   actions:[{label:"RIPRENDI",onClick:closePanel},{label:"NINODEX",variant:"alt",onClick:openDex}]});
  const grid=document.createElement("div");grid.className="city-map";grid.setAttribute("role","group");grid.setAttribute("aria-label","64 quadranti: nord in alto");
  const details=document.createElement("p");details.className="map-details";details.setAttribute("aria-live","polite");
  for(let z=0;z<ZONES.length;z++){
   const btn=document.createElement("button");btn.type="button";btn.textContent=quadrantCode(z);
-  btn.className="map-cell theme-"+M.zones[z].theme+(state.visited[z]?" visited":"")+(z===player.zone?" current":"");
+  const goal=trackedQuest()&&Q.current(state.quests,trackedQuest());
+   btn.className="map-cell theme-"+M.zones[z].theme+(state.visited[z]?" visited":"")+(z===player.zone?" current":"")+(goal&&goal.zone===z?" quest-target":"");
   btn.setAttribute("aria-label",quadrantCode(z)+" "+M.zones[z].name+(z===player.zone?", posizione attuale":state.visited[z]?", visitato":", da visitare"));
   if(z===player.zone)btn.setAttribute("aria-current","location");
   btn.addEventListener("click",()=>{
@@ -685,7 +726,8 @@ function bind(){
   if(e.key==="e"||e.key==="E"||e.key==="Enter"||e.key===" "){
    e.preventDefault();if(e.repeat)return;
    if(state.mode==="walk")inspect();else if(state.primary)state.primary();
-  }else if(e.key==="m"||e.key==="M"){e.preventDefault();if(state.mode!=="intro"&&state.mode!=="title")openMap();}
+  }else if(e.key==="q"||e.key==="Q"){e.preventDefault();if(state.mode!=="intro"&&state.mode!=="title")openQuests();}
+   else if(e.key==="m"||e.key==="M"){e.preventDefault();if(state.mode!=="intro"&&state.mode!=="title")openMap();}
   else if(e.key==="i"||e.key==="I"||e.key==="Tab"){e.preventDefault();openDex();}
   else if(e.key==="Escape"&&state.mode!=="intro"&&state.mode!=="title"){e.preventDefault();closePanel();}
  });
@@ -700,6 +742,7 @@ function bind(){
  }
  ui.inspect.addEventListener("click",()=>{if(state.mode==="walk")inspect();else if(state.mode!=="battle"&&state.primary)state.primary();});
  ui.dex.addEventListener("click",openDex);
+  $("quests").addEventListener("click",openQuests);
  $("map").addEventListener("click",()=>{if(state.mode!=="intro"&&state.mode!=="title"&&state.mode!=="battle")openMap();});
  battleUI.rest.addEventListener("click",()=>battleTurn("rest"));battleUI.guard.addEventListener("click",()=>battleTurn("guard"));battleUI.stage.addEventListener("click",()=>{if(state.battleBusy)finishBattleAnimation();});battleUI.switch.addEventListener("click",pickBattleParty);battleUI.flee.addEventListener("click",()=>battleTurn("flee"));
  ui.sound.addEventListener("click",()=>{state.mute=!state.mute;ui.sound.textContent=state.mute?"♫ OFF":"♫ ON";tone(645,.1);});
