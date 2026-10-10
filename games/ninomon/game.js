@@ -9,6 +9,8 @@ const $=id=>document.getElementById(id);
 const ui={place:$("place"),count:$("count"),tip:$("tip"),overlay:$("overlay"),tag:$("panel-tag"),title:$("panel-title"),text:$("panel-text"),actions:$("panel-actions"),portrait:$("portrait"),inspect:$("inspect"),dex:$("dex"),sound:$("sound")};
 const B=window.NINOMON_BATTLE;
 if(!B)throw new Error("battle.js deve essere caricato prima di game.js");
+const Q=window.NINOMON_QUESTS;
+if(!Q)throw new Error("quests.js deve essere caricato prima di game.js");
 const battleCanvas=$("combat-art"),battleCtx=battleCanvas.getContext("2d");
 battleCtx.imageSmoothingEnabled=false;
 const battleUI={stage:$("battle-stage"),controls:$("battle-controls"),explore:$("explore-controls"),moves:$("battle-moves"),round:$("battle-round"),rest:$("rest"),guard:$("guard"),switch:$("switch"),partyOptions:$("party-options"),flee:$("flee")};
@@ -47,7 +49,7 @@ for(const npc of NPC){
 }
 const input={up:false,down:false,left:false,right:false};
 const player={zone:0,x:16.5,y:18.5,facing:"down",walk:0,step:null,companion:{x:16.5,y:19.5,facing:"down",walk:0},companionStep:null};
-const state={mode:"intro",intro:0,found:{},camera:{x:0,y:0},last:0,time:0,mute:false,ac:null,primary:null,discovered:0,firstComplete:false,lastInteract:0,battle:null,battleTarget:null,activeId:"starter",steps:0,wildCooldown:15,randomBattles:0,clues:{},defeated:{},visited:{0:true},introSeen:false,autosave:0};
+const state={mode:"intro",intro:0,found:{},camera:{x:0,y:0},last:0,time:0,mute:false,ac:null,primary:null,discovered:0,firstComplete:false,lastInteract:0,battle:null,battleTarget:null,activeId:"starter",steps:0,wildCooldown:15,randomBattles:0,clues:{},defeated:{},visited:{0:true},quests:Q.blank(),introSeen:false,autosave:0};
 try{const saved=JSON.parse(localStorage.getItem("ninomon-captured-v1")||"[]");if(Array.isArray(saved))for(const id of saved){if(ENCOUNTERS.some(e=>e.id===id))state.found[id]=true;}}catch(_){}
 try{const id=localStorage.getItem("ninomon-active-v1");if(B.CREATURES[id]&&(id==="starter"||state.found[id]))state.activeId=id;}catch(_){}
 try{
@@ -62,17 +64,22 @@ try{
   state.steps=Math.max(0,Number(checkpoint.steps)||0);
   state.introSeen=checkpoint.introSeen===true;
   if(checkpoint.clues&&typeof checkpoint.clues==="object")for(const name of Object.keys(checkpoint.clues))if(SCENERY.some(item=>item.name===name))state.clues[name]=true;
+   state.quests=Q.restore(checkpoint.quests);
  }
 }catch(_){} 
+Q.sync(state.quests,questSnapshot());
 [player.x,player.y]=M.safeSpawn(player.zone,player.x,player.y,[...NPC,...TRAINERS]);
 [player.companion.x,player.companion.y]=M.safeSpawn(player.zone,player.x,player.y+1,[...NPC,...TRAINERS,{zone:player.zone,x:Math.floor(player.x),y:Math.floor(player.y)}]);
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const count=()=>ENCOUNTERS.filter(a=>state.found[a.id]).length;
+function questSnapshot(){return{visited:state.visited,defeated:state.defeated,clues:state.clues,found:state.found};}
+function questGoal(q){const step=Q.current(state.quests,q);if(!step)return "Missione non ancora iniziata.";const done=["visits","wins","photos"].includes(step.type)?Math.min(step.count,Q.targetCount(questSnapshot(),step.type))+"/"+step.count+" · ":"";return done+step.hint;}
+function trackedQuest(){const q=Q.get(state.quests.tracked);return q&&Q.current(state.quests,q)?q:null;}
 function save(){
  try{
   localStorage.setItem("ninomon-captured-v1",JSON.stringify(Object.keys(state.found)));
   localStorage.setItem("ninomon-discoveries",String(count()));
-  localStorage.setItem("ninomon-save-v2",JSON.stringify({zone:player.zone,x:player.x,y:player.y,steps:state.steps,introSeen:state.introSeen,clues:state.clues,defeated:state.defeated,visited:state.visited}));
+  localStorage.setItem("ninomon-save-v2",JSON.stringify({zone:player.zone,x:player.x,y:player.y,steps:state.steps,introSeen:state.introSeen,clues:state.clues,defeated:state.defeated,visited:state.visited,quests:state.quests}));
  }catch(_){}
 }
 function tone(freq=550,dur=.085,volume=.012){
@@ -90,7 +97,7 @@ function updateHud(){
  ui.count.textContent="NINODEX "+count()+"/"+ENCOUNTERS.length;
  const obj=nearby();
  if(state.mode==="walk"){
-  ui.tip.textContent=obj?(obj.kind==="trainer"?(state.defeated[obj.data.id]?"Rivincita con ":"Sfida ")+obj.data.name:obj.kind==="clue"?"Indizio: "+obj.data.name:"Parla con "+obj.data.name)+" · A ESAMINA":M.district(player.zone,player.x,player.y)+" · ! allenatore · MAPPA per orientarti";
+  ui.tip.textContent=obj?(obj.kind==="trainer"?(state.defeated[obj.data.id]?"Rivincita con ":"Sfida ")+obj.data.name:obj.kind==="clue"?"Indizio: "+obj.data.name:"Parla con "+obj.data.name)+" · A ESAMINA":(trackedQuest()?"★ "+questGoal(trackedQuest()):M.district(player.zone,player.x,player.y)+" · ! allenatore · MAPPA per orientarti");
  }
 }
 function addAction(label,callback,kind="main",href){
@@ -161,7 +168,7 @@ function changeZone(direction){
  player.facing=direction;player.step=null;player.companionStep=null;
  const [dx,dy]={right:[-1,0],left:[1,0],down:[0,-1],up:[0,1]}[direction];
  [player.companion.x,player.companion.y]=M.safeSpawn(next,player.x+dx,player.y+dy,[...NPC,...TRAINERS,{zone:next,x:Math.floor(player.x),y:Math.floor(player.y)}]);
- state.visited[next]=true;state.wildCooldown=12;state.zoneBannerUntil=state.time+2.5;
+ state.visited[next]=true;Q.sync(state.quests,questSnapshot());state.wildCooldown=12;state.zoneBannerUntil=state.time+2.5;
  tone(620,.12);save();updateHud();
 }
 function patrolNPCs(dt){
@@ -266,10 +273,11 @@ function inspect(){
   let message=npc.text;
   if(npc.name==="Vincenzo"&&count()>0)message="Nino, hai già fotografato "+count()+" Ninomon. Trova anche i tre indizi nascosti nelle zone: sulla ferrovia, sotto il ponte e dietro il mercato.";
   if(npc.name==="Vincenzo"&&Object.keys(state.clues).length===3)message="Hai trovato tutti gli indizi? Ho preparato un premio: tutta la tua squadra ha un punto Fiato in più in combattimento. Ora non fare altre foto sfocate!";
-  panel({mode:"talk",tag:"DIALOGO · "+ZONES[player.zone].title,title:npc.name,text:message,icon:npc.role,color:npc.color,actions:[{label:"CONTINUA",onClick:closePanel}]});
+  const offers=Q.offers(state.quests,npc.name,player.zone);
+  panel({mode:"talk",tag:"DIALOGO · "+ZONES[player.zone].title,title:npc.name,text:message+(offers.length?"\n\n★ "+offers.length+" missione/i disponibili.":""),icon:npc.role,color:npc.color,actions:[...offers.map(q=>({label:"★ "+q.title,onClick:()=>talkQuest(q,npc)})),{label:"CONTINUA",onClick:closePanel}]});
  }else if(n.kind==="clue"){
   const item=n.data,first=!state.clues[item.name];
-  if(first){state.clues[item.name]=true;save();tone(840,.14,.021);}
+  if(first){state.clues[item.name]=true;Q.sync(state.quests,questSnapshot());save();tone(840,.14,.021);}
   const total=Object.keys(state.clues).length;
   panel({mode:"clue",tag:"INDIZIO URBANO · "+total+"/3",title:item.name.toUpperCase(),icon:"!",color:"#899778",
    text:item.text+"\n\n"+(first?"Indizio aggiunto agli appunti di Nino.":"Hai già osservato questo indizio.")+(total===3?"\nHai scoperto tutti e tre gli indizi urbani! Ricompensa: FIATO MASSIMO +1 per tutta la squadra.":""),
@@ -358,9 +366,8 @@ function startBattle(p){
  if(state.mode!=="encounter"&&state.mode!=="walk")return;
  state.battleTarget=p;
  state.battle=B.make(state.activeId,p.id,M.zones[p.zone].theme,count(),["starter",...Object.keys(state.found)]);
- if(Object.keys(state.clues).length===SCENERY.length){
-  for(const fighter of Object.values(state.battle.party)){fighter.maxFiato=7;fighter.fiato=7;}
- }
+ const bonus=(Object.keys(state.clues).length===SCENERY.length?1:0)+Q.fiatoBonus(state.quests);
+ if(bonus)for(const fighter of Object.values(state.battle.party)){fighter.maxFiato+=bonus;fighter.fiato+=bonus;}
  state.mode="battle";state.primary=null;
  state.battleBusy=false;state.battleFx=null;
  ui.overlay.classList.add("hidden");ui.overlay.style.display="none";battleMode(true);
@@ -461,7 +468,7 @@ function finishBattleResult(){
  const outcome=state.battle.ended,target=state.battleTarget;
  battleMode(false);
  if(outcome==="win"){
-  if(target.trainerId){state.defeated[target.trainerId]=true;save();}
+  if(target.trainerId){state.defeated[target.trainerId]=true;Q.sync(state.quests,questSnapshot());save();}
   const seen=!!state.found[target.id];
   panel({mode:"battle-result",tag:"VITTORIA · TURNO "+state.battle.round,title:target.trainerName?target.trainerName+" BATTUTO!":"NINOMON SCONFITTO!",icon:"★",color:"#75967e",
     text:(target.trainerName?target.trainerName+": «Bella sfida, Nino.»\n":"")+"Hai battuto "+target.name+"! "+state.battle.log.slice(-3).join(" ")+"\n"+(seen?"Questo Ninomon è già nella tua Ninodex.":"Ora puoi scattare la foto che Nino vuole mandare a Vincenzo."),
@@ -501,7 +508,7 @@ function selectTeam(id){
 }
 
 function photo(p){
- if(!state.found[p.id]){state.found[p.id]=true;save();tone(850,.15,.025);}
+ if(!state.found[p.id]){state.found[p.id]=true;Q.sync(state.quests,questSnapshot());save();tone(850,.15,.025);}
  const total=count(),done=total===ENCOUNTERS.length;
  panel({mode:"caught",tag:"NINODEX · NUOVO AVVISTAMENTO",title:p.name,text:"Fotografia simulata registrata!\n"+p.kind+". "+p.description+"\n\nAvvistamenti: "+total+"/"+ENCOUNTERS.length+".",
  icon:"◎",color:p.color,actions:[{label:done?"VEDI IL RIEPILOGO ▶":"CONTINUA ▶",onClick:()=>{if(done)finishChapter();else closePanel();}}]});
@@ -555,7 +562,7 @@ function confirmReset(){
  panel({mode:"confirm",tag:"RIPARTIRE DA ZERO?",title:"NUOVA ESPLORAZIONE",icon:"!",color:"#755f55",
  text:"Vuoi cancellare gli avvistamenti salvati e ricominciare dall'introduzione di Vincenzo?",
  actions:[{label:"ANNULLA",variant:"alt",onClick:openDex},{label:"SÌ, RICOMINCIA",onClick:()=>{
-   state.found={};state.clues={};state.defeated={};state.visited={0:true};state.steps=0;state.introSeen=false;state.activeId="starter";state.wildCooldown=15;
+   state.found={};state.clues={};state.defeated={};state.visited={0:true};state.quests=Q.blank();state.steps=0;state.introSeen=false;state.activeId="starter";state.wildCooldown=15;
   player.zone=0;player.x=16.5;player.y=18.5;player.step=null;player.companion.x=16.5;player.companion.y=19.5;player.companionStep=null;
   for(const n of NPC){n.x=n.home.x;n.y=n.home.y;n.patrolIndex=0;n.patrolClock=0;n.visualX=n.x;n.visualY=n.y;n.facing="down";n.motion=0;}
   try{localStorage.setItem("ninomon-active-v1","starter");}catch(_){}
