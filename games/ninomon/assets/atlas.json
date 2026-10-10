@@ -302,7 +302,28 @@
     "n06": "Madama Leoparda",
     "n07": "Fumatore col cane",
     "n08": "Scimmia in felpa",
-    "n09": "Sacco vivente"
+    "n09": "Sacco vivente",
+    "n10": "Rana ammuffita"
   },
-  "identityNote": "Mob IDs stable in savegames. SNES and legacy atlases have different row ordering; consult their independent mainRows and extraRows mappings. Never change encounter IDs to compensate for shuffled art."
+  "identityNote": "Creature IDs stable in saves; n10 uses standaloneCreatures; other IDs use separate legacy/SNES atlas mappings; no repacking older atlases.",
+  "standaloneCreatures": {
+    "n10": {
+      "name": "Rana ammuffita",
+      "file": "rana-ammuffita-battle.png",
+      "size": [
+        576,
+        288
+      ],
+      "cell": [
+        288,
+        288
+      ],
+      "columns": [
+        "front",
+        "back"
+      ],
+      "format": "indexed PNG preserving original alpha",
+      "note": "Full connected silhouettes extracted from original transparent artwork, not present in either legacy or SNES atlas."
+    }
+  }
 }
