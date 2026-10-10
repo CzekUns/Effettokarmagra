@@ -24,7 +24,8 @@ const ENCOUNTERS=[
  {id:"n06",number:"006",zone:2,x:11,y:15,name:"Madama Leoparda",kind:"Divinità del marciapiede",description:"Si presenta sempre vestita per una serata che non inizia mai.",hint:"Tacco alto, orecchini enormi e un'aria poco rassicurante.",color:"#d4a8b2",glyph:"!",label:"SPRITE ORIGINALE"},
  {id:"n07",number:"007",zone:0,x:29,y:16,name:"Fumatore col cane",kind:"Coppia dello scalo",description:"Loro due pattugliano i binari dismessi, ognuno con il proprio odore.",hint:"Un tipo con le treccine non smette di fumare, nemmeno quando ti guarda.",color:"#a4a17c",glyph:"!",label:"SPRITE ORIGINALE"},
  {id:"n08",number:"008",zone:1,x:27,y:19,name:"Scimmia in felpa",kind:"Abitante del sottopasso",description:"Ha trovato una felpa rossa e da allora considera il ponte casa sua.",hint:"Una piccola figura col cappuccio sbuca da dietro un muro.",color:"#a96f5d",glyph:"!",label:"SPRITE ORIGINALE"},
- {id:"n09",number:"009",zone:2,x:31,y:16,name:"Sacco vivente",kind:"Ninomon da cassonetto",description:"La leggenda racconta che qualcuno abbia provato a portarlo via con l'umido.",hint:"Un sacco nero si muove controvento vicino ai cassonetti.",color:"#878989",glyph:"!",label:"SPRITE ORIGINALE"}
+ {id:"n09",number:"009",zone:2,x:31,y:16,name:"Sacco vivente",kind:"Ninomon da cassonetto",description:"La leggenda racconta che qualcuno abbia provato a portarlo via con l'umido.",hint:"Un sacco nero si muove controvento vicino ai cassonetti.",color:"#878989",glyph:"!",label:"SPRITE ORIGINALE"},
+ {id:"n10",number:"010",zone:1,x:16,y:15,name:"Rana ammuffita",kind:"Creatura del sottopasso umido",description:"Da settimane sembrava soltanto un grumo di muffa fra le pozzanghere. Nino giura di averla vista fare un salto di tre metri.",hint:"Vicino ai piloni del sottopasso si muove una massa verde dall'aria assonnata.",color:"#acc5a4",glyph:"?",label:"SPRITE ORIGINALE"}
 ];
 const TRAINERS=M.trainers.map(t=>({...t}));
 const NPC=M.npcs.map(n=>({...n}));
@@ -520,7 +521,7 @@ function shareUrl(){
 }
 function finishChapter(){
  panel({mode:"complete",tag:"CAPITOLO 0 · COMPLETATO",title:"NINO, MA COS'HAI TROVATO?",icon:"★",color:"#688776",
-  text:"Hai fotografato tutti e nove i Ninomon della prima esplorazione.\nVincenzo ha ricevuto le segnalazioni. Ha chiesto soltanto: «Nino, ma sei sicuro?».\n\nLa città continua: esplora i 64 quadranti e sfida le altre crew. La mappa tiene traccia dei luoghi visitati e degli allenatori battuti.",
+  text:"Hai fotografato tutti e dieci i Ninomon della prima esplorazione.\nVincenzo ha ricevuto le segnalazioni. Ha chiesto soltanto: «Nino, ma sei sicuro?».\n\nLa città continua: esplora i 64 quadranti e sfida le altre crew. La mappa tiene traccia dei luoghi visitati e degli allenatori battuti.",
   actions:[{label:"TORNA IN STRADA",onClick:closePanel},{label:"APRI NINODEX",variant:"alt",onClick:openDex},{label:"SQUADRA",variant:"alt",onClick:chooseTeam},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()}]});
 }
 
