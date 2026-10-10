@@ -16,7 +16,7 @@ class SpriteImage {
   this._src=value;
   const dim=value.includes("ninomon-snes-atlas")?[656,912]:
    value.includes("ninomon-atlas")?[328,456]:
-   value.includes("rana-ammuffita-battle")?[576,288]:[0,0];
+   value.includes("rana-ammuffita-battle")?[576,288]:value.includes("calzo-overworld")?[64,96]:value.includes("calzo-")?[256,144]:[0,0];
   this.naturalWidth=dim[0];this.naturalHeight=dim[1];
  }
  get src(){return this._src;}
@@ -38,7 +38,7 @@ assert(begin>=0,"Encounters list missing");
 const start=begin+"const ENCOUNTERS=".length,end=game.indexOf("];",start);
 assert(end>start,"Encounter literal unavailable");
 const encounters=vm.runInNewContext("("+game.slice(start,end+1)+")");
-const ids=["starter",...Array.from({length:10},(_,i)=>"n"+String(i+1).padStart(2,"0"))];
+const ids=["starter",...Array.from({length:13},(_,i)=>"n"+String(i+1).padStart(2,"0"))];
 function expectedIndex(info,id){
  const name=id==="starter"?"gialluca":id;
  if(Object.hasOwn(info.mainRows,name))return info.mainRows[name];
@@ -67,6 +67,19 @@ for(const id of ids){
  const encounter=encounters.find(item=>item.id===id);
  if(id==="starter")assert(!encounter);
  else assert.equal(encounter&&encounter.name,creatures[id].name,id+" battle and overworld labels diverged");
+ if(["n11","n12","n13"].includes(id)){
+  const standalone=meta.standaloneCreatures[id];
+  assert.equal(standalone.name,creatures[id].name);
+  const calls=[];
+  const canvas={imageSmoothingEnabled:false,drawImage(...args){calls.push(args);}};
+  modern.monster(canvas,id,10,20,3,false);
+  modern.monster(canvas,id,10,20,3,true);
+  assert.equal(calls.length,2,id+" legendary front/back must be loaded");
+  assert.equal(calls[0][1],0,id+" front sprite x");
+  assert.equal(calls[1][1],128,id+" back sprite x");
+  for(const call of calls){assert.equal(call[2],0);assert.equal(call[3],128);assert.equal(call[4],144);}
+  continue;
+ }
  if(id==="n10"){
   assert.equal(meta.standaloneCreatures.n10.name,creatures.n10.name);
   const calls=[];
@@ -87,6 +100,6 @@ for(const id of ids){
  verifySprite(legacy,id,i0,56,72,184,104);
  verifySprite(modern,id,i1,112,144,368,208);
 }
-assert.equal(new Set(Object.values(oldIndices)).size,ids.length-1,"Legacy atlas has duplicate mappings");
-assert.equal(new Set(Object.values(modernIndices)).size,ids.length-1,"SNES atlas has duplicate mappings");
-console.log("Ninomon sprite identities OK: 11 names and IDs, 2 atlases + Rana standalone, 42 front/rear draws.");
+assert.equal(new Set(Object.values(oldIndices)).size,ids.length-4,"Legacy atlas has duplicate mappings");
+assert.equal(new Set(Object.values(modernIndices)).size,ids.length-4,"SNES atlas has duplicate mappings");
+console.log("Ninomon identities OK: 14 names, two original atlases, Rana + 3 Faccia da Calzo sheets.");

@@ -48,6 +48,13 @@ const trainers=[
  {id:'delivery',creature:'n03',zone:2,x:24,y:14,name:'Toni il rider',look:'rider',color:'#dc9851',intro:'Ultima consegna fatta. Mi è rimasto questo Pesce misterioso nello zaino. Una sfida e capiamo che sa fare.',after:'Se lo fotografi manda uno scatto anche a me. Il cliente non mi crede.'},
  {id:'closing',creature:'n09',zone:2,x:31,y:16,name:'Bruno',look:'worker',color:'#75996b',intro:'Dovevo buttare i sacchi. Questo ha deciso di restare. Sacco vivente, fai vedere a Nino come ti difendi!',after:'Ormai me lo tengo. Comunque, dietro le serrande trovi un posto tranquillo per allenarti.'}
 ];
+// Optional post-game legendary encounters in three reachable districts, using their
+// own monster sprites on the overworld and distinct movesets in battle.
+trainers.push(
+ {id:"calzo-rosso",creature:"n11",legendary:true,zone:9,x:17,y:15,name:"Faccia da Calzo Rosso",look:"hoodie",color:"#ca4943",intro:"Un calzo sul volto e la maglia rossa. Fa un passo avanti: preparati al suo Rutto apocalittico!",after:"Il Rosso si toglie di mezzo, ma puoi tornare quando vuoi."},
+ {id:"calzo-turchese",creature:"n12",legendary:true,zone:33,x:17,y:15,name:"Faccia da Calzo Turchese",look:"hoodie",color:"#39a99b",intro:"Dal sottopasso emerge una figura dalla felpa turchese. Un solo gesto e comincia la sfida!",after:"Il Turchese annuisce. Nessuno sa che faccia abbia davvero."},
+ {id:"calzo-blu",creature:"n13",legendary:true,zone:43,x:17,y:15,name:"Faccia da Calzo Blu",look:"hoodie",color:"#355cc7",intro:"Una visiera di traverso, il volto coperto e la maglia blu. L'ultimo Faccia da Calzo ti sfida.",after:"Il Blu alza la visiera e sparisce fra i manifesti."}
+);
 const npc=(zone,x,y,name,look,text,patrol)=>({zone,x,y,name,look,text,role:'…',patrol});
 const npcs=[
  {...npc(0,14,16,'Vincenzo','guide','Nino, gli allenatori del quartiere ti aspettano. Sfida i loro Ninomon, fotografali e riempi la Ninodex. Il tabellone dello scalo nasconde il primo indizio.'),role:'V'},

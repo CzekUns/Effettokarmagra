@@ -25,7 +25,10 @@ const ENCOUNTERS=[
  {id:"n07",number:"007",zone:0,x:29,y:16,name:"Fumatore col cane",kind:"Coppia dello scalo",description:"Loro due pattugliano i binari dismessi, ognuno con il proprio odore.",hint:"Un tipo con le treccine non smette di fumare, nemmeno quando ti guarda.",color:"#a4a17c",glyph:"!",label:"SPRITE ORIGINALE"},
  {id:"n08",number:"008",zone:1,x:27,y:19,name:"Scimmia in felpa",kind:"Abitante del sottopasso",description:"Ha trovato una felpa rossa e da allora considera il ponte casa sua.",hint:"Una piccola figura col cappuccio sbuca da dietro un muro.",color:"#a96f5d",glyph:"!",label:"SPRITE ORIGINALE"},
  {id:"n09",number:"009",zone:2,x:31,y:16,name:"Sacco vivente",kind:"Ninomon da cassonetto",description:"La leggenda racconta che qualcuno abbia provato a portarlo via con l'umido.",hint:"Un sacco nero si muove controvento vicino ai cassonetti.",color:"#878989",glyph:"!",label:"SPRITE ORIGINALE"},
- {id:"n10",number:"010",zone:1,x:16,y:15,name:"Rana ammuffita",kind:"Creatura del sottopasso umido",description:"Da settimane sembrava soltanto un grumo di muffa fra le pozzanghere. Nino giura di averla vista fare un salto di tre metri.",hint:"Vicino ai piloni del sottopasso si muove una massa verde dall'aria assonnata.",color:"#acc5a4",glyph:"?",label:"SPRITE ORIGINALE"}
+ {id:"n10",number:"010",zone:1,x:16,y:15,name:"Rana ammuffita",kind:"Creatura del sottopasso umido",description:"Da settimane sembrava soltanto un grumo di muffa fra le pozzanghere. Nino giura di averla vista fare un salto di tre metri.",hint:"Vicino ai piloni del sottopasso si muove una massa verde dall'aria assonnata.",color:"#acc5a4",glyph:"?",label:"SPRITE ORIGINALE"},
+ {id:"n11",number:"011",zone:9,x:17,y:15,name:"Faccia da Calzo Rosso",kind:"LEGGENDARIO · Deposito tranviario",description:"Una figura mascherata dalla maglia rossa. Si dice che il suo rutto si senta fino al capolinea.",hint:"Tra i vecchi tram compare una figura dalla maglia rossa e dal volto coperto.",color:"#ca4943",glyph:"★",label:"LEGGENDARIO",legendary:true},
+ {id:"n12",number:"012",zone:33,x:17,y:15,name:"Faccia da Calzo Turchese",kind:"LEGGENDARIO · Sotto il viadotto",description:"Vaga sotto il cavalcavia con una felpa turchese. Le sue mosse appiccicose hanno fatto scappare molte crew.",hint:"Una felpa turchese risalta fra i pilastri del viadotto.",color:"#39a99b",glyph:"★",label:"LEGGENDARIO",legendary:true},
+ {id:"n13",number:"013",zone:43,x:17,y:15,name:"Faccia da Calzo Blu",kind:"LEGGENDARIO · Largo degli artisti",description:"Cappello di traverso e maglia blu. Pare che nessuno sappia da quale angolo sbuchi.",hint:"Un cappellino rosso e blu ondeggia fra i manifesti del largo.",color:"#355cc7",glyph:"★",label:"LEGGENDARIO",legendary:true}
 ];
 const TRAINERS=M.trainers.map(t=>({...t}));
 const NPC=M.npcs.map(n=>({...n}));
@@ -510,7 +513,7 @@ function selectTeam(id){
 
 function photo(p){
  if(!state.found[p.id]){state.found[p.id]=true;Q.sync(state.quests,questSnapshot());save();tone(850,.15,.025);}
- const total=count(),done=total===ENCOUNTERS.length;
+ const total=count(),done=!p.legendary&&ENCOUNTERS.filter(e=>!e.legendary).every(e=>state.found[e.id]);
  panel({mode:"caught",tag:"NINODEX · NUOVO AVVISTAMENTO",title:p.name,text:"Fotografia simulata registrata!\n"+p.kind+". "+p.description+"\n\nAvvistamenti: "+total+"/"+ENCOUNTERS.length+".",
  icon:"◎",color:p.color,actions:[{label:done?"VEDI IL RIEPILOGO ▶":"CONTINUA ▶",onClick:()=>{if(done)finishChapter();else closePanel();}}]});
 }
@@ -521,7 +524,7 @@ function shareUrl(){
 }
 function finishChapter(){
  panel({mode:"complete",tag:"CAPITOLO 0 · COMPLETATO",title:"NINO, MA COS'HAI TROVATO?",icon:"★",color:"#688776",
-  text:"Hai fotografato tutti e dieci i Ninomon della prima esplorazione.\nVincenzo ha ricevuto le segnalazioni. Ha chiesto soltanto: «Nino, ma sei sicuro?».\n\nLa città continua: esplora i 64 quadranti e sfida le altre crew. La mappa tiene traccia dei luoghi visitati e degli allenatori battuti.",
+  text:"Hai fotografato i dieci Ninomon della prima esplorazione. Oltre ai tre quartieri iniziali, ora puoi cercare i tre leggendari Faccia da Calzo: Rosso (B2), Turchese (B5), Blu (D6).\nVincenzo ha ricevuto le segnalazioni. Ha chiesto soltanto: «Nino, ma sei sicuro?».\n\nLa città continua: esplora i 64 quadranti e sfida le altre crew. La mappa tiene traccia dei luoghi visitati e degli allenatori battuti.",
   actions:[{label:"TORNA IN STRADA",onClick:closePanel},{label:"APRI NINODEX",variant:"alt",onClick:openDex},{label:"SQUADRA",variant:"alt",onClick:chooseTeam},{label:"CONDIVIDI SU WHATSAPP",variant:"whatsapp",href:shareUrl()}]});
 }
 
@@ -689,9 +692,10 @@ function render(){
   }else{
    const t=a.data,dx=player.x-t.x-.5,dy=player.y-t.y-.5;
    const facing=Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up");
-   R.human(g,xx,yy,t.look,facing,0,t.color);
+   if(t.legendary)R.monster(g,t.creature,xx-16,yy-30,1,false);
+   else R.human(g,xx,yy,t.look,facing,0,t.color);
    const objective=trackedQuest()&&Q.current(state.quests,trackedQuest());
-   R.marker(g,xx,yy,objective?.type==="win"&&objective.key===t.id?"Q":state.defeated[t.id]?"✓":"!",!!state.defeated[t.id]);
+   R.marker(g,xx,yy,objective?.type==="win"&&objective.key===t.id?"Q":state.defeated[t.id]?"✓":t.legendary?"★":"!",!!state.defeated[t.id]);
   }
  }
  // SNES-sized in-screen HUD, scaled with the new framebuffer.

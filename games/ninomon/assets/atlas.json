@@ -303,7 +303,10 @@
     "n07": "Fumatore col cane",
     "n08": "Scimmia in felpa",
     "n09": "Sacco vivente",
-    "n10": "Rana ammuffita"
+    "n10": "Rana ammuffita",
+    "n11": "Faccia da Calzo Rosso",
+    "n12": "Faccia da Calzo Turchese",
+    "n13": "Faccia da Calzo Blu"
   },
   "identityNote": "Creature IDs stable in saves; n10 uses standaloneCreatures; other IDs use separate legacy/SNES atlas mappings; no repacking older atlases.",
   "standaloneCreatures": {
@@ -324,6 +327,75 @@
       ],
       "format": "indexed PNG preserving original alpha",
       "note": "Full connected silhouettes extracted from original transparent artwork, not present in either legacy or SNES atlas."
+    },
+    "n11": {
+      "name": "Faccia da Calzo Rosso",
+      "file": "calzo-rosso-battle.png",
+      "size": [
+        256,
+        144
+      ],
+      "cell": [
+        128,
+        144
+      ],
+      "columns": [
+        "front",
+        "back"
+      ],
+      "rarity": "legendary",
+      "overworldFile": "calzo-overworld.png",
+      "overworldCell": [
+        32,
+        32
+      ],
+      "preserveDarkContours": true
+    },
+    "n12": {
+      "name": "Faccia da Calzo Turchese",
+      "file": "calzo-turchese-battle.png",
+      "size": [
+        256,
+        144
+      ],
+      "cell": [
+        128,
+        144
+      ],
+      "columns": [
+        "front",
+        "back"
+      ],
+      "rarity": "legendary",
+      "overworldFile": "calzo-overworld.png",
+      "overworldCell": [
+        32,
+        32
+      ],
+      "preserveDarkContours": true
+    },
+    "n13": {
+      "name": "Faccia da Calzo Blu",
+      "file": "calzo-blu-battle.png",
+      "size": [
+        256,
+        144
+      ],
+      "cell": [
+        128,
+        144
+      ],
+      "columns": [
+        "front",
+        "back"
+      ],
+      "rarity": "legendary",
+      "overworldFile": "calzo-overworld.png",
+      "overworldCell": [
+        32,
+        32
+      ],
+      "preserveDarkContours": true
     }
   }
 }

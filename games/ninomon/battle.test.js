@@ -6,7 +6,7 @@ require("./battle.js");
 const B=globalThis.NINOMON_BATTLE;
 const roll=()=>.25;
 assert.equal(B.MOVES.length,32);
-assert.equal(Object.keys(B.CREATURES).length,11);
+assert.equal(Object.keys(B.CREATURES).length,14);
 assert.equal(B.CREATURES.starter.name,"Gialluca");
 {
  const b=B.make("starter","n01",0,0,["starter"],roll);
@@ -64,4 +64,4 @@ for(let seed=0;seed<16;seed++){
  assert(b.round<=70,"battle softlock, "+id);
  cases++;
 }
-console.log("Ninomon battle tests OK: 32 moves, 11 creatures, "+cases+" complete battles, switch/guard/turn-order/status/flee.");
+console.log("Ninomon battle tests OK: 32 moves, 14 creatures, "+cases+" complete battles, switch/guard/turn-order/status/flee.");

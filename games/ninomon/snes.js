@@ -59,6 +59,30 @@ function ranaPortrait(c,x,y,size,back=false){
  }catch(_){return false;}
  finally{c.imageSmoothingEnabled=smoothing;}
 }
+// Three legendary Faccia da Calzo portraits: cropped front/back image pairs.
+// Keep original dark outlines; transparency only outside the source silhouette.
+const CALZO_LEGENDS={n11:{color:"rosso",row:0,shirt:"#ca4943"},n12:{color:"turchese",row:1,shirt:"#39a99b"},n13:{color:"blu",row:2,shirt:"#355cc7"}};
+const calzoImages={};
+for(const [id,info] of Object.entries(CALZO_LEGENDS)){
+ const art=new Image();art.decoding="async";art.src="./assets/calzo-"+info.color+"-battle.png?v=1";calzoImages[id]=art;
+}
+const calzoMap=new Image();calzoMap.decoding="async";calzoMap.src="./assets/calzo-overworld.png?v=1";
+function calzoPortrait(c,id,x,y,size,back=false){
+ const info=CALZO_LEGENDS[id],img=calzoImages[id];if(!info)return false;
+ const smoothing=c.imageSmoothingEnabled;
+ try{
+  c.imageSmoothingEnabled=false;
+  if(size<=32&&calzoMap.complete&&calzoMap.naturalWidth===64&&calzoMap.naturalHeight===96){
+   c.drawImage(calzoMap,back?32:0,info.row*32,32,32,Math.round(x),Math.round(y),32,32);return true;
+  }
+  if(img.complete&&img.naturalWidth===256&&img.naturalHeight===144){
+   const offset=size>=64?12:0;
+   c.drawImage(img,back?128:0,0,128,144,Math.round(x),Math.round(y-offset),size,size+offset);return true;
+  }
+ }catch(_){/* Transparent fallback below, never show a different monster's art. */}
+ finally{c.imageSmoothingEnabled=smoothing;}
+ return false;
+}
 // Ten genuine road/ground tile samples from each of the three original street sheets.
 // These cover EVERY tile in the world. Street props are a separate, sparse overlay.
 const floorAtlas=new Image();
@@ -353,6 +377,16 @@ function person(c,x,y,who="player",dir="down",walk=0){
 function monster(c,id,x,y,scale=1,back=false){
  const cell=mobs[id];
  const size=scale>=3?100:32;
+ if(CALZO_LEGENDS[id]){
+  if(calzoPortrait(c,id,x,y,size,back))return;
+  const info=CALZO_LEGENDS[id];
+  // Loading placeholder in the correct colour; keep name/ID and art independent.
+  rect(c,x+size*.30,y+size*.04,size*.40,size*.26,"#c7b18c");
+  rect(c,x+size*.17,y+size*.34,size*.66,size*.39,info.shirt);
+  rect(c,x+size*.20,y+size*.74,size*.23,size*.24,"#34313c");
+  rect(c,x+size*.58,y+size*.74,size*.23,size*.24,"#34313c");
+  return;
+ }
  if(id==="n10"){
   if(ranaPortrait(c,x,y,size,back))return;
   // Never show another Ninomon's sprite while the image is decoding.
