@@ -678,7 +678,8 @@ function render(){
   else if(a.kind==="person"){
    if(a.data.look==="guide")R.person(g,xx,yy,"guide",a.data.facing,a.data.motion>0.05?state.time*10:0);
    else R.human(g,xx,yy,a.data.look,a.data.facing,a.data.motion>0.05?state.time*10:0);
-   if(nearby()?.data===a.data)R.marker(g,xx,yy,"…");
+   if(Q.offers(state.quests,a.data.name,a.data.zone).length)R.marker(g,xx,yy,"Q");
+   else if(nearby()?.data===a.data)R.marker(g,xx,yy,"…");
   }else if(a.kind==="clue"){
    g.fillStyle=p[0];g.fillRect(xx-14,yy-18,28,18);
    g.fillStyle=p[3];g.fillRect(xx-10,yy-14,20,10);
@@ -688,7 +689,8 @@ function render(){
    const t=a.data,dx=player.x-t.x-.5,dy=player.y-t.y-.5;
    const facing=Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up");
    R.human(g,xx,yy,t.look,facing,0,t.color);
-   R.marker(g,xx,yy,state.defeated[t.id]?"✓":"!",!!state.defeated[t.id]);
+   const objective=trackedQuest()&&Q.current(state.quests,trackedQuest());
+   R.marker(g,xx,yy,objective?.type==="win"&&objective.key===t.id?"Q":state.defeated[t.id]?"✓":"!",!!state.defeated[t.id]);
   }
  }
  // SNES-sized in-screen HUD, scaled with the new framebuffer.
