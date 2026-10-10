@@ -489,13 +489,13 @@ function battle(c,b,z,lines,fx=null){
  }
  // HP panels never cover large sprite faces or the dialogue box.
  frame(c,3,8,177,76,z);
- text(c,b.enemy.name.toUpperCase().slice(0,20),11,14,DARK,11);
+ text(c,b.enemy.name.toUpperCase().slice(0,26),11,14,DARK,b.enemy.name.length>20?9:11);
  bar(c,11,40,135,b.enemy.maxHp?b.enemy.hp/b.enemy.maxHp:0,z);
  text(c,"PS "+b.enemy.hp+"/"+b.enemy.maxHp,11,56,DARK,11);
  const enemyEffects=Object.keys(b.enemy.status||{}).filter(k=>b.enemy.status[k]>0);
  if(enemyEffects.length)text(c,enemyEffects.slice(0,2).join(" ").toUpperCase().slice(0,20),11,70,"#8e493e",9);
  frame(c,155,139,162,76,z);
- text(c,b.player.name.toUpperCase().slice(0,18),163,145,DARK,11);
+ text(c,b.player.name.toUpperCase().slice(0,26),163,145,DARK,b.player.name.length>19?9:11);
  bar(c,163,169,143,b.player.maxHp?b.player.hp/b.player.maxHp:0,z);
  text(c,"PS "+b.player.hp+"  F "+b.player.fiato+"/"+b.player.maxFiato,163,187,DARK,11);
  const playerEffects=Object.keys(b.player.status||{}).filter(k=>b.player.status[k]>0);
