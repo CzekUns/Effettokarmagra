@@ -109,7 +109,7 @@ main{width:100%;display:block}
 (function(){"use strict";
 const N=15,T=800/15,SECONDS=9,dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]},colors=["red","violet","green","gold"],E=id=>document.getElementById(id),c=E("board"),ctx=c.getContext("2d");
 const ui={score:E("score"),best:E("best"),lives:E("lives"),level:E("level"),pow:E("powertxt"),bar:E("bar"),veil:E("veil"),tag:E("tag"),title:E("title"),message:E("message"),play:E("play"),pause:E("pause"),audio:E("audio"),share:E("share-score"),shareHint:E("share-hint")};
-const walkSprites=new Image();walkSprites.src="./assets/biagio-sprites.png";
+const walkSprites=new Image();walkSprites.src="./assets/biagio-sprites.png?v=2";
 const imgs={};["biaggio-normal","biaggio-power"].concat(colors.flatMap(k=>["lady-"+k+"-long","lady-"+k+"-short"])).forEach(k=>{let im=new Image();im.src="../../assets/"+k+".svg";imgs[k]=im;});
 const s={phase:"ready",level:1,score:0,best:0,lives:3,power:0,grace:0,dots:new Set(),pills:new Set(),maze:[],player:null,girls:[],last:0,t:0,mute:false,ac:null,musicBus:null,musicStep:0,nextBeat:0,bg:null};
 try{s.best=Number(localStorage.getItem("effetto-karmagra-best")||0);}catch(_){}
@@ -124,7 +124,7 @@ for(const [x1,y1,x2,y2] of [[5,5,9,9],[3,3,5,5],[9,9,11,11]]){
 }
 for(let x=3;x<=11;x++){m[3][x]=0;m[11][x]=0;}
 return m;}
-function mob(x,y,speed){return{x,y,fx:x,fy:y,tx:x,ty:y,p:0,moving:false,dir:"left",want:"left",speed,delay:0};}
+function mob(x,y,speed){return{x,y,fx:x,fy:y,tx:x,ty:y,p:0,moving:false,dir:"left",want:"left",speed,delay:0,stride:0};}
 function pos(a){return a.moving?{x:a.fx+(a.tx-a.fx)*a.p,y:a.fy+(a.ty-a.fy)*a.p}:{x:a.x,y:a.y};}
 function step(a,d){let v=dirs[d];if(!v||!free(a.x+v[0],a.y+v[1]))return false;a.fx=a.x;a.fy=a.y;a.tx=a.x+v[0];a.ty=a.y+v[1];a.dir=d;a.p=0;a.moving=true;return true;}
 function opposite(d){return{up:"down",down:"up",left:"right",right:"left"}[d];}
@@ -223,7 +223,7 @@ function beep(freq,d=.06){
  osc.connect(amp).connect(ac.destination);osc.start(at);osc.stop(at+d+.01);
 }
 function collect(){let k=id(s.player.x,s.player.y);if(s.pills.delete(k)){s.power=SECONDS;score(50);beep(850,.2);}else if(s.dots.delete(k)){score(10);if(Math.random()<.3)beep(470,.024);}if(!s.dots.size&&!s.pills.size){s.phase="win";stopMusic();show("LIVELLO SUPERATO","BRAVO, BIAGIO!","Hai raccolto tutte le palline. Passiamo al prossimo labirinto?","PROSSIMO LIVELLO ▶");}}
-function movePlayer(dt){let p=s.player;if(!p.moving){if(!step(p,p.want))step(p,p.dir);}if(p.moving){p.p+=p.speed*dt;if(p.p>=1){p.x=p.tx;p.y=p.ty;p.p=0;p.moving=false;collect();}}}
+function movePlayer(dt){let p=s.player;if(!p.moving){if(!step(p,p.want))step(p,p.dir);}if(p.moving){p.p+=p.speed*dt;if(p.p>=1){p.x=p.tx;p.y=p.ty;p.p=0;p.moving=false;p.stride=(p.stride+1)&1;collect();}}}
 function distances(x,y){let d=Array.from({length:N},()=>Array(N).fill(999)),q=[[x,y]];if(!free(x,y))return d;d[y][x]=0;for(let i=0;i<q.length;i++){let [a,b]=q[i];for(let [dx,dy] of Object.values(dirs)){let nx=a+dx,ny=b+dy;if(free(nx,ny)&&d[ny][nx]===999){d[ny][nx]=d[b][a]+1;q.push([nx,ny]);}}}return d;}
 function moveGirls(dt){let p=pos(s.player),dist=distances(Math.round(p.x),Math.round(p.y));s.girls.forEach((a,i)=>{if(a.delay>0){a.delay-=dt;return;}if(!a.moving){let options=Object.keys(dirs).filter(d=>free(a.x+dirs[d][0],a.y+dirs[d][1]));if(options.length>1)options=options.filter(d=>d!==opposite(a.dir));options.sort((u,v)=>{let aa=dirs[u],bb=dirs[v],da=dist[a.y+aa[1]][a.x+aa[0]],db=dist[a.y+bb[1]][a.x+bb[0]];return s.power?db-da:da-db;});if(options.length)step(a,Math.random()<[.16,.26,.44,.55][i]?options[Math.floor(Math.random()*options.length)]:options[0]);}
 if(a.moving){a.p+=a.speed*dt*(s.power?.84:1);if(a.p>=1){a.x=a.tx;a.y=a.ty;a.moving=false;a.p=0;}}});}
@@ -257,13 +257,16 @@ function drawBackground(){s.bg=background();}
 function drawActor(a,name,main){
  let p=pos(a),x=(p.x+.5)*T,y=(p.y+.5)*T;
  ctx.save();ctx.translate(x,y);
- if(main&&walkSprites.complete&&walkSprites.naturalWidth===160&&walkSprites.naturalHeight===96){
+ if(main&&walkSprites.complete&&walkSprites.naturalWidth===256&&walkSprites.naturalHeight===76){
   if(s.grace&&Math.floor(s.t*12)%2===0)ctx.globalAlpha=.45;
   ctx.fillStyle="#0008";ctx.beginPath();ctx.ellipse(0,18,23,8,0,0,7);ctx.fill();
   const facing={down:0,left:1,right:2,up:3}[a.dir]??0;
   const sheetRow=s.power>0?1:0;
-  const bounce=a.moving?Math.sin(Math.min(1,a.p)*Math.PI)*2:0;
-  ctx.drawImage(walkSprites,facing*40,sheetRow*48,40,48,-29,-45-bounce,58,70);
+  // Each movement advances the walk cycle by half a frame; alternate the
+  // lead foot between tiles instead of restarting the same pose each step.
+  const walkFrame=a.moving?((a.stride+(a.p>=.5?1:0))&1):0;
+  const bounce=a.moving?Math.sin(Math.min(1,a.p)*Math.PI)*1.5:0;
+  ctx.drawImage(walkSprites,(facing*2+walkFrame)*32,sheetRow*38,32,38,-29,-45-bounce,58,70);
   if(s.power){ctx.strokeStyle="#ffe5a5";ctx.globalAlpha=.55;ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,37,0,7);ctx.stroke();}
   ctx.restore();return;
  }
