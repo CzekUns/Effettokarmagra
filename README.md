@@ -124,6 +124,17 @@ Quarto titolo di Arcade Club: **RPG urbano a turni in stile console portatile an
 
 File: `games/ninomon/index.html`, `games/ninomon/retro.js`, `games/ninomon/snes.js`, `games/ninomon/game.js`, `games/ninomon/battle.js`, `games/ninomon/assets/ninomon-atlas.png`, `games/ninomon/assets/ninomon-snes-atlas.png`, `games/ninomon/assets/atlas.json`, `games/ninomon/cover.svg`.
 
+
+## Missioni di strada — Ninomon (10 ottobre 2026)
+
+Otto missioni originali attraversano la città 8×8 e coinvolgono abitanti, allenatori, indizi e nuovi quartieri: **Il pezzo cancellato**, **La notte senza musica**, **Le cassette di Carmela**, **Il sacco che cammina**, **L'ultima consegna di Toni**, **Frequenza fantasma**, **La crew attraversa la città**, **L'ultima firma**.
+
+- **★ MISSIONI** nella parte alta della console (o **Q** su PC) apre il diario con obiettivi, ricompense e missioni disponibili. Si può seguire una missione e MAPPA segnala il quadrante obiettivo.
+- Una **Q** sopra la testa identifica personaggi che offrono o avanzano missioni e gli allenatori collegati all'obiettivo seguito.
+- Completare le quest dà reputazione e oggetti narrativi da collezione; tre ricompense danno +1 Fiato massimo ciascuna, cumulabili con il bonus degli indizi originali.
+- La logica è in games/ninomon/quests.js e i progressi sono nel checkpoint ninomon-save-v2, campo quests. Le partite precedenti restano compatibili e i traguardi già raggiunti vengono riconosciuti.
+- Test: node games/ninomon/quests.test.js (in aggiunta ai test del mondo, combattimenti e sprite).
+
 ## Tecnologia
 
 Pagine statiche e JavaScript nativo, senza backend né librerie esterne obbligatorie. I record locali sono salvati nel browser. Il catalogo è gestito come un semplice file JavaScript per funzionare anche su GitHub Pages senza server.
