@@ -45,13 +45,14 @@ const CREATURES={
  n06:{id:"n06",name:"Madama Leoparda",kind:"Divinità del marciapiede",hp:102,color:"#d4a8b2",symbol:"!",types:["sfiga","sputo"],base:["sfiga-1","sputo-1","sfiga-2","sputo-2"],advanced:["sfiga-3","sputo-3"],ultimate:"sfiga-4"},
  n07:{id:"n07",name:"Fumatore col cane",kind:"Coppia dello scalo",hp:112,color:"#a4a17c",symbol:"!",types:["puzza","schiamazzo"],base:["puzza-1","schiamazzo-1","puzza-2","schiamazzo-2"],advanced:["puzza-3","schiamazzo-3"],ultimate:"puzza-4"},
  n08:{id:"n08",name:"Scimmia in felpa",kind:"Abitante del sottopasso",hp:109,color:"#a96f5d",symbol:"!",types:["rutto","rottami"],base:["rutto-1","rottami-1","rutto-2","rottami-2"],advanced:["rutto-3","rottami-3"],ultimate:"rottami-4"},
- n09:{id:"n09",name:"Sacco vivente",kind:"Ninomon da cassonetto",hp:122,color:"#878989",symbol:"!",types:["cacca","puzza"],base:["cacca-1","puzza-1","cacca-2","puzza-2"],advanced:["cacca-3","puzza-3"],ultimate:"cacca-4"}
+ n09:{id:"n09",name:"Sacco vivente",kind:"Ninomon da cassonetto",hp:122,color:"#878989",symbol:"!",types:["cacca","puzza"],base:["cacca-1","puzza-1","cacca-2","puzza-2"],advanced:["cacca-3","puzza-3"],ultimate:"cacca-4"},
+ n10:{id:"n10",name:"Rana ammuffita",kind:"Creatura del sottopasso umido",hp:108,color:"#a0b99a",symbol:"?",types:["puzza","pipi"],base:["puzza-1","pipi-1","puzza-2","pipi-2"],advanced:["puzza-3","pipi-3"],ultimate:"puzza-4"}
 };
 
 const ZONE_BONUS=["rottami","rutto","pipi"];
 // Two linked counter loops: a weakness can be exploited without making a low-level fight unwinnable.
 const COUNTERS={rutto:"puzza",puzza:"schiamazzo",schiamazzo:"sfiga",sfiga:"rutto",sputo:"cacca",cacca:"pipi",pipi:"rottami",rottami:"sputo"};
-const SPEED={starter:15,n01:20,n02:16,n03:9,n04:18,n05:14,n06:17,n07:11,n08:19,n09:7};
+const SPEED={starter:15,n01:20,n02:16,n03:9,n04:18,n05:14,n06:17,n07:11,n08:19,n09:7,n10:12};
 const cap=(n,a,b)=>Math.max(a,Math.min(b,n));
 function roll(random){const n=Number((random||Math.random)());return cap(Number.isFinite(n)?n:.5,0,.999999);}
 function availableTier(discoveries){return discoveries>=3?4:discoveries>=2?3:2;}
