@@ -43,6 +43,22 @@ function largePortrait(c,who,pose,x,y,w,h){
  finally{c.imageSmoothingEnabled=smooth;c.imageSmoothingQuality=quality;}
 }
 
+// Rana ammuffita: two separately cropped portraits from the user's true-RGBA source.
+// Do not substitute a row from either old creature atlas: n10 uses its own sheet.
+const ranaHD=new Image();
+ranaHD.decoding="async";
+ranaHD.src="./assets/rana-ammuffita-battle.png?v=1";
+const ranaReady=()=>ranaHD.complete&&ranaHD.naturalWidth===576&&ranaHD.naturalHeight===288;
+function ranaPortrait(c,x,y,size,back=false){
+ if(!ranaReady())return false;
+ const smoothing=c.imageSmoothingEnabled;
+ try{
+  c.imageSmoothingEnabled=size>=64;
+  c.drawImage(ranaHD,back?288:0,0,288,288,Math.round(x),Math.round(y),size,size);
+  return true;
+ }catch(_){return false;}
+ finally{c.imageSmoothingEnabled=smoothing;}
+}
 // Ten genuine road/ground tile samples from each of the three original street sheets.
 // These cover EVERY tile in the world. Street props are a separate, sparse overlay.
 const floorAtlas=new Image();
@@ -337,6 +353,17 @@ function person(c,x,y,who="player",dir="down",walk=0){
 function monster(c,id,x,y,scale=1,back=false){
  const cell=mobs[id];
  const size=scale>=3?100:32;
+ if(id==="n10"){
+  if(ranaPortrait(c,x,y,size,back))return;
+  // Never show another Ninomon's sprite while the image is decoding.
+  rect(c,x+size*.17,y+size*.67,size*.2,size*.07,"#d2d9c0");
+  rect(c,x+size*.65,y+size*.67,size*.2,size*.07,"#d2d9c0");
+  rect(c,x+size*.14,y+size*.34,size*.72,size*.43,"#9db9a5");
+  rect(c,x+size*.27,y+size*.30,size*.17,size*.13,"#344d41");
+  rect(c,x+size*.57,y+size*.30,size*.17,size*.13,"#344d41");
+  rect(c,x+size*.28,y+size*.55,size*.44,size*.05,"#526d55");
+  return;
+ }
  if(id==="starter"&&scale>=3&&largePortrait(c,"gialluca",back?"back":"front",
    x+7,y-17,86,117))return;
  if(ready()&&cell!==undefined){
@@ -560,5 +587,5 @@ function introLake(c,phase=0,chapter=0){
  frame(c,22,8,158,30,0);
  text(c,"LAGO DEI NINOMON",30,15,DARK,14);
 }
-root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,introStory,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,floorV2,floorV2Ready,floorIndexV2,ninoHD,ninoReady,giallucaHD,giallucaReady,largeHD,largeReady,largePortrait,scaloStructure,scaloArtReady,scaloArt,mobIndices:mobs,revision:"snes-overworld-scalo-structures-v1"});
+root.NINOMON_RETRO=Object.assign({},old,{W,H,T,P:PAL,ground,person,monster,text,frame,bar,symbol,battle,introLake,introStory,ready,sprite,atlas,floorAtlas,floorReady,floorIndex,floorV2,floorV2Ready,floorIndexV2,ninoHD,ninoReady,giallucaHD,giallucaReady,largeHD,largeReady,largePortrait,scaloStructure,scaloArtReady,scaloArt,mobIndices:mobs,ranaHD,ranaReady,ranaPortrait,revision:"snes-overworld-scalo-structures-v1"});
 })(window);
