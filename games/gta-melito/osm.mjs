@@ -25,6 +25,37 @@ export function inside(pt,ring){
   }
   return yes;
 }
+// Retain precisely the portions of OSM centre-lines inside the municipal border.
+// Each intersection is a true geometric crossing; no artificial road grid is added.
+export function clipPolyline(points,ring){
+ const result=[];let current=[];
+ const equal=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])<.075;
+ function finish(){if(current.length>=2)result.push(current);current=[];}
+ for(let i=1;i<points.length;i++){
+  const a=points[i-1],b=points[i],rx=b[0]-a[0],ry=b[1]-a[1],ts=[0,1];
+  for(let j=0;j<ring.length-1;j++){
+   const c=ring[j],d=ring[j+1],sx=d[0]-c[0],sy=d[1]-c[1];
+   const den=rx*sy-ry*sx;if(Math.abs(den)<1e-9)continue;
+   const dx=c[0]-a[0],dy=c[1]-a[1],t=(dx*sy-dy*sx)/den,u=(dx*ry-dy*rx)/den;
+   if(t>1e-7&&t<1-1e-7&&u>=0&&u<=1)ts.push(t);
+  }
+  ts.sort((x,y)=>x-y);
+  for(let j=1;j<ts.length;j++){
+   const t0=ts[j-1],t1=ts[j];
+   if(t1-t0<1e-8)continue;
+   const mid=(t0+t1)/2,px=a[0]+rx*mid,py=a[1]+ry*mid;
+   if(inside([px,py],ring)){
+    const start=[Math.round((a[0]+rx*t0)*10)/10,Math.round((a[1]+ry*t0)*10)/10];
+    const end=[Math.round((a[0]+rx*t1)*10)/10,Math.round((a[1]+ry*t1)*10)/10];
+    if(!current.length)current=[start];
+    else if(!equal(current[current.length-1],start)){finish();current=[start];}
+    if(!equal(current[current.length-1],end))current.push(end);
+   }else finish();
+  }
+ }
+ finish();return result;
+}
+
 export function buildQuery(p){
  const bb=[p.minLat-.0015,p.minLon-.0015,p.maxLat+.0015,p.maxLon+.0015].map(n=>n.toFixed(6)).join(",");
  return '[out:json][timeout:110];(way["highway"]('+bb+');way["building"]('+bb+');node["shop"]('+bb+');node["amenity"]('+bb+');node["tourism"]('+bb+'););out geom;';
@@ -58,9 +89,10 @@ export function buildMap(overpass,boundary){
   const t=el.tags||{},g=el.geometry.filter(v=>Number.isFinite(v.lon)&&Number.isFinite(v.lat)).map(v=>xy(v.lon,v.lat,p));
   if(g.length<2)continue;
   if(t.highway&&WIDTH[t.highway]&&!['construction','proposed'].includes(t.highway)){
-   if(!g.some(pt=>inside(pt,border))&&!inside(g[Math.floor(g.length/2)],border))continue;
-   const s=simplified(g);
-   roads.push({id:el.id,n:t.name||'',t:t.highway,w:WIDTH[t.highway],o:t.oneway==='yes',p:s.flat()});
+   for(const part of clipPolyline(g,border)){
+    const s=simplified(part);
+    if(s.length>=2)roads.push({id:el.id,n:t.name||'',t:t.highway,w:WIDTH[t.highway],o:t.oneway==='yes',p:s.flat()});
+   }
   } else if(t.building&&g.length>=4){
    const mid=g.slice(0,-1).reduce((a,c)=>[a[0]+c[0],a[1]+c[1]],[0,0]).map(v=>v/(g.length-1));
    if(!inside(mid,border))continue;

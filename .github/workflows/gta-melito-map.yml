@@ -5,7 +5,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'games/gta-melito/**'
+      - 'games/gta-melito/osm.mjs'
+      - 'games/gta-melito/data/boundary.json'
       - 'scripts/build-melito-map.mjs'
       - '.github/workflows/gta-melito-map.yml'
 

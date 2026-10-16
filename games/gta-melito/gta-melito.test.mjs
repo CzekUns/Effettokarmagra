@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {buildRoadGraph,createAgents,stepAgents,chooseTurn,DRIVABLE} from './roads.mjs';
 import {buildStreetProps,sampleRoad} from './visuals.mjs';
+import {clipPolyline,inside} from './osm.mjs';
 
 const map=JSON.parse(await readFile(new URL('./data/melito-map.json',import.meta.url),'utf8'));
 const graph=buildRoadGraph(map.roads);
@@ -69,4 +70,18 @@ test('road sampling preserves geometric direction and length',()=>{
  assert.deepEqual(sampleRoad(p,5),{x:5,y:0,a:0});
  assert.deepEqual(sampleRoad(p,15),{x:10,y:5,a:Math.PI/2});
  assert.equal(sampleRoad(p,41),null);
+});
+
+test('every imported road segment stays inside the real Melito polygon',()=>{
+ const ring=[];for(let i=0;i<map.border.length;i+=2)ring.push([map.border[i],map.border[i+1]]);
+ for(const r of map.roads){
+  for(let i=0;i<r.p.length;i+=2){
+   const x=r.p[i],y=r.p[i+1];
+   assert.ok(x>=-.1&&x<=map.projection.width+.1, 'road '+r.id+' x='+x);
+   assert.ok(y>=-.1&&y<=map.projection.height+.1, 'road '+r.id+' y='+y);
+  }
+ }
+ const box=[[0,0],[10,0],[10,10],[0,10],[0,0]];
+ assert.deepEqual(clipPolyline([[-5,5],[5,5],[15,5]],box),[[[0,5],[5,5],[10,5]]]);
+ assert.deepEqual(clipPolyline([[-5,-5],[-2,-2]],box),[]);
 });
