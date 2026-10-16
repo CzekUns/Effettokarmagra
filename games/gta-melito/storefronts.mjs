@@ -1,3 +1,4 @@
+import {visualRoadWidth} from './road-widths.mjs';
 /* Small storefronts tied to real OpenStreetMap named POIs.
  * Position is projected to the nearest suitable OSM street. Store awnings are stylized.
  */
@@ -14,7 +15,7 @@ function nearestRoad(roads,x,y){
    if(len<=.2)continue;
    const t=Math.min(1,Math.max(0,((x-p[i-2])*dx+(y-p[i-1])*dy)/len));
    const a=p[i-2]+t*dx,b=p[i-1]+t*dy,d=(x-a)**2+(y-b)**2;
-   if(d<dist){dist=d;result={x:a,y:b,a:Math.atan2(dy,dx),w:road.w,d};}
+   if(d<dist){dist=d;result={x:a,y:b,a:Math.atan2(dy,dx),w:visualRoadWidth(road),d};}
   }
  }
  return result;

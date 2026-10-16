@@ -90,3 +90,17 @@ La colorazione del suolo è una stima in base alla concentrazione di edifici e s
 ## Sopralluogo progressivo dal confine (0.4.1)
 
 Il censimento integrale degli edifici OSM è iniziato dal bordo nord-occidentale, usando una griglia di 34 settori. Nel primo passaggio sono state catalogate tutte le 2.056 impronte e sono stati assegnati 47 **profili estetici provvisori** su 47 building ID dei primi due settori. **Nessuna facciata è ancora verificata con Google Street View.** Il sopralluogo consultabile è in [survey/index.html](./survey/index.html); il protocollo completo e le fonti sono in [survey/README.md](./survey/README.md). I nomi stradali sono associazioni per prossimità da OSM, non numeri civici. Per fotografia fedele occorre validare edificio per edificio prima di segnare `photoVerified`.
+
+## GTA Melito 0.4.2 — proporzioni delle strade corrette
+
+Il feedback sulla mappa era fondato: le carreggiate erano troppo strette rispetto ad auto e pedoni (ad esempio `residential=7` contro un'auto larga circa 4–5 unità nel rendering). La nuova scala arcade usa `road-widths.mjs` e produce:
+
+| Classe OSM | Prima (unità del gioco) | Ora | Differenza |
+| --- | ---: | ---: | ---: |
+| Residenziale | 7 | **13,3** | +90% |
+| Terziaria | 9 | **15,5** | +72% |
+| Secondaria | 11 | **17,6** | +60% |
+| Servizio | 5 | **9** | +80% |
+| Principale | 13 | **19,5** | +50% |
+
+La larghezza arcade è una **correzione di proporzioni visive**, non una misura certificata delle carreggiate reali. L'archivio geografico OSM `melito-map.json` non viene alterato, e gli edifici restano sulle impronte originali; eventuali larghezze reali andranno ricavate strada per strada. Il nuovo valore è usato coerentemente per asfalto, cordoli, marciapiedi, attraversamenti, NPC sul bordo strada, offset delle corsie del traffico, insegne e collisione dell'auto guidata. I pedonali vengono ampliati solo moderatamente.

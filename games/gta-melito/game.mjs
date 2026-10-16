@@ -1,3 +1,4 @@
+import {visualRoadWidth} from './road-widths.mjs';
 import {fetchOverpass,inside} from './osm.mjs';
 import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs';
@@ -225,7 +226,7 @@ function carBlocked(x,y,a,which){
   if(buildingAt(px,py)||!inside([px,py],toRing(state.map.border)))return true;
  }
  const road=nearest(x,y,30,state.roads,true);
- if(!road||road.distance>road.road.w/2+2.1)return true;
+ if(!road||road.distance>visualRoadWidth(road.road)/2-1.2)return true;
  for(let i=0;i<state.cars.length;i++){
   if(i===which)continue;
   const b=state.cars[i];
@@ -340,7 +341,7 @@ function draw(){
    seen.add(road.n);
    const q=roadPoint(road,.5);
    c.save();c.translate(q.x,q.y);let angle=q.a;if(angle>Math.PI/2||angle< -Math.PI/2)angle+=Math.PI;c.rotate(angle);
-   c.fillText(road.n.toUpperCase().slice(0,25),0,-road.w/2-2);c.restore();
+   c.fillText(road.n.toUpperCase().slice(0,25),0,-visualRoadWidth(road)/2-3.4);c.restore();
   }
  }
  // Storefront labels are tied to nearby real POIs, not floating over every roof.

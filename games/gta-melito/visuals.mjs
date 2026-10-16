@@ -1,3 +1,4 @@
+import {visualRoadWidth} from './road-widths.mjs';
 /* GTA Melito 0.2 — procedural 1990s overhead city visuals.
  * Roads and building polygons are from © OpenStreetMap contributors (ODbL).
  * Trees, lamps, bins, signs and scooters are fictional visual dressing. */
@@ -27,7 +28,7 @@ export function buildStreetProps(roads){
   for(let d=14+seed%19,idx=0;d<len-9;d+=stride,idx++){
    const point=sampleRoad(road.p,d);if(!point)continue;
    const kind=(hash(seed+idx*333)%15),side=(idx+seed)%2?1:-1;
-   const margin=road.w/2+3.5;
+   const margin=visualRoadWidth(road)/2+3.5;
    const x=point.x-Math.sin(point.a)*margin*side,y=point.y+Math.cos(point.a)*margin*side;
    props.push({x,y,a:point.a,kind,side,p:[x-3,y-3,x+3,y+3],roadId:road.id});
   }
@@ -92,21 +93,21 @@ export function drawStreets(c,roads,zoom){
  c.save();c.lineCap='round';c.lineJoin='round';
  // Concrete sidewalks, curb shadow, then asphalt; real centreline geometry unchanged.
  for(const road of roads){
-  line(c,road.p);c.lineWidth=road.w+5.3;c.strokeStyle='#726f65';c.stroke();
+  line(c,road.p);c.lineWidth=visualRoadWidth(road)+5.3;c.strokeStyle='#726f65';c.stroke();
  }
  for(const road of roads){
-  line(c,road.p);c.lineWidth=road.w+3.1;c.strokeStyle='#c1b59b';c.stroke();
+  line(c,road.p);c.lineWidth=visualRoadWidth(road)+3.1;c.strokeStyle='#c1b59b';c.stroke();
  }
  for(const road of roads){
-  line(c,road.p);c.lineWidth=road.w+.7;c.strokeStyle='#313b3b';c.stroke();
+  line(c,road.p);c.lineWidth=visualRoadWidth(road)+.7;c.strokeStyle='#313b3b';c.stroke();
  }
  for(const road of roads){
-  line(c,road.p);c.lineWidth=Math.max(1,road.w-1);c.strokeStyle=asphalt[road.t]||'#585c58';c.stroke();
+  line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)-1);c.strokeStyle=asphalt[road.t]||'#585c58';c.stroke();
  }
  if(zoom>1.4){
   c.setLineDash([2.2,5.6]);c.lineWidth=.3;c.strokeStyle='#d8bb788c';
   for(const road of roads){
-   if(road.w<8||road.t==='service'||road.t==='pedestrian')continue;
+   if(visualRoadWidth(road)<12||road.t==='service'||road.t==='pedestrian')continue;
    line(c,road.p);c.stroke();
   }
   c.setLineDash([]);
@@ -127,10 +128,10 @@ export function drawCrosswalks(c,graph,bounds,zoom){
   const unique=new Set(cars.map(id=>Math.round(edges[id].angle*20)));
   if(unique.size<3)continue;
   for(let j=0;j<Math.min(4,cars.length);j++){
-   const e=edges[cars[j]],width=Math.max(4,Math.min(11,e.streetWidth)),a=e.angle,nx=node.x+Math.cos(a)*Math.min(8,e.len*.45),ny=node.y+Math.sin(a)*Math.min(8,e.len*.45);
+   const e=edges[cars[j]],width=Math.max(4,Math.min(21,e.streetWidth-1.4)),a=e.angle,nx=node.x+Math.cos(a)*Math.min(8,e.len*.45),ny=node.y+Math.sin(a)*Math.min(8,e.len*.45);
    if(e.len<9)continue;
    c.save();c.translate(nx,ny);c.rotate(a);
-   c.fillStyle='#d9d0bbaa';for(let k=-1;k<=1;k++)c.fillRect(k*1.5,-width/2,.7,width);
+   c.fillStyle='#d9d0bbaa';for(let k=-2;k<=2;k++)c.fillRect(k*1.5,-width/2,.7,width);
    c.restore();
   }
   drawn++;if(drawn>90)break;

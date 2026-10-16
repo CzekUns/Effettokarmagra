@@ -1,3 +1,4 @@
+import {visualRoadWidth} from './road-widths.mjs';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
  * are original artistic interpretations: they do not claim photographic fidelity.
@@ -104,17 +105,17 @@ export function drawCityStreets(c,roads,zoom){
  c.save();c.lineJoin='round';c.lineCap='round';
  const pedestrian=r=>['footway','pedestrian','path','steps'].includes(r.t);
  const coat=(extra,color)=>{for(const road of roads){
-  line(c,road.p);c.lineWidth=Math.max(1,road.w+extra);c.strokeStyle=pedestrian(road)?color.ped:color.car;c.stroke();
+  line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)+extra);c.strokeStyle=pedestrian(road)?color.ped:color.car;c.stroke();
  }};
  coat(5.2,{ped:'#77766e',car:'#79786d'});
  coat(3.8,{ped:'#b1a798',car:'#c9bca7'});
  coat(1.7,{ped:'#b7a997',car:'#34393b'});
  for(const road of roads){
-  line(c,road.p);c.lineWidth=Math.max(1,road.w-.5);c.strokeStyle=asphalt[road.t]||'#626362';c.stroke();
+  line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)-.5);c.strokeStyle=asphalt[road.t]||'#626362';c.stroke();
  }
  if(zoom>=1.3){
   for(const road of roads){
-   if(road.w<8||pedestrian(road)||road.t==='service')continue;
+   if(visualRoadWidth(road)<12||pedestrian(road)||road.t==='service')continue;
    c.setLineDash(road.t==='primary'||road.t==='trunk'?[3.9,5.1]:[2.5,6.0]);
    c.lineWidth=road.t==='trunk'?.5:.31;c.strokeStyle=road.t==='primary'||road.t==='trunk'?'#e2d1a1b6':'#d9d5b889';
    line(c,road.p);c.stroke();

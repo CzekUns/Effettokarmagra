@@ -1,3 +1,4 @@
+import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
  * Simulates moving traffic through intersections with legal one-way exits. */
@@ -23,7 +24,7 @@ export function buildRoadGraph(roads){
    const a=vertex(ax,ay),b=vertex(bx,by);
    if(a===b)continue;
    function add(from,to,angle,carAllowed){
-    const edge={from,to,angle,len,roadId:road.id,name:road.n,streetWidth:road.w,car:carAllowed,walk,roadType:road.t};
+    const edge={from,to,angle,len,roadId:road.id,name:road.n,streetWidth:visualRoadWidth(road),car:carAllowed,walk,roadType:road.t};
     const index=edges.length;edges.push(edge);nodes[from].out.push(index);
     if(carAllowed)trafficStarts.push(index);if(walk)walkStarts.push(index);
    }
@@ -37,7 +38,7 @@ export function buildRoadGraph(roads){
 }
 function position(graph,edgeIndex,t,lane=false){
  const e=graph.edges[edgeIndex],a=graph.nodes[e.from],b=graph.nodes[e.to];
- const offset=lane?clamp(e.streetWidth/6,.35,1.5):0;
+ const offset=lane?roadTrafficLaneOffset(e.streetWidth):0;
  return {x:a.x+(b.x-a.x)*t-Math.sin(e.angle)*offset,y:a.y+(b.y-a.y)*t+Math.cos(e.angle)*offset,a:e.angle};
 }
 export function createAgents(graph,count,seed=10,kind='car'){
