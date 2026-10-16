@@ -62,3 +62,17 @@ Questa lista **non è un certificato di qualità**. Le voci sono aperte fino a c
 **Test e deploy:** GitHub Actions, Node 22.23.3: 53 test superati, 0 falliti sul commit `0148da0`. Deploy GitHub Pages completato; URL verificato: https://czekuns.github.io/Effettokarmagra/games/gta-melito/?v=071.
 
 **Aree successive:** acquisire una baseline prima/dopo ripetibile su Piazza Santo Stefano; poi continuare con Via Roma e il Municipio usando fonti identificabili, mantenendo distinta la stilizzazione generica dalle caratteristiche verificate.
+
+### Sessione 2026-10-17 — Etichette della piazza e riferimenti open source
+
+**Commit / PR:** `4bb88fb` (etichetta chiesa), `59dc011` (spaziatura etichette stradali), `28d5070` e `04415f6` (cache/test), `e87c01e` (handoff GTAopen).
+
+**Fatto nel codice:** l'etichetta della chiesa è stata accorciata e riposizionata con fondo scuro; le etichette stradali evitano l'area della minimappa e vengono diradate vicino a punti notevoli e tra loro. Versione cache aggiornata a `v072`. Nel handoff è stata precisata la funzione di GTAopen: case/interiori/arredi nel mondo GTA 3D già esistente, senza renderer delle facciate cittadine.
+
+**Confronto visuale:** lo screenshot fornito mostrava l'etichetta della chiesa coperta dalla minimappa e nomi di strade/piazza sovrapposti. Dopo la modifica, il gioco `v072` è stato aperto nel browser desktop e ha caricato la mappa a Via Roma. Non è disponibile uno screenshot post-modifica alla stessa posizione mobile di Piazza Santo Stefano; non si dichiara un confronto prima/dopo completo né una verifica mobile.
+
+**Edifici documentati:** nessuna nuova facciata verificata. GTAopen non è una fonte di geometrie o aspetto per Melito; le sagome restano OSM e le caratteristiche visive restano stime salvo override con fonti identificabili.
+
+**Test e deploy:** la validazione GitHub Actions sul commit `04415f6` è risultata positiva (53 test). Il browser ha caricato `v072`; il deploy del successivo aggiornamento documentale è da verificare.
+
+**Aree successive:** tornare su Piazza Santo Stefano con un confronto mobile alla stessa camera; proseguire le verifiche di facciata per ID OSM, senza usare gli interni o i modelli di GTAopen come riferimento architettonico.
