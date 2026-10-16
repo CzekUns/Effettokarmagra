@@ -38,3 +38,13 @@ Le immagini Google Maps e di portali immobiliari **non sono scaricate, copiate o
 Per proseguire su un settore bisogna confrontare **una facciata per volta**, conservare nel profilo i riferimenti verificabili (foto, panoramica, data), aggiornare `photoVerified` **solo dopo osservazione effettiva**, quindi applicare colori, materiali, piani e balconi documentati. La disponibilità di foto non garantisce una corrispondenza, che resta da verificare.
 
 **Ordine dei prossimi interventi**: S003 → S004 → … → S034. Nessuna missione del gioco necessita di modifica per aggiornare gli edifici.
+
+## Nuova partenza operativa: PIAZZA SANTO STEFANO — 17 ottobre 2026
+
+La scansione parte ora dalla piazza (PSS), senza distruggere i 47 profili dei primi due settori precedenti. Il **primo anello di 190 metri comprende 58 edifici**, in ordine per distanza dal centro della piazza OSM (1096,1150), identificati individualmente tramite way OSM.
+
+**Verificato fotograficamente: 1/58** — Chiesa di Santa Maria delle Grazie (way 733703815). Foto e fonti del Comune, Fondo Ambiente Italiano, ICCD/Ministero della Cultura e Piazza Santo Stefano confermano l'identità dell'edificio, il prospetto color crema, la cupola grigio-ardesia e la torre campanaria in mattoni con orologio. La posizione planimetrica del campanile nel disegno è **approssimata**, non rilevata.
+
+**Altri 57/58**: solo forma OSM, orientamento, area e tipologia OSM se presente, e palette provvisoria. Non confondere foto di quartiere con identificazione univoca di un edificio. Il secondo anello di lavoro è tra **190 e 320 m**. Il visualizzatore si apre ora direttamente sulla piazza, con schede, fonti e link Street View per ogni edificio.
+
+Vedi `piazza-santo-stefano.json` e `viewer.mjs`.

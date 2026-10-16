@@ -200,6 +200,19 @@ function specialized(c,b,art){
    c.strokeStyle='#bfa886';c.lineWidth=.7;c.beginPath();c.moveTo(art.x0+1,cy);c.lineTo(art.x1-1,cy);c.stroke();
    return true;
   }
+  // Santa Maria delle Grazie: architectural silhouette from named historic
+  // building photos (municipal site, FAI, ICCD heritage catalogue).
+  // The tower is schematically placed beside the true OSM church footprint;
+  // its exact roof-level survey coordinates are not established.
+  c.save();poly(c,b.p);c.clip();
+  c.fillStyle='#e7ddc1';c.fillRect(art.x0,art.y0,w,bh);
+  c.strokeStyle='#bbaa8a';c.lineWidth=1.1;
+  c.strokeRect(art.x0+1.6,art.y0+1.6,Math.max(0,w-3.2),Math.max(0,bh-3.2));
+  // Baroque front cornice and paired stone ribs.
+  c.strokeStyle='#d4c2a1';c.lineWidth=.9;
+  for(const dx of [-.26,.26]){c.beginPath();c.moveTo(cx+w*dx,art.y0+2);
+   c.lineTo(cx+w*dx,art.y1-2);c.stroke();}
+  c.restore();
   const radius=clamp(Math.min(w,bh)*.24,4,12);
   c.save();c.translate(cx,cy);
   c.fillStyle='#b09f82';c.beginPath();c.arc(1.2,1.6,radius+1.8,0,TAU);c.fill();
@@ -211,6 +224,30 @@ function specialized(c,b,art){
   c.strokeStyle='#463e34';c.lineWidth=.8;c.beginPath();c.moveTo(0,-radius*.38);c.lineTo(0,radius*.38);
   c.moveTo(-radius*.25,-radius*.08);c.lineTo(radius*.25,-radius*.08);c.stroke();
   c.restore();
+  // Octagonal pale lantern above the slate dome.
+  c.save();c.translate(cx,cy);
+  c.fillStyle='#d7d1ba';c.beginPath();
+  for(let j=0;j<8;j++){const a=Math.PI/8+j*Math.PI/4;
+   const x=Math.cos(a)*radius*.38,y=Math.sin(a)*radius*.38;
+   if(j===0)c.moveTo(x,y);else c.lineTo(x,y);}
+  c.closePath();c.fill();c.lineWidth=.45;c.strokeStyle='#65685d';c.stroke();
+  c.fillStyle='#566774';c.fillRect(-1,-1,2,2);
+  c.restore();
+  // Distinctive brick bell tower and white clock, both seen in photos.
+  // Draw slightly offset from the OSM church roof: an illustrative rooftop
+  // landmark, NOT a measured building extension.
+  const bx=art.x1-5,by=art.y1-9;
+  c.fillStyle='#262f31a0';c.fillRect(bx-3.7,by-2.1,11,11);
+  c.fillStyle='#a05f46';c.fillRect(bx-5,by-5,10,10);
+  c.strokeStyle='#e2bb88';c.lineWidth=.7;c.strokeRect(bx-5,by-5,10,10);
+  for(let q=-3;q<5;q+=2){
+   c.strokeStyle='#be9474';c.lineWidth=.3;c.beginPath();
+   c.moveTo(bx-4.8,by+q);c.lineTo(bx+4.8,by+q);c.stroke();
+  }
+  c.fillStyle='#333b38';c.fillRect(bx-2.3,by-4,4.6,2.1);
+  c.fillStyle='#ede6d6';c.beginPath();c.arc(bx,by+1.15,2.25,0,TAU);c.fill();
+  c.strokeStyle='#595b55';c.lineWidth=.38;c.stroke();
+  c.beginPath();c.moveTo(bx,by+1.15);c.lineTo(bx,by-.1);c.lineTo(bx+1.1,by+1.5);c.stroke();
   return true;
  }
  if(art.type==='civic'){

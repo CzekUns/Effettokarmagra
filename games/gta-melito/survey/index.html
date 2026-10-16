@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#182d29">
 <meta name="description" content="GTA Melito: censimento progressivo edificio per edificio dal confine comunale, con impronte reali OpenStreetMap e riferimenti Google Maps per sopralluoghi.">
-<title>Sopralluogo edifici · GTA Melito</title>
+<title>Piazza Santo Stefano · Censimento GTA Melito</title>
 <style>
 :root{color-scheme:dark;background:#0b1717;color:#e9e4cd;font:14px/1.45 ui-monospace,Consolas,monospace}
 *{box-sizing:border-box}body{margin:0}a{color:#ffce8e}
@@ -34,20 +34,20 @@ small,.foot{font-size:11px;color:#bac5b4}
 .footer{max-width:1600px;padding:4px 20px 22px;margin:auto;color:#b4bca9;font-size:11px}
 @media(max-width:800px){main{display:flex;flex-direction:column}#map{height:48dvh;min-height:310px}#list{max-height:260px}}
 </style></head><body>
-<header><div><h1>SOPRALLUOGO · GTA MELITO</h1><p>Dal confine nord-occidentale, edificio per edificio · ID OpenStreetMap conservati</p></div><a href="../index.html">← TORNA AL GIOCO</a></header>
+<header><div><h1>SOPRALLUOGO · GTA MELITO</h1><p>Piazza Santo Stefano: primo anello di 190 metri · 58 edifici OSM</p></div><a href="../index.html">← TORNA AL GIOCO</a></header>
 <main><section class="panel"><div class="toolbar">
  <label for="sector">Settore:</label><select id="sector" aria-label="Settore da analizzare"></select>
  <button id="prev">← PRECEDENTE</button><button id="next">SUCCESSIVO →</button>
  <button id="fit">CENTRA SETTORE</button>
 </div>
 <canvas id="map" width="900" height="650" aria-label="Pianta OSM interattiva degli edifici, tocca per selezionare" tabindex="0"></canvas>
-<div class="legend"><span class="tag" style="--tag:#dfbb79">Scheda OSM preliminare</span><span class="tag" style="--tag:#56716a">Da catalogare</span><span class="tag" style="--tag:#e3f0bc">Edificio selezionato</span></div>
-<p class="foot">Rotellina per zoom; trascina la mappa; tocca un fabbricato per identificarlo. Le sagome sono OSM. Nessuna foto di Google è stata copiata.</p></section>
+<div class="legend"><span class="tag" style="--tag:#e59c61">Identificato da fonti fotografiche</span><span class="tag" style="--tag:#dfbb79">Scheda OSM preliminare</span><span class="tag" style="--tag:#56716a">Da catalogare</span><span class="tag" style="--tag:#e3f0bc">Edificio selezionato</span></div>
+<p class="foot">Rotellina per zoom; trascina la mappa; tocca un fabbricato per identificarlo. Le sagome sono OSM. La chiesa è associata a foto pubbliche; nessuna foto di Google è stata copiata.</p></section>
 <div class="side">
 <section class="panel totals" id="totals" aria-live="polite"><div>Sto caricando il catasto visuale OSM…</div></section>
 <section class="panel" id="detail" aria-live="polite"><h2>Seleziona un edificio</h2></section>
 <section class="panel"><h2>Edifici nel settore</h2><div id="list"></div></section>
 </div></main>
 <div class="footer">Dati cartografici © OpenStreetMap contributors (ODbL). Google Maps/Street View sono link esterni per verifica manuale, non fotografie automaticamente controllate. La copertura delle panoramiche dipende da Google.</div>
-<script type="module" src="./viewer.mjs"></script>
+<script type="module" src="./viewer.mjs?v=pss1"></script>
 </body></html>

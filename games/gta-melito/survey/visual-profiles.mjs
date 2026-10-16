@@ -3,7 +3,12 @@
 export function applySurveyDrafts(buildings, sectors){
  const overrides=new Map();
  for(const batch of sectors||[])for(const item of batch.profiles||[]){
-  if(!Number.isInteger(item.id)||overrides.has(item.id))throw Error('ID profilo sopralluogo non valido: '+item.id);
+  if(!Number.isInteger(item.id))throw Error('ID profilo sopralluogo non valido: '+item.id);
+  // Later focus-area surveys can refine the same OSM building that appeared
+  // in an earlier sector pass; never discard a verified photo in favour
+  // of an unverified style guess.
+  const existing=overrides.get(item.id);
+  if(existing?.photoVerified&&!item.photoVerified)continue;
   if(item.status!=='osm-draft'&&item.status!=='photo-verified')throw Error('Stato sopralluogo non valido');
   overrides.set(item.id,item);
  }
@@ -17,6 +22,7 @@ export function applySurveyDrafts(buildings, sectors){
   b.art.roofTint=draft.roof;
   b.art.roofDirection=draft.longAxisDeg;
   b.art.surveyDesign=draft.detail;
+  if(draft.photoVerified&&draft.observations)b.art.surveyObservation={...draft.observations};
   if(draft.osmType==='industrial'&&b.t==='industrial')b.art.type='industrial';
   if(draft.roofShape)b.art.roof=true;
   applied++;if(draft.photoVerified)verified++;

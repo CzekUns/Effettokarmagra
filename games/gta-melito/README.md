@@ -110,3 +110,11 @@ La larghezza arcade è una **correzione di proporzioni visive**, non una misura 
 L'utente non percepiva l'aumento introdotto con 0.4.2. La 0.4.3 aumenta ulteriormente le dimensioni arcade delle carreggiate principali (residenziale 7 → **15,4 unità grafiche**) e rende più evidente il margine di asfalto. Soprattutto aggiunge una barra **CONFRONTA CON PRIMA** che alterna senza ricaricare la pagina tra il vecchio rendering 7 e il nuovo 15,4, ricalcolando anche grafo viario, AI, collocazione pedoni e oggetti stradali. Non sono misure reali delle strade.
 
 Per prevenire moduli obsoleti nel browser, l'HTML carica `game.mjs?v=043` e i moduli modificati importano `road-widths.mjs?v=043` come singola istanza condivisa. Chi ha la pagina vecchia in cache deve aprire il link versione `?v=043` o fare ricarica forzata.
+
+## 0.4.4 — Piazza Santo Stefano: primo anello di scan
+
+- Nuova priorità: prima Piazza Santo Stefano, anello circolare di raggio **190 m**. **58 edifici** con profili specifici e forme OSM in `survey/piazza-santo-stefano.json`.
+- Uno solo dei 58 è identificato fotograficamente: **Chiesa di Santa Maria delle Grazie**, way OSM 733703815. Foto pubbliche e schede Comune/FAI/ICCD descrivono facciata barocca chiara, cupola e campanile in mattoni con orologio. La loro rappresentazione in pianta resta illustrativa e non è un rilievo 3D.
+- Altri 57: colori e materiali **provvisori**, non derivati da foto certe dei singoli edifici.
+- L'archivio ora si apre direttamente su Piazza Santo Stefano, con filtri per ritornare ai settori precedenti. Il censimento completo delle 2.056 sagome continua a esistere.
+- I profili OSM nuovi si caricano in ordine dopo quelli precedenti; motore missioni e tracciati viari non sono stati modificati.
