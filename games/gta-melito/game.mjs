@@ -1,6 +1,6 @@
 import {fetchOverpass,inside} from './osm.mjs';
 import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs';
-import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps} from './visuals.mjs';
+import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const radar=$('radar'),r=radar.getContext('2d');
@@ -252,11 +252,7 @@ function draw(){
    c.fillText(road.n.toUpperCase().slice(0,25),0,-road.w/2-2);c.restore();
   }
  }
- for(const poi of state.map.pois||[]){
-  if(poi.p[0]<x0||poi.p[0]>x1||poi.p[1]<y0||poi.p[1]>y1||state.zoom<2.4)continue;
-  c.fillStyle='#f4c981';c.fillRect(poi.p[0]-1,poi.p[1]-1,2,2);
-  c.fillStyle='#efddb9';c.font='3px monospace';c.fillText(poi.n.slice(0,26),poi.p[0]+3,poi.p[1]);
- }
+ drawPoiSigns(c,state.map.pois||[],[x0,y0,x1,y1],state.zoom);
  for(const human of state.people){
   if(human.x<x0||human.x>x1||human.y<y0||human.y>y1)continue;
   const edge=state.graph.edges[human.edge],margin=(edge?.streetWidth||7)/2+1.4,side=human.kind%2?1:-1;

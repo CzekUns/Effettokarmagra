@@ -185,3 +185,25 @@ export function drawStreetProps(c,props,zoom){
   }
  }
 }
+
+/* Signboards use real OSM POI names, but their illustrated storefront styling is fictional. */
+export function drawPoiSigns(c,pois,bounds,zoom){
+ if(zoom<1.7)return;
+ const [x0,y0,x1,y1]=bounds;
+ for(const poi of pois){
+  const [x,y]=poi.p;
+  if(x<x0||x>x1||y<y0||y>y1||!poi.n)continue;
+  const isShop=!!poi.k&&/shop|supermarket|bakery|clothes|hairdresser|convenience|butcher|greengrocer/i.test(poi.k);
+  const caption=String(poi.n).toUpperCase().slice(0,24);
+  const w=Math.max(12,Math.min(60,caption.length*2.55+6));
+  c.save();c.translate(x,y);
+  c.fillStyle='#1e2f2e';c.fillRect(-1.25,-1.25,2.5,2.5);
+  c.fillStyle=isShop?'#e5bb79':'#a5d0b6';c.fillRect(-.8,-.8,1.6,1.6);
+  c.fillStyle='#1c2826c9';c.fillRect(2-w/2,-8.4,w,6.4);
+  c.fillStyle=isShop?'#9d483b':'#46665e';c.fillRect(2-w/2,-8.4,w,1.15);
+  c.strokeStyle='#cfc7a18c';c.lineWidth=.35;c.strokeRect(2-w/2,-8.4,w,6.4);
+  c.font='bold 3.1px monospace';c.textAlign='center';c.fillStyle='#fff3d3';
+  c.fillText(caption,2,-3.65,w-3);
+  c.restore();
+ }
+}
