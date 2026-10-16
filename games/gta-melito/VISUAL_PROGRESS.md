@@ -76,3 +76,17 @@ Questa lista **non è un certificato di qualità**. Le voci sono aperte fino a c
 **Test e deploy:** la validazione GitHub Actions sul commit `04415f6` è risultata positiva (53 test). Il browser ha caricato `v072`; il deploy del successivo aggiornamento documentale è da verificare.
 
 **Aree successive:** tornare su Piazza Santo Stefano con un confronto mobile alla stessa camera; proseguire le verifiche di facciata per ID OSM, senza usare gli interni o i modelli di GTAopen come riferimento architettonico.
+
+### Sessione 2026-10-17 — Revisione complessiva del comparto grafico
+
+**Commit / PR:** `aeacf32` (renderer e interfaccia), `4ff1a9d` (asserzione di cache test).
+
+**Fatto nel codice:** in `city-art.mjs` differenziata la palette dell'asfalto per gerarchia stradale, tolte le linee centrali dalle strade residenziali e mantenute sulle arterie principali, aggiunta una trama a lastre sul suolo urbano e rafforzata la profondità di cornici e davanzali. Corretto anche il controllo delle persiane: usava la larghezza della finestra al posto della lunghezza della facciata e quindi non poteva attivarsi. In `index.html` resa coerente l'interfaccia con la scena, con gerarchia più netta per HUD, controlli, mappa radar e pannelli; il canvas usa un ridimensionamento pixelato. Cache aggiornata a `v073`.
+
+**Confronto visuale:** confronto browser desktop a Via Roma, camera a piedi 5×, tra `v072` e `v073`: la nuova versione ha contorni più nitidi, meno tratteggi sulle vie minori e un suolo più leggibile. La pagina carica i dati attesi (614 strade, 2.056 edifici OSM, 467 placeholder, 73 incroci). È stata fornita anche una schermata mobile precedente, ma non è disponibile una cattura post-modifica su dispositivo mobile; la verifica responsive resta da completare su telefono.
+
+**Edifici documentati:** nessuna nuova verifica fotografica. Finestre, persiane, colori e texture rimangono stilizzazioni procedurali; le impronte OSM non sono state alterate.
+
+**Test e deploy:** GitHub Actions sul commit `4ff1a9d`: 53 test superati, 0 falliti; controllo moduli browser passato. GitHub Pages deploy completato sul commit `4ff1a9d`.
+
+**Aree successive:** verificare la stessa scena su smartphone reale, poi rifinire i contrasti di facciata e gli ingombri dei marker in Piazza Santo Stefano.
