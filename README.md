@@ -140,13 +140,13 @@ Otto missioni originali attraversano la città 8×8 e coinvolgono abitanti, alle
 Pagine statiche e JavaScript nativo, senza backend né librerie esterne obbligatorie. I record locali sono salvati nel browser. Il catalogo è gestito come un semplice file JavaScript per funzionare anche su GitHub Pages senza server.
 
 
-## GTA Melito — Open world top-down (prototipo 0.2, ottobre 2026)
+## GTA Melito — Open world top-down (prototipo 0.3, ottobre 2026)
 
 Quinto gioco di Arcade Club: esplorazione di Melito di Napoli a piedi e in auto, con geometria urbana reale ricavata da OpenStreetMap (ODbL). Il confine del comune è quello ISTAT 2026 (CC BY), conservato in `games/gta-melito/data/boundary.json`.
 
 - **Gioca:** https://czekuns.github.io/Effettokarmagra/games/gta-melito/
 - **Controlli:** WASD/frecce; E entra/esci dall'auto; Shift corri; spazio freno a mano; pulsanti touch, zoom e minimappa.
 - **Cartografia:** lo snapshot `games/gta-melito/data/melito-map.json` è generato da `node scripts/build-melito-map.mjs` e da GitHub Actions. Se ancora assente, il gioco tenta il download diretto dai server Overpass e la cache locale. In assenza di dati reali non mostra una città inventata.
-- **Stato:** mappa topografica, forme dei palazzi, guida, incroci collegati da un grafo OSM, traffico che svolta, sagome dei palazzi con tetti/ombre, marciapiedi e arredo urbano rétro; semafori, missioni e punti iconici da rifinire. I motori esaminati come riferimento includono Anywhere City Web (MIT) e Punjab Stories (MIT); la prima versione usa Canvas per garantire leggerezza su GitHub Pages.
+- **Stato:** mappa topografica, forme dei palazzi, guida, incroci collegati da un grafo OSM, traffico che svolta, sagome dei palazzi con tetti/ombre, marciapiedi e arredo urbano rétro; semafori, missioni narrative avanzate e architetture iconiche da rifinire. Il prototipo 0.3 aggiunge quattro missioni tra luoghi OSM reali, personaggi fittizi, salvataggi locali e mappa missioni. I motori esaminati come riferimento includono Anywhere City Web (MIT) e Punjab Stories (MIT); la prima versione usa Canvas per garantire leggerezza su GitHub Pages.
 
 Guida completa e licenze: [games/gta-melito/README.md](games/gta-melito/README.md).

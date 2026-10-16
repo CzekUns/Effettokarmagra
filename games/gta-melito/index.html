@@ -50,14 +50,74 @@ button{cursor:pointer}a{color:#eec97d}button:focus-visible,a:focus-visible{outli
 .controls{gap:4px;padding:8px 3px 0}.buttons{gap:5px}.buttons button{min-height:40px}
 .control-action{padding:9px 10px}.mini{padding:9px 8px}#brake,#sprint{padding:9px 7px;min-width:57px;font-size:10px}.instructions{font-size:10px;margin:8px 4px}
 }
+
+[hidden]{display:none!important}
+.missions{position:absolute;left:10px;bottom:10px;width:min(335px,calc(100% - 20px));background:#101d1bde;color:#fff1d3;
+ border:2px solid #c2ab72;box-shadow:5px 5px #09140fa6;padding:12px 13px;z-index:2;pointer-events:auto;backdrop-filter:blur(4px)}
+.m-head{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#ead091;font-size:11px;font-weight:bold}
+.m-label{color:#a6b99f;font-size:9px;letter-spacing:.14em}
+.missions h2{margin:6px 0 3px;font-size:15px;line-height:1.1;color:#f5cb79}
+.missions p{margin:6px 0;color:#c7d4bc;font-size:10px;line-height:1.45}
+.m-destination{font-size:11px;font-weight:900;color:#fff5cc;margin:7px 0 4px;line-height:1.45}
+.m-status{display:flex;gap:12px;justify-content:space-between;align-items:center;font-size:10px;color:#f8d787}
+.m-hint{min-height:0;color:#ffa78a;font-size:10px;font-weight:bold}
+.m-actions{display:flex;gap:5px;margin-top:9px;align-items:center}
+.m-actions button{border:1px solid #c7b687;min-height:35px;background:#e0bc75;color:#182b22;font-size:10px;font-weight:900;flex:1;padding:4px}
+.m-actions button:last-child{flex:0 0 30%;background:#243a31;color:#ecd8b0;border-color:#678674;font-size:9px}
+.m-actions button:disabled{opacity:.65;cursor:default}
+.waypoint{position:absolute;top:70px;left:50%;transform:translateX(-50%);background:#1b302bdb;
+ border:1px solid #e7c585;color:#ffe4a7;font-size:11px;font-weight:1000;padding:6px 10px;max-width:55%;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;z-index:1;pointer-events:none}
+.dialog{position:absolute;z-index:5;left:50%;top:50%;transform:translate(-50%,-50%);
+ width:min(430px,calc(100% - 20px));background:#122821f5;border:4px double #f4d797;box-shadow:0 8px 45px #000c;
+ padding:15px 18px;color:#f6e9cb}
+.dialog .name{font-size:11px;color:#f4a972;font-weight:bold;letter-spacing:.1em}
+.dialog h2{font-size:20px;color:#ffde9b;margin:8px 0 12px}
+.dialog p{white-space:pre-line;font-size:13px;line-height:1.6;min-height:45px;color:#f6f2e5}
+.dialog button{display:block;margin:16px 0 0 auto;background:#f2d28a;color:#152a21;padding:9px 23px;border:2px solid #ffe7b2;font-weight:900}
+.fullmap{position:absolute;inset:0;z-index:7;background:#0e1d19ed;padding:14px;
+ display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px}
+.fullmap h2{color:#f5d68e;font-size:16px;letter-spacing:.1em;margin:0}
+.fullmap p{font-size:10px;color:#c4d0bc;margin:0;text-align:center}
+.fullmap canvas{max-width:100%;max-height:calc(100% - 92px);width:auto;height:auto;border:2px solid #738b70;background:#15251e}
+.fullmap button{padding:7px 18px;background:#edcf85;color:#14251c;border:1px solid #fff0ba;font-weight:bold}
+@media(max-width:680px){
+ .missions{left:6px;bottom:5px;padding:8px 10px;width:min(295px,calc(100% - 12px))}
+ .missions h2{font-size:12px;margin:4px 0 2px}
+ .missions p{font-size:9px;margin:3px 0}
+ .m-head,.m-destination,.m-status{font-size:9px}
+ .m-destination{margin:4px 0}
+ .m-actions{margin-top:5px}
+ .m-actions button{min-height:30px}
+ .waypoint{top:45px;font-size:9px;max-width:76%;padding:5px 7px}
+ .dialog h2{font-size:16px}.dialog p{font-size:12px}
+}
 </style>
 </head><body><main class="app">
-<header class="header"><div><h1>GTA: MELITO <span aria-hidden="true">★</span></h1><small>UNS ARCADE / MELITO DI NAPOLI / VERSIONE 0.2</small></div><a class="back" href="../../index.html">← SALA GIOCHI</a></header>
+<header class="header"><div><h1>GTA: MELITO <span aria-hidden="true">★</span></h1><small>UNS ARCADE / MELITO DI NAPOLI / VERSIONE 0.3</small></div><a class="back" href="../../index.html">← SALA GIOCHI</a></header>
 <div class="hud"><span id="place">CARICAMENTO MAPPA…</span><span>MEZZO: <b id="vehicle">A PIEDI</b></span><span>STRADE: <b id="road-count">—</b></span><span>PALAZZI: <b id="building-count">—</b></span><span>INCROCI: <b id="junction-count">—</b></span></div>
 <div class="stage">
  <canvas id="world" aria-label="Mappa giocabile di Melito, muoviti con frecce o WASD" tabindex="0"></canvas>
  <canvas id="radar" width="168" height="142" aria-label="Minimappa di Melito"></canvas>
  <div class="coins">MELITO · LIBERA ESPLORAZIONE <span id="street">RETE STRADALE REALE</span></div>
+ <div class="waypoint" id="waypoint" hidden aria-live="off"></div>
+ <aside class="missions" id="mission-panel" aria-label="Missioni di GTA Melito">
+  <div class="m-head"><span class="m-label">STORIA · <span id="mission-progress">1/4</span></span><span>💶 <span id="mission-money">€ 0</span> · ★ <span id="mission-respect">0</span></span></div>
+  <h2 id="mission-name">LA PRIMA MISSIONE</h2><p id="mission-desc">Nuove missioni per le strade di Melito</p>
+  <div class="m-destination" id="mission-destination">CARICO GLI OBIETTIVI…</div>
+  <div class="m-status"><span id="mission-time">NESSUN LIMITE</span><span id="mission-distance">—</span></div>
+  <div id="mission-hint" class="m-hint" aria-live="polite"></div>
+  <div class="m-actions"><button id="mission-interact" aria-label="Interagisci con l'obiettivo">F · INTERAGISCI</button><button id="mission-reset">RICOMINCIA ↻</button></div>
+ </aside>
+ <section class="dialog" id="dialog" hidden role="dialog" aria-labelledby="dialog-head" aria-live="polite">
+  <div class="name" id="dialog-speaker">NICO</div><h2 id="dialog-head">NUOVO MESSAGGIO</h2><p id="dialog-text"></p>
+  <button id="dialog-close" aria-label="Chiudi messaggio">CONTINUA →</button>
+ </section>
+ <section class="fullmap" id="fullmap" hidden role="dialog" aria-label="Mappa di Melito">
+  <h2>MAPPA REALE · MELITO</h2><p>Strade: OpenStreetMap · ◉ obiettivo · ● posizione attuale</p>
+  <canvas id="bigmap" width="640" height="580" aria-label="Mappa completa della città con obiettivi"></canvas>
+  <button id="map-close">CHIUDI MAPPA · M</button>
+ </section>
  <section class="loading" id="loading"><h2 id="loading-title">CARICO MELITO…</h2><p id="loading-text">Preparo strade ed edifici reali da OpenStreetMap.</p><button id="retry" hidden>RIPROVA ↻</button></section>
 </div>
 <div class="controls">
@@ -65,8 +125,8 @@ button{cursor:pointer}a{color:#eec97d}button:focus-visible,a:focus-visible{outli
   <button data-dir="up" aria-label="Avanti">▲</button><button data-dir="left" aria-label="Sinistra">◀</button>
   <button data-dir="down" aria-label="Indietro">▼</button><button data-dir="right" aria-label="Destra">▶</button>
  </div>
- <div class="buttons"><button class="control-action" id="action">E · ENTRA IN AUTO</button><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="sprint" aria-label="Tieni premuto per correre">CORRI</button><button class="mini" id="zoom-in" aria-label="Zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div>
+ <div class="buttons"><button class="control-action" id="action">E · ENTRA IN AUTO</button><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="sprint" aria-label="Tieni premuto per correre">CORRI</button><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-in" aria-label="Zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div>
 </div>
-<p class="instructions">PC: WASD/frecce per muoverti e guidare · E entra/esci · SHIFT corri · SPAZIO freno a mano. Telefono: frecce, ENTRA/SCENDI, FRENO e CORRI. Traffico che svolta sulle vere strade, marciapiedi, attraversamenti, tetti tridimensionali e dettagli urbani immaginari in stile pixel art. Strade, incroci e sagome dei palazzi si basano su OpenStreetMap.</p>
+<p class="instructions">PC: WASD/frecce per muoverti e guidare · E entra/esci · SHIFT corri · SPAZIO freno a mano. Telefono: frecce, ENTRA/SCENDI, FRENO, CORRI e MAPPA. Missioni: F per parlare/interagire, M per aprire la mappa. Traffico che svolta sulle vere strade, marciapiedi, attraversamenti, tetti tridimensionali e dettagli urbani immaginari in stile pixel art. Strade, incroci e sagome dei palazzi si basano su OpenStreetMap.</p>
 <footer class="credits"><span>© OpenStreetMap contributors — ODbL · Confini: ISTAT 2026 — CC BY · MIT: ispirazione motore <a href="https://github.com/harmanhanjra/punjab-stories" target="_blank" rel="noreferrer">Punjab Stories</a></span><span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Crediti cartografia</a> · <a href="./README.md">Informazioni sul progetto</a></span></footer>
 </main><script type="module" src="./game.mjs"></script></body></html>

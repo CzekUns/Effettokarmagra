@@ -1,11 +1,13 @@
 import {fetchOverpass,inside} from './osm.mjs';
 import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs';
+import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
+import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false};
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:2.2,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,props:[],propsGrid:null,camera:{x:0,y:0},distance:0};
+const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:2.2,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,props:[],propsGrid:null,camera:{x:0,y:0},distance:0,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const colors=['#8f8271','#a29076','#797970','#ae947b','#938c7b','#7b8581','#a58c85'];
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
@@ -89,6 +91,7 @@ function prepareMap(map){
  state.camera.x=point.x;state.camera.y=point.y;state.distance=0;
  state.graph=buildRoadGraph(state.roads);
  state.props=buildStreetProps(state.roads);state.propsGrid=makeIndex(state.props);
+ initCampaign(map);
  const nearCar={x:point.x+Math.cos(point.a)*9,y:point.y+Math.sin(point.a)*9,a:point.a,speed:0,type:0};
  state.cars=[nearCar];
  let k=0;
@@ -103,8 +106,90 @@ function prepareMap(map){
  state.people=createAgents(state.graph,190,310,'walk');
  $('road-count').textContent=String(state.roads.length);$('building-count').textContent=String(state.buildings.length);$('junction-count').textContent=String(state.graph.junctions);
  $('place').textContent='MELITO DI NAPOLI · MAPPA REALE';
- state.ready=true;hideLoading();state.last=0;canvas.focus({preventScroll:true});prepareMini();
+ state.ready=true;hideLoading();state.last=0;canvas.focus({preventScroll:true});prepareMini();refreshCampaign();
 }
+
+/* Campaign v0.3 — map positions always resolved from the downloaded OSM snapshot. */
+function initCampaign(map){
+ try{
+  state.landmarks=resolveLandmarks(map,{x:state.spawn[0],y:state.spawn[1]});
+  state.progress=readProgress(localStorage);
+ }catch(error){
+  console.error('Campaign not available:',error);
+  state.progress=null;state.landmarks=new Map();
+  $('mission-name').textContent='MISSIONI NON DISPONIBILI';
+  $('mission-desc').textContent='Un punto d’interesse OSM manca dalla mappa. La città resta esplorabile.';
+ }
+}
+function formattedTime(sec){const t=Math.max(0,Math.ceil(sec));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');}
+function refreshCampaign(){
+ const p=state.progress;if(!p)return;
+ const active=currentStep(p);
+ const target=activeTarget(p,state.landmarks);
+ $('mission-money').textContent='€ '+p.money;
+ $('mission-respect').textContent=p.respect;
+ $('mission-progress').textContent=p.completed?'4/4':(p.mission+1)+'/4';
+ $('mission-reset').textContent=p.completed?'NUOVA PARTITA ↻':'RICOMINCIA MISSIONE ↻';
+ if(p.completed){
+  $('mission-name').textContent='MELITO È TUA ★';
+  $('mission-desc').textContent='Hai completato tutte le missioni. Continua a esplorare o ricomincia.';
+  $('mission-destination').textContent='STORIA COMPLETATA';
+  $('mission-distance').textContent='—';
+  $('mission-time').textContent='LIBERA ESPLORAZIONE';
+  $('mission-interact').textContent='MISSIONI COMPLETE ✓';
+  $('mission-interact').disabled=true;
+  $('waypoint').hidden=true;return;
+ }
+ $('mission-interact').disabled=false;
+ $('mission-name').textContent=active.mission.title;
+ $('mission-desc').textContent=active.mission.intro;
+ $('mission-destination').textContent=(p.stage+1)+'/'+active.mission.steps.length+' · '+active.step.verb+' · '+target.name;
+ const check=isNear(p,state.landmarks,state.player.x,state.player.y,state.player.car>=0);
+ $('mission-distance').textContent=Math.ceil(check.distance)+' m';
+ $('mission-time').textContent=active.mission.time?'TEMPO: '+formattedTime(p.remaining===null?active.mission.time:p.remaining):'NESSUN LIMITE';
+ $('mission-interact').textContent=check.near?'F · '+active.step.verb+' ✓':
+  check.reason==='exit-car'?'SCENDI DALL’AUTO PER '+active.step.verb:'F · '+active.step.verb;
+ if(state.ready){
+  const angle=Math.atan2(target.y-state.player.y,target.x-state.player.x);
+  const dirs=['→','↘','↓','↙','←','↖','↑','↗'];
+  const direction=dirs[(Math.round(angle/(Math.PI/4))+8)%8];
+  $('waypoint').textContent=direction+' '+target.name.toUpperCase()+' · '+Math.ceil(check.distance)+' M';
+  $('waypoint').hidden=check.distance<16;
+ }
+}
+function message(text,title='NUOVO MESSAGGIO',speaker='NICO'){
+ const panel=$('dialog');$('dialog-head').textContent=title;
+ $('dialog-speaker').textContent=speaker;$('dialog-text').textContent=text;
+ panel.hidden=false;
+}
+function interactMission(){
+ if(!state.ready||!state.progress)return;
+ const p=state.progress;
+ const result=doInteraction(p,state.landmarks,state.player.x,state.player.y,state.player.car>=0);
+ if(result.type==='blocked'){
+  $('mission-hint').textContent=result.message;
+  return;
+ }
+ if(result.type==='finished'){message(result.message,'MELITO È TUA');return;}
+ $('mission-hint').textContent='';
+ saveProgress(localStorage,p);
+ const title=result.type==='ending'?'LA CITTÀ È TUA ★':result.type==='mission-complete'?'MISSIONE SUPERATA!':result.speaker||'MESSAGGIO';
+ const body=result.type==='mission-complete'||result.type==='ending'?
+  result.text+'\n\n'+result.message+'\nRICOMPENSA: €'+result.reward:result.text;
+ message(body,title,result.speaker||'RADIO');
+ refreshCampaign();
+}
+function toggleBigMap(){
+ if(!state.ready||!state.map)return;
+ state.mapOpen=!state.mapOpen;
+ $('fullmap').hidden=!state.mapOpen;
+ if(!state.mapOpen)return;
+ const cv=$('bigmap'),width=640,height=580;
+ cv.width=width;cv.height=height;
+ drawBigMap(cv.getContext('2d'),width,height,state.map,state.landmarks,state.player,
+   state.progress?activeTarget(state.progress,state.landmarks):null);
+}
+
 function updateTraffic(dt){
  stepAgents(state.graph,state.traffic,dt,state.player);
  stepAgents(state.graph,state.people,dt);
@@ -150,6 +235,10 @@ function toRing(border){
 }
 function tick(dt){
  if(!state.ready)return;
+ if(state.mapOpen||!$('dialog').hidden){
+  for(const key of Object.keys(pressed))pressed[key]=false;
+  return;
+ }
  const p=state.player;
  if(p.car>=0){
   const car=state.cars[p.car],prior=car.speed||0;
@@ -178,12 +267,18 @@ function tick(dt){
   }
  }
  updateTraffic(dt);
+ if(state.progress){
+  const result=updateTimer(state.progress,dt);
+  if(result){message(result.message,'TEMPO SCADUTO');saveProgress(localStorage,state.progress);refreshCampaign();}
+  state.lastSave+=dt;
+  if(state.lastSave>4){state.lastSave=0;saveProgress(localStorage,state.progress);}
+ }
  const targetX=p.x+(p.car>=0?Math.cos(p.a)*8:0);
  const targetY=p.y+(p.car>=0?Math.sin(p.a)*8:0);
  const follow=1-Math.exp(-6*dt);
  state.camera.x+=(targetX-state.camera.x)*follow;
  state.camera.y+=(targetY-state.camera.y)*follow;
- state.clock+=dt;state.hud+=dt;if(state.hud>.18){state.hud=0;updateHud();}
+ state.clock+=dt;state.hud+=dt;if(state.hud>.18){state.hud=0;updateHud();refreshCampaign();}
 }
 function updateHud(){
  const p=state.player;
@@ -253,6 +348,7 @@ function draw(){
   }
  }
  drawPoiSigns(c,state.map.pois||[],[x0,y0,x1,y1],state.zoom);
+ if(state.progress)drawWorldLandmarks(c,state.landmarks,activeTarget(state.progress,state.landmarks),[x0,y0,x1,y1],state.clock,state.zoom,currentStep(state.progress)?.step.speaker);
  for(const human of state.people){
   if(human.x<x0||human.x>x1||human.y<y0||human.y>y1)continue;
   const edge=state.graph.edges[human.edge],margin=(edge?.streetWidth||7)/2+1.4,side=human.kind%2?1:-1;
@@ -283,6 +379,7 @@ function prepareMini(){
 function drawMini(){
  if(!state.mapCanvas)return;
  r.clearRect(0,0,168,142);r.drawImage(state.mapCanvas,0,0);
+ if(state.progress)drawMinimapLandmarks(r,state.landmarks,activeTarget(state.progress,state.landmarks),state.mini);
  const {k,ox,oy}=state.mini,p=state.player,x=ox+p.x*k,y=oy+p.y*k;
  r.fillStyle='#ffce66';r.beginPath();r.arc(x,y,4,0,Math.PI*2);r.fill();
  r.lineWidth=1.4;r.strokeStyle='#1e2920';r.stroke();
@@ -322,6 +419,9 @@ function bind(){
   if(e.key==='Shift')pressed.run=true;
   if(e.code==='Space'){e.preventDefault();pressed.handbrake=true;}
   if(e.key.toLowerCase()==='e'&&!e.repeat){e.preventDefault();toggleVehicle();}
+  if(e.key.toLowerCase()==='f'&&!e.repeat){e.preventDefault();interactMission();}
+  if(e.key.toLowerCase()==='m'&&!e.repeat){e.preventDefault();toggleBigMap();}
+  if(e.key==='Escape'){$('fullmap').hidden=true;state.mapOpen=false;$('dialog').hidden=true;}
  });
  window.addEventListener('keyup',e=>{
   const dir={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];
@@ -335,6 +435,21 @@ function bind(){
   for(const name of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(name,()=>{pressed[key]=false;btn.classList.remove('pressed');});
  });
  $('action').addEventListener('click',toggleVehicle);
+ $('mission-interact').addEventListener('click',interactMission);
+ $('map-toggle').addEventListener('click',toggleBigMap);
+ $('map-close').addEventListener('click',toggleBigMap);
+ $('dialog-close').addEventListener('click',()=>$('dialog').hidden=true);
+ $('mission-reset').addEventListener('click',()=>{
+  if(!state.progress)return;
+  if(resetCurrentMission(state.progress)){
+   saveProgress(localStorage,state.progress);
+   message('Missione riavviata. Puoi ripartire dal primo obiettivo.','MISSIONE RIAVVIATA');
+   refreshCampaign();
+  }else{
+   state.progress=freshProgress();saveProgress(localStorage,state.progress);
+   message('Nuova partita iniziata!','NUOVA PARTITA');refreshCampaign();
+  }
+ });
  for(const [id,key] of [['brake','handbrake'],['sprint','run']]){
   const btn=$(id);if(!btn)continue;
   btn.addEventListener('pointerdown',e=>{e.preventDefault();pressed[key]=true;btn.classList.add('pressed');try{btn.setPointerCapture(e.pointerId);}catch(_){}});

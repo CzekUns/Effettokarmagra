@@ -2,6 +2,17 @@
 
 Piccolo gioco arcade originale ispirato alla visuale dall'alto dei GTA degli anni Novanta, ambientato in **Melito di Napoli**. Accesso diretto dal browser, PC e telefono, sulla stessa GitHub Pages degli altri giochi. **Non contiene codice o asset di Rockstar Games.**
 
+## Campagna 0.3: quattro missioni locali
+- **Il primo contatto:** incontri il personaggio immaginario Nico tra Via Roma e Piazza Santo Stefano.
+- **Il giro del centro:** attraversi Piazza Santo Stefano, Municipio e Piazza Immacolata, con un tempo limite.
+- **La staffetta:** percorso da Piazza Immacolata fino ai due uffici postali passando per Corso Europa.
+- **La firma della città:** circuito finale attraverso Largo Cinque Via, Piazza Santo Stefano e Via Roma.
+- Obiettivi agganciati ai nomi/posizioni OSM con approssimazione al punto stradale percorribile. Le missioni, le buste, Nico e i contatti **sono finzione** e non coinvolgono realmente Comune, Poste o negozi.
+- Interazione esplicita (F o pulsante), dialoghi, tempi, ricompense e salvataggio locale nel browser sotto `gta-melito-campaign-v3`.
+- Otto luoghi localizzati, indicatore obiettivo sul mondo, minimappa e mappa della città completa con segnalini.
+- Ricompense complessive completando tutte le missioni: **€795 virtuali e 40 punti rispetto**. I timer si fermano mentre dialoghi e mappa sono aperti.
+- Tastiera: **F** interagisci, **M** mappa; mobile: pulsante missione e pulsante MAPPA.
+
 ## Stato e obiettivi realistici
 
 - Confine amministrativo reale di Melito di Napoli: ISTAT, 1 gennaio 2026 (CC BY).
@@ -45,7 +56,7 @@ Lo script ricava la cartografia OpenStreetMap da una bounding box del confine IS
 - **Spazio:** freno a mano.
 - **Telefono:** pulsanti direzionali, ENTRA/SCENDI, FRENO e CORRI.
 - **+ / −:** zoom.
-- **⌂:** torna al punto di partenza.\n\nPer verificare topologia, passaggio fra segmenti e reali geometrie:\n\n```bash\nnode --test games/gta-melito/gta-melito.test.mjs\n```\n\nC'è anche un workflow `GTA Melito 0.2 validation` che esegue i test ad ogni modifica al gioco.
+- **⌂:** torna al punto di partenza.\n\nPer verificare topologia, passaggio fra segmenti e reali geometrie:\n\n```bash\nnode --test games/gta-melito/*.test.mjs\n```\n\nC'è anche un workflow `GTA Melito campaign validation` che esegue i test ad ogni modifica al gioco.
 
 ## Sviluppo successivo
 
@@ -55,4 +66,4 @@ Lo script ricava la cartografia OpenStreetMap da una bounding box del confine IS
 4. Missioni locali, NPC, polizia e salvataggio.
 5. Ottimizzazione smartphone e verifica con test reali su dispositivi.
 
-Questa è la versione 0.2 del prototipo di esplorazione urbana. I dati geografici sono reali; alcuni allestimenti grafici e gli NPC sono inventati. Non è un GTA 2 completo né una ricostruzione fotografica degli immobili.
+Questa è la versione 0.3 del prototipo di esplorazione urbana con campagna narrativa di prova. I dati geografici sono reali; alcuni allestimenti grafici e gli NPC sono inventati. Non è un GTA 2 completo né una ricostruzione fotografica degli immobili.
