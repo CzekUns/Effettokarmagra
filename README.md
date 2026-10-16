@@ -1,5 +1,8 @@
 # Arcade Club — Sala giochi
 
+> **GTA Melito — consegna a ChatGPT Work:** [handoff per il realismo grafico](./games/gta-melito/HANDOFF_WORK_REALISMO.md)
+> (con [istruzioni agenti](./games/gta-melito/AGENTS.md) e [registro avanzamento](./games/gta-melito/VISUAL_PROGRESS.md)).
+
 Raccolta di giochi arcade indipendenti in HTML, CSS e JavaScript, ospitata da GitHub Pages. La pagina iniziale presenta automaticamente i titoli registrati nel catalogo.
 
 ## Indirizzi

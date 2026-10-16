@@ -1,3 +1,7 @@
+/* WORK HANDOFF: art direction / photo evidence / acceptance criteria live
+ * in ./HANDOFF_WORK_REALISMO.md (see also ./AGENTS.md).
+ * Do not claim hypothetical materials or pixel geometry as photo-verified.
+ */
 import {visualRoadWidth} from './road-widths.mjs?v=043';
 import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-volume.mjs?v=070';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors

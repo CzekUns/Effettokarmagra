@@ -1,3 +1,9 @@
+/* WORK HANDOFF / VISUAL REALISM:
+ * Read ./AGENTS.md and ./HANDOFF_WORK_REALISMO.md before changing this game;
+ * log completed visual improvements in ./VISUAL_PROGRESS.md.
+ * Aim: identifiable Melito di Napoli in original top-down pixel art 2.5D.
+ * Preserve OSM geometry, gameplay and camera controls. 
+ */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
 import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=043';

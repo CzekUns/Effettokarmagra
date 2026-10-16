@@ -1,5 +1,12 @@
 # GTA Melito — Uns Arcade (prototipo 0.1)
 
+> **PASSAGGIO DI CONSEGNE PER CHATGPT WORK:** leggi [AGENTS.md](./AGENTS.md) e soprattutto
+> [HANDOFF_WORK_REALISMO.md](./HANDOFF_WORK_REALISMO.md).
+> Obiettivo: migliorare davvero l'estetica del gioco fino a renderla riconoscibile
+> come Melito di Napoli in pixel art 2.5D, con prove visive e fonti attendibili.
+> Traccia ogni intervento in [VISUAL_PROGRESS.md](./VISUAL_PROGRESS.md).
+> La modellazione OSM e quella fotografica **non sono equivalenti**.
+
 Piccolo gioco arcade originale ispirato alla visuale dall'alto dei GTA degli anni Novanta, ambientato in **Melito di Napoli**. Accesso diretto dal browser, PC e telefono, sulla stessa GitHub Pages degli altri giochi. **Non contiene codice o asset di Rockstar Games.**
 
 ## Campagna 0.4: quattro missioni locali
