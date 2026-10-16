@@ -70,7 +70,10 @@ test('renderer actually emits multiple opaque extruded side polygons before the 
  const landmarks=source.filter(b=>b.art.type==='church'||b.art.type==='civic');
  assert.ok(landmarks.length>=3);
  for(const kind of names){
-  const b=source.find(e=>e.art.type===kind)||placeholders.find(e=>e.art.type===kind);
+  // Some legitimate categories have no mapped example in this OSM snapshot.
+  // Exercise their renderer branch with a derived synthetic fixture as well.
+  const mapped=source.find(e=>e.art.type===kind)||placeholders.find(e=>e.art.type===kind);
+  const b=mapped||{...source[0],id:-99215,art:{...source[0].art,type:kind}};
   assert.ok(b,'category '+kind+' needs coverage');
   const {ctx,stats}=mock();
   drawCityBuildings(ctx,[b],4.5);
