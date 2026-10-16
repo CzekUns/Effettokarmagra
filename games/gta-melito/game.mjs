@@ -13,7 +13,7 @@ import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art
 import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=074';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
-import {generateUrbanInfill} from './urban-infill.mjs?v=060';
+import {generateUrbanInfill} from './urban-infill.mjs?v=075';
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=060';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
@@ -107,7 +107,7 @@ function prepareMap(map,surveyData=[]){
   const h=hash(Math.abs(b.id)),a=b.art;
   a.inferred=true;a.facadeTint=facade[h%facade.length];a.roofTint=roof[(h>>>5)%roof.length];
   a.renderHeight=b.h;
-  a.roof=b.p.length<=10&&h%5===0;
+  a.roof=b.p.length<=10&&h%5<3;
  }
  state.ground=prepareUrbanGround([...state.buildings,...state.inferredBuildings],state.roads);
  state.roadGrid=makeIndex(state.roads);state.buildingGrid=makeIndex(state.buildings);

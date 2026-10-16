@@ -90,7 +90,11 @@ export function generateUrbanInfill(map,{pitch=23.5,max=2600}={}){
   }
   const street=roadDistance(roads,x,y,100),road=street.segment;
   if(!road||street.distance>48||nearCount<1||nearDist>80){stats.excludedOpen++;continue;}
-  if(random(seed+1)<(nearCount>=5?.15:.40)){stats.excludedOpen++;continue;}
+  // Accept or omit small 2×2 cell clusters as a unit. This gives invented
+  // infill a coherent block rhythm instead of peppering isolated footprints.
+  const cluster=hash(Math.floor(gx/2)*73856093^Math.floor(gy/2)*19349663);
+  const fillRate=nearCount>=5?.82:.68;
+  if(random(cluster)>fillRate){stats.excludedOpen++;continue;}
   const w=11+Math.floor(random(seed+3)*8),d=10+Math.floor(random(seed+5)*9);
   // Orient with the nearest actual street segment; no fabricated street grid.
   const p=footprint(x,y,road.a,w,d),box=toBox(p);
