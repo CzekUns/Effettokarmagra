@@ -105,3 +105,18 @@ Questa lista **non è un certificato di qualità**. Le voci sono aperte fino a c
 **Test e deploy:** GitHub Actions: 53/53 test superati sul commit `0eb7419`; deploy Pages avviato per lo stesso commit, controllo pubblico in corso.
 
 **Aree successive:** raccogliere screenshot smartphone dopo il rilascio e verificare gli incroci densi, dove la distanza fra sagome OSM e carreggiate è minima.
+
+
+### Sessione 2026-10-17 — Coerenza dei placeholder urbani
+
+**Commit / PR:** `9f8c3c4` (gruppi di infill e tetti), `08f60d3` (filtro dei singoli isolati), `86950d8` e `a5833c1` (soglia più stretta e aggiornamento test).
+
+**Fatto nel codice:** `urban-infill.mjs` ora omette i placeholder senza un vicino entro 29 unità; i gruppi vengono scelti in blocchi 2×2 anziché con esclusioni casuali indipendenti. Circa il 60% degli infill riceve un tetto inclinato, con palette coerente e volume laterale mantenuto. La mappa produce 363 placeholder raggruppati invece di 467 distribuiti più liberamente; i 2.056 footprint OSM e le strade non vengono toccati. Cache renderer aggiornata a `077`.
+
+**Confronto visuale:** versione pubblicata controllata su browser desktop, Via Roma, a piedi 5×. Il conteggio HUD mostra 363 placeholder; la mappa si carica regolarmente. Non ho una verifica mobile post-modifica in questa sessione.
+
+**Edifici documentati:** nessun nuovo riscontro fotografico; i placeholder e le relative coperture sono ipotesi visive, non immobili accertati.
+
+**Test e deploy:** GitHub Actions: 53/53 test superati; GitHub Pages completato sulla versione `077`.
+
+**Aree successive:** rifinire i vuoti residui con cortili, isolati e recinzioni coerenti quando le geometrie o fonti pubbliche permettono di distinguerli; verificare su telefono.
