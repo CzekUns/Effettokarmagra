@@ -90,3 +90,18 @@ Questa lista **non è un certificato di qualità**. Le voci sono aperte fino a c
 **Test e deploy:** GitHub Actions sul commit `4ff1a9d`: 53 test superati, 0 falliti; controllo moduli browser passato. GitHub Pages deploy completato sul commit `4ff1a9d`.
 
 **Aree successive:** verificare la stessa scena su smartphone reale, poi rifinire i contrasti di facciata e gli ingombri dei marker in Piazza Santo Stefano.
+
+
+### Sessione 2026-10-16 — Profondità edifici e carreggiate
+
+**Commit / PR:** `e3e5cde` (correzione renderer), `0eb7419` (allineamento test cache).
+
+**Fatto nel codice:** in `building-volume.mjs` la proiezione delle facciate è stata limitata a 1,4–4,3 unità in X e 1,6–4,8 in Y, mantenendo la differenza di altezza ma impedendo estrusioni proporzionali fino a 20+ unità. In `city-art.mjs` rimossa la seconda sagoma d’ombra traslata di altre 2,4 unità, che allargava ancora l’impronta visibile verso la strada. Sagome OSM, collisioni, geometria stradale e tetti restano invariati. Aggiornata la cache del renderer a `074`.
+
+**Confronto visuale:** controllo browser desktop dopo la modifica, via Via Roma, zoom a piedi 5×; scena e mappa caricate regolarmente. Nessuna verifica mobile post-fix disponibile in questa sessione.
+
+**Edifici documentati:** nessun nuovo rilievo fotografico; materiali e profondità restano una resa arcade stilizzata.
+
+**Test e deploy:** GitHub Actions: 53/53 test superati sul commit `0eb7419`; deploy Pages avviato per lo stesso commit, controllo pubblico in corso.
+
+**Aree successive:** raccogliere screenshot smartphone dopo il rilascio e verificare gli incroci densi, dove la distanza fra sagome OSM e carreggiate è minima.
