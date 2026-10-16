@@ -4,7 +4,7 @@ import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=043';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=043';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs';
-import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=060';
+import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=070';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill} from './urban-infill.mjs?v=060';
@@ -388,8 +388,9 @@ function draw(){
  }
  drawCityStreets(c,roads,state.zoom);
  drawCrosswalks(c,state.graph,[x0,y0,x1,y1],state.zoom);
- drawCityBuildings(c,inferred,state.zoom);
- drawCityBuildings(c,buildings,state.zoom);
+ // One global painter order: placeholders and genuine OSM roofs occlude
+ // each other by their projected foot depth, not by their source type.
+ drawCityBuildings(c,[...inferred,...buildings],state.zoom);
  drawStreetProps(c,query(state.props,state.propsGrid,x0,y0,x1,y1),state.zoom);
  drawStorefronts(c,query(state.shops,state.shopGrid,x0,y0,x1,y1),state.zoom);
  if(state.zoom>1.75){

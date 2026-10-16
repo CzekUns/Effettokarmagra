@@ -77,9 +77,9 @@ test('game exposes placeholder count and camera mode to the player',async()=>{
  assert.ok(game.includes('generateUrbanInfill(map)'));
  assert.ok(game.includes('targetCameraZoom(movement,state.zoomBias)'));
  assert.ok(game.includes('advanceCameraZoom'));
- assert.ok(game.includes('drawCityBuildings(c,inferred'));
+ assert.ok(game.includes('drawCityBuildings(c,[...inferred,...buildings]'));
  assert.ok(html.includes('id="inferred-count"'));
  assert.ok(html.includes('id="camera-mode"'));
  assert.ok(html.includes('id="zoom-auto"'));
- assert.ok(html.includes('game.mjs?v=060'));
+ assert.ok(html.includes('game.mjs?v=070'));
 });

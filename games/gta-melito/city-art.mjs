@@ -1,4 +1,5 @@
 import {visualRoadWidth} from './road-widths.mjs?v=043';
+import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-volume.mjs?v=070';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
  * are original artistic interpretations: they do not claim photographic fidelity.
@@ -301,44 +302,99 @@ function specialized(c,b,art){
  }
  return false;
 }
-export function drawCityBuildings(c,buildings,zoom){
- const sorted=[...buildings].sort((a,b)=>(a.art?.y1??0)-(b.art?.y1??0));
- for(const b of sorted){
-  const a=b.art;if(!a)continue;
-  const seed=a.seed,depth=clamp((a.renderHeight||b.h||9)*.29,2.2,9.1),dx=depth*.65,dy=depth*.9;
-  const wall=a.facadeTint|| (a.type==='historic'?'#b29a82':a.type==='industrial'?'#919b96':'#aaa49a');
-  c.save();
-  c.save();c.translate(dx+1.1,dy+1.3);poly(c,b.p);c.fillStyle='#22362c66';c.fill();c.restore();
-  c.save();c.translate(dx,dy);poly(c,b.p);c.fillStyle='#4c5148';c.fill();c.restore();
-  for(let j=2;j<b.p.length;j+=2){
-   const x1=b.p[j-2],y1=b.p[j-1],x2=b.p[j],y2=b.p[j+1];
-   const edgeX=x2-x1,edgeY=y2-y1,len=Math.hypot(edgeX,edgeY);
-   if(len<2)continue;
-   c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.lineTo(x2+dx,y2+dy);c.lineTo(x1+dx,y1+dy);c.closePath();
-   c.fillStyle=edgeY>0?wall:'#696b61';c.fill();
-   // A few tiny windows, shutters and balconies on visible long facades.
-   if(zoom>1.7&&len>9&&edgeY>-.2){
-    const count=Math.min(14,Math.floor(len/4.5));
-    for(let k=1;k<=count;k++){
-     const t=k/(count+1),px=x1+edgeX*t+dx*.63,py=y1+edgeY*t+dy*.63;
-     c.fillStyle='#343f40';c.fillRect(px-1,py-1,1.5,1.9);
-     c.fillStyle=k%3===0?'#d0a373':'#aeb7b0';c.fillRect(px-1,py-1,.4,1.9);
-     if((a.surveyFeatures?.balconies||a.type==='historic')&&k%3===0){
-      c.strokeStyle='#2f3a33';c.lineWidth=.32;c.strokeRect(px-1.5,py+.9,2.6,.6);
-     }
+/* Universal extruded cityscape.
+ * Every OSM and synthetic building gets foundation, directional side faces,
+ * floor bands, windows and a raised roof. The building polygon never changes.
+ * Floor counts/materials without photo or explicit OSM data are fictional. */
+function drawRaisedWalls(c,b,v,zoom){
+ const p=b.p,a=b.art;
+ const wall=a.facadeTint||
+  (a.type==='historic'?'#c6b49a':a.type==='industrial'?'#a0a8a1':'#b6aa9a');
+ // Offset ground silhouette + daylight cast shadow. These two overlapping
+ // footprints guarantee depth is legible even for the tiniest roof sheds.
+ c.save();c.translate(v.dx+2.4,v.dy+2.4);
+ poly(c,p);c.fillStyle='#16252195';c.fill();c.restore();
+ c.save();c.translate(v.dx,v.dy);
+ poly(c,p);c.fillStyle=shiftColor(wall,-60);c.fill();c.restore();
+ for(let j=2;j<p.length;j+=2){
+  const edgeX=p[j]-p[j-2],edgeY=p[j+1]-p[j-1];
+  const len=Math.hypot(edgeX,edgeY);
+  if(len<.08||!exposedFacade(edgeX,edgeY,v))continue;
+  const f=facadePoints(p,j,v);
+  const south=Math.abs(edgeX)>=Math.abs(edgeY),isTall=v.stories>=3;
+  c.beginPath();c.moveTo(f.x1,f.y1);c.lineTo(f.x2,f.y2);
+  c.lineTo(f.x3,f.y3);c.lineTo(f.x4,f.y4);c.closePath();
+  c.fillStyle=shiftColor(wall,south?-8:-34);c.fill();
+  // The wall-top lip, ground sill and vertically expressed front corners
+  // visually join the facades to the roof and projected ground footprint.
+  c.lineWidth=.66;
+  c.strokeStyle=shiftColor(wall,25);
+  c.beginPath();c.moveTo(f.x1,f.y1);c.lineTo(f.x2,f.y2);c.stroke();
+  c.strokeStyle=shiftColor(wall,-54);
+  c.beginPath();c.moveTo(f.x4,f.y4);c.lineTo(f.x3,f.y3);c.stroke();
+  c.lineWidth=.55;c.strokeStyle=shiftColor(wall,-27);
+  c.beginPath();c.moveTo(f.x2,f.y2);c.lineTo(f.x3,f.y3);c.stroke();
+  if(zoom<1.1||len<2.6)continue;
+  // Floor separation is visible even on very narrow buildings.
+  const floors=v.stories,shiftX=v.dx,shiftY=v.dy;
+  for(let floor=1;floor<floors;floor++){
+   const t=floor/floors;
+   c.strokeStyle=shiftColor(wall, south?-25:-45);c.lineWidth=.32;
+   c.beginPath();c.moveTo(f.x1+shiftX*t,f.y1+shiftY*t);
+   c.lineTo(f.x2+shiftX*t,f.y2+shiftY*t);c.stroke();
+   c.strokeStyle='#f1e1c05c';c.lineWidth=.23;
+   c.beginPath();c.moveTo(f.x1+shiftX*t,f.y1+shiftY*t-.42);
+   c.lineTo(f.x2+shiftX*t,f.y2+shiftY*t-.42);c.stroke();
+  }
+  if(zoom<1.5||len<6||Math.hypot(v.dx,v.dy)/floors<2.1)continue;
+  const doors=a.type==='industrial'||a.type==='market';
+  const columns=Math.max(1,Math.min(18,Math.floor(len/(doors?7.5:4.8))));
+  for(let floor=0;floor<floors;floor++){
+   const tv=(floor+.48)/floors;
+   for(let col=1;col<=columns;col++){
+    const tu=col/(columns+1);
+    const wx=f.x1+edgeX*tu+shiftX*tv,wy=f.y1+edgeY*tu+shiftY*tv;
+    const w=doors?2.4:1.5,hh=floors>=5?1.35:1.85;
+    c.fillStyle='#273e43';c.fillRect(wx-w*.5,wy-hh*.55,w,hh);
+    c.fillStyle='#abc4c085';c.fillRect(wx-w*.38,wy-hh*.43,w*.35,hh*.63);
+    c.fillStyle=shiftColor(wall,40);
+    c.fillRect(wx-w*.7,wy+hh*.43,w*1.4,.35);
+    if(a.surveyFeatures?.balconies&&isTall&&floor>0&&col%3===1){
+     c.fillStyle='#454b45';c.fillRect(wx-1.7,wy+hh*.65,3.4,.45);
+     c.strokeStyle='#66706d';c.lineWidth=.28;
+     c.strokeRect(wx-1.7,wy+hh*.22,3.4,1.05);
     }
    }
   }
+ }
+}
+export function drawCityBuildings(c,buildings,zoom){
+ const sorted=[...buildings].filter(b=>b.art).sort((a,b)=>{
+  const va=buildingVolume(a),vb=buildingVolume(b);
+  const bottomA=a.art.y1+(va?.dy||0),bottomB=b.art.y1+(vb?.dy||0);
+  return bottomA-bottomB||a.id-b.id;
+ });
+ for(const b of sorted){
+  const a=b.art,v=buildingVolume(b);
+  if(!v)continue;
+  const seed=a.seed;
+  c.save();
+  drawRaisedWalls(c,b,v,zoom);
   const tone=a.roofTint||historicalRoofTone(a);
   if(!specialized(c,b,a)){
    if(a.roof&&a.area>55)slopedRoof(c,b,a,tone);
-   else flatRoof(c,b,a,a.roofTint|| (a.type==='industrial'?metal[seed%3]:a.type==='apartment'?flat[seed%6]:tone));
+   else flatRoof(c,b,a,a.roofTint||
+    (a.type==='industrial'?metal[seed%3]:a.type==='apartment'?flat[seed%6]:tone));
   }
-  poly(c,b.p);c.strokeStyle='#39423d';c.lineWidth=.55;c.stroke();
+  // High-contrast raised parapet defines the roof above the façades,
+  // including tiny annexes, historic churches and one-floor workshops.
+  poly(c,b.p);c.strokeStyle='#353c38';c.lineWidth=1.1;c.stroke();
+  c.save();c.translate(-.35,-.35);poly(c,b.p);
+  c.strokeStyle='#efe6d45e';c.lineWidth=.5;c.stroke();c.restore();
   if(zoom>=1.45&&(b.id===733703600||/Chiesa di Santa Maria delle Grazie/i.test(b.n||''))){
    const label=b.id===733703600?'MUNICIPIO':'S. MARIA DELLE GRAZIE';
    const width=b.id===733703600?28:54;
-   c.fillStyle='#162821d9';c.fillRect(a.cx-width/2,a.y0-8,width,5.7);
+   c.fillStyle='#162821e0';c.fillRect(a.cx-width/2,a.y0-8,width,5.7);
    c.fillStyle='#ffe3a9';c.font='bold 2.9px monospace';c.textAlign='center';
    c.fillText(label,a.cx,a.y0-4,width-2);
   }
