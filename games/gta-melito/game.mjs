@@ -1,11 +1,11 @@
-import {visualRoadWidth} from './road-widths.mjs';
+import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs';
-import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs';
+import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=043';
+import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=043';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs';
-import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs';
-import {prepareStorefronts,drawStorefronts} from './storefronts.mjs';
+import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=043';
+import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
@@ -117,7 +117,7 @@ function prepareMap(map,surveyData=[]){
  state.people=createAgents(state.graph,190,310,'walk');
  $('road-count').textContent=String(state.roads.length);$('building-count').textContent=String(state.buildings.length);$('junction-count').textContent=String(state.graph.junctions);
  $('place').textContent='MELITO DI NAPOLI · MAPPA REALE';
- state.ready=true;hideLoading();state.last=0;canvas.focus({preventScroll:true});prepareMini();refreshCampaign();
+ state.ready=true;hideLoading();state.last=0;canvas.focus({preventScroll:true});prepareMini();refreshCampaign();updateRoadWidthLabel();
 }
 
 /* Campaign v0.3 — map positions always resolved from the downloaded OSM snapshot. */
@@ -291,6 +291,29 @@ function tick(dt){
  state.camera.y+=(targetY-state.camera.y)*follow;
  state.clock+=dt;state.hud+=dt;if(state.hud>.18){state.hud=0;updateHud();refreshCampaign();}
 }
+
+function updateRoadWidthLabel(){
+ const before=getRoadWidthMode()==='before';
+ const v=visualRoadWidth({t:'residential',w:7}).toFixed(1).replace('.',',');
+ $('road-width-current').textContent=before?'PRIMA · '+v:'ADESSO · '+v;
+ $('road-width-compare').textContent=before?'VEDI STRADE LARGHE':'CONFRONTA CON PRIMA';
+ $('road-width-compare').setAttribute('aria-pressed',String(before));
+}
+function compareRoadWidths(){
+ if(!state.ready)return;
+ setRoadWidthMode(getRoadWidthMode()==='before'?'wide':'before');
+ // Every consumer shares the same module instance, including roads/traffic,
+ // street furniture, crosswalks and building-side storefront placements.
+ state.graph=buildRoadGraph(state.roads);
+ state.traffic=createAgents(state.graph,140,189,'car');
+ state.people=createAgents(state.graph,190,310,'walk');
+ state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
+ state.propsGrid=makeIndex(state.props);
+ state.shops=prepareStorefronts(state.map.pois||[],state.roads);
+ state.shopGrid=makeIndex(state.shops);
+ updateRoadWidthLabel();
+}
+
 function updateHud(){
  const p=state.player;
  $('vehicle').textContent=p.car>=0?'AUTO · '+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H':'A PIEDI';
@@ -426,6 +449,7 @@ function bind(){
   for(const name of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(name,()=>{pressed[key]=false;btn.classList.remove('pressed');});
  });
  $('action').addEventListener('click',toggleVehicle);
+ $('road-width-compare').addEventListener('click',compareRoadWidths);
  const panel=$('mission-panel'),panelButton=$('mission-panel-toggle');
  panelButton.addEventListener('click',()=>{
   panel.hidden=!panel.hidden;

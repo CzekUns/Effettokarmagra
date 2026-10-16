@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {ROAD_WIDTH_MULTIPLIER,visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs';
+import {ROAD_WIDTH_MULTIPLIER,visualRoadWidth,roadTrafficLaneOffset,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs';
 import {buildStreetProps,drawCrosswalks} from './visuals.mjs';
 import {drawCityStreets} from './city-art.mjs';
@@ -12,15 +12,15 @@ test('wide arcade streets keep original OSM geometry and source metadata',()=>{
  const first=map.roads.find(r=>r.t==='residential');
  assert.ok(first);
  const coords=first.p.slice(),width=first.w;
- assert.equal(visualRoadWidth(first),Math.round(first.w*1.9*10)/10);
- assert.ok(visualRoadWidth(first)>=first.w*1.85);
+ assert.equal(visualRoadWidth(first),Math.round(first.w*2.2*10)/10);
+ assert.ok(visualRoadWidth(first)>=first.w*2.15);
  assert.deepEqual(first.p,coords);
  assert.equal(first.w,width,'do not rewrite estimated OSM source width');
- assert.equal(visualRoadWidth({w:5,t:'service'}),9);
+ assert.equal(visualRoadWidth({w:5,t:'service'}),10);
  assert.equal(visualRoadWidth({w:2.4,t:'footway'}),2.9);
- assert.equal(visualRoadWidth({w:7,t:'residential'}),13.3);
- assert.equal(visualRoadWidth({w:9,t:'tertiary'}),15.5);
- assert.equal(visualRoadWidth({w:11,t:'secondary'}),17.6);
+ assert.equal(visualRoadWidth({w:7,t:'residential'}),15.4);
+ assert.equal(visualRoadWidth({w:9,t:'tertiary'}),18.7);
+ assert.equal(visualRoadWidth({w:11,t:'secondary'}),20.9);
  assert.equal(visualRoadWidth({w:0,t:'primary'}),0);
  assert.equal(visualRoadWidth({w:NaN,t:'primary'}),0);
  assert.ok(ROAD_WIDTH_MULTIPLIER.primary>1);
@@ -34,8 +34,8 @@ test('traffic graph, pedestrian placement and lane offsets use the new street wi
  const agents=createAgents(graph,28,77,'car'),people=createAgents(graph,20,42,'walk');
  for(let tick=0;tick<90;tick++){stepAgents(graph,agents,.04);stepAgents(graph,people,.04);}
  assert.ok(agents.every(a=>Number.isFinite(a.x)&&Number.isFinite(a.y)));
- assert.ok(roadTrafficLaneOffset(13.3)>2.5);
- assert.ok(roadTrafficLaneOffset(13.3)<13.3/2-2);
+ assert.ok(roadTrafficLaneOffset(15.4)>3.0);
+ assert.ok(roadTrafficLaneOffset(15.4)<15.4/2-2);
  const props=buildStreetProps([{
   id:101,n:'Example',t:'residential',w:7,p:[0,0,150,0]
  }]);
@@ -69,4 +69,31 @@ test('commercial frontage and crosswalks share the wider road estimate',()=>{
  {get:(o,p)=>p in o?o[p]:(..._)=>{}});
  drawCrosswalks(ctx,graph,[-50,-50,50,50],2.6);
  assert.ok(widths.some(n=>n>11),'crosswalks should span the expanded lane width');
+});
+
+test('A/B comparison changes road geometry in real-time and can restore the wider default',()=>{
+ const r={w:7,t:'residential'};
+ assert.equal(getRoadWidthMode(),'wide');
+ assert.equal(visualRoadWidth(r),15.4);
+ setRoadWidthMode('before');
+ assert.equal(getRoadWidthMode(),'before');
+ assert.equal(visualRoadWidth(r),7);
+ const narrow=buildRoadGraph([{id:1,n:'Via prova',t:'residential',w:7,p:[0,0,20,0]}]);
+ assert.equal(narrow.edges[0].streetWidth,7);
+ setRoadWidthMode('wide');
+ assert.equal(visualRoadWidth(r),15.4);
+ const wide=buildRoadGraph([{id:1,n:'Via prova',t:'residential',w:7,p:[0,0,20,0]}]);
+ assert.equal(wide.edges[0].streetWidth,15.4);
+ assert.throws(()=>setRoadWidthMode('invalid'),RangeError);
+});
+test('every consumer imports the same versioned road-width module for A/B',async()=>{
+ const jsFiles=['game.mjs','city-art.mjs','visuals.mjs','roads.mjs','storefronts.mjs'];
+ for(const file of jsFiles){
+  const text=await readFile(new URL('./'+file,import.meta.url),'utf8');
+  assert.ok(text.includes("'./road-widths.mjs?v=043'"),file+' requires versioned singleton');
+ }
+ const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
+ assert.ok(html.includes('game.mjs?v=043'));
+ assert.ok(html.includes('id="road-width-compare"'));
+ assert.ok(html.includes('id="road-width-current"'));
 });

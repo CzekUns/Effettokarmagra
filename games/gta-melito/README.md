@@ -104,3 +104,9 @@ Il feedback sulla mappa era fondato: le carreggiate erano troppo strette rispett
 | Principale | 13 | **19,5** | +50% |
 
 La larghezza arcade è una **correzione di proporzioni visive**, non una misura certificata delle carreggiate reali. L'archivio geografico OSM `melito-map.json` non viene alterato, e gli edifici restano sulle impronte originali; eventuali larghezze reali andranno ricavate strada per strada. Il nuovo valore è usato coerentemente per asfalto, cordoli, marciapiedi, attraversamenti, NPC sul bordo strada, offset delle corsie del traffico, insegne e collisione dell'auto guidata. I pedonali vengono ampliati solo moderatamente.
+
+## GTA Melito 0.4.3 — confronto visivo immediato
+
+L'utente non percepiva l'aumento introdotto con 0.4.2. La 0.4.3 aumenta ulteriormente le dimensioni arcade delle carreggiate principali (residenziale 7 → **15,4 unità grafiche**) e rende più evidente il margine di asfalto. Soprattutto aggiunge una barra **CONFRONTA CON PRIMA** che alterna senza ricaricare la pagina tra il vecchio rendering 7 e il nuovo 15,4, ricalcolando anche grafo viario, AI, collocazione pedoni e oggetti stradali. Non sono misure reali delle strade.
+
+Per prevenire moduli obsoleti nel browser, l'HTML carica `game.mjs?v=043` e i moduli modificati importano `road-widths.mjs?v=043` come singola istanza condivisa. Chi ha la pagina vecchia in cache deve aprire il link versione `?v=043` o fare ricarica forzata.

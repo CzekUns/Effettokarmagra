@@ -1,4 +1,4 @@
-import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs';
+import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
  * Simulates moving traffic through intersections with legal one-way exits. */

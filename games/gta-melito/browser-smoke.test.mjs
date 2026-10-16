@@ -56,6 +56,13 @@ test('browser entry boots and first NPC mission is interactable on Via Roma',asy
  assert.equal(els.get('dialog').hidden,true);
  els.get('map-toggle').fire('click');
  assert.equal(els.get('fullmap').hidden,false);
+ assert.match(els.get('road-width-current').textContent,/15,4/);
+ els.get('road-width-compare').fire('click');
+ assert.match(els.get('road-width-current').textContent,/PRIMA/);
+ assert.match(els.get('road-width-current').textContent,/7,0/);
+ els.get('road-width-compare').fire('click');
+ assert.match(els.get('road-width-current').textContent,/ADESSO/);
+ assert.match(els.get('road-width-current').textContent,/15,4/);
  els.get('map-close').fire('click');
  assert.equal(els.get('fullmap').hidden,true);
  assert.equal(els.get('mission-panel').hidden,true);

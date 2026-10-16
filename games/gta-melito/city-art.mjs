@@ -1,4 +1,4 @@
-import {visualRoadWidth} from './road-widths.mjs';
+import {visualRoadWidth} from './road-widths.mjs?v=043';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
  * are original artistic interpretations: they do not claim photographic fidelity.
@@ -107,9 +107,9 @@ export function drawCityStreets(c,roads,zoom){
  const coat=(extra,color)=>{for(const road of roads){
   line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)+extra);c.strokeStyle=pedestrian(road)?color.ped:color.car;c.stroke();
  }};
- coat(5.2,{ped:'#77766e',car:'#79786d'});
+ coat(5.2,{ped:'#77766e',car:'#817e70'});
  coat(3.8,{ped:'#b1a798',car:'#c9bca7'});
- coat(1.7,{ped:'#b7a997',car:'#34393b'});
+ coat(1.7,{ped:'#b7a997',car:'#ada48c'});
  for(const road of roads){
   line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)-.5);c.strokeStyle=asphalt[road.t]||'#626362';c.stroke();
  }

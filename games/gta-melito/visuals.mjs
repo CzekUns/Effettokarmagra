@@ -1,4 +1,4 @@
-import {visualRoadWidth} from './road-widths.mjs';
+import {visualRoadWidth} from './road-widths.mjs?v=043';
 /* GTA Melito 0.2 — procedural 1990s overhead city visuals.
  * Roads and building polygons are from © OpenStreetMap contributors (ODbL).
  * Trees, lamps, bins, signs and scooters are fictional visual dressing. */
