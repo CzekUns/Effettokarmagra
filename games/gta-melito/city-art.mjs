@@ -29,8 +29,10 @@ function roofType(b,box,nearPOI){
  if(/school|kindergarten|college/.test(type+' '+u)||nearPOI?.k==='school')return 'school';
  if(/retail|commercial|supermarket|shop/.test(type+' '+u)||/(lidl|eurospin|decò|^md$|todis)/i.test(name)||nearPOI?.k==='supermarket')return 'market';
  if(/industrial|warehouse|storage|hangar|factory/.test(type+' '+u)||box.area>2300)return 'industrial';
- if(/apartments|residential|terrace/.test(type)||box.area>500||b.h>=17)return 'apartment';
- if(near(box.cx,box.cy,1100,1150)<410)return 'historic';
+ // The centre around Piazza Santo Stefano contains a dense historic fabric.
+ // Roof profiles there are a stylised hypothesis, never a measured facade.
+ if(near(box.cx,box.cy,1100,1150)<410&&box.area<1500&&(!b.lv||b.lv<5))return 'historic';
+ if(/apartments|residential|terrace/.test(type)||box.area>500||(b.lv&&b.lv>=4))return 'apartment';
  return box.area<155?'house':'mixed';
 }
 function poiKindNear(b,poi,box){
@@ -51,13 +53,45 @@ export function prepareCityStyles(buildings,pois=[]){
  }
  return counts;
 }
-export function drawTerrain(c,bb,zoom){
+/* Parcel-like surface colours are estimated from actual OSM building
+ * density and road proximity, not claimed as surveyed lawns or pavements. */
+export function prepareUrbanGround(buildings,roads){
+ const grid=new Map(),cell=28;
+ const mark=(x,y,n)=>{
+  const gx=Math.floor(x/cell),gy=Math.floor(y/cell);
+  for(let ox=-1;ox<=1;ox++)for(let oy=-1;oy<=1;oy++){
+   const key=(gx+ox)+','+(gy+oy);
+   grid.set(key,Math.min(8,(grid.get(key)||0)+(ox===0&&oy===0?n:1)));
+  }
+ };
+ for(const b of buildings){
+  const a=b.art;if(!a)continue;
+  mark(a.cx,a.cy,3);
+  if(a.w>25||a.h>25){
+   for(let x=a.x0;x<=a.x1;x+=28)for(let y=a.y0;y<=a.y1;y+=28)mark(x,y,2);
+  }
+ }
+ for(const road of roads){
+  const p=road.p;
+  for(let i=2;i<p.length;i+=2){
+   const ax=p[i-2],ay=p[i-1],dx=p[i]-ax,dy=p[i+1]-ay,len=Math.hypot(dx,dy);
+   for(let d=0;d<=len;d+=24)mark(ax+dx*d/(len||1),ay+dy*d/(len||1),2);
+  }
+ }
+ return grid;
+}
+export function drawTerrain(c,bb,zoom,ground=null){
  const cell=28;
  const [x0,y0,x1,y1]=bb;
  for(let gx=Math.floor(x0/cell);gx<=Math.ceil(x1/cell);gx++)for(let gy=Math.floor(y0/cell);gy<=Math.ceil(y1/cell);gy++){
   const seed=h(gx*907+gy*1867),x=gx*cell,y=gy*cell;
-  c.fillStyle=seed%7===0?'#53655533':seed%11===0?'#b5a48418':'#8f99751a';
-  c.fillRect(x,y,cell-1,cell-1);
+  const weight=ground?.get(gx+','+gy)||0;
+  const urban=weight>=2;
+  c.fillStyle=urban?
+   ['#86877b','#929087','#8b8a7e','#908e80'][seed%4]:
+   weight>0?['#8b8d79','#7d8b71','#878d7b'][seed%3]:
+   ['#6f806a','#76836e','#71826b','#6e806c'][seed%4];
+  c.fillRect(x,y,cell+.2,cell+.2);
   if(zoom<1.15)continue;
   for(let j=0;j<4;j++){
    const px=x+3+h(seed+j*9)%(cell-5),py=y+3+h(seed+j*17)%(cell-5);

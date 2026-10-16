@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {prepareCityStyles,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,drawTerrain} from './city-art.mjs';
+import {prepareCityStyles,prepareUrbanGround,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,drawTerrain} from './city-art.mjs';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs';
 const map=JSON.parse(await readFile(new URL('./data/melito-map.json',import.meta.url),'utf8'));
 test('real OSM geometry is preserved and gets appropriate stylistic classifications',()=>{
@@ -61,4 +61,11 @@ test('mobile controls prevent selection but retain accessibility and mission UI'
  assert.ok(game.includes("addEventListener('selectstart'"));
  assert.ok(game.includes("addEventListener('contextmenu'"));
  assert.ok(game.includes("mission-panel-toggle"));
+});
+test('terrain derives urban versus open land from real OSM building and road geometry',()=>{
+ const grid=prepareUrbanGround(map.buildings,map.roads);
+ assert.ok(grid.size>2000);
+ assert.ok([...grid.values()].some(v=>v>=2));
+ const again=prepareUrbanGround(map.buildings,map.roads);
+ assert.deepEqual([...grid],[...again]);
 });
