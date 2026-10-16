@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="it"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#172521"><meta name="description" content="GTA Melito: esplora Melito di Napoli, ricostruita da cartografia libera OpenStreetMap, in un arcade dall'alto.">
+<title>GTA Melito · Uns Arcade</title>
+<style>
+:root{color-scheme:dark;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#101916;color:#f6ebce}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;overflow-x:hidden}button,a{font:inherit;-webkit-tap-highlight-color:transparent}
+button{cursor:pointer}a{color:#eec97d}button:focus-visible,a:focus-visible{outline:3px solid #ffc66a;outline-offset:2px}
+.app{width:min(100%,1500px);margin:auto;padding:12px 16px 18px}
+.header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.header h1{font-size:clamp(18px,3vw,29px);font-weight:1000;letter-spacing:.06em;margin:0;color:#f8ce6f;text-shadow:2px 2px #55372c}
+.header small{display:block;color:#b5bda8;font-size:10px;letter-spacing:.15em;margin-top:4px}
+.back{padding:8px 10px;border:1px solid #778674;background:#24362f;color:#e9ebd6;text-decoration:none;font-size:11px}
+.hud{background:#23352c;border:2px solid #70816a;border-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:9px 12px;font-size:12px}
+.hud b{color:#f5ce6f}#place{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:45%}
+.stage{position:relative;height:clamp(390px,70vh,750px);background:#23332b;overflow:hidden;border:3px solid #899071;box-shadow:0 12px 32px #0007}
+#world{width:100%;height:100%;display:block;touch-action:none;image-rendering:auto}
+#radar{position:absolute;top:12px;right:12px;width:168px;height:142px;background:#0d1e1ad9;border:2px solid #b6b18a;image-rendering:auto;pointer-events:none}
+.coins{position:absolute;top:12px;left:12px;background:#14221fbd;padding:9px 11px;border:1px solid #8b9470;color:#f5cc83;font-size:11px;pointer-events:none;max-width:calc(100% - 200px)}
+#street{display:block;color:#f6efce;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#0e1a17eb;padding:24px;gap:14px;z-index:4}
+.loading[hidden]{display:none}
+.loading h2{font-size:clamp(20px,4vw,38px);color:#f5ce6f;margin:0}.loading p{max-width:550px;line-height:1.7;color:#d6dccd;font-size:13px;margin:0}
+.loading button,.control-action{background:#ecd081;color:#25332b;font-weight:1000;border:2px solid #fff0b4;padding:12px 20px;box-shadow:2px 3px #6e613c}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:15px;padding-top:12px;flex-wrap:wrap}
+.dpad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(2,52px);gap:5px}
+.dpad button{background:#354b3e;color:#fff2d3;border:2px solid #8e9d79;font-size:24px;font-weight:bold;touch-action:none}
+.dpad button[data-dir="up"]{grid-column:2;grid-row:1}
+.dpad button[data-dir="left"]{grid-column:1;grid-row:2}
+.dpad button[data-dir="down"]{grid-column:2;grid-row:2}
+.dpad button[data-dir="right"]{grid-column:3;grid-row:2}
+.dpad button:active,.dpad button.pressed{background:#e5bd66;color:#1b3029}
+.buttons{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.buttons button{min-height:48px}
+.mini{padding:11px 12px;background:#263b35;border:1px solid #81937b;color:#f2e0b9;font-weight:bold}
+.instructions{color:#adbbaa;font-size:11px;line-height:1.6;margin:12px 0 0}
+.credits{display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:space-between;color:#a4b5a6;font-size:10px;margin-top:12px;border-top:1px solid #526353;padding-top:10px}
+.credits a{color:#e4c683}
+@media(max-width:680px){
+.app{padding:5px 5px 12px}.header{padding:4px 6px}.header h1{font-size:20px}
+.stage{height:min(64dvh,650px);min-height:360px}
+#radar{width:104px;height:94px;top:6px;right:6px}.coins{top:6px;left:6px;max-width:calc(100% - 123px);font-size:9px;padding:6px}
+.hud{font-size:10px;padding:7px;gap:5px}
+.dpad{grid-template-columns:repeat(3,47px);grid-template-rows:repeat(2,49px);gap:3px}
+.controls{gap:4px;padding:8px 3px 0}.buttons{gap:5px}.buttons button{min-height:40px}
+.control-action{padding:9px 10px}.mini{padding:9px 8px}.instructions{font-size:10px;margin:8px 4px}
+}
+</style>
+</head><body><main class="app">
+<header class="header"><div><h1>GTA: MELITO <span aria-hidden="true">★</span></h1><small>UNS ARCADE / MELITO DI NAPOLI / VERSIONE 0.1</small></div><a class="back" href="../../index.html">← SALA GIOCHI</a></header>
+<div class="hud"><span id="place">CARICAMENTO MAPPA…</span><span>MEZZO: <b id="vehicle">A PIEDI</b></span><span>STRADE: <b id="road-count">—</b></span><span>PALAZZI: <b id="building-count">—</b></span></div>
+<div class="stage">
+ <canvas id="world" aria-label="Mappa giocabile di Melito, muoviti con frecce o WASD" tabindex="0"></canvas>
+ <canvas id="radar" width="168" height="142" aria-label="Minimappa di Melito"></canvas>
+ <div class="coins">MELITO · LIBERA ESPLORAZIONE <span id="street">RETE STRADALE REALE</span></div>
+ <section class="loading" id="loading"><h2 id="loading-title">CARICO MELITO…</h2><p id="loading-text">Preparo strade ed edifici reali da OpenStreetMap.</p><button id="retry" hidden>RIPROVA ↻</button></section>
+</div>
+<div class="controls">
+ <div class="dpad" aria-label="Comandi di movimento e guida">
+  <button data-dir="up" aria-label="Avanti">▲</button><button data-dir="left" aria-label="Sinistra">◀</button>
+  <button data-dir="down" aria-label="Indietro">▼</button><button data-dir="right" aria-label="Destra">▶</button>
+ </div>
+ <div class="buttons"><button class="control-action" id="action">E · ENTRA IN AUTO</button><button class="mini" id="zoom-in" aria-label="Zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div>
+</div>
+<p class="instructions">PC: WASD/frecce per muoverti e guidare · E entra/esci · SHIFT corri · SPAZIO freno a mano. Telefono: pulsanti direzionali e AZIONE. Il mondo riproduce il tracciato OSM; i palazzi hanno forme cartografiche, ma le facciate sono rappresentazioni in pixel art.</p>
+<footer class="credits"><span>© OpenStreetMap contributors — ODbL · Confini: ISTAT 2026 — CC BY · MIT: ispirazione motore <a href="https://github.com/harmanhanjra/punjab-stories" target="_blank" rel="noreferrer">Punjab Stories</a></span><span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Crediti cartografia</a> · <a href="./README.md">Informazioni sul progetto</a></span></footer>
+</main><script type="module" src="./game.mjs"></script></body></html>

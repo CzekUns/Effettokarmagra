@@ -56,5 +56,17 @@ window.ARCADE_CATALOG = [
     support: "Telefono e PC · Capitolo 0",
     status: "live",
     accent: "aqua"
+  },
+  {
+    id: "gta-melito",
+    title: "GTA: Melito",
+    subtitle: "Un'avventura top-down per le strade vere di Melito",
+    genre: "Open world / Guida",
+    description: "Esplora a piedi o in auto Melito di Napoli, con strade ed edifici ricostruiti dai dati OpenStreetMap. Prototipo giocabile in evoluzione.",
+    href: "./games/gta-melito/",
+    artwork: "./games/gta-melito/cover.svg",
+    support: "Telefono e PC · Prototipo 0.1",
+    status: "live",
+    accent: "orange"
   }
 ];

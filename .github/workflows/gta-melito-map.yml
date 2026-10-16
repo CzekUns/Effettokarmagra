@@ -1,0 +1,36 @@
+name: Build GTA Melito real map
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'games/gta-melito/**'
+      - 'scripts/build-melito-map.mjs'
+      - '.github/workflows/gta-melito-map.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  extract-osm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download Melito roads and buildings (OSM ODbL)
+        run: node scripts/build-melito-map.mjs
+      - name: Commit static offline map snapshot
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games/gta-melito/data/melito-map.json
+          if git diff --cached --quiet; then
+            echo 'No cartographic updates'
+          else
+            git commit -m 'Refresh real Melito OSM street and building snapshot'
+            git push
+          fi

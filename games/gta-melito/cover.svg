@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="330" viewBox="0 0 520 330">
+<defs><pattern id="tiles" width="30" height="30" patternUnits="userSpaceOnUse"><rect width="30" height="30" fill="#52614c"/><path d="M0 0H30V30H0" fill="none" stroke="#89916d" stroke-width=".7"/></pattern></defs>
+<rect width="520" height="330" fill="#1d2927"/>
+<path d="M0 30H520V300H0Z" fill="url(#tiles)"/>
+<g fill="#b59f83" stroke="#2b3b34" stroke-width="4">
+<rect x="25" y="35" width="150" height="85"/><rect x="240" y="30" width="110" height="105"/>
+<rect x="360" y="30" width="120" height="160"/><rect x="45" y="215" width="120" height="90"/>
+<rect x="365" y="250" width="140" height="85"/><rect x="220" y="250" width="95" height="80"/>
+</g>
+<path d="M196 -20L185 350M-20 165L540 205" stroke="#d9c6a0" stroke-width="66" fill="none"/>
+<path d="M196 -20L185 350M-20 165L540 205" stroke="#565b5c" stroke-width="53" fill="none"/>
+<path d="M196 -20L185 350M-20 165L540 205" stroke="#cfbd84" stroke-width="1.5" stroke-dasharray="9 17" fill="none"/>
+<g transform="translate(195 180) rotate(18)"><rect x="-41" y="-22" width="82" height="44" rx="8" fill="#1b2523"/><rect x="-36" y="-17" width="72" height="34" rx="6" fill="#d65b4c"/><rect x="-10" y="-15" width="27" height="30" fill="#476674"/><path d="M-34 -14V14M34 -14V14" stroke="#ffe8ae" stroke-width="3"/></g>
+<rect x="18" y="22" width="360" height="50" fill="#17231fd9"/>
+<text x="28" y="57" font-family="monospace" font-size="38" font-weight="900" fill="#ffd477">GTA: MELITO</text>
+<rect x="21" y="274" width="290" height="36" fill="#18231dd9"/>
+<text x="32" y="297" font-family="monospace" font-size="17" font-weight="bold" fill="#fff0bd">UNS ARCADE · TOP DOWN</text>
+</svg>
