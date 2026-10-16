@@ -49,10 +49,17 @@ export function drawWorldLandmarks(c,landmarks,focus,bounds,clock,zoom,speaker='
    c.fillStyle='#ffe6a8';c.font='bold 2.8px monospace';c.textAlign='center';c.fillText(speaker,x,y-7);
   }
   if(zoom>1.8||selected){
-   const txt=item.name.toUpperCase(),width=Math.min(95,txt.length*2.3+6);
-   c.fillStyle=selected?'#f6d78e':'#d0d2b9';
+   const church=/santa maria delle grazie/i.test(item.name);
+   const txt=church?'S. MARIA DELLE GRAZIE':item.name.toUpperCase();
+   const width=Math.min(church?58:95,txt.length*2.3+6);
+   // Keep the church name compact and bias it away from the top-right
+   // minimap; the screenshot showed its long label being clipped underneath it.
+   const labelX=church?item.x-9:item.x;
+   const labelY=church?item.y-12:item.y-(selected?25:10);
+   c.fillStyle='#14231edb';c.fillRect(labelX-width/2-2,labelY-4.2,width+4,6.5);
+   c.fillStyle=selected?'#f6d78e':'#e4dfc8';
    c.font=selected?'bold 3.8px monospace':'3px monospace';
-   c.textAlign='center';c.fillText(txt,item.x,item.y-(selected?25:10),width);
+   c.textAlign='center';c.fillText(txt,labelX,labelY,width);
   }
   c.restore();
  }
