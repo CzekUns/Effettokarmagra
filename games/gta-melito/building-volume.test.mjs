@@ -17,7 +17,7 @@ const all=[...source,...placeholders];
 test('every one of 2056 real footprints and all 475 visual infill buildings has actual 2.5D extrusion',()=>{
  assert.equal(source.length,2056);
  assert.equal(placeholders.length,475);
- assert.equal(all.length,2523);
+ assert.equal(all.length,2531);
  for(const b of all){
   const v=buildingVolume(b);
   assert.ok(v&&v.vertical>=9,'flat roof '+b.id);
