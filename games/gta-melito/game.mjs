@@ -140,7 +140,7 @@ function prepareMap(map,surveyData=[]){
  $('inferred-count').textContent=String(state.inferredBuildings.length);
  $('junction-count').textContent=String(state.graph.junctions);
  $('place').textContent='MELITO DI NAPOLI · MAPPA REALE';
- state.ready=true;hideLoading();state.last=0;canvas.focus({preventScroll:true});prepareMini();refreshCampaign();updateRoadWidthLabel();
+ state.ready=true;hideLoading();state.last=0;canvas.focus({preventScroll:true});prepareMini();refreshCampaign();updateRoadWidthLabel();updateHud();
 }
 
 /* Campaign v0.3 — map positions always resolved from the downloaded OSM snapshot. */
