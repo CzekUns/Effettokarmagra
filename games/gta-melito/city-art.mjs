@@ -236,7 +236,7 @@ export function drawCityBuildings(c,buildings,zoom){
  for(const b of sorted){
   const a=b.art;if(!a)continue;
   const seed=a.seed,depth=clamp((b.h||9)*.29,2.2,7.2),dx=depth*.65,dy=depth*.9;
-  const wall=a.type==='historic'?'#8a7962':a.type==='industrial'?'#74817c':'#807e72';
+  const wall=a.facadeTint|| (a.type==='historic'?'#8a7962':a.type==='industrial'?'#74817c':'#807e72');
   c.save();
   c.save();c.translate(dx+1.1,dy+1.3);poly(c,b.p);c.fillStyle='#22362c66';c.fill();c.restore();
   c.save();c.translate(dx,dy);poly(c,b.p);c.fillStyle='#4c5148';c.fill();c.restore();
@@ -260,10 +260,10 @@ export function drawCityBuildings(c,buildings,zoom){
    }
   }
   const historic=a.type==='historic'||a.type==='house';
-  const tone=historicalRoofTone(a);
+  const tone=a.roofTint||historicalRoofTone(a);
   if(!specialized(c,b,a)){
    if(a.roof&&a.area>55)slopedRoof(c,b,a,tone);
-   else flatRoof(c,b,a,a.type==='industrial'?metal[seed%3]:a.type==='apartment'?flat[seed%6]:tone);
+   else flatRoof(c,b,a,a.roofTint|| (a.type==='industrial'?metal[seed%3]:a.type==='apartment'?flat[seed%6]:tone));
   }
   poly(c,b.p);c.strokeStyle='#39423d';c.lineWidth=.55;c.stroke();
   if(zoom>=1.45&&(b.id===733703600||/Chiesa di Santa Maria delle Grazie/i.test(b.n||''))){

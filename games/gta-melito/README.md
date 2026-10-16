@@ -86,3 +86,7 @@ Riferimenti visuali pubblici: Comune di Melito e FAI; **non vengono copiate foto
 ### Pavimentazioni e densità urbana (0.4)
 
 La colorazione del suolo è una stima in base alla concentrazione di edifici e strade OSM: cemento e pietra nelle zone costruite, verde nei settori meno urbanizzati. Non è una carta catastale degli usi del suolo. La resa pixel art è sempre un'interpretazione artistica. La strada, la posizione dei negozi e le sagome edilizie restano geolocalizzate. Il modulo `city-art.mjs` gestisce lo stile, `storefronts.mjs` proietta i negozi OSM sulla strada più vicina. Il tasto MISSIONI apre il motore già presente senza coprire la visuale di default.
+
+## Sopralluogo progressivo dal confine (0.4.1)
+
+Il censimento integrale degli edifici OSM è iniziato dal bordo nord-occidentale, usando una griglia di 34 settori. Nel primo passaggio sono state catalogate tutte le 2.056 impronte e sono stati assegnati 47 **profili estetici provvisori** su 47 building ID dei primi due settori. **Nessuna facciata è ancora verificata con Google Street View.** Il sopralluogo consultabile è in [survey/index.html](./survey/index.html); il protocollo completo e le fonti sono in [survey/README.md](./survey/README.md). I nomi stradali sono associazioni per prossimità da OSM, non numeri civici. Per fotografia fedele occorre validare edificio per edificio prima di segnare `photoVerified`.

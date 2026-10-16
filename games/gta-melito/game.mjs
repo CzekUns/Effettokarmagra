@@ -5,6 +5,7 @@ import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentSt
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs';
 import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs';
+import {applySurveyDrafts} from './survey/visual-profiles.mjs';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const radar=$('radar'),r=radar.getContext('2d');
@@ -76,11 +77,13 @@ function roadPoint(road,fraction){
  }
  return {x:p[0],y:p[1],a:0};
 }
-function prepareMap(map){
+function prepareMap(map,surveyData=[]){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
  state.map=map;
  state.roads=map.roads;state.buildings=map.buildings||[];
  prepareCityStyles(state.buildings,map.pois||[]);
+ const survey=applySurveyDrafts(state.buildings,surveyData);
+ console.info('Melito survey: '+survey.applied+'/'+survey.total+' mapped drafts, '+survey.verified+' photo-verified');
  state.ground=prepareUrbanGround(state.buildings,state.roads);
  state.roadGrid=makeIndex(state.roads);state.buildingGrid=makeIndex(state.buildings);
  const possible=state.roads.filter(q=>DRIVE.has(q.t)&&q.p.length>=4);
@@ -390,7 +393,12 @@ async function load(){
    map=await fetchOverpass(boundary,url=>{$('loading-text').textContent='Collegamento cartografico: '+new URL(url).hostname+'. Le strade resteranno fedeli ai dati OSM.';});
    try{localStorage.setItem('gta-melito-osm-v1',JSON.stringify(map));}catch(e){console.warn('Cache della mappa non disponibile:',e);}
   }
-  prepareMap(map);
+  let surveyData=[];
+  try{
+   const surveyReq=await fetch('./survey/sector-001-002.json',{cache:'no-cache'});
+   if(surveyReq.ok)surveyData=[await surveyReq.json()];
+  }catch(error){console.warn('Optional building survey unavailable:',error);}
+  prepareMap(map,surveyData);
  }catch(e){console.error('GTA Melito map load',e);loading('MAPPA NON DISPONIBILE','Non posso mostrare una Melito inventata: '+e.message+'. Riprova quando la cartografia è disponibile.',true);}
  finally{state.loading=false;}
 }

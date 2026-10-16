@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#182d29">
+<meta name="description" content="GTA Melito: censimento progressivo edificio per edificio dal confine comunale, con impronte reali OpenStreetMap e riferimenti Google Maps per sopralluoghi.">
+<title>Sopralluogo edifici · GTA Melito</title>
+<style>
+:root{color-scheme:dark;background:#0b1717;color:#e9e4cd;font:14px/1.45 ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0}a{color:#ffce8e}
+header{border-bottom:2px solid #7c8b79;background:#1b312c;padding:15px clamp(10px,2vw,28px);display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+h1{font-size:19px;letter-spacing:.08em;color:#ffe2a0;margin:0}
+header p{font-size:11px;color:#cbd2bd;margin:3px 0 0}
+main{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(305px,.8fr);gap:14px;max-width:1600px;padding:14px;margin:auto}
+.panel{background:#182a28;border:1px solid #647b72;padding:12px;min-width:0}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12px}
+select,button{background:#304d44;color:#f2eccf;border:1px solid #8fa08a;padding:8px;font:inherit}
+button{cursor:pointer;user-select:none;touch-action:manipulation}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #ffcf76;outline-offset:2px}
+#map{width:100%;height:min(72vh,720px);min-height:370px;display:block;background:#465c4c;touch-action:none;border:2px solid #adab90}
+.legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:9px;font-size:11px;color:#d8d8bf}
+.tag:before{content:"";display:inline-block;width:11px;height:11px;margin-right:4px;border:1px solid #151e1c;vertical-align:-1px;background:var(--tag)}
+.side{display:flex;flex-direction:column;gap:10px;min-width:0}
+.totals{font-size:14px;display:grid;gap:6px}
+strong{color:#ffe0a4}#detail h2{margin:0 0 6px;font-size:17px}
+#detail p{margin:5px 0;color:#d5d6c1}
+#detail .warn{background:#614337;border:1px solid #a47a58;padding:8px;color:#ffe5c0}
+.detail-links{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.detail-links a{background:#293f37;padding:7px 10px;border:1px solid #829a86;text-decoration:none;font-size:11px}
+#list{overflow:auto;max-height:390px;display:grid;gap:3px}
+#list button{text-align:left;background:#223933;padding:7px 10px;border:1px solid transparent;font-size:11px}
+#list button.selected{border-color:#f3d18d;background:#554e38;color:#ffe8b9}
+section h2{margin:0 0 9px;color:#e9dba9;font-size:13px}
+small,.foot{font-size:11px;color:#bac5b4}
+.footer{max-width:1600px;padding:4px 20px 22px;margin:auto;color:#b4bca9;font-size:11px}
+@media(max-width:800px){main{display:flex;flex-direction:column}#map{height:48dvh;min-height:310px}#list{max-height:260px}}
+</style></head><body>
+<header><div><h1>SOPRALLUOGO · GTA MELITO</h1><p>Dal confine nord-occidentale, edificio per edificio · ID OpenStreetMap conservati</p></div><a href="../index.html">← TORNA AL GIOCO</a></header>
+<main><section class="panel"><div class="toolbar">
+ <label for="sector">Settore:</label><select id="sector" aria-label="Settore da analizzare"></select>
+ <button id="prev">← PRECEDENTE</button><button id="next">SUCCESSIVO →</button>
+ <button id="fit">CENTRA SETTORE</button>
+</div>
+<canvas id="map" width="900" height="650" aria-label="Pianta OSM interattiva degli edifici, tocca per selezionare" tabindex="0"></canvas>
+<div class="legend"><span class="tag" style="--tag:#dfbb79">Scheda OSM preliminare</span><span class="tag" style="--tag:#56716a">Da catalogare</span><span class="tag" style="--tag:#e3f0bc">Edificio selezionato</span></div>
+<p class="foot">Rotellina per zoom; trascina la mappa; tocca un fabbricato per identificarlo. Le sagome sono OSM. Nessuna foto di Google è stata copiata.</p></section>
+<div class="side">
+<section class="panel totals" id="totals" aria-live="polite"><div>Sto caricando il catasto visuale OSM…</div></section>
+<section class="panel" id="detail" aria-live="polite"><h2>Seleziona un edificio</h2></section>
+<section class="panel"><h2>Edifici nel settore</h2><div id="list"></div></section>
+</div></main>
+<div class="footer">Dati cartografici © OpenStreetMap contributors (ODbL). Google Maps/Street View sono link esterni per verifica manuale, non fotografie automaticamente controllate. La copertura delle panoramiche dipende da Google.</div>
+<script type="module" src="./viewer.mjs"></script>
+</body></html>

@@ -1,0 +1,981 @@
+{
+  "schema": 1,
+  "areas": [
+    "S001",
+    "S002"
+  ],
+  "bbox": [
+    0,
+    0,
+    700,
+    500
+  ],
+  "status": "geometry-styled-no-photo-verification",
+  "photoVerified": 0,
+  "count": 47,
+  "sourceMap": "2026-10-16T21:27:56.483Z",
+  "styleSources": [
+    {
+      "type": "osm",
+      "url": "https://www.openstreetmap.org/copyright",
+      "verified": "building footprint and tags"
+    },
+    {
+      "type": "area-context",
+      "url": "https://www.blia.it/in/59288-82232",
+      "verified": "Via Etna is in north Melito; not any specific photographed building"
+    },
+    {
+      "type": "area-context",
+      "url": "https://www.idealista.it/geo/vendita-case/via-etna-melito-di-napoli-napoli/",
+      "verified": "neighborhood reference only; no address-to-OSM match"
+    },
+    {
+      "type": "area-context",
+      "url": "https://www.idealista.it/immobile/21428821/",
+      "verified": "industrial buildings occur along Via Appia, listing hides exact address; DO NOT attach to an OSM ID"
+    }
+  ],
+  "profiles": [
+    {
+      "id": 733646047,
+      "sector": "S001",
+      "x": 345.3,
+      "y": 476.6,
+      "areaM2": 933,
+      "longAxisDeg": 90,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#a59b91",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733646047"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733646108,
+      "sector": "S001",
+      "x": 308.1,
+      "y": 492.9,
+      "areaM2": 140,
+      "longAxisDeg": 91,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#b6a38c",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733646108"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703151,
+      "sector": "S002",
+      "x": 478.8,
+      "y": 128.5,
+      "areaM2": 2318,
+      "longAxisDeg": 157,
+      "osmType": "industrial",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#a8a69d",
+      "roof": "#8b9994",
+      "roofShape": "",
+      "detail": "industrial",
+      "evidence": [
+        "osm:way/733703151"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703093,
+      "sector": "S002",
+      "x": 503.5,
+      "y": 168.1,
+      "areaM2": 1153,
+      "longAxisDeg": 69,
+      "osmType": "yes",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ab9d8a",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703093"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703094,
+      "sector": "S002",
+      "x": 465,
+      "y": 174.5,
+      "areaM2": 264,
+      "longAxisDeg": 69,
+      "osmType": "yes",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#c0afa0",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703094"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703183,
+      "sector": "S002",
+      "x": 534.1,
+      "y": 195.2,
+      "areaM2": 29,
+      "longAxisDeg": 160,
+      "osmType": "yes",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ab9d8a",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "low-residential",
+      "evidence": [
+        "osm:way/733703183"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703095,
+      "sector": "S002",
+      "x": 468.2,
+      "y": 197.9,
+      "areaM2": 327,
+      "longAxisDeg": 69,
+      "osmType": "yes",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#c0afa0",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703095"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703184,
+      "sector": "S002",
+      "x": 516.2,
+      "y": 202.1,
+      "areaM2": 67,
+      "longAxisDeg": 158,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ab9d8a",
+      "roof": "#a49e91",
+      "roofShape": "",
+      "detail": "low-residential",
+      "evidence": [
+        "osm:way/733703184"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703185,
+      "sector": "S002",
+      "x": 433.3,
+      "y": 207.7,
+      "areaM2": 147,
+      "longAxisDeg": 164,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#c0afa0",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703185"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703195,
+      "sector": "S002",
+      "x": 567.7,
+      "y": 218.4,
+      "areaM2": 209,
+      "longAxisDeg": 157,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#938e86",
+      "roof": "#a49e91",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703195"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703196,
+      "sector": "S002",
+      "x": 444.9,
+      "y": 235.4,
+      "areaM2": 301,
+      "longAxisDeg": 72,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#b6a38c",
+      "roof": "#a49e91",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703196"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703194,
+      "sector": "S002",
+      "x": 488.6,
+      "y": 237.5,
+      "areaM2": 1068,
+      "longAxisDeg": 67,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#938e86",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703194"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703191,
+      "sector": "S002",
+      "x": 535.5,
+      "y": 247.4,
+      "areaM2": 2166,
+      "longAxisDeg": 70,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ab9d8a",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703191"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703210,
+      "sector": "S002",
+      "x": 455.9,
+      "y": 262.9,
+      "areaM2": 257,
+      "longAxisDeg": 72,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#938e86",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703210"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703213,
+      "sector": "S002",
+      "x": 505.3,
+      "y": 280.2,
+      "areaM2": 1067,
+      "longAxisDeg": 71,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ada798",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703213"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703219,
+      "sector": "S002",
+      "x": 536.8,
+      "y": 285,
+      "areaM2": 48,
+      "longAxisDeg": 67,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#b6a38c",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "low-residential",
+      "evidence": [
+        "osm:way/733703219"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703218,
+      "sector": "S002",
+      "x": 462.2,
+      "y": 290.7,
+      "areaM2": 236,
+      "longAxisDeg": 72,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#938e86",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703218"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703221,
+      "sector": "S002",
+      "x": 431.8,
+      "y": 295.5,
+      "areaM2": 188,
+      "longAxisDeg": 74,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ada798",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703221"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703230,
+      "sector": "S002",
+      "x": 440.9,
+      "y": 313,
+      "areaM2": 81,
+      "longAxisDeg": 163,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#c0afa0",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "low-residential",
+      "evidence": [
+        "osm:way/733703230"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703228,
+      "sector": "S002",
+      "x": 471.8,
+      "y": 316.6,
+      "areaM2": 497,
+      "longAxisDeg": 73,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ab9d8a",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703228"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703229,
+      "sector": "S002",
+      "x": 542.1,
+      "y": 331.1,
+      "areaM2": 588,
+      "longAxisDeg": 70,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ab9d8a",
+      "roof": "#a49e91",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703229"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703223,
+      "sector": "S002",
+      "x": 571.1,
+      "y": 332.2,
+      "areaM2": 2020,
+      "longAxisDeg": 69,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#9c988e",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703223"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703235,
+      "sector": "S002",
+      "x": 510.4,
+      "y": 333.8,
+      "areaM2": 519,
+      "longAxisDeg": 70,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ada798",
+      "roof": "#a49e91",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703235"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703244,
+      "sector": "S002",
+      "x": 481.2,
+      "y": 345.7,
+      "areaM2": 369,
+      "longAxisDeg": 161,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ada798",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703244"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703247,
+      "sector": "S002",
+      "x": 437,
+      "y": 347.8,
+      "areaM2": 478,
+      "longAxisDeg": 91,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#9c988e",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703247"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703258,
+      "sector": "S002",
+      "x": 487.5,
+      "y": 377.5,
+      "areaM2": 204,
+      "longAxisDeg": 70,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ada798",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703258"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703261,
+      "sector": "S002",
+      "x": 517.1,
+      "y": 381.1,
+      "areaM2": 293,
+      "longAxisDeg": 91,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#9c988e",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703261"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703262,
+      "sector": "S002",
+      "x": 565.4,
+      "y": 386,
+      "areaM2": 435,
+      "longAxisDeg": 160,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#938e86",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703262"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703263,
+      "sector": "S002",
+      "x": 596.4,
+      "y": 391.4,
+      "areaM2": 47,
+      "longAxisDeg": 156,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#938e86",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "low-residential",
+      "evidence": [
+        "osm:way/733703263"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703260,
+      "sector": "S002",
+      "x": 631.7,
+      "y": 403,
+      "areaM2": 1520,
+      "longAxisDeg": 67,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ab9d8a",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703260"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703266,
+      "sector": "S002",
+      "x": 438.4,
+      "y": 407.3,
+      "areaM2": 203,
+      "longAxisDeg": 179,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ada798",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703266"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703268,
+      "sector": "S002",
+      "x": 551.1,
+      "y": 411,
+      "areaM2": 447,
+      "longAxisDeg": 177,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#c0afa0",
+      "roof": "#a49e91",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703268"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703264,
+      "sector": "S002",
+      "x": 462.4,
+      "y": 412.4,
+      "areaM2": 703,
+      "longAxisDeg": 89,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#b6a38c",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703264"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703269,
+      "sector": "S002",
+      "x": 521.8,
+      "y": 413.3,
+      "areaM2": 506,
+      "longAxisDeg": 75,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#9c988e",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703269"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703267,
+      "sector": "S002",
+      "x": 497.8,
+      "y": 420.9,
+      "areaM2": 562,
+      "longAxisDeg": 75,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#c0afa0",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703267"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703270,
+      "sector": "S002",
+      "x": 585.9,
+      "y": 422.4,
+      "areaM2": 663,
+      "longAxisDeg": 92,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#938e86",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703270"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703284,
+      "sector": "S002",
+      "x": 383,
+      "y": 459.7,
+      "areaM2": 198,
+      "longAxisDeg": 1,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#9c988e",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703284"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703286,
+      "sector": "S002",
+      "x": 422.6,
+      "y": 462.2,
+      "areaM2": 347,
+      "longAxisDeg": 2,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#938e86",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703286"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703288,
+      "sector": "S002",
+      "x": 612.4,
+      "y": 463.8,
+      "areaM2": 163,
+      "longAxisDeg": 88,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#ada798",
+      "roof": "#a49e91",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703288"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703287,
+      "sector": "S002",
+      "x": 572.8,
+      "y": 477.9,
+      "areaM2": 1098,
+      "longAxisDeg": 179,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#b6a38c",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703287"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703292,
+      "sector": "S002",
+      "x": 450.8,
+      "y": 484.5,
+      "areaM2": 338,
+      "longAxisDeg": 89,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#9c988e",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703292"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703299,
+      "sector": "S002",
+      "x": 617.4,
+      "y": 484.6,
+      "areaM2": 38,
+      "longAxisDeg": 97,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#c0afa0",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "low-residential",
+      "evidence": [
+        "osm:way/733703299"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703290,
+      "sector": "S002",
+      "x": 506.3,
+      "y": 485.7,
+      "areaM2": 1215,
+      "longAxisDeg": 179,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#c0afa0",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703290"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703294,
+      "sector": "S002",
+      "x": 384.2,
+      "y": 488.9,
+      "areaM2": 471,
+      "longAxisDeg": 89,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#a59b91",
+      "roof": "#b8a58f",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703294"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703301,
+      "sector": "S002",
+      "x": 532.8,
+      "y": 491.7,
+      "areaM2": 160,
+      "longAxisDeg": 1,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#a59b91",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703301"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703295,
+      "sector": "S002",
+      "x": 646.2,
+      "y": 493.5,
+      "areaM2": 1345,
+      "longAxisDeg": 89,
+      "osmType": "residential",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#b6a38c",
+      "roof": "#b5aaa3",
+      "roofShape": "",
+      "detail": "urban-residential",
+      "evidence": [
+        "osm:way/733703295"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    },
+    {
+      "id": 733703307,
+      "sector": "S002",
+      "x": 693.5,
+      "y": 498.3,
+      "areaM2": 53,
+      "longAxisDeg": 70,
+      "osmType": "yes",
+      "osmLevels": null,
+      "photoVerified": false,
+      "status": "osm-draft",
+      "facade": "#9c988e",
+      "roof": "#a49e91",
+      "roofShape": "",
+      "detail": "low-residential",
+      "evidence": [
+        "osm:way/733703307"
+      ],
+      "note": "Forma e tipologia solo OSM; materiali/colore e dettagli sono bozze artistiche da confrontare con foto Street View puntuali."
+    }
+  ]
+}

@@ -156,3 +156,7 @@ Guida completa e licenze: [games/gta-melito/README.md](games/gta-melito/README.m
 - Interfaccia di gioco non selezionabile su pressione prolungata; pannello missioni ripiegato per dare priorità alla mappa.
 - Rendering 2D rinnovato di strade, tetti storici/moderni, personaggi e veicoli; riconoscibili la chiesa di Santa Maria delle Grazie e l'area del Municipio, a partire dai footprint OSM e da riferimenti comunali pubblici.
 - Insegne con nomi OSM vicino alle strade, ricreazione estetica **non fotografica** degli edifici.
+
+### Sopralluogo GTA Melito, dal confine (0.4.1)
+
+Un registro OSM di 2.056 edifici divisi in 34 settori, con mappa consultabile in `games/gta-melito/survey/` e 47 prime schede individuali di stile, ancora da validare su foto. I link Google Maps e Street View aprono il provider senza incorporarne immagini. Il prossimo settore è S003.
