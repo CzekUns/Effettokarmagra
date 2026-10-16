@@ -48,3 +48,13 @@ La scansione parte ora dalla piazza (PSS), senza distruggere i 47 profili dei pr
 **Altri 57/58**: solo forma OSM, orientamento, area e tipologia OSM se presente, e palette provvisoria. Non confondere foto di quartiere con identificazione univoca di un edificio. Il secondo anello di lavoro è tra **190 e 320 m**. Il visualizzatore si apre ora direttamente sulla piazza, con schede, fonti e link Street View per ogni edificio.
 
 Vedi `piazza-santo-stefano.json` e `viewer.mjs`.
+
+## 17 ottobre 2026 — Passata grafica completa, fotografie da completare
+
+Lavoro sui **2.056/2.056 edifici** OSM del paese: ogni ID conserva un proprio profilo in `town-visuals.json`, con colori/forme e dettagli grafici deterministici dal contesto OSM. Gli edifici sono ordinati in **sette anelli concentrici** da Piazza Santo Stefano (58, 139, 353, 727, 607, 144, 28 edifici) e nei **34 settori** originari.
+
+**Copertura geometrica e grafica: 100%. Copertura delle fotografie assegnate con certezza: 1/2.056.** Questa seconda fase, artigianale, NON è stata completata: fare diversamente significherebbe attribuire foto inesistenti a facciate. Gli edifici da verificare sono distinti chiaramente in UI.
+
+I profili sono in `town-visuals.json`, il generatore rigenerabile è `town-generator.mjs` e il motore li carica PRIMA dell’override documentato `piazza-santo-stefano.json`. Il portale ora mostra anche tutta Melito e ogni anello, non solo i primi 58 edifici, lasciando link Street View edificio per edificio.
+
+Le ricostruzioni di tetti, terrazzi, balconi e colori senza foto sono **stilizzazioni arcade**, anche dove le sagome cartografiche sono vere. La verifica fotografica non è eseguibile in modo attendibile per 2.056 edifici in un solo passaggio senza effettivo accesso e riconoscimento delle panoramiche.

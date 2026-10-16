@@ -4,9 +4,9 @@ import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=043';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=043';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs';
-import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=044';
+import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=045';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
-import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=044';
+import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const radar=$('radar'),r=radar.getContext('2d');
@@ -84,7 +84,7 @@ function prepareMap(map,surveyData=[]){
  state.roads=map.roads;state.buildings=map.buildings||[];
  prepareCityStyles(state.buildings,map.pois||[]);
  const survey=applySurveyDrafts(state.buildings,surveyData);
- console.info('Melito survey: '+survey.applied+'/'+survey.total+' mapped drafts, '+survey.verified+' photo-verified');
+ console.info('Melito visual city scan: '+survey.applied+'/'+survey.total+' buildings styled, '+survey.verified+' photo-verified');
  state.ground=prepareUrbanGround(state.buildings,state.roads);
  state.roadGrid=makeIndex(state.roads);state.buildingGrid=makeIndex(state.buildings);
  const possible=state.roads.filter(q=>DRIVE.has(q.t)&&q.p.length>=4);
@@ -418,7 +418,7 @@ async function load(){
    try{localStorage.setItem('gta-melito-osm-v1',JSON.stringify(map));}catch(e){console.warn('Cache della mappa non disponibile:',e);}
   }
   const surveyData=[];
-  for(const path of ['./survey/sector-001-002.json','./survey/piazza-santo-stefano.json']){
+  for(const path of ['./survey/sector-001-002.json','./survey/town-visuals.json','./survey/piazza-santo-stefano.json']){
    try{
     const surveyReq=await fetch(path,{cache:'no-cache'});
     if(surveyReq.ok)surveyData.push(await surveyReq.json());

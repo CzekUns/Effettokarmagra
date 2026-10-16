@@ -180,6 +180,34 @@ function flatRoof(c,b,art,tone){
   c.strokeStyle='#777365';c.lineWidth=.35;c.strokeRect(cx-2.9,cy-2.7,5.8,5);
   c.fillStyle='#464b48';c.fillRect(cx+1,cy-2,1.4,3.8);
  }
+
+ const features=art.surveyFeatures;
+ if(features?.roofTerrace&&area>120&&w>10&&bh>10){
+  // Stairwell access, light parapet and a few drying lines; original arcade art.
+  c.fillStyle='#ddd2bd';c.fillRect(cx-4,cy-2.8,8,5.6);
+  c.strokeStyle='#77786e';c.lineWidth=.5;c.strokeRect(cx-4,cy-2.8,8,5.6);
+  c.fillStyle='#4b5553';c.fillRect(cx-1.6,cy-1,3.3,2);
+  c.strokeStyle='#d9d0b3';c.lineWidth=.23;
+  for(let i=0;i<3;i++){c.beginPath();c.moveTo(x0+3,y0+4+i*2.3);c.lineTo(Math.min(x1-3,x0+16),y0+4+i*2.3);c.stroke();}
+ }
+ if(features?.roofTanks&&w>16&&bh>15){
+  c.fillStyle='#465755';c.fillRect(x1-8,y0+5,3.1,3.1);
+  c.fillStyle='#b5c1b9';c.fillRect(x1-7.5,y0+4.3,2.1,3);
+ }
+ if(features?.roofPanels&&w>20&&bh>16){
+  const count=Math.min(5,Math.max(2,Math.floor(w/9)));
+  for(let i=0;i<count;i++){
+   const x=x0+4+i*7.5,y=y0+Math.max(4,bh*.3);
+   c.fillStyle='#2f5260';c.fillRect(x,y,5.8,3.4);
+   c.strokeStyle='#c0cbbb';c.lineWidth=.33;c.strokeRect(x,y,5.8,3.4);
+   c.beginPath();c.moveTo(x+2.9,y);c.lineTo(x+2.9,y+3.4);c.stroke();
+  }
+ }
+ if(features?.courtyard&&area>450&&w>22&&bh>22){
+  const iw=Math.min(w*.32,12),ih=Math.min(bh*.25,9);
+  c.fillStyle='#727c70';c.fillRect(cx-iw/2,cy-ih/2,iw,ih);
+  c.strokeStyle='#d2c0a0';c.lineWidth=.65;c.strokeRect(cx-iw/2,cy-ih/2,iw,ih);
+ }
  if(art.type==='industrial'&&area>450){
   c.fillStyle='#d8e2d4a2';
   const count=Math.min(6,Math.floor(w/17));
@@ -273,7 +301,7 @@ export function drawCityBuildings(c,buildings,zoom){
  const sorted=[...buildings].sort((a,b)=>(a.art?.y1??0)-(b.art?.y1??0));
  for(const b of sorted){
   const a=b.art;if(!a)continue;
-  const seed=a.seed,depth=clamp((b.h||9)*.29,2.2,7.2),dx=depth*.65,dy=depth*.9;
+  const seed=a.seed,depth=clamp((a.renderHeight||b.h||9)*.29,2.2,9.1),dx=depth*.65,dy=depth*.9;
   const wall=a.facadeTint|| (a.type==='historic'?'#8a7962':a.type==='industrial'?'#74817c':'#807e72');
   c.save();
   c.save();c.translate(dx+1.1,dy+1.3);poly(c,b.p);c.fillStyle='#22362c66';c.fill();c.restore();
@@ -283,7 +311,7 @@ export function drawCityBuildings(c,buildings,zoom){
    const edgeX=x2-x1,edgeY=y2-y1,len=Math.hypot(edgeX,edgeY);
    if(len<2)continue;
    c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.lineTo(x2+dx,y2+dy);c.lineTo(x1+dx,y1+dy);c.closePath();
-   c.fillStyle=edgeY>0?wall:'#67675a';c.fill();
+   c.fillStyle=edgeY>0?wall:'#696b61';c.fill();
    // A few tiny windows, shutters and balconies on visible long facades.
    if(zoom>1.7&&len>9&&edgeY>-.2){
     const count=Math.min(14,Math.floor(len/4.5));
@@ -291,13 +319,12 @@ export function drawCityBuildings(c,buildings,zoom){
      const t=k/(count+1),px=x1+edgeX*t+dx*.63,py=y1+edgeY*t+dy*.63;
      c.fillStyle='#343f40';c.fillRect(px-1,py-1,1.5,1.9);
      c.fillStyle=k%3===0?'#d0a373':'#aeb7b0';c.fillRect(px-1,py-1,.4,1.9);
-     if(a.type==='historic'&&k%3===0){
+     if((a.surveyFeatures?.balconies||a.type==='historic')&&k%3===0){
       c.strokeStyle='#2f3a33';c.lineWidth=.32;c.strokeRect(px-1.5,py+.9,2.6,.6);
      }
     }
    }
   }
-  const historic=a.type==='historic'||a.type==='house';
   const tone=a.roofTint||historicalRoofTone(a);
   if(!specialized(c,b,a)){
    if(a.roof&&a.area>55)slopedRoof(c,b,a,tone);

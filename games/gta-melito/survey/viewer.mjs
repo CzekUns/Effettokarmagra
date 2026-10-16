@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id);
 const canvas=$('map'),c=canvas.getContext('2d'),sectorSel=$('sector');
-const data={map:null,register:null,profiles:new Map(),byId:new Map(),visible:[],sector:null,focus:null,selected:null,x:0,y:0,scale:1,pointer:null};
+const data={map:null,register:null,profiles:new Map(),byId:new Map(),visible:[],sector:null,focus:null,ringAreas:[],whole:null,selected:null,x:0,y:0,scale:1,pointer:null};
 const polycent=p=>{let x=0,y=0,n=0;for(let i=0;i<p.length;i+=2){if(i===p.length-2&&p[i]===p[0]&&p[i+1]===p[1])continue;x+=p[i];y+=p[i+1];n++;}return {x:x/n,y:y/n};};
 function hex(v){return String(v||'').replace(/[^#0-9a-f]/gi,'')||'#dfbb79';}
 function pointIn(p,x,y){let k=false;for(let i=0,j=p.length-2;i<p.length;j=i,i+=2){const ax=p[i],ay=p[i+1],bx=p[j],by=p[j+1];if((ay>y)!==(by>y)&&x<(bx-ax)*(y-ay)/(by-ay)+ax)k=!k;}return k;}
@@ -34,7 +34,11 @@ function paint(){
  const area=data.sector;
  if(area){
   const [x0,y0,x1,y1]=area.bbox;
-  c.strokeStyle='#ffde8b';c.setLineDash([4,4]);c.lineWidth=1.8;c.strokeRect(x0,y0,x1-x0,y1-y0);c.setLineDash([]);
+  c.strokeStyle='#ffde8b';c.setLineDash([4,4]);c.lineWidth=1.8;
+  if(area.outerRadius){
+   c.beginPath();c.arc(data.focus.center[0],data.focus.center[1],area.outerRadius,0,Math.PI*2);c.stroke();
+  } else if(area.sector!=='CITY')c.strokeRect(x0,y0,x1-x0,y1-y0);
+  c.setLineDash([]);
  }
  if(data.selected){
   const item=data.selected;
@@ -77,11 +81,22 @@ function choose(id,centerOn=false){
  ['Tipologia OSM',b.osmType],
  ['Piani OSM',b.osmLevels??'non censiti'],
  ['Strada vicina',b.nearestNamedStreet?(b.nearestNamedStreet+' (~'+b.namedStreetDistance+' m, NON indirizzo)'):'non associata'],
+ ['Anello dal centro',b.focusRing||'—'],
+ ['Copertura grafica',data.profiles.has(b.id)?'COMPLETATA (MODELLO OSM)':'DA GENERARE'],
  ['Verifica fotografica',data.profiles.get(b.id)?.photoVerified?'SÌ':'NO, da controllare']
  ];
  for(const [k,v] of fields){const row=document.createElement('p');row.textContent=k+': '+v;detail.append(row);}
  const a=data.profiles.get(b.id);
- if(a){const row=document.createElement('p');row.textContent=(a.photoVerified?'Aspetto documentato: ':'Bozza estetica OSM: ')+a.detail+' · area '+a.areaM2+' m² · asse '+a.longAxisDeg+'°';detail.append(row);}
+ if(a){const row=document.createElement('p');row.textContent=(a.photoVerified?'Aspetto documentato: ':'Modello grafico OSM: ')+a.detail+' · area '+a.areaM2+' m² · asse '+a.longAxisDeg+'°';detail.append(row);
+  if(a.features){
+   const model=document.createElement('p');
+   model.textContent='Stile arcade: '+(a.features.roofKind||'tetto generico')+
+    ' · '+a.features.stories+' piani '+(a.features.storiesMeasured?'(tag OSM)':'(STIMATI, NON REALI)')+
+    (a.features.balconies?' · balconi disegnati':'')+
+    (a.features.roofTerrace?' · terrazzo disegnato':'');
+   detail.append(model);
+  }
+ }
  if(a?.observations){
   const obs=document.createElement('p');obs.textContent='Elementi riconosciuti: '+a.observations.facadeAppearance+'; '+a.observations.domeAppearance+'; '+a.observations.towerAppearance;
   detail.append(obs);
@@ -104,10 +119,18 @@ function choose(id,centerOn=false){
  const u=new URL(location.href);u.searchParams.set('edificio',b.id);history.replaceState(null,'',u);
 }
 function renderSector(){
- const rows=data.register.buildings.filter(x=>data.sector.sector==='PSS'?x.focusArea==='PSS':x.sector===data.sector.sector).sort((a,b)=>data.sector.sector==='PSS'?a.focusOrder-b.focusOrder:a.y-b.y||a.x-b.x);
+ const key=data.sector.sector;
+ const rows=data.register.buildings.filter(x=>
+  key==='PSS'?x.focusArea==='PSS':
+  key==='CITY'?true:
+  key.startsWith('PSS-R')?x.focusRing===key:x.sector===key)
+ .sort((a,b)=>key==='PSS'?a.focusOrder-b.focusOrder:
+  key.startsWith('PSS-R')?Math.hypot(a.x-1096,a.y-1150)-Math.hypot(b.x-1096,b.y-1150):
+  a.y-b.y||a.x-b.x);
  data.visible=rows;
  const list=$('list');list.replaceChildren();
- rows.forEach((b,j)=>{
+ const listed=key==='CITY'?rows.slice(0,120):rows;
+ listed.forEach((b,j)=>{
   const btn=document.createElement('button');btn.type='button';btn.dataset.id=String(b.id);
   btn.textContent=String(j+1).padStart(2,'0')+' · #'+b.id+' · '+(b.nearestNamedStreet||b.osmType);
   btn.addEventListener('click',()=>choose(b.id,true));
@@ -116,29 +139,39 @@ function renderSector(){
  $('totals').replaceChildren();
  const lines=[
  'EDIFICI CENSITI NEL COMUNE: '+data.register.totals.registered,
- 'SCHEDE OSM PRELIMINARI: '+data.register.totals.osmDraft+' / '+data.register.totals.registered,
+ 'EDIFICI MODELLATI GRAFICAMENTE: '+data.register.totals.visualModeled+' / '+data.register.totals.registered,
+ 'MODELLI ANCORA DA VERIFICARE SU FOTO: '+data.register.totals.osmDraft,
  'FACCIATE VERIFICATE CON FOTO: '+data.register.totals.photoVerified,
- data.sector.sector==='PSS'?'PIAZZA SANTO STEFANO · '+rows.length+' EDIFICI':'SETTORE '+data.sector.sector+' · EDIFICI '+rows.length,
+ key==='PSS'?'PIAZZA SANTO STEFANO · '+rows.length+' EDIFICI':
+ key==='CITY'?'TUTTA MELITO · '+rows.length+' EDIFICI (LISTA PRIMI 120; SELEZIONA DALLA MAPPA)':
+ 'ZONA '+key+' · EDIFICI '+rows.length,
  'PROSSIMO DA ESAMINARE: '+(data.register.activeFocus?.next||data.register.nextSector)
  ];
  for(const text of lines){const el=document.createElement('div');el.textContent=text;$('totals').append(el);}
  fitSector();if(rows.length)choose(rows[0].id,false);
 }
 function setSector(id){
- const sector=id==='PSS'?data.focus:data.register.sectors.find(x=>x.sector===id);if(!sector)return;
+ const sector=id==='PSS'?data.focus:id==='CITY'?data.whole:
+  data.ringAreas.find(x=>x.sector===id)||data.register.sectors.find(x=>x.sector===id);
+ if(!sector)return;
  data.sector=sector;sectorSel.value=id;renderSector();
 }
 async function boot(){
  try{
-  const [m,r,p,piazza]=await Promise.all([
+  const [m,r,town,piazza]=await Promise.all([
    fetch('../data/melito-map.json').then(r=>r.json()),
    fetch('./building-register.json').then(r=>r.json()),
-   fetch('./sector-001-002.json').then(r=>r.json()),
+   fetch('./town-visuals.json').then(r=>r.json()),
    fetch('./piazza-santo-stefano.json').then(r=>r.json())
   ]);
   data.map=m;data.register=r;
-  data.profiles=new Map([...p.profiles,...piazza.profiles].map(x=>[x.id,x]));
-  data.focus={sector:'PSS',bbox:piazza.bbox,n:piazza.profiles.length,stage:'osm-draft'};
+  data.profiles=new Map([...town.profiles,...piazza.profiles].map(x=>[x.id,x]));
+  data.focus={sector:'PSS',bbox:piazza.bbox,n:piazza.profiles.length,center:[1096,1150],stage:'visual-complete'};
+  data.whole={sector:'CITY',bbox:[0,0,m.projection.width,m.projection.height],n:town.profiles.length};
+  data.ringAreas=town.rings.map(r=>({
+    sector:r.id,n:r.n,outerRadius:r.toMeters,stage:'visual-complete',
+    bbox:[1096-r.toMeters,1150-r.toMeters,1096+r.toMeters,1150+r.toMeters]
+  }));
   data.byId=new Map(r.buildings.map(x=>[x.id,x]));
   const buildings=new Map(m.buildings.map(x=>[x.id,x]));
   for(const item of r.buildings){
@@ -149,7 +182,12 @@ async function boot(){
    building.surveyBox=[x0,y0,x1,y1];
   }
   const focusOption=document.createElement('option');focusOption.value='PSS';focusOption.textContent='★ PIAZZA SANTO STEFANO · '+piazza.profiles.length+' edifici';sectorSel.append(focusOption);
-  for(const sect of r.sectors){const opt=document.createElement('option');opt.value=sect.sector;opt.textContent=sect.sector+' · '+sect.n+' edifici '+(sect.stage==='osm-draft'?'●':'○');sectorSel.append(opt);}
+  const cityOption=document.createElement('option');cityOption.value='CITY';cityOption.textContent='★ TUTTA MELITO · '+town.profiles.length+' edifici';sectorSel.append(cityOption);
+  for(const ring of data.ringAreas){
+   const option=document.createElement('option');option.value=ring.sector;
+   option.textContent=ring.sector+' · '+ring.n+' edifici dalla piazza';sectorSel.append(option);
+  }
+  for(const sect of r.sectors){const opt=document.createElement('option');opt.value=sect.sector;opt.textContent=sect.sector+' · '+sect.n+' edifici ✓';sectorSel.append(opt);}
   const preselect=Number(new URL(location.href).searchParams.get('edificio'));
   const init=data.byId.get(preselect);
   setSector(init?.focusArea||init?.sector||'PSS');
@@ -158,7 +196,7 @@ async function boot(){
   function next(d){
    const cur=data.visible.findIndex(b=>b.id===data.selected?.id);
    if(cur>=0&&cur+d>=0&&cur+d<data.visible.length){choose(data.visible[cur+d].id,true);return;}
-   const seq=[data.focus,...data.register.sectors],current=seq.findIndex(s=>s.sector===data.sector.sector);
+   const seq=[data.focus,data.whole,...data.ringAreas,...data.register.sectors],current=seq.findIndex(s=>s.sector===data.sector.sector);
    const target=seq[current+d];if(target)setSector(target.sector);
   }
   $('prev').addEventListener('click',()=>next(-1));
@@ -178,8 +216,10 @@ async function boot(){
    const rect=canvas.getBoundingClientRect(),xx=(ev.clientX-rect.left)*canvas.width/rect.width,yy=(ev.clientY-rect.top)*canvas.height/rect.height;
    const x=data.x+(xx-canvas.width/2)/data.scale,y=data.y+(yy-canvas.height/2)/data.scale;
    for(const b of m.buildings)if(b.surveyBox?.[0]<=x&&b.surveyBox[2]>=x&&b.surveyBox[1]<=y&&b.surveyBox[3]>=y&&pointIn(b.p,x,y)){choose(b.id,false);const reference=data.byId.get(b.id);
+     if(data.sector.sector==='CITY')return;
      if(data.sector.sector==='PSS'&&reference?.focusArea==='PSS')return;
-     const desired=reference?.focusArea==='PSS'?'PSS':reference?.sector;
+     if(data.sector.sector.startsWith('PSS-R')&&reference?.focusRing===data.sector.sector)return;
+     const desired=reference?.focusArea==='PSS'?'PSS':reference?.focusRing||reference?.sector;
      if(desired&&desired!==data.sector.sector){setSector(desired);choose(b.id,false);}
      return;}
   });

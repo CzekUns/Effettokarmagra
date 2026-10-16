@@ -22,6 +22,19 @@ export function applySurveyDrafts(buildings, sectors){
   b.art.roofTint=draft.roof;
   b.art.roofDirection=draft.longAxisDeg;
   b.art.surveyDesign=draft.detail;
+  b.art.surveyCategory=draft.category||null;
+  b.art.surveyFeatures=draft.features?{...draft.features}:null;
+  b.art.renderHeight=draft.features?.stories?
+   Math.max(3,Math.min(30,draft.features.stories*3)):null;
+  // Architectural mass and roof shape remain stylistic until each building
+  // is individually observed. Named landmarks retain their specialized art.
+  const mapped={historical:'historic',residential:'apartment',
+   lowrise:'house',industrial:'industrial',retail:'market',ancillary:'mixed'};
+  if(!['church','civic','school'].includes(b.art.type)&&mapped[draft.category])
+   b.art.type=mapped[draft.category];
+  if(draft.features?.roofKind==='pitched-clay')b.art.roof=true;
+  if(draft.features?.roofKind==='flat'||draft.features?.roofKind==='corrugated-flat')
+   b.art.roof=false;
   if(draft.photoVerified&&draft.observations)b.art.surveyObservation={...draft.observations};
   if(draft.osmType==='industrial'&&b.t==='industrial')b.art.type='industrial';
   if(draft.roofShape)b.art.roof=true;

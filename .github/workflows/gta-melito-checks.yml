@@ -32,5 +32,6 @@ jobs:
           node --check games/gta-melito/storefronts.mjs
           node --check games/gta-melito/survey/visual-profiles.mjs
           node --check games/gta-melito/survey/viewer.mjs
+          node --check games/gta-melito/survey/town-generator.mjs
       - name: Test graph topology, real map and traffic
         run: node --test games/gta-melito/*.test.mjs games/gta-melito/survey/*.test.mjs

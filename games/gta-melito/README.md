@@ -118,3 +118,11 @@ Per prevenire moduli obsoleti nel browser, l'HTML carica `game.mjs?v=043` e i mo
 - Altri 57: colori e materiali **provvisori**, non derivati da foto certe dei singoli edifici.
 - L'archivio ora si apre direttamente su Piazza Santo Stefano, con filtri per ritornare ai settori precedenti. Il censimento completo delle 2.056 sagome continua a esistere.
 - I profili OSM nuovi si caricano in ordine dopo quelli precedenti; motore missioni e tracciati viari non sono stati modificati.
+
+## 0.5.0 — PRIMA PASSATA GRAFICA DI TUTTA MELITO
+
+**Copertura completata delle 2.056 sagome edificio** dell’archivio OpenStreetMap attuale. Ogni building way ha una **scheda estetica individuale**, con categoria derivata dai tag OSM, area calcolata dalla pianta, direzione prevalente, colori delle facciate/tetti, sagoma visiva e dettagli procedurali ripetibili: balconi, terrazze, volumi tecnici, piccoli cortili, serbatoi e pannelli decorativi ove coerenti. La grafica è utilizzata dal renderer Canvas tramite `survey/town-visuals.json` e `survey/visual-profiles.mjs`.
+
+**Non equivale a una scansione completa di Google Street View:** 2.055 facciate su 2.056 NON sono state confrontate con una fotografia individuata con certezza. Colori, piani non taggati, balconi e dettagli restano interpretazioni artistiche non certificate. Santa Maria delle Grazie è l'unico edificio identificato in fotografia tramite fonti pubbliche in questa fase. **Non dichiariamo verificati i 2.055 edifici stimati.**
+
+I profili sono prodotti deterministicamente da `survey/town-generator.mjs` usando le sole geometrie/tipologie OpenStreetMap e il registro OSM originale; nessuna immagine Google viene scaricata. Il catalogo originario per settori (34) e le 47 vecchie schede sono conservati, così come le 58 schede individuali del primo anello di Piazza Santo Stefano. Il visualizzatore `survey/index.html` espone tutta la città, anelli concentrici dalla piazza e tutti i 34 settori, con link Maps/Street View per continuare in seguito la verifica fotografica e con il numero corretto di schede complete.
