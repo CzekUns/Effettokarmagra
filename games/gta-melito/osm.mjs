@@ -76,31 +76,31 @@ export function buildMap(overpass,boundary){
 // Fallback when public Overpass mirrors are unavailable.
 // Small /api/0.6/map tiles avoid OSM API's single-request node cap.
 function decodeXml(value){
- return String(value||'').replace(/&#(\\d+);/g,(_,n)=>String.fromCodePoint(Number(n)))
+ return String(value||'').replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(Number(n)))
  .replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
 }
 function attributes(raw){
- const out={};let m;const re=/([\\w:.-]+)="([^"]*)"/g;
+ const out={};let m;const re=/([\w:.-]+)="([^"]*)"/g;
  while((m=re.exec(raw))!==null)out[m[1]]=decodeXml(m[2]);return out;
 }
 function osmTags(xml){
- const tags={};let m;const re=/<tag\\b([^>]*?)\\/>/g;
+ const tags={};let m;const re=/<tag\b([^>]*?)\/>/g;
  while((m=re.exec(xml))!==null){const a=attributes(m[1]);if(a.k)tags[a.k]=a.v||'';}return tags;
 }
 export function parseOsmXml(text,nodes,ways){
  let m;
- const nodeRe=/<node\\b([^>]*?)(?:\\/>|>([\\s\\S]*?)<\\/node>)/g;
+ const nodeRe=/<node\b([^>]*?)(?:\/>|>([\s\S]*?)<\/node>)/g;
  while((m=nodeRe.exec(text))!==null){
   const a=attributes(m[1]);if(!a.id||!a.lat||!a.lon)continue;
   const tag=m[2]?osmTags(m[2]):{};
   nodes.set(a.id,{type:'node',id:Number(a.id),lat:Number(a.lat),lon:Number(a.lon),tags:tag});
  }
- const wayRe=/<way\\b([^>]*)>([\\s\\S]*?)<\\/way>/g;
+ const wayRe=/<way\b([^>]*)>([\s\S]*?)<\/way>/g;
  while((m=wayRe.exec(text))!==null){
   const a=attributes(m[1]);if(!a.id)continue;
   const tags=osmTags(m[2]);
   if(!tags.highway&&!tags.building)continue;
-  const refs=[...m[2].matchAll(/<nd\\b[^>]*ref="(\\d+)"/g)].map(q=>q[1]);
+  const refs=[...m[2].matchAll(/<nd\b[^>]*ref="(\d+)"/g)].map(q=>q[1]);
   ways.set(a.id,{type:'way',id:Number(a.id),refs,tags});
  }
 }
