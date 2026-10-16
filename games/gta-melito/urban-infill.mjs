@@ -115,5 +115,13 @@ export function generateUrbanInfill(map,{pitch=23.5,max=2600}={}){
    nearbyRoad:road.t,purpose:'fill-urban-block-not-surveyed-building'};
   buildings.push(model);put(boxBin,box,box.x0,box.y0,box.x1,box.y1);
  }
- return {buildings,stats:{...stats,generated:buildings.length,osmBuildings:map.buildings.length,accuracy:'synthetic visual infill, not verified real building footprints'}};
+ const center=b=>{const box=toBox(b.p);return[(box.x0+box.x1)/2,(box.y0+box.y1)/2];};
+ // Drop solitary stands in empty OSM space. Infill remains a visual estimate,
+ // but each retained footprint now belongs to a small, readable cluster.
+ const centers=buildings.map(center),clustered=buildings.filter((b,i)=>
+  centers.some((q,j)=>j!==i&&Math.hypot(q[0]-centers[i][0],q[1]-centers[i][1])<=36));
+ stats.excludedOpen+=buildings.length-clustered.length;
+ return {buildings:clustered,stats:{...stats,generated:clustered.length,candidates:buildings.length,
+  excludedIsolated:buildings.length-clustered.length,osmBuildings:map.buildings.length,
+  accuracy:'synthetic visual infill, not verified real building footprints'}};
 }

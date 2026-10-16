@@ -13,7 +13,7 @@ import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art
 import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=074';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
-import {generateUrbanInfill} from './urban-infill.mjs?v=075';
+import {generateUrbanInfill} from './urban-infill.mjs?v=076';
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=060';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
