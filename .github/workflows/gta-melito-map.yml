@@ -33,5 +33,8 @@ jobs:
             echo 'No cartographic updates'
           else
             git commit -m 'Refresh real Melito OSM street and building snapshot'
+            # The user may push game code while this 40-90 s cartographic job runs.
+            # Rebase just the snapshot commit on the latest branch before pushing.
+            git pull --rebase origin main
             git push
           fi
