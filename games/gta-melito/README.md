@@ -6,10 +6,16 @@ Piccolo gioco arcade originale ispirato alla visuale dall'alto dei GTA degli ann
 
 - Confine amministrativo reale di Melito di Napoli: ISTAT, 1 gennaio 2026 (CC BY).
 - Vie, curve, incroci, sagome edilizie e punti d'interesse: importati dai dati OpenStreetMap (ODbL). **Nessuna strada viene inventata con una griglia fittizia.**
-- Movimento a piedi, guida top-down, salita/discesa dalle auto, semplici automobili in movimento, pedoni decorativi e minimappa.
+- Movimento a piedi, guida arcade top-down con auto guidabili, salita/discesa, freno a mano, corsa, camera con inseguimento morbido e minimappa.
+- **Viabilità a grafo**: 1.541 nodi geografici e 155 intersezioni con almeno tre diramazioni nell'estrazione di ottobre 2026; il traffico può scegliere una svolta e proseguire in un'altra via, con rispetto delle strade a senso unico.
+- Pedoni animati sulle vie percorribili a piedi, traffico distribuito nei quartieri e rallentamenti tra auto sullo stesso segmento.
+- Edifici con impronte OSM (2.056 sagome), tetti in pixel art, facciate proiettate, ombre, lucernari, impianti e variazioni cromatiche deterministiche.
+- Carreggiate con larghezze approssimative differenziate per gerarchia OSM, marciapiedi, strisce pedonali in corrispondenza degli incroci.
+- Arredo urbano **fictional/decorativo** generato proceduralmente (alberi, lampioni, cassonetti, scooter parcheggiati, panchine). Non corrisponde all'inventario reale di Melito.
+- Comandi touch con freno e corsa dedicati, controlli PC, zoom e navigazione camera fluida.
 - Rendering 2D Canvas con caricamento e disegno solo degli elementi vicini al giocatore.
-- Per motivi di prestazioni e fedeltà, le **forme** dei palazzi vengono dai dati OSM, mentre le facciate sono rese con un'estetica rétro originale. Il database OSM può essere incompleto; non garantiamo che contenga *ogni* negozio, strada privata o edificio.
-- Le auto del traffico seguono singole geometrie stradali; non implementano ancora una vera rete di percorsi con semafori, incroci e precedenze. Le missioni, la polizia, un sistema di danni e il vero gameplay GTA restano da costruire.
+- Per motivi di prestazioni e fedeltà, le **forme** dei palazzi vengono dai dati OSM, mentre le facciate e gli elementi sul tetto sono resi con un'estetica rétro originale. Il database OSM può essere incompleto; non garantiamo che contenga *ogni* negozio, strada privata o edificio.
+- Le auto del traffico ora percorrono il grafo OSM e possono svoltare agli incroci; precedenze, semafori, collisioni complesse e pianificazione di destinazioni sono ancora semplificati. Missioni, polizia, danni e gameplay GTA completo restano da costruire.
 
 ## Fonti e licenze
 
@@ -36,9 +42,9 @@ Lo script ricava la cartografia OpenStreetMap da una bounding box del confine IS
 - **E:** entra nell'auto vicina, oppure scendi.
 - **Shift:** corsa a piedi.
 - **Spazio:** freno a mano.
-- **Telefono:** pulsanti direzionali, ENTRA/SCENDI.
+- **Telefono:** pulsanti direzionali, ENTRA/SCENDI, FRENO e CORRI.
 - **+ / −:** zoom.
-- **⌂:** torna al punto di partenza.
+- **⌂:** torna al punto di partenza.\n\nPer verificare topologia, passaggio fra segmenti e reali geometrie:\n\n```bash\nnode --test games/gta-melito/gta-melito.test.mjs\n```\n\nC'è anche un workflow `GTA Melito 0.2 validation` che esegue i test ad ogni modifica al gioco.
 
 ## Sviluppo successivo
 
@@ -48,4 +54,4 @@ Lo script ricava la cartografia OpenStreetMap da una bounding box del confine IS
 4. Missioni locali, NPC, polizia e salvataggio.
 5. Ottimizzazione smartphone e verifica con test reali su dispositivi.
 
-Questo è un prototipo di esplorazione, non un GTA 2 completo e non una ricostruzione fotografica degli immobili.
+Questa è la versione 0.2 del prototipo di esplorazione urbana. I dati geografici sono reali; alcuni allestimenti grafici e gli NPC sono inventati. Non è un GTA 2 completo né una ricostruzione fotografica degli immobili.

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="it"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#172521"><meta name="description" content="GTA Melito: esplora Melito di Napoli, ricostruita da cartografia libera OpenStreetMap, in un arcade dall'alto.">
+<meta name="theme-color" content="#172521"><meta name="description" content="GTA Melito 0.2: strade di Melito di Napoli da OpenStreetMap, traffico agli incroci, tetti pixel art, scooter e guida arcade dall'alto.">
 <title>GTA Melito · Uns Arcade</title>
 <style>
 :root{color-scheme:dark;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#101916;color:#f6ebce}
@@ -32,7 +32,11 @@ button{cursor:pointer}a{color:#eec97d}button:focus-visible,a:focus-visible{outli
 .dpad button[data-dir="right"]{grid-column:3;grid-row:2}
 .dpad button:active,.dpad button.pressed{background:#e5bd66;color:#1b3029}
 .buttons{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.buttons button{min-height:48px}
+.buttons button{min-height:48px;touch-action:none}
+.buttons button.pressed{background:#f5cc74;color:#1a2922}
+#brake{background:#5c3f38;color:#fff4d4;border:2px solid #bd8c79;font-weight:900}
+#sprint{background:#345452;color:#fff4d4;border:2px solid #67908d;font-weight:900}
+#brake,#sprint{padding:10px 11px;min-width:67px}
 .mini{padding:11px 12px;background:#263b35;border:1px solid #81937b;color:#f2e0b9;font-weight:bold}
 .instructions{color:#adbbaa;font-size:11px;line-height:1.6;margin:12px 0 0}
 .credits{display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:space-between;color:#a4b5a6;font-size:10px;margin-top:12px;border-top:1px solid #526353;padding-top:10px}
@@ -44,12 +48,12 @@ button{cursor:pointer}a{color:#eec97d}button:focus-visible,a:focus-visible{outli
 .hud{font-size:10px;padding:7px;gap:5px}
 .dpad{grid-template-columns:repeat(3,47px);grid-template-rows:repeat(2,49px);gap:3px}
 .controls{gap:4px;padding:8px 3px 0}.buttons{gap:5px}.buttons button{min-height:40px}
-.control-action{padding:9px 10px}.mini{padding:9px 8px}.instructions{font-size:10px;margin:8px 4px}
+.control-action{padding:9px 10px}.mini{padding:9px 8px}#brake,#sprint{padding:9px 7px;min-width:57px;font-size:10px}.instructions{font-size:10px;margin:8px 4px}
 }
 </style>
 </head><body><main class="app">
-<header class="header"><div><h1>GTA: MELITO <span aria-hidden="true">★</span></h1><small>UNS ARCADE / MELITO DI NAPOLI / VERSIONE 0.1</small></div><a class="back" href="../../index.html">← SALA GIOCHI</a></header>
-<div class="hud"><span id="place">CARICAMENTO MAPPA…</span><span>MEZZO: <b id="vehicle">A PIEDI</b></span><span>STRADE: <b id="road-count">—</b></span><span>PALAZZI: <b id="building-count">—</b></span></div>
+<header class="header"><div><h1>GTA: MELITO <span aria-hidden="true">★</span></h1><small>UNS ARCADE / MELITO DI NAPOLI / VERSIONE 0.2</small></div><a class="back" href="../../index.html">← SALA GIOCHI</a></header>
+<div class="hud"><span id="place">CARICAMENTO MAPPA…</span><span>MEZZO: <b id="vehicle">A PIEDI</b></span><span>STRADE: <b id="road-count">—</b></span><span>PALAZZI: <b id="building-count">—</b></span><span>INCROCI: <b id="junction-count">—</b></span></div>
 <div class="stage">
  <canvas id="world" aria-label="Mappa giocabile di Melito, muoviti con frecce o WASD" tabindex="0"></canvas>
  <canvas id="radar" width="168" height="142" aria-label="Minimappa di Melito"></canvas>
@@ -61,8 +65,8 @@ button{cursor:pointer}a{color:#eec97d}button:focus-visible,a:focus-visible{outli
   <button data-dir="up" aria-label="Avanti">▲</button><button data-dir="left" aria-label="Sinistra">◀</button>
   <button data-dir="down" aria-label="Indietro">▼</button><button data-dir="right" aria-label="Destra">▶</button>
  </div>
- <div class="buttons"><button class="control-action" id="action">E · ENTRA IN AUTO</button><button class="mini" id="zoom-in" aria-label="Zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div>
+ <div class="buttons"><button class="control-action" id="action">E · ENTRA IN AUTO</button><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="sprint" aria-label="Tieni premuto per correre">CORRI</button><button class="mini" id="zoom-in" aria-label="Zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div>
 </div>
-<p class="instructions">PC: WASD/frecce per muoverti e guidare · E entra/esci · SHIFT corri · SPAZIO freno a mano. Telefono: pulsanti direzionali e AZIONE. Il mondo riproduce il tracciato OSM; i palazzi hanno forme cartografiche, ma le facciate sono rappresentazioni in pixel art.</p>
+<p class="instructions">PC: WASD/frecce per muoverti e guidare · E entra/esci · SHIFT corri · SPAZIO freno a mano. Telefono: frecce, ENTRA/SCENDI, FRENO e CORRI. Traffico che svolta sulle vere strade, marciapiedi, attraversamenti, tetti tridimensionali e dettagli urbani immaginari in stile pixel art. Strade, incroci e sagome dei palazzi si basano su OpenStreetMap.</p>
 <footer class="credits"><span>© OpenStreetMap contributors — ODbL · Confini: ISTAT 2026 — CC BY · MIT: ispirazione motore <a href="https://github.com/harmanhanjra/punjab-stories" target="_blank" rel="noreferrer">Punjab Stories</a></span><span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Crediti cartografia</a> · <a href="./README.md">Informazioni sul progetto</a></span></footer>
 </main><script type="module" src="./game.mjs"></script></body></html>

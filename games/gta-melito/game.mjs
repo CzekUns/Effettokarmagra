@@ -1,9 +1,11 @@
 import {fetchOverpass,inside} from './osm.mjs';
+import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs';
+import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps} from './visuals.mjs';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false};
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:2.2,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null};
+const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:2.2,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,props:[],propsGrid:null,camera:{x:0,y:0},distance:0};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const colors=['#8f8271','#a29076','#797970','#ae947b','#938c7b','#7b8581','#a58c85'];
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
@@ -35,9 +37,10 @@ function query(items,grid,x0,y0,x1,y1){
    for(const i of grid.get(gx+','+gy)||[])out.add(i);
  return [...out].map(i=>items[i]);
 }
-function nearest(x,y,max=24,roads=state.roads){
+function nearest(x,y,max=24,roads=state.roads,driveOnly=false){
  let best=null,dd=max*max;
  for(const road of query(roads,state.roadGrid,x-max,y-max,x+max,y+max)){
+  if(driveOnly&&!DRIVE.has(road.t))continue;
   const p=road.p;
   for(let i=2;i<p.length;i+=2){
    const ax=p[i-2],ay=p[i-1],bx=p[i],by=p[i+1],dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy;
@@ -83,7 +86,10 @@ function prepareMap(map){
  const chosen=pool.map(q=>({q,p:roadPoint(q,.5)})).sort((a,b)=>Math.hypot(a.p.x-center[0],a.p.y-center[1])-Math.hypot(b.p.x-center[0],b.p.y-center[1]))[0];
  const point=chosen.p;
  state.spawn=[point.x,point.y];Object.assign(state.player,{x:point.x,y:point.y,a:point.a,car:-1});
- const nearCar={x:point.x+Math.cos(point.a)*7,y:point.y+Math.sin(point.a)*7,a:point.a,speed:0,type:0};
+ state.camera.x=point.x;state.camera.y=point.y;state.distance=0;
+ state.graph=buildRoadGraph(state.roads);
+ state.props=buildStreetProps(state.roads);state.propsGrid=makeIndex(state.props);
+ const nearCar={x:point.x+Math.cos(point.a)*9,y:point.y+Math.sin(point.a)*9,a:point.a,speed:0,type:0};
  state.cars=[nearCar];
  let k=0;
  for(const road of possible){
@@ -93,33 +99,15 @@ function prepareMap(map){
   state.cars.push({x:pt.x,y:pt.y,a:pt.a,speed:0,type:k++%5});
   if(state.cars.length>=105)break;
  }
- const moving=possible.filter(q=>arcLength(q.p)>45&&q.t!=='service');
- for(let i=0;i<65&&moving.length;i++){
-  const road=moving[Math.floor(rnd(i*83+19)*moving.length)],p=road.p;
-  state.traffic.push({road,p,seg:0,t:rnd(i*143+7),dir:i%2?1:-1,speed:5+rnd(i*5+3)*8,kind:i%5});
- }
- const walking=possible.filter(q=>q.t==='residential'||q.t==='tertiary'||q.t==='secondary'||q.t==='primary');
- for(let i=0;i<120&&walking.length;i++){
-  const road=walking[Math.floor(rnd(i*41+11)*walking.length)],pt=roadPoint(road,rnd(i*73+9)),side=i%2?1:-1;
-  state.people.push({x:pt.x+Math.cos(pt.a+Math.PI/2)*side*(road.w/2+1.5),y:pt.y+Math.sin(pt.a+Math.PI/2)*side*(road.w/2+1.5),a:pt.a+(i%2?0:Math.PI),step:rnd(i*13)*6});
- }
- $('road-count').textContent=String(state.roads.length);$('building-count').textContent=String(state.buildings.length);
+ state.traffic=createAgents(state.graph,140,189,'car');
+ state.people=createAgents(state.graph,190,310,'walk');
+ $('road-count').textContent=String(state.roads.length);$('building-count').textContent=String(state.buildings.length);$('junction-count').textContent=String(state.graph.junctions);
  $('place').textContent='MELITO DI NAPOLI · MAPPA REALE';
  state.ready=true;hideLoading();state.last=0;canvas.focus({preventScroll:true});prepareMini();
 }
 function updateTraffic(dt){
- for(const ai of state.traffic){
-  const p=ai.p;
-  if(ai.seg>=p.length/2-1)ai.seg=0;
-  let j=ai.seg*2,ax=p[j],ay=p[j+1],bx=p[j+2],by=p[j+3],dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||.01;
-  ai.t+=dt*ai.speed/len;
-  while(ai.t>=1){
-   ai.t-=1;ai.seg=(ai.seg+1)%(p.length/2-1);j=ai.seg*2;
-   ax=p[j];ay=p[j+1];bx=p[j+2];by=p[j+3];dx=bx-ax;dy=by-ay;len=Math.hypot(dx,dy)||.01;
-  }
-  ai.x=ax+(bx-ax)*ai.t;ai.y=ay+(by-ay)*ai.t;ai.a=Math.atan2(dy,dx)+(ai.dir===-1?Math.PI:0);
- }
- for(const npc of state.people)npc.step+=dt*2;
+ stepAgents(state.graph,state.traffic,dt,state.player);
+ stepAgents(state.graph,state.people,dt);
 }
 function toggleVehicle(){
  if(!state.ready)return;
@@ -134,35 +122,68 @@ function toggleVehicle(){
  }
  updateHud();
 }
+function carBlocked(x,y,a,which){
+ // Test the car's front and corners, not only its centre.
+ const dirx=Math.cos(a),diry=Math.sin(a);
+ for(const forward of [-2.6,0,3.4])for(const side of [-1.7,1.7]){
+  const px=x+dirx*forward-diry*side,py=y+diry*forward+dirx*side;
+  if(buildingAt(px,py)||!inside([px,py],toRing(state.map.border)))return true;
+ }
+ const road=nearest(x,y,30,state.roads,true);
+ if(!road||road.distance>road.road.w/2+2.1)return true;
+ for(let i=0;i<state.cars.length;i++){
+  if(i===which)continue;
+  const b=state.cars[i];
+  if(Math.abs(b.x-x)>5.7||Math.abs(b.y-y)>5.7)continue;
+  if(Math.hypot(b.x-x,b.y-y)<5.4)return true;
+ }
+ for(const ai of state.traffic){
+  if(Math.abs(ai.x-x)<4.2&&Math.abs(ai.y-y)<4.2&&Math.hypot(ai.x-x,ai.y-y)<4)return true;
+ }
+ return false;
+}
+function toRing(border){
+ if(state.borderRing)return state.borderRing;
+ state.borderRing=[];
+ for(let i=0;i<border.length;i+=2)state.borderRing.push([border[i],border[i+1]]);
+ return state.borderRing;
+}
 function tick(dt){
  if(!state.ready)return;
  const p=state.player;
  if(p.car>=0){
-  const car=state.cars[p.car];
-  let speed=car.speed||0;
+  const car=state.cars[p.car],prior=car.speed||0;
+  let speed=prior;
   if(pressed.up)speed+=17*dt;
-  if(pressed.down)speed-=23*dt;
-  if(!pressed.up&&!pressed.down)speed-=Math.sign(speed)*Math.min(Math.abs(speed),4.5*dt);
-  if(pressed.handbrake)speed*=Math.pow(.1,dt);
-  speed=clamp(speed,-9,31);
-  if(pressed.left||pressed.right)car.a+=(Number(pressed.right)-Number(pressed.left))*(1.9*dt)*(speed<0?-1:1)*clamp(Math.abs(speed)/5,.3,1);
+  if(pressed.down)speed-=22*dt;
+  if(!pressed.up&&!pressed.down)speed-=Math.sign(speed)*Math.min(Math.abs(speed),6*dt);
+  if(pressed.handbrake)speed*=Math.pow(.045,dt);
+  speed=clamp(speed,-9,28);
+  const steer=Number(pressed.right)-Number(pressed.left);
+  if(steer&&Math.abs(speed)>.25){
+   car.a+=steer*1.38*dt*(speed<0?-1:1)*clamp(Math.abs(speed)/9,.17,1);
+  }
   const nx=car.x+Math.cos(car.a)*speed*dt,ny=car.y+Math.sin(car.a)*speed*dt;
-  if(!buildingAt(nx,ny)){
-   car.x=nx;car.y=ny;
-   const road=nearest(nx,ny,23);
-   if(!road||road.distance>road.road.w/2+3)speed*=Math.pow(.25,dt);
+  if(!carBlocked(nx,ny,car.a,p.car)){
+   car.x=nx;car.y=ny;state.distance+=Math.abs(speed*dt);
   }else speed=0;
   car.speed=speed;p.x=car.x;p.y=car.y;p.a=car.a;
  }else{
-  let dx=Number(pressed.right)-Number(pressed.left),dy=Number(pressed.down)-Number(pressed.up);
+  const dx=Number(pressed.right)-Number(pressed.left),dy=Number(pressed.down)-Number(pressed.up);
   if(dx||dy){
-   const len=Math.hypot(dx,dy),v=pressed.run?9:6.5,nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
-   if(validWalk(nx,p.y))p.x=nx;if(validWalk(p.x,ny))p.y=ny;
-   p.a=Math.atan2(dy,dx);
+   const len=Math.hypot(dx,dy),v=pressed.run?7.5:5.0,nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
+   if(validWalk(nx,p.y)&&inside([nx,p.y],toRing(state.map.border)))p.x=nx;
+   if(validWalk(p.x,ny)&&inside([p.x,ny],toRing(state.map.border)))p.y=ny;
+   p.a=Math.atan2(dy,dx);state.distance+=v*dt;
   }
  }
  updateTraffic(dt);
- state.clock+=dt;state.hud+=dt;if(state.hud>.22){state.hud=0;updateHud();}
+ const targetX=p.x+(p.car>=0?Math.cos(p.a)*8:0);
+ const targetY=p.y+(p.car>=0?Math.sin(p.a)*8:0);
+ const follow=1-Math.exp(-6*dt);
+ state.camera.x+=(targetX-state.camera.x)*follow;
+ state.camera.y+=(targetY-state.camera.y)*follow;
+ state.clock+=dt;state.hud+=dt;if(state.hud>.18){state.hud=0;updateHud();}
 }
 function updateHud(){
  const p=state.player;
@@ -177,8 +198,13 @@ function poly(p){drawLine(p);c.closePath();}
 function drawCar(x,y,a,type,drive=false){
  c.save();c.translate(x,y);c.rotate(a);
  const hue=['#c95644','#e5bc64','#5b9db6','#a7c3a5','#ded8b8'][type%5];
+ if(type===5){
+  c.fillStyle='#172b2d';c.fillRect(-2.8,-1.5,1.3,3);c.fillRect(1.4,-1.5,1.4,3);
+  c.fillStyle='#d56f47';c.fillRect(-1.6,-.9,3.4,2);c.fillStyle='#e9d6b5';c.fillRect(-.5,-1,.9,2);
+  c.restore();return;
+ }
  c.fillStyle='#101715';c.fillRect(-4.4,-2.5,9.5,5.8);
- c.fillStyle=hue;c.fillRect(-4,-2.1,8.5,4.2);
+ c.fillStyle=hue;c.fillRect(-4,-2.1,type===6?11:8.5,4.2);
  c.fillStyle='#263f49';c.fillRect(-.4,-1.8,2.7,3.6);
  c.fillStyle='#ffedbe';c.fillRect(3.7,-1.6,.7,1);c.fillRect(3.7,.6,.7,1);
  if(drive){c.strokeStyle='#fff2b3';c.lineWidth=.6;c.strokeRect(-4.6,-2.8,9.2,5.6);}
@@ -194,7 +220,7 @@ function drawPlayer(){
  c.restore();
 }
 function visibleBounds(){
- const x=state.player.x,y=state.player.y,pad=90;
+ const x=state.camera.x,y=state.camera.y,pad=90;
  return [x-canvas.clientWidth/(2*state.zoom)-pad,y-canvas.clientHeight/(2*state.zoom)-pad,x+canvas.clientWidth/(2*state.zoom)+pad,y+canvas.clientHeight/(2*state.zoom)+pad];
 }
 function draw(){
@@ -204,31 +230,17 @@ function draw(){
  c.fillStyle='#15221e';c.fillRect(0,0,cw,ch);
  if(!state.ready)return;
  const p=state.player;
- c.translate(cw/2,ch/2);c.scale(state.zoom,state.zoom);c.translate(-p.x,-p.y);
+ c.translate(cw/2,ch/2);c.scale(state.zoom,state.zoom);c.translate(-state.camera.x,-state.camera.y);
  const border=state.map.border;
  c.beginPath();c.moveTo(border[0],border[1]);for(let i=2;i<border.length;i+=2)c.lineTo(border[i],border[i+1]);c.closePath();
  c.fillStyle='#46564c';c.fill();c.lineWidth=10;c.strokeStyle='#798c73';c.stroke();
  const [x0,y0,x1,y1]=visibleBounds();
  const buildings=query(state.buildings,state.buildingGrid,x0,y0,x1,y1);
  const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
- for(const b of buildings){
-  c.save();c.translate(2.3,3.1);poly(b.p);c.fillStyle='#1b2623b9';c.fill();c.restore();
-  poly(b.p);c.fillStyle=colors[hash(b.id)%colors.length];c.fill();
-  c.lineWidth=.75;c.strokeStyle='#3a4038';c.stroke();
-  c.lineWidth=.25;c.strokeStyle='#c9b493';c.stroke();
- }
- c.lineCap='round';c.lineJoin='round';
- for(const road of roads){drawLine(road.p);c.strokeStyle='#a39989';c.lineWidth=road.w+2.6;c.stroke();}
- for(const road of roads){
-  drawLine(road.p);c.strokeStyle=road.t==='pedestrian'||road.t==='footway'||road.t==='path'?'#9c9c8a':'#464b4c';
-  c.lineWidth=road.w;c.stroke();
- }
- c.lineCap='butt';c.lineJoin='miter';
- if(state.zoom>1.55){
-  c.save();c.setLineDash([3,6]);c.lineWidth=.23;c.strokeStyle='#d2ba7a88';
-  for(const road of roads)if(DRIVE.has(road.t)&&road.w>=7){drawLine(road.p);c.stroke();}
-  c.restore();
- }
+ drawArchitecture(c,buildings,state.zoom);
+ drawStreets(c,roads,state.zoom);
+ drawCrosswalks(c,state.graph,[x0,y0,x1,y1],state.zoom);
+ drawStreetProps(c,query(state.props,state.propsGrid,x0,y0,x1,y1),state.zoom);
  if(state.zoom>1.75){
   c.font='3.6px monospace';c.fillStyle='#e5d9bc';c.textAlign='center';
   const seen=new Set();
@@ -247,8 +259,15 @@ function draw(){
  }
  for(const human of state.people){
   if(human.x<x0||human.x>x1||human.y<y0||human.y>y1)continue;
-  c.fillStyle='#273a39';c.beginPath();c.arc(human.x,human.y,1.25,0,Math.PI*2);c.fill();
-  c.fillStyle=colors[Math.floor(human.step)%colors.length];c.fillRect(human.x-.6,human.y-1.3,1.3,1.3);
+  const edge=state.graph.edges[human.edge],margin=(edge?.streetWidth||7)/2+1.4,side=human.kind%2?1:-1;
+  const x=human.x-Math.sin(human.a)*margin*side,y=human.y+Math.cos(human.a)*margin*side;
+  c.save();c.translate(x,y);c.rotate(human.a);
+  c.fillStyle='#17231db0';c.fillRect(-.65,-.3,1.9,2);
+  c.fillStyle=['#be9859','#a78178','#7fa495','#c6b59a','#8c95ac'][human.kind];c.fillRect(-.8,-.9,1.5,1.8);
+  c.fillStyle='#edc293';c.fillRect(.5,-.5,.85,.95);
+  const stride=Math.sin(state.clock*human.speed*5+human.seed)*.75;
+  c.fillStyle='#2f3432';c.fillRect(-1.2,-.7,.55,1+stride*.35);c.fillRect(-1.2,.3,.55,1-stride*.35);
+  c.restore();
  }
  for(const ai of state.traffic)if(ai.x>=x0&&ai.x<=x1&&ai.y>=y0&&ai.y<=y1)drawCar(ai.x,ai.y,ai.a,ai.kind);
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car);});
@@ -320,11 +339,17 @@ function bind(){
   for(const name of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(name,()=>{pressed[key]=false;btn.classList.remove('pressed');});
  });
  $('action').addEventListener('click',toggleVehicle);
+ for(const [id,key] of [['brake','handbrake'],['sprint','run']]){
+  const btn=$(id);if(!btn)continue;
+  btn.addEventListener('pointerdown',e=>{e.preventDefault();pressed[key]=true;btn.classList.add('pressed');try{btn.setPointerCapture(e.pointerId);}catch(_){}});
+  for(const name of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(name,()=>{pressed[key]=false;btn.classList.remove('pressed');});
+ }
+
  $('retry').addEventListener('click',load);
  $('zoom-in').addEventListener('click',()=>state.zoom=clamp(state.zoom*1.23,.4,5));
  $('zoom-out').addEventListener('click',()=>state.zoom=clamp(state.zoom/1.23,.4,5));
  $('reset').addEventListener('click',()=>{
-  if(!state.ready)return;const p=state.player;p.car=-1;p.x=state.spawn[0];p.y=state.spawn[1];p.a=0;updateHud();
+  if(!state.ready)return;const p=state.player;p.car=-1;p.x=state.spawn[0];p.y=state.spawn[1];p.a=0;state.camera.x=p.x;state.camera.y=p.y;updateHud();
  });
  window.addEventListener('blur',()=>Object.keys(pressed).forEach(k=>pressed[k]=false));
  document.addEventListener('visibilitychange',()=>{if(document.hidden)Object.keys(pressed).forEach(k=>pressed[k]=false);});

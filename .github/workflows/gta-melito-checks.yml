@@ -1,0 +1,30 @@
+name: GTA Melito 0.2 validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'games/gta-melito/**'
+      - '.github/workflows/gta-melito-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check browser module syntax
+        run: |
+          node --check games/gta-melito/game.mjs
+          node --check games/gta-melito/roads.mjs
+          node --check games/gta-melito/visuals.mjs
+          node --check games/gta-melito/osm.mjs
+      - name: Test graph topology, real map and traffic
+        run: node --test games/gta-melito/gta-melito.test.mjs
