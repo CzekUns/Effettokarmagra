@@ -7,7 +7,7 @@ Piccolo gioco arcade originale ispirato alla visuale dall'alto dei GTA degli ann
 - Confine amministrativo reale di Melito di Napoli: ISTAT, 1 gennaio 2026 (CC BY).
 - Vie, curve, incroci, sagome edilizie e punti d'interesse: importati dai dati OpenStreetMap (ODbL). **Nessuna strada viene inventata con una griglia fittizia.**
 - Movimento a piedi, guida arcade top-down con auto guidabili, salita/discesa, freno a mano, corsa, camera con inseguimento morbido e minimappa.
-- **Viabilità a grafo**: 1.541 nodi geografici e 155 intersezioni con almeno tre diramazioni nell'estrazione di ottobre 2026; il traffico può scegliere una svolta e proseguire in un'altra via, con rispetto delle strade a senso unico.
+- **Viabilità a grafo**: 1.423 nodi geografici e 73 intersezioni con almeno tre diramazioni nell'estrazione del 16 ottobre 2026 (rete delimitata dal confine ISTAT); il traffico può scegliere una svolta e proseguire in un'altra via, con rispetto delle strade a senso unico.
 - Pedoni animati sulle vie percorribili a piedi, traffico distribuito nei quartieri e rallentamenti tra auto sullo stesso segmento.
 - Edifici con impronte OSM (2.056 sagome), tetti in pixel art, facciate proiettate, ombre, lucernari, impianti e variazioni cromatiche deterministiche.
 - Carreggiate con larghezze approssimative differenziate per gerarchia OSM, marciapiedi, strisce pedonali in corrispondenza degli incroci.
@@ -34,7 +34,7 @@ Da un ambiente Node 22+ dotato di rete, nella root della repo:
 node scripts/build-melito-map.mjs
 ```
 
-Lo script ricava la cartografia OpenStreetMap da una bounding box del confine ISTAT, seleziona gli elementi all'interno del comune, converte le coordinate WGS84 in metri locali e scrive `games/gta-melito/data/melito-map.json`. È previsto un job GitHub Actions (`Build GTA Melito real map`) per generare e aggiornare lo snapshot statico; eventuali protezioni del repository possono richiedere l'esecuzione manuale del workflow.
+Lo script ricava la cartografia OpenStreetMap da una bounding box del confine ISTAT, interseca i tratti stradali con il confine comunale reale per escludere tratti extra-comunali, converte le coordinate WGS84 in metri locali e scrive `games/gta-melito/data/melito-map.json`. È previsto un job GitHub Actions (`Build GTA Melito real map`) per generare e aggiornare lo snapshot statico; eventuali protezioni del repository possono richiedere l'esecuzione manuale del workflow.
 
 ### Comandi
 
