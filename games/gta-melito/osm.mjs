@@ -72,6 +72,64 @@ export function buildMap(overpass,boundary){
  return {version:1,source:'OpenStreetMap',license:'ODbL 1.0',boundarySource:'ISTAT 2026 — CC BY 4.0',created:new Date().toISOString(),
  projection:p,border:border.flat(),roads,buildings,pois:pois.slice(0,1600)};
 }
+
+// Fallback when public Overpass mirrors are unavailable.
+// Small /api/0.6/map tiles avoid OSM API's single-request node cap.
+function decodeXml(value){
+ return String(value||'').replace(/&#(\\d+);/g,(_,n)=>String.fromCodePoint(Number(n)))
+ .replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+}
+function attributes(raw){
+ const out={};let m;const re=/([\\w:.-]+)="([^"]*)"/g;
+ while((m=re.exec(raw))!==null)out[m[1]]=decodeXml(m[2]);return out;
+}
+function osmTags(xml){
+ const tags={};let m;const re=/<tag\\b([^>]*?)\\/>/g;
+ while((m=re.exec(xml))!==null){const a=attributes(m[1]);if(a.k)tags[a.k]=a.v||'';}return tags;
+}
+export function parseOsmXml(text,nodes,ways){
+ let m;
+ const nodeRe=/<node\\b([^>]*?)(?:\\/>|>([\\s\\S]*?)<\\/node>)/g;
+ while((m=nodeRe.exec(text))!==null){
+  const a=attributes(m[1]);if(!a.id||!a.lat||!a.lon)continue;
+  const tag=m[2]?osmTags(m[2]):{};
+  nodes.set(a.id,{type:'node',id:Number(a.id),lat:Number(a.lat),lon:Number(a.lon),tags:tag});
+ }
+ const wayRe=/<way\\b([^>]*)>([\\s\\S]*?)<\\/way>/g;
+ while((m=wayRe.exec(text))!==null){
+  const a=attributes(m[1]);if(!a.id)continue;
+  const tags=osmTags(m[2]);
+  if(!tags.highway&&!tags.building)continue;
+  const refs=[...m[2].matchAll(/<nd\\b[^>]*ref="(\\d+)"/g)].map(q=>q[1]);
+  ways.set(a.id,{type:'way',id:Number(a.id),refs,tags});
+ }
+}
+export async function fetchViaOsmApi(boundary,onAttempt=()=>{}){
+ const p=getProjection(boundary),nodes=new Map(),ways=new Map(),columns=3,rows=3;
+ const eps=.0006,w=(p.maxLon-p.minLon+2*eps)/columns,h=(p.maxLat-p.minLat+2*eps)/rows;
+ for(let row=0;row<rows;row++)for(let col=0;col<columns;col++){
+  const west=p.minLon-eps+col*w,east=west+w,south=p.minLat-eps+row*h,north=south+h;
+  const endpoint='https://api.openstreetmap.org/api/0.6/map?bbox='+[west,south,east,north].map(v=>v.toFixed(7)).join(',');
+  onAttempt(endpoint);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),50000);
+  try{
+   const response=await fetch(endpoint,{headers:{'Accept':'application/xml','User-Agent':'UnsArcadeMelito/0.1 (https://github.com/CzekUns/Effettokarmagra)'},signal:controller.signal});
+   if(!response.ok)throw Error('OpenStreetMap API HTTP '+response.status);
+   const xml=await response.text();
+   if(!xml.includes('<osm'))throw Error('OSM API risposta XML non valida');
+   parseOsmXml(xml,nodes,ways);
+   console.log('OSM tile',col,row,'nodes',nodes.size,'ways',ways.size);
+  }finally{clearTimeout(timer);}
+ }
+ const elements=[];
+ for(const n of nodes.values())if(n.tags?.name&&(n.tags.shop||n.tags.amenity||n.tags.tourism))elements.push(n);
+ for(const w of ways.values()){
+  const g=w.refs.map(id=>nodes.get(id)).filter(Boolean).map(n=>({lat:n.lat,lon:n.lon}));
+  if(g.length>=2)elements.push({type:'way',id:w.id,tags:w.tags,geometry:g});
+ }
+ return buildMap({elements},boundary);
+}
+
 export async function fetchOverpass(boundary,onAttempt=()=>{}){
  const query=buildQuery(getProjection(boundary));
  const errors=[];
@@ -99,5 +157,5 @@ export async function fetchOverpass(boundary,onAttempt=()=>{}){
    }finally{clearTimeout(timer);}
   }
  }
- throw Error('Server cartografici non raggiungibili. '+errors.slice(-3).join(' | '));
+ try{return await fetchViaOsmApi(boundary,onAttempt);}catch(e){throw Error('OpenStreetMap API e Overpass non raggiungibili: '+e.message+'; '+errors.slice(-2).join(' | '));}
 }
