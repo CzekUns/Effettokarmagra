@@ -3,7 +3,7 @@
  * Do not claim hypothetical materials or pixel geometry as photo-verified.
  */
 import {visualRoadWidth} from './road-widths.mjs?v=043';
-import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-volume.mjs?v=070';
+import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-volume.mjs?v=074';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
  * are original artistic interpretations: they do not claim photographic fidelity.
@@ -341,10 +341,8 @@ function drawRaisedWalls(c,b,v,zoom){
  const p=b.p,a=b.art;
  const wall=a.facadeTint||
   (a.type==='historic'?'#d0b99c':a.type==='industrial'?'#9da9a6':a.type==='market'?'#b7b5a7':a.type==='church'?'#ded0b6':a.type==='civic'?'#c9b39b':'#c0b19e');
- // Offset ground silhouette + daylight cast shadow. These two overlapping
- // footprints guarantee depth is legible even for the tiniest roof sheds.
- c.save();c.translate(v.dx+2.4,v.dy+2.4);
- poly(c,p);c.fillStyle='#16252195';c.fill();c.restore();
+ // The compact translated footprint forms the wall base. Avoid a second,
+ // farther offset shadow footprint that used to spill over adjacent streets.
  c.save();c.translate(v.dx,v.dy);
  poly(c,p);c.fillStyle=shiftColor(wall,-60);c.fill();c.restore();
  for(let j=2;j<p.length;j+=2){

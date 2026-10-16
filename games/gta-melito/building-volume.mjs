@@ -16,7 +16,8 @@ export function buildingVolume(building){
  const inferredFloors=Number.isFinite(floors)&&floors>0?floors:Math.max(1,Math.round(Math.max(height,mapped,7)/3.4));
  const stories=clamp(Math.round(inferredFloors),1,9);
  const vertical=clamp(6+Math.max(height,mapped,stories*3)*.67,9,27);
- const dx=vertical*.72,dy=vertical*.82;
+ // Keep the 2.5D relief readable without projecting walls across nearby roads.
+ const dx=clamp(vertical*.16,1.4,4.3),dy=clamp(vertical*.18,1.6,4.8);
  return {stories,vertical,dx,dy,areaSign:Math.sign(signedFootprintArea(building.p))||1,
   visual:true,measured:!!art.surveyFeatures?.storiesMeasured};
 }
