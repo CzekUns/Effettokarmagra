@@ -9,9 +9,9 @@ import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-v
  * are original artistic interpretations: they do not claim photographic fidelity.
  */
 const PI=Math.PI,TAU=2*PI;
-const asphalt={motorway:'#42454a',trunk:'#494b4c',primary:'#505356',secondary:'#53575a',
- tertiary:'#585c60',residential:'#5a5e61',unclassified:'#5b6062',service:'#676767',
- living_street:'#787571',footway:'#b1a391',pedestrian:'#b3a794',path:'#a39884',
+const asphalt={motorway:'#3e4246',trunk:'#44484a',primary:'#4a4e50',secondary:'#505456',
+ tertiary:'#565a5d',residential:'#5b5e60',unclassified:'#5c6061',service:'#686762',
+ living_street:'#77736b',footway:'#b6a994',pedestrian:'#b8ad99',path:'#a79b84',
  steps:'#ab9f8e',track:'#8e8d75'};
 const oldtown=['#b77a63','#af856b','#bd9c7c','#c4a88a','#ac9074','#be8869'];
 const flat=['#bcb7a7','#b2aba1','#b7b0a0','#a69e92','#c6b5a1','#9d9d96'];
@@ -108,9 +108,15 @@ export function drawTerrain(c,bb,zoom,ground=null){
    c.fillStyle=j%2?'#d9caaf4d':'#7e736540';
    c.fillRect(px,py,j%3===0?1.2:.6,.65);
   }
+  if(zoom>=1.2&&weight>=2){
+   // Repeated paving slabs give dense blocks a readable urban ground texture.
+   c.strokeStyle='#625b5033';c.lineWidth=.34;
+   c.beginPath();c.moveTo(x+cell*.5,y+2);c.lineTo(x+cell*.5,y+cell-2);
+   c.moveTo(x+2,y+cell*.62);c.lineTo(x+cell*.5,y+cell*.62);c.stroke();
+  }
   if(zoom>=1.65&&weight>=2){
-   // Deterministic worn paving joints and small repairs make dense urban
-   // parcels read as lived-in stone/concrete rather than empty color blocks.
+   // Deterministic worn joints and small repairs keep the paving from reading
+   // as a flat fill while remaining subordinate to streets and buildings.
    const joints=1+Math.min(2,Math.floor(weight/3));
    for(let j=0;j<joints;j++){
     const sx=x+4+h(seed+j*23+71)%(cell-10);
@@ -141,10 +147,13 @@ export function drawCityStreets(c,roads,zoom){
   line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)-.5);c.strokeStyle=asphalt[road.t]||'#626362';c.stroke();
  }
  if(zoom>=1.3){
+  // Lane paint belongs on the main avenues; small residential streets stay
+  // visually quiet and avoid the old citywide dashed-line effect.
   for(const road of roads){
-   if(visualRoadWidth(road)<12||pedestrian(road)||road.t==='service')continue;
-   c.setLineDash(road.t==='primary'||road.t==='trunk'?[3.9,5.1]:[2.5,6.0]);
-   c.lineWidth=road.t==='trunk'?.5:.31;c.strokeStyle=road.t==='primary'||road.t==='trunk'?'#e2d1a1b6':'#d9d5b889';
+   if(!['motorway','trunk','primary','secondary'].includes(road.t)||visualRoadWidth(road)<12.5)continue;
+   c.setLineDash(road.t==='primary'||road.t==='trunk'?[4.2,5.4]:[3.2,6.4]);
+   c.lineWidth=road.t==='trunk'?.48:.34;
+   c.strokeStyle=road.t==='primary'||road.t==='trunk'?'#e6d5a6c2':'#ddd8c09a';
    line(c,road.p);c.stroke();
   }
   c.setLineDash([]);
@@ -331,7 +340,7 @@ function specialized(c,b,art){
 function drawRaisedWalls(c,b,v,zoom){
  const p=b.p,a=b.art;
  const wall=a.facadeTint||
-  (a.type==='historic'?'#c6b49a':a.type==='industrial'?'#a0a8a1':'#b6aa9a');
+  (a.type==='historic'?'#d0b99c':a.type==='industrial'?'#9da9a6':a.type==='market'?'#b7b5a7':a.type==='church'?'#ded0b6':a.type==='civic'?'#c9b39b':'#c0b19e');
  // Offset ground silhouette + daylight cast shadow. These two overlapping
  // footprints guarantee depth is legible even for the tiniest roof sheds.
  c.save();c.translate(v.dx+2.4,v.dy+2.4);
@@ -346,7 +355,7 @@ function drawRaisedWalls(c,b,v,zoom){
   const south=Math.abs(edgeX)>=Math.abs(edgeY),isTall=v.stories>=3;
   c.beginPath();c.moveTo(f.x1,f.y1);c.lineTo(f.x2,f.y2);
   c.lineTo(f.x3,f.y3);c.lineTo(f.x4,f.y4);c.closePath();
-  c.fillStyle=shiftColor(wall,south?-8:-34);c.fill();
+  c.fillStyle=shiftColor(wall,south?-14:-42);c.fill();
   // The wall-top lip, ground sill and vertically expressed front corners
   // visually join the facades to the roof and projected ground footprint.
   c.lineWidth=.66;
@@ -376,15 +385,17 @@ function drawRaisedWalls(c,b,v,zoom){
    for(let col=1;col<=columns;col++){
     const tu=col/(columns+1);
     const wx=f.x1+edgeX*tu+shiftX*tv,wy=f.y1+edgeY*tu+shiftY*tv;
-    const w=doors?2.4:1.5,hh=floors>=5?1.35:1.85;
     const windowSeed=h(a.seed+floor*97+col*131+j*17);
-    c.fillStyle=windowSeed%7===0?'#b87951':windowSeed%5===0?'#344c50':'#273e43';
+    const w=doors?2.4:windowSeed%4===0?1.8:1.45,hh=floors>=5?1.35:1.85;
+    c.fillStyle='#283532';c.fillRect(wx-w*.58,wy-hh*.59,w*1.16,hh*1.12);
+    c.fillStyle=windowSeed%7===0?'#a9664c':windowSeed%5===0?'#344c50':'#273e43';
     c.fillRect(wx-w*.5,wy-hh*.55,w,hh);
-    c.fillStyle=windowSeed%7===0?'#e0b1769c':'#abc4c085';
-    c.fillRect(wx-w*.38,wy-hh*.43,w*.35,hh*.63);
+    c.fillStyle=windowSeed%7===0?'#dfb173a8':'#abc4c085';
+    c.fillRect(wx-w*.34,wy-hh*.42,w*.28,hh*.58);
     c.fillStyle=shiftColor(wall,40);
-    c.fillRect(wx-w*.7,wy+hh*.43,w*1.4,.35);
-    if(windowSeed%6===0&&w>12){
+    c.fillRect(wx-w*.72,wy+hh*.43,w*1.44,.38);
+    c.fillStyle=shiftColor(wall,-22);c.fillRect(wx-w*.56,wy-hh*.63,w*1.12,.24);
+    if(windowSeed%6===0&&len>12){
      const shutter=windowSeed%2?'#71816f':'#a66e58';
      c.fillStyle=shutter;c.fillRect(wx-w*.5-1.1,wy-hh*.58,.55,hh*1.15);
      c.fillRect(wx+w*.5+.55,wy-hh*.58,.55,hh*1.15);
