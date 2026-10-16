@@ -14,9 +14,9 @@ prepareCityStyles(source,map.pois);
 prepareCityStyles(placeholders,[]);
 applySurveyDrafts(source,[styles,church]);
 const all=[...source,...placeholders];
-test('every one of 2056 real footprints and all 467 visual infill buildings has actual 2.5D extrusion',()=>{
+test('every one of 2056 real footprints and all 475 visual infill buildings has actual 2.5D extrusion',()=>{
  assert.equal(source.length,2056);
- assert.equal(placeholders.length,467);
+ assert.equal(placeholders.length,475);
  assert.equal(all.length,2523);
  for(const b of all){
   const v=buildingVolume(b);
