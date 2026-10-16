@@ -401,11 +401,24 @@ function draw(){
  drawStorefronts(c,query(state.shops,state.shopGrid,x0,y0,x1,y1),state.zoom);
  if(state.zoom>1.75){
   c.font='3.6px monospace';c.fillStyle='#e5d9bc';c.textAlign='center';
-  const seen=new Set();
+  const seen=new Set(),placed=[];
+  const miniW=cw<=680?112:176,miniH=cw<=680?102:150;
+  const landmarkCenters=[...state.landmarks.values()].map(item=>[
+   cw/2+(item.x-state.camera.x)*state.zoom,
+   ch/2+(item.y-state.camera.y)*state.zoom
+  ]);
   for(const road of roads){
    if(!road.n||seen.has(road.n)||road.p.length<4)continue;
    seen.add(road.n);
    const q=roadPoint(road,.5);
+   const sx=cw/2+(q.x-state.camera.x)*state.zoom;
+   const sy=ch/2+(q.y-state.camera.y)*state.zoom;
+   // The minimap sits above the canvas on mobile and desktop. Skip labels
+   // under it and leave breathing room around landmarks and other street names.
+   if(sx>cw-miniW&&sy<miniH)continue;
+   if(landmarkCenters.some(([lx,ly])=>Math.hypot(sx-lx,sy-ly)<76))continue;
+   if(placed.some(([lx,ly])=>Math.hypot(sx-lx,sy-ly)<78))continue;
+   placed.push([sx,sy]);
    c.save();c.translate(q.x,q.y);let angle=q.a;if(angle>Math.PI/2||angle< -Math.PI/2)angle+=Math.PI;c.rotate(angle);
    c.fillText(road.n.toUpperCase().slice(0,25),0,-visualRoadWidth(road)/2-3.4);c.restore();
   }
