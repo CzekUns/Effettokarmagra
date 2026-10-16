@@ -119,3 +119,9 @@ Quando una singola facciata non è documentabile, continua a migliorare l'esteti
 - Evita di alterare il contratto delle chiavi `p` (vertici alternati x,y), `id` OSM, `b.art`, `state.buildings`, `state.inferredBuildings` senza adattare tutti i moduli/indicizzazioni/collisioni.
 
 **Priorità assoluta: l'utente deve aprire il gioco e riconoscere Melito in pixel art.**
+
+## Riferimento esterno: GTAopen / open.mp
+
+Il progetto [PatrickGTR/gta-open](https://github.com/PatrickGTR/gta-open) è una modalità multiplayer per open.mp ambientata a Los Santos e usa l'ambiente 3D già fornito da GTA San Andreas. Il suo sistema case registra ingressi, proprietari e ID degli interni; gli arredi sono oggetti selezionabili tramite model ID, mentre il mapping aggiunge oggetti in luoghi specifici. Questo è un riferimento per interazioni, interni e posizionamento di oggetti nel mondo 3D, **non** per generare o disegnare le facciate della città.
+
+Per GTA Melito si può trasferire il principio di separare identità dell'edificio, dati d'interazione e oggetti posizionati. La resa esterna deve invece continuare a partire dalle impronte e dai tag OSM, usando override per way ID solo quando supportati da fonti verificabili. Non importare asset/modelli di GTA San Andreas né interpretare gli interni di GTAopen come rilievi degli edifici di Melito.
