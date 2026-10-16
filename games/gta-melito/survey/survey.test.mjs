@@ -66,7 +66,7 @@ test('Street View navigation is external: there is no downloaded Google imagery'
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
  assert.ok(viewer.includes('https://www.google.com/maps/@?api=1&map_action=pano&viewpoint='));
  assert.ok(viewer.includes('https://www.google.com/maps/@?api=1&map_action=map&center='));
- assert.match(html,/Nessuna foto di Google è stata copiata/);
+ assert.match(html,/nessuna foto di Google è stata copiata/i);
 });
 
 test('Piazza Santo Stefano is now the active survey focus, without erasing the border-sector scan',()=>{
