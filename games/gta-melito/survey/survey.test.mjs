@@ -11,7 +11,7 @@ test('all 2056 buildings are uniquely registered and cannot be silently skipped'
  assert.equal(registry.buildings.length,map.buildings.length);
  assert.equal(registry.totals.registered,map.buildings.length);
  assert.deepEqual(new Set(registry.buildings.map(b=>b.id)),new Set(map.buildings.map(b=>b.id)));
- assert.equal(registry.buildings.filter(b=>b.stage==='osm-draft').length,104);
+ assert.equal(registry.buildings.filter(b=>b.stage==='osm-draft').length,2055);
  assert.equal(registry.buildings.filter(b=>b.stage==='photo-verified').length,1);
  assert.equal(registry.sectors.reduce((sum,x)=>sum+x.n,0),map.buildings.length);
  assert.ok(registry.sectors.every(s=>s.n>0));
