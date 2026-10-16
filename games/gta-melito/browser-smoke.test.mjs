@@ -11,11 +11,11 @@ const ctx=new Proxy({},{get(o,k){return k in o?o[k]:(..._)=>{}},set(o,k,v){o[k]=
 function element(id=''){
  const listeners=new Map();
  return {
-  id,hidden:id==='dialog'||id==='fullmap'||id==='waypoint',textContent:'',style:{},clientWidth:630,clientHeight:470,
+  id,hidden:id==='dialog'||id==='fullmap'||id==='waypoint'||id==='mission-panel',textContent:'',style:{},clientWidth:630,clientHeight:470,
   width:168,height:142,dataset:{},classList:{add(){},remove(){}},
   addEventListener(type,callback){listeners.set(type,callback);},
   fire(type,args={}){listeners.get(type)?.({preventDefault(){},pointerId:1,...args});},
-  getContext(){return ctx;},focus(){},setPointerCapture(){}
+  getContext(){return ctx;},focus(){},setPointerCapture(){},setAttribute(k,v){this[k]=v}{}
  };
 }
 const els=new Map(ids.map(id=>[id,element(id)]));
@@ -58,4 +58,9 @@ test('browser entry boots and first NPC mission is interactable on Via Roma',asy
  assert.equal(els.get('fullmap').hidden,false);
  els.get('map-close').fire('click');
  assert.equal(els.get('fullmap').hidden,true);
+ assert.equal(els.get('mission-panel').hidden,true);
+ els.get('mission-panel-toggle').fire('click');
+ assert.equal(els.get('mission-panel').hidden,false);
+ els.get('mission-panel-toggle').fire('click');
+ assert.equal(els.get('mission-panel').hidden,true);
 });

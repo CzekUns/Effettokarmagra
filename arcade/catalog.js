@@ -62,10 +62,10 @@ window.ARCADE_CATALOG = [
     title: "GTA: Melito",
     subtitle: "Open world pixel art nel cuore di Melito",
     genre: "Open world / Guida",
-    description: "Esplora Melito di Napoli con quattro missioni ambientate nei suoi luoghi reali, dialoghi, ricompense e progressi salvati. Strade e palazzi da OpenStreetMap.",
+    description: "Melito in stile top-down rétro: palazzi del centro storico, cupola di Santa Maria delle Grazie, negozi geolocalizzati, pedoni e auto ridisegnati. Missioni disponibili.",
     href: "./games/gta-melito/",
     artwork: "./games/gta-melito/cover.svg",
-    support: "Telefono e PC · Prototipo 0.3",
+    support: "Telefono e PC · Visual update 0.4",
     status: "live",
     accent: "orange"
   }

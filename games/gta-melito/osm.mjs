@@ -97,7 +97,15 @@ export function buildMap(overpass,boundary){
    const mid=g.slice(0,-1).reduce((a,c)=>[a[0]+c[0],a[1]+c[1]],[0,0]).map(v=>v/(g.length-1));
    if(!inside(mid,border))continue;
    const s=simplified(g,1.0);
-   buildings.push({id:el.id,n:t.name||'',p:s.flat(),h:Math.min(24,Math.max(6,Number(t['building:levels'])?Number(t['building:levels'])*3:9+(el.id%4)*2))});
+   const levels=Number(t['building:levels']);
+   const h=Number.isFinite(levels)&&levels>0?Math.min(30,Math.max(3,levels*3)):(9+(el.id%4)*2);
+   buildings.push({
+    id:el.id,n:t.name||'',p:s.flat(),h,
+    t:t.building||'yes',lv:Number.isFinite(levels)&&levels>0?levels:null,
+    roof:t['roof:shape']||'',material:t['roof:material']||'',
+    usage:t.shop||t.amenity||t.office||'',historic:t.historic||'',
+    colour:t['building:colour']||''
+   });
   }
  }
  if(roads.length<20)throw Error('Sono state trovate troppo poche strade: estrazione incompleta');

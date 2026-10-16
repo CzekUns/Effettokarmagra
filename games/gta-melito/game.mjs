@@ -3,11 +3,13 @@ import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs';
+import {prepareCityStyles,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs';
+import {prepareStorefronts,drawStorefronts} from './storefronts.mjs';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false};
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:2.2,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,props:[],propsGrid:null,camera:{x:0,y:0},distance:0,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:2.2,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const colors=['#8f8271','#a29076','#797970','#ae947b','#938c7b','#7b8581','#a58c85'];
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
@@ -78,6 +80,7 @@ function prepareMap(map){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
  state.map=map;
  state.roads=map.roads;state.buildings=map.buildings||[];
+ prepareCityStyles(state.buildings,map.pois||[]);
  state.roadGrid=makeIndex(state.roads);state.buildingGrid=makeIndex(state.buildings);
  const possible=state.roads.filter(q=>DRIVE.has(q.t)&&q.p.length>=4);
  if(!possible.length)throw Error('Non risultano strade percorribili in auto');
@@ -90,7 +93,10 @@ function prepareMap(map){
  state.spawn=[point.x,point.y];Object.assign(state.player,{x:point.x,y:point.y,a:point.a,car:-1});
  state.camera.x=point.x;state.camera.y=point.y;state.distance=0;
  state.graph=buildRoadGraph(state.roads);
- state.props=buildStreetProps(state.roads);state.propsGrid=makeIndex(state.props);
+ state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
+ state.propsGrid=makeIndex(state.props);
+ state.shops=prepareStorefronts(map.pois||[],state.roads);
+ state.shopGrid=makeIndex(state.shops);
  initCampaign(map);
  const nearCar={x:point.x+Math.cos(point.a)*9,y:point.y+Math.sin(point.a)*9,a:point.a,speed:0,type:0};
  state.cars=[nearCar];
@@ -154,7 +160,7 @@ function refreshCampaign(){
   const dirs=['→','↘','↓','↙','←','↖','↑','↗'];
   const direction=dirs[(Math.round(angle/(Math.PI/4))+8)%8];
   $('waypoint').textContent=direction+' '+target.name.toUpperCase()+' · '+Math.ceil(check.distance)+' M';
-  $('waypoint').hidden=check.distance<16;
+  $('waypoint').hidden=check.distance<16||$('mission-panel').hidden;
  }
 }
 function message(text,title='NUOVO MESSAGGIO',speaker='NICO'){
@@ -290,29 +296,10 @@ function updateHud(){
 }
 function drawLine(p){c.beginPath();c.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)c.lineTo(p[i],p[i+1]);}
 function poly(p){drawLine(p);c.closePath();}
-function drawCar(x,y,a,type,drive=false){
- c.save();c.translate(x,y);c.rotate(a);
- const hue=['#c95644','#e5bc64','#5b9db6','#a7c3a5','#ded8b8'][type%5];
- if(type===5){
-  c.fillStyle='#172b2d';c.fillRect(-2.8,-1.5,1.3,3);c.fillRect(1.4,-1.5,1.4,3);
-  c.fillStyle='#d56f47';c.fillRect(-1.6,-.9,3.4,2);c.fillStyle='#e9d6b5';c.fillRect(-.5,-1,.9,2);
-  c.restore();return;
- }
- c.fillStyle='#101715';c.fillRect(-4.4,-2.5,9.5,5.8);
- c.fillStyle=hue;c.fillRect(-4,-2.1,type===6?11:8.5,4.2);
- c.fillStyle='#263f49';c.fillRect(-.4,-1.8,2.7,3.6);
- c.fillStyle='#ffedbe';c.fillRect(3.7,-1.6,.7,1);c.fillRect(3.7,.6,.7,1);
- if(drive){c.strokeStyle='#fff2b3';c.lineWidth=.6;c.strokeRect(-4.6,-2.8,9.2,5.6);}
- c.restore();
-}
+function drawCar(x,y,a,type,drive=false){drawCityCar(c,x,y,a,type,drive,state.clock);}
 function drawPlayer(){
- const p=state.player;if(p.car>=0)return;
- c.save();c.translate(p.x,p.y);c.rotate(p.a);
- c.fillStyle='#0d1817';c.beginPath();c.ellipse(0,1,2.3,1.6,0,0,Math.PI*2);c.fill();
- c.fillStyle='#d8a978';c.beginPath();c.arc(0,0,1.8,0,Math.PI*2);c.fill();
- c.fillStyle='#bf4d35';c.fillRect(-2.1,-2.7,3.3,1.5);
- c.fillStyle='#ede1bf';c.fillRect(1.7,-.4,.8,.8);
- c.restore();
+ const moving=pressed.up||pressed.down||pressed.left||pressed.right;
+ drawCityPlayer(c,state.player,state.clock,moving);
 }
 function visibleBounds(){
  const x=state.camera.x,y=state.camera.y,pad=90;
@@ -328,14 +315,19 @@ function draw(){
  c.translate(cw/2,ch/2);c.scale(state.zoom,state.zoom);c.translate(-state.camera.x,-state.camera.y);
  const border=state.map.border;
  c.beginPath();c.moveTo(border[0],border[1]);for(let i=2;i<border.length;i+=2)c.lineTo(border[i],border[i+1]);c.closePath();
- c.fillStyle='#46564c';c.fill();c.lineWidth=10;c.strokeStyle='#798c73';c.stroke();
+ c.fillStyle='#677662';c.fill();c.lineWidth=10;c.strokeStyle='#9eac87';c.stroke();
  const [x0,y0,x1,y1]=visibleBounds();
  const buildings=query(state.buildings,state.buildingGrid,x0,y0,x1,y1);
  const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
- drawArchitecture(c,buildings,state.zoom);
- drawStreets(c,roads,state.zoom);
+ if(state.zoom>=1.05){
+  c.save();c.beginPath();c.moveTo(border[0],border[1]);for(let i=2;i<border.length;i+=2)c.lineTo(border[i],border[i+1]);
+  c.closePath();c.clip();drawTerrain(c,[x0,y0,x1,y1],state.zoom);c.restore();
+ }
+ drawCityStreets(c,roads,state.zoom);
  drawCrosswalks(c,state.graph,[x0,y0,x1,y1],state.zoom);
+ drawCityBuildings(c,buildings,state.zoom);
  drawStreetProps(c,query(state.props,state.propsGrid,x0,y0,x1,y1),state.zoom);
+ drawStorefronts(c,query(state.shops,state.shopGrid,x0,y0,x1,y1),state.zoom);
  if(state.zoom>1.75){
   c.font='3.6px monospace';c.fillStyle='#e5d9bc';c.textAlign='center';
   const seen=new Set();
@@ -347,20 +339,9 @@ function draw(){
    c.fillText(road.n.toUpperCase().slice(0,25),0,-road.w/2-2);c.restore();
   }
  }
- drawPoiSigns(c,state.map.pois||[],[x0,y0,x1,y1],state.zoom);
+ // Storefront labels are tied to nearby real POIs, not floating over every roof.
  if(state.progress)drawWorldLandmarks(c,state.landmarks,activeTarget(state.progress,state.landmarks),[x0,y0,x1,y1],state.clock,state.zoom,currentStep(state.progress)?.step.speaker);
- for(const human of state.people){
-  if(human.x<x0||human.x>x1||human.y<y0||human.y>y1)continue;
-  const edge=state.graph.edges[human.edge],margin=(edge?.streetWidth||7)/2+1.4,side=human.kind%2?1:-1;
-  const x=human.x-Math.sin(human.a)*margin*side,y=human.y+Math.cos(human.a)*margin*side;
-  c.save();c.translate(x,y);c.rotate(human.a);
-  c.fillStyle='#17231db0';c.fillRect(-.65,-.3,1.9,2);
-  c.fillStyle=['#be9859','#a78178','#7fa495','#c6b59a','#8c95ac'][human.kind];c.fillRect(-.8,-.9,1.5,1.8);
-  c.fillStyle='#edc293';c.fillRect(.5,-.5,.85,.95);
-  const stride=Math.sin(state.clock*human.speed*5+human.seed)*.75;
-  c.fillStyle='#2f3432';c.fillRect(-1.2,-.7,.55,1+stride*.35);c.fillRect(-1.2,.3,.55,1-stride*.35);
-  c.restore();
- }
+ drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1]);
  for(const ai of state.traffic)if(ai.x>=x0&&ai.x<=x1&&ai.y>=y0&&ai.y<=y1)drawCar(ai.x,ai.y,ai.a,ai.kind);
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car);});
  drawPlayer();
@@ -435,6 +416,23 @@ function bind(){
   for(const name of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(name,()=>{pressed[key]=false;btn.classList.remove('pressed');});
  });
  $('action').addEventListener('click',toggleVehicle);
+ const panel=$('mission-panel'),panelButton=$('mission-panel-toggle');
+ panelButton.addEventListener('click',()=>{
+  panel.hidden=!panel.hidden;
+  panelButton.setAttribute('aria-expanded',String(!panel.hidden));
+  if(state.ready)refreshCampaign();
+ });
+ // Prevent accidental text highlight, image dragging and long-press callouts
+ // in the game controls; leave normal text selection outside the game intact.
+ document.addEventListener('selectstart',e=>{
+  if(e.target.closest?.('.controls, .stage, .hud'))e.preventDefault();
+ });
+ document.addEventListener('dragstart',e=>{
+  if(e.target.closest?.('.controls, .stage, .hud'))e.preventDefault();
+ });
+ document.addEventListener('contextmenu',e=>{
+  if(e.target.closest?.('.dpad, .buttons, #mission-panel, #mission-panel-toggle'))e.preventDefault();
+ });
  $('mission-interact').addEventListener('click',interactMission);
  $('map-toggle').addEventListener('click',toggleBigMap);
  $('map-close').addEventListener('click',toggleBigMap);

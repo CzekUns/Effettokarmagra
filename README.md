@@ -140,7 +140,7 @@ Otto missioni originali attraversano la città 8×8 e coinvolgono abitanti, alle
 Pagine statiche e JavaScript nativo, senza backend né librerie esterne obbligatorie. I record locali sono salvati nel browser. Il catalogo è gestito come un semplice file JavaScript per funzionare anche su GitHub Pages senza server.
 
 
-## GTA Melito — Open world top-down (prototipo 0.3, ottobre 2026)
+## GTA Melito — Open world top-down (prototipo 0.4, ottobre 2026)
 
 Quinto gioco di Arcade Club: esplorazione di Melito di Napoli a piedi e in auto, con geometria urbana reale ricavata da OpenStreetMap (ODbL). Il confine del comune è quello ISTAT 2026 (CC BY), conservato in `games/gta-melito/data/boundary.json`.
 
@@ -150,3 +150,9 @@ Quinto gioco di Arcade Club: esplorazione di Melito di Napoli a piedi e in auto,
 - **Stato:** mappa topografica, forme dei palazzi, guida, incroci collegati da un grafo OSM, traffico che svolta, sagome dei palazzi con tetti/ombre, marciapiedi e arredo urbano rétro; semafori, missioni narrative avanzate e architetture iconiche da rifinire. Il prototipo 0.3 aggiunge quattro missioni tra luoghi OSM reali, personaggi fittizi, salvataggi locali e mappa missioni. I motori esaminati come riferimento includono Anywhere City Web (MIT) e Punjab Stories (MIT); la prima versione usa Canvas per garantire leggerezza su GitHub Pages.
 
 Guida completa e licenze: [games/gta-melito/README.md](games/gta-melito/README.md).
+
+### GTA Melito 0.4 — resa urbana e accessibilità touch
+
+- Interfaccia di gioco non selezionabile su pressione prolungata; pannello missioni ripiegato per dare priorità alla mappa.
+- Rendering 2D rinnovato di strade, tetti storici/moderni, personaggi e veicoli; riconoscibili la chiesa di Santa Maria delle Grazie e l'area del Municipio, a partire dai footprint OSM e da riferimenti comunali pubblici.
+- Insegne con nomi OSM vicino alle strade, ricreazione estetica **non fotografica** degli edifici.

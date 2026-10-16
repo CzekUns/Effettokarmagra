@@ -2,7 +2,7 @@
 
 Piccolo gioco arcade originale ispirato alla visuale dall'alto dei GTA degli anni Novanta, ambientato in **Melito di Napoli**. Accesso diretto dal browser, PC e telefono, sulla stessa GitHub Pages degli altri giochi. **Non contiene codice o asset di Rockstar Games.**
 
-## Campagna 0.3: quattro missioni locali
+## Campagna 0.4: quattro missioni locali
 - **Il primo contatto:** incontri il personaggio immaginario Nico tra Via Roma e Piazza Santo Stefano.
 - **Il giro del centro:** attraversi Piazza Santo Stefano, Municipio e Piazza Immacolata, con un tempo limite.
 - **La staffetta:** percorso da Piazza Immacolata fino ai due uffici postali passando per Corso Europa.
@@ -66,4 +66,19 @@ Lo script ricava la cartografia OpenStreetMap da una bounding box del confine IS
 4. Missioni locali, NPC, polizia e salvataggio.
 5. Ottimizzazione smartphone e verifica con test reali su dispositivi.
 
-Questa è la versione 0.3 del prototipo di esplorazione urbana con campagna narrativa di prova. I dati geografici sono reali; alcuni allestimenti grafici e gli NPC sono inventati. Non è un GTA 2 completo né una ricostruzione fotografica degli immobili.
+Questa è la versione 0.4 del prototipo di esplorazione urbana con campagna narrativa di prova. I dati geografici sono reali; alcuni allestimenti grafici e gli NPC sono inventati. Non è un GTA 2 completo né una ricostruzione fotografica degli immobili.
+
+## Aggiornamento estetico 0.4 — mappa al centro
+
+- L'interfaccia non seleziona più il testo dei tasti con pressioni prolungate; il testo del sito esterno rimane normale e il focus da tastiera resta visibile.
+- Il riquadro delle missioni è **chiuso all'avvio**: resta accessibile dal piccolo tasto `MISSIONI`, mentre `F` continua a interagire con gli obiettivi. Nessuna nuova missione.
+- Nuova resa del terreno e delle carreggiate che mantiene il tracciato OSM, marciapiedi, cordoli e segnaletica distinti per classe di strada.
+- Nuovo renderer dei tetti/corpi di fabbrica con materiali coerenti: tetti in cotto e intonaco nell'area storica, edifici residenziali, condomini, civici, attività commerciali e capannoni; balconi, abbaini, canne fumarie e ombre sono *interpretazioni*, non ricostruzioni certificate.
+- **Chiesa di Santa Maria delle Grazie**: sagoma OSM originale, modello a cupola con lanterna, motivato dalla pianta centrale reale documentata dal Comune e dal FAI (https://comune.melito.na.it/vivere-il-comune/luoghi/chiesa-di-santa-maria-delle-grazie/ ; https://fondoambiente.it/luoghi/chiesa-di-santa-maria-delle-grazie-melito-di-napoli). L'altra chiesa mantiene una rappresentazione diversa.
+- **Municipio**: edificio associato all'OSM ID 733703600 vicino al POI del municipio, con tetto rosso e cornici chiare coerenti con la documentazione fotografica comunale (https://comune.melito.na.it/vivere-il-comune/). Associazione cartografica prossima, da verificare sul posto.
+- **47 insegne/ingressi illustrati** generati dai POI con nome OSM in prossimità di una strada e abbastanza vicini da sostenere un posizionamento di facciata; nessun esercizio inventato da promuovere come realmente esistente.
+- Pedoni, personaggio principale, scooter, auto e furgoni ridisegnati in Canvas con sagoma top-down leggibile, ombra, passo animato e dettagli.
+- Il file OSM può includere metadati extra sugli edifici (tipologia, piani quando disponibili, forma/materiale del tetto), conservati nel database statico. Per i dati mancanti il disegno rimane *plausibile ma non certificato*.
+- I precedenti moduli `visuals.mjs`, `roads.mjs`, `campaign.mjs` e `landmark-art.mjs` restano disponibili e il motore delle missioni è invariato.
+
+Riferimenti visuali pubblici: Comune di Melito e FAI; **non vengono copiate fotografie o tessere proprietarie** nel gioco. Per riprodurre con maggiore precisione uno specifico prospetto serviranno fotografie originali con autorizzazione, orientamento dell'edificio e particolari architettonici.
