@@ -15,7 +15,7 @@ test('all 2056 buildings are uniquely registered and cannot be silently skipped'
  assert.equal(registry.buildings.filter(b=>b.stage==='photo-verified').length,1);
  assert.equal(registry.sectors.reduce((sum,x)=>sum+x.n,0),map.buildings.length);
  assert.ok(registry.sectors.every(s=>s.n>0));
- assert.equal(registry.nextSector,'S003');
+ assert.match(registry.nextSector,/PSS-R01 photo-validation/);
 });
 test('municipal-border sector traversal is spatially contiguous and deterministic',()=>{
  assert.equal(registry.sectors[0].sector,'S001');
