@@ -87,16 +87,20 @@ export function drawTerrain(c,bb,zoom,ground=null){
  for(let gx=Math.floor(x0/cell);gx<=Math.ceil(x1/cell);gx++)for(let gy=Math.floor(y0/cell);gy<=Math.ceil(y1/cell);gy++){
   const seed=h(gx*907+gy*1867),x=gx*cell,y=gy*cell;
   const weight=ground?.get(gx+','+gy)||0;
+  // Melito is highly urbanized: missing OSM building polygons DO NOT imply
+  // parks. Most ground is compacted stone, concrete, mixed courtyards.
+  // Rare green patches are illustrative; actual park boundaries are not known.
   const urban=weight>=2;
   c.fillStyle=urban?
-   ['#86877b','#929087','#8b8a7e','#908e80'][seed%4]:
-   weight>0?['#8b8d79','#7d8b71','#878d7b'][seed%3]:
-   ['#6f806a','#76836e','#71826b','#6e806c'][seed%4];
+   ['#a59d91','#aaa296','#a29c92','#b1a698'][seed%4]:
+   weight>0?['#9c988e','#a29a8d','#938f85'][seed%3]:
+   seed%23===0?'#79856e':
+   ['#979185','#938e82','#9c9588','#928c81'][seed%4];
   c.fillRect(x,y,cell+.2,cell+.2);
   if(zoom<1.15)continue;
   for(let j=0;j<4;j++){
    const px=x+3+h(seed+j*9)%(cell-5),py=y+3+h(seed+j*17)%(cell-5);
-   c.fillStyle=j%2?'#b5ad8f35':'#364f3b3e';
+   c.fillStyle=j%2?'#d9caaf4d':'#7e736540';
    c.fillRect(px,py,j%3===0?1.2:.6,.65);
   }
  }
@@ -302,7 +306,7 @@ export function drawCityBuildings(c,buildings,zoom){
  for(const b of sorted){
   const a=b.art;if(!a)continue;
   const seed=a.seed,depth=clamp((a.renderHeight||b.h||9)*.29,2.2,9.1),dx=depth*.65,dy=depth*.9;
-  const wall=a.facadeTint|| (a.type==='historic'?'#8a7962':a.type==='industrial'?'#74817c':'#807e72');
+  const wall=a.facadeTint|| (a.type==='historic'?'#b29a82':a.type==='industrial'?'#919b96':'#aaa49a');
   c.save();
   c.save();c.translate(dx+1.1,dy+1.3);poly(c,b.p);c.fillStyle='#22362c66';c.fill();c.restore();
   c.save();c.translate(dx,dy);poly(c,b.p);c.fillStyle='#4c5148';c.fill();c.restore();

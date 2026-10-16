@@ -4,14 +4,16 @@ import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=043';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=043';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs';
-import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=045';
+import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=060';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
+import {generateUrbanInfill} from './urban-infill.mjs?v=060';
+import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=060';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false};
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:2.2,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,ground:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const colors=['#8f8271','#a29076','#797970','#ae947b','#938c7b','#7b8581','#a58c85'];
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
@@ -56,14 +58,17 @@ function nearest(x,y,max=24,roads=state.roads,driveOnly=false){
  }return best;
 }
 function buildingAt(x,y){
- return query(state.buildings,state.buildingGrid,x-5,y-5,x+5,y+5).some(b=>{
-  const bd=b.bounds;if(x<bd[0]||x>bd[2]||y<bd[1]||y>bd[3])return false;
+ const hit=buildings=>buildings.some(b=>{
+  const bd=b.bounds;if(!bd||x<bd[0]||x>bd[2]||y<bd[1]||y>bd[3])return false;
   let found=false,p=b.p;
   for(let i=0,j=p.length-2;i<p.length;j=i,i+=2){
    const ax=p[i],ay=p[i+1],bx=p[j],by=p[j+1];
    if(((ay>y)!==(by>y))&&(x<(bx-ax)*(y-ay)/(by-ay)+ax))found=!found;
   }return found;
  });
+ if(hit(query(state.buildings,state.buildingGrid,x-5,y-5,x+5,y+5)))return true;
+ return state.inferredGrid?
+  hit(query(state.inferredBuildings,state.inferredGrid,x-5,y-5,x+5,y+5)):false;
 }
 function validWalk(x,y){
  return x>=0&&y>=0&&x<state.map.projection.width&&y<state.map.projection.height&&!buildingAt(x,y);
@@ -85,8 +90,22 @@ function prepareMap(map,surveyData=[]){
  prepareCityStyles(state.buildings,map.pois||[]);
  const survey=applySurveyDrafts(state.buildings,surveyData);
  console.info('Melito visual city scan: '+survey.applied+'/'+survey.total+' buildings styled, '+survey.verified+' photo-verified');
- state.ground=prepareUrbanGround(state.buildings,state.roads);
+ // Synthetic fillers are visually plausible but not mapped real addresses.
+ // Deterministically fill only urban gaps, clear of real buildings and roads.
+ const inferred=generateUrbanInfill(map);
+ state.inferredBuildings=inferred.buildings;state.infillStats=inferred.stats;
+ prepareCityStyles(state.inferredBuildings,[]);
+ const facade=['#b8ad9f','#cbb9a5','#c9c6b6','#b1a99b','#d0bba9','#aba99b'];
+ const roof=['#a58d79','#b8aa97','#c3b8a5','#9da29d','#ac9a87'];
+ for(const b of state.inferredBuildings){
+  const h=hash(Math.abs(b.id)),a=b.art;
+  a.inferred=true;a.facadeTint=facade[h%facade.length];a.roofTint=roof[(h>>>5)%roof.length];
+  a.renderHeight=b.h;
+  a.roof=b.p.length<=10&&h%5===0;
+ }
+ state.ground=prepareUrbanGround([...state.buildings,...state.inferredBuildings],state.roads);
  state.roadGrid=makeIndex(state.roads);state.buildingGrid=makeIndex(state.buildings);
+ state.inferredGrid=makeIndex(state.inferredBuildings);
  const possible=state.roads.filter(q=>DRIVE.has(q.t)&&q.p.length>=4);
  if(!possible.length)throw Error('Non risultano strade percorribili in auto');
  const center=[map.projection.width/2,map.projection.height/2];
@@ -95,6 +114,7 @@ function prepareMap(map,surveyData=[]){
  const pool=candidates.length?candidates:possible;
  const chosen=pool.map(q=>({q,p:roadPoint(q,.5)})).sort((a,b)=>Math.hypot(a.p.x-center[0],a.p.y-center[1])-Math.hypot(b.p.x-center[0],b.p.y-center[1]))[0];
  const point=chosen.p;
+ state.zoom=CAMERA_ZOOM_MAX;state.zoomTarget=CAMERA_ZOOM_MAX;state.zoomBias=1;
  state.spawn=[point.x,point.y];Object.assign(state.player,{x:point.x,y:point.y,a:point.a,car:-1});
  state.camera.x=point.x;state.camera.y=point.y;state.distance=0;
  state.graph=buildRoadGraph(state.roads);
@@ -115,7 +135,10 @@ function prepareMap(map,surveyData=[]){
  }
  state.traffic=createAgents(state.graph,140,189,'car');
  state.people=createAgents(state.graph,190,310,'walk');
- $('road-count').textContent=String(state.roads.length);$('building-count').textContent=String(state.buildings.length);$('junction-count').textContent=String(state.graph.junctions);
+ $('road-count').textContent=String(state.roads.length);
+ $('building-count').textContent=String(state.buildings.length);
+ $('inferred-count').textContent=String(state.inferredBuildings.length);
+ $('junction-count').textContent=String(state.graph.junctions);
  $('place').textContent='MELITO DI NAPOLI · MAPPA REALE';
  state.ready=true;hideLoading();state.last=0;canvas.focus({preventScroll:true});prepareMini();refreshCampaign();updateRoadWidthLabel();
 }
@@ -284,6 +307,12 @@ function tick(dt){
   state.lastSave+=dt;
   if(state.lastSave>4){state.lastSave=0;saveProgress(localStorage,state.progress);}
  }
+ const moving=pressed.up||pressed.down||pressed.left||pressed.right;
+ const movement={inVehicle:p.car>=0,
+  speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?7.5:5):0,
+  running:pressed.run,moving:!!moving};
+ state.zoomTarget=targetCameraZoom(movement,state.zoomBias);
+ state.zoom=advanceCameraZoom(state.zoom,state.zoomTarget,dt);
  const targetX=p.x+(p.car>=0?Math.cos(p.a)*8:0);
  const targetY=p.y+(p.car>=0?Math.sin(p.a)*8:0);
  const follow=1-Math.exp(-6*dt);
@@ -321,6 +350,11 @@ function updateHud(){
  if(n&&n.road.n)$('street').textContent=n.road.n.toUpperCase();
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
  $('action').textContent=p.car>=0?'E · SCENDI':'E · ENTRA IN AUTO';
+ const moving=pressed.up||pressed.down||pressed.left||pressed.right;
+ const status={inVehicle:p.car>=0,
+  speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?7.5:5):0,
+  running:pressed.run,moving:!!moving};
+ $('camera-mode').textContent=describeCameraZoom(status)+' · '+state.zoom.toFixed(1)+'×';
 }
 function drawLine(p){c.beginPath();c.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)c.lineTo(p[i],p[i+1]);}
 function poly(p){drawLine(p);c.closePath();}
@@ -343,9 +377,10 @@ function draw(){
  c.translate(cw/2,ch/2);c.scale(state.zoom,state.zoom);c.translate(-state.camera.x,-state.camera.y);
  const border=state.map.border;
  c.beginPath();c.moveTo(border[0],border[1]);for(let i=2;i<border.length;i+=2)c.lineTo(border[i],border[i+1]);c.closePath();
- c.fillStyle='#677662';c.fill();c.lineWidth=10;c.strokeStyle='#9eac87';c.stroke();
+ c.fillStyle='#988f81';c.fill();c.lineWidth=10;c.strokeStyle='#9e998a';c.stroke();
  const [x0,y0,x1,y1]=visibleBounds();
  const buildings=query(state.buildings,state.buildingGrid,x0,y0,x1,y1);
+ const inferred=query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1);
  const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
  if(state.zoom>=1.05){
   c.save();c.beginPath();c.moveTo(border[0],border[1]);for(let i=2;i<border.length;i+=2)c.lineTo(border[i],border[i+1]);
@@ -353,6 +388,7 @@ function draw(){
  }
  drawCityStreets(c,roads,state.zoom);
  drawCrosswalks(c,state.graph,[x0,y0,x1,y1],state.zoom);
+ drawCityBuildings(c,inferred,state.zoom);
  drawCityBuildings(c,buildings,state.zoom);
  drawStreetProps(c,query(state.props,state.propsGrid,x0,y0,x1,y1),state.zoom);
  drawStorefronts(c,query(state.shops,state.shopGrid,x0,y0,x1,y1),state.zoom);
@@ -491,13 +527,17 @@ function bind(){
  }
 
  $('retry').addEventListener('click',load);
- $('zoom-in').addEventListener('click',()=>state.zoom=clamp(state.zoom*1.23,.4,5));
- $('zoom-out').addEventListener('click',()=>state.zoom=clamp(state.zoom/1.23,.4,5));
+ $('zoom-in').addEventListener('click',()=>{state.zoomBias=clamp(state.zoomBias*1.17,.62,1.35);});
+ $('zoom-out').addEventListener('click',()=>{state.zoomBias=clamp(state.zoomBias/1.17,.62,1.35);});
+ $('zoom-auto').addEventListener('click',()=>{state.zoomBias=1;});
  $('reset').addEventListener('click',()=>{
-  if(!state.ready)return;const p=state.player;p.car=-1;p.x=state.spawn[0];p.y=state.spawn[1];p.a=0;state.camera.x=p.x;state.camera.y=p.y;updateHud();
+  if(!state.ready)return;const p=state.player;p.car=-1;p.x=state.spawn[0];p.y=state.spawn[1];p.a=0;state.camera.x=p.x;state.camera.y=p.y;
+  state.zoom=CAMERA_ZOOM_MAX;state.zoomBias=1;state.zoomTarget=CAMERA_ZOOM_MAX;updateHud();
  });
  window.addEventListener('blur',()=>Object.keys(pressed).forEach(k=>pressed[k]=false));
  document.addEventListener('visibilitychange',()=>{if(document.hidden)Object.keys(pressed).forEach(k=>pressed[k]=false);});
- canvas.addEventListener('wheel',e=>{e.preventDefault();state.zoom=clamp(state.zoom*(e.deltaY>0?.92:1.08),.4,5);},{passive:false});
+ canvas.addEventListener('wheel',e=>{e.preventDefault();
+  state.zoomBias=clamp(state.zoomBias*(e.deltaY>0?.91:1.1),.62,1.35);
+ },{passive:false});
 }
 bind();requestAnimationFrame(frame);load();

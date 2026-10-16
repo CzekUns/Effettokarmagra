@@ -126,3 +126,18 @@ Per prevenire moduli obsoleti nel browser, l'HTML carica `game.mjs?v=043` e i mo
 **Non equivale a una scansione completa di Google Street View:** 2.055 facciate su 2.056 NON sono state confrontate con una fotografia individuata con certezza. Colori, piani non taggati, balconi e dettagli restano interpretazioni artistiche non certificate. Santa Maria delle Grazie è l'unico edificio identificato in fotografia tramite fonti pubbliche in questa fase. **Non dichiariamo verificati i 2.055 edifici stimati.**
 
 I profili sono prodotti deterministicamente da `survey/town-generator.mjs` usando le sole geometrie/tipologie OpenStreetMap e il registro OSM originale; nessuna immagine Google viene scaricata. Il catalogo originario per settori (34) e le 47 vecchie schede sono conservati, così come le 58 schede individuali del primo anello di Piazza Santo Stefano. Il visualizzatore `survey/index.html` espone tutta la città, anelli concentrici dalla piazza e tutti i 34 settori, con link Maps/Street View per continuare in seguito la verifica fotografica e con il numero corretto di schede complete.
+
+## 0.6.0 — Fill urbano e telecamera automatica
+
+Il territorio reale di Melito è fortemente urbanizzato. Il precedente renderer rappresentava con **verde erboso** ogni zona senza impronta edificio OSM: questo era un errore concettuale, perché una zona non registrata su OSM non è automaticamente un prato. Il nuovo fondo è **urbano, con cortili pavimentati, piazzali e toni cemento/pietra**; piccole zone verdi rimangono solo come dettaglio illustrativo, non come parchi georeferenziati. La densità di alberi generici sulle strade è ridotta.
+
+Il modulo `urban-infill.mjs` posiziona deterministicamente edifici **PLACEHOLDER** nei vuoti del tessuto stradale, guidandosi tramite strade OSM, margini di carreggiata, densità degli edifici reali e confine comunale. Esclude Piazza Santo Stefano e il Municipio, intersezioni con edifici OSM, strade e pezzi di territorio poco supportati dalla presenza di fabbricati mappati. I placeholder:
+- hanno ID sintetici negativi e sono colorati/rappresentati in pixel art;
+- non alterano le 2.056 sagome immobiliari OSM certificate come geometrie della fonte;
+- **non sono rilievi reali** e possono differire dalla presenza effettiva di immobili;
+- entrano nelle collisioni di gioco per impedire al personaggio di attraversare i loro muri;
+- sono conteggiati separatamente dal numero di edifici OpenStreetMap nel pannello HUD.
+
+La **telecamera automatica** (`camera-zoom.mjs`) si inizializza a **5× a piedi** (zoom massimo), scala a **4,65×** durante lo sprint e in auto parte attorno a **3,35×**, arretrando progressivamente fino a circa **1,87×** a 28 unità di velocità. Il rapporto ottico è definito dalla scala Canvas: a velocità più alta si vede **più strada in anticipo**, quindi il moltiplicatore numerico diminuisce. Interpolazione morbida indipendente dal frame rate. I pulsanti +/− regolano il fattore preferito, il nuovo pulsante **AUTO** ripristina l'adattamento standard.
+
+Le distanze reali e l'esatta occupazione urbanistica richiedono cartografie comunali aerofotogrammetriche: consultare [strumenti urbanistici e tavole del Comune](https://comune.melito.na.it/edilizia-privata/documentazione-edilizia-privata/strumenti-urbanistici-e-tavole/), inclusi elaborati 1:2.000 e 1:5.000. I placeholder non sostituiscono tali fonti.

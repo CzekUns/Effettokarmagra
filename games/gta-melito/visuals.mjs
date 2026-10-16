@@ -175,7 +175,9 @@ function lamp(c,x,y){
 export function drawStreetProps(c,props,zoom){
  if(zoom<.85)return;
  for(const p of props){
-  if(p.kind<4)pixelTree(c,p.x,p.y,p.kind);
+  // Urban Melito: isolated street trees rather than dense roadside greenery.
+  if(p.kind<2)pixelTree(c,p.x,p.y,p.kind);
+  else if(p.kind<4)lamp(c,p.x,p.y);
   else if(p.kind<6)bench(c,p.x,p.y,p.a);
   else if(p.kind===6||p.kind===7)dumpster(c,p.x,p.y,p.a);
   else if(p.kind===8||p.kind===9)scooter(c,p.x,p.y,p.a);

@@ -125,10 +125,13 @@ button:focus-visible{outline:3px solid #f5d78a;outline-offset:2px}
 @media(max-width:680px){.road-width-bar{padding:6px 8px;gap:5px;font-size:9px}
  #road-width-compare{font-size:10px;padding:7px 8px}
  .road-width-bar small{font-size:9px}}
+#camera-mode{color:#ffe0a0;font-weight:900}
+#zoom-auto{background:#1e4745;border:1px solid #82b1a2;color:#e0f4da;font-size:11px;font-weight:900}
+@media(max-width:680px){#camera-mode{display:inline-block;max-width:190px;white-space:nowrap}}
 </style>
 </head><body><main class="app">
-<header class="header"><div><h1>GTA: MELITO <span aria-hidden="true">★</span></h1><small>UNS ARCADE / MELITO DI NAPOLI / VERSIONE 0.5.0</small></div><a class="back" href="../../index.html">← SALA GIOCHI</a></header>
-<div class="hud"><span id="place">CARICAMENTO MAPPA…</span><span>MEZZO: <b id="vehicle">A PIEDI</b></span><span>STRADE: <b id="road-count">—</b></span><span>PALAZZI: <b id="building-count">—</b></span><span>INCROCI: <b id="junction-count">—</b></span></div>
+<header class="header"><div><h1>GTA: MELITO <span aria-hidden="true">★</span></h1><small>UNS ARCADE / MELITO DI NAPOLI / VERSIONE 0.6.0</small></div><a class="back" href="../../index.html">← SALA GIOCHI</a></header>
+<div class="hud"><span id="place">CARICAMENTO MAPPA…</span><span>MEZZO: <b id="vehicle">A PIEDI</b></span><span>CAMERA: <b id="camera-mode">PIEDI · 5.0×</b></span><span>STRADE: <b id="road-count">—</b></span><span>OSM: <b id="building-count">—</b></span><span>EDIFICI PLACEHOLDER: <b id="inferred-count">—</b></span><span>INCROCI: <b id="junction-count">—</b></span></div>
 <div class="road-width-bar" aria-label="Confronto larghezza delle strade">
  <div><strong>STRADA RESIDENZIALE</strong> <span id="road-width-current">ADESSO · 15,4</span> <small>unità grafiche</small></div>
  <button id="road-width-compare" type="button" aria-pressed="false">CONFRONTA CON PRIMA</button>
@@ -163,9 +166,9 @@ button:focus-visible{outline:3px solid #f5d78a;outline-offset:2px}
   <button data-dir="up" aria-label="Avanti">▲</button><button data-dir="left" aria-label="Sinistra">◀</button>
   <button data-dir="down" aria-label="Indietro">▼</button><button data-dir="right" aria-label="Destra">▶</button>
  </div>
- <div class="buttons"><button class="control-action" id="action">E · ENTRA IN AUTO</button><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="sprint" aria-label="Tieni premuto per correre">CORRI</button><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-in" aria-label="Zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div>
+ <div class="buttons"><button class="control-action" id="action">E · ENTRA IN AUTO</button><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="sprint" aria-label="Tieni premuto per correre">CORRI</button><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-auto" aria-label="Ripristina zoom automatico">AUTO</button><button class="mini" id="zoom-in" aria-label="Regola zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div>
 </div>
-<p class="instructions">PC: WASD/frecce per muoverti e guidare · E entra/esci · SHIFT corri · SPAZIO freno a mano. Telefono: pulsanti direzionali, ENTRA/SCENDI, FRENO, CORRI e MAPPA. Missioni nel pannello dedicato; F per interagire, M per la mappa. Traffico che svolta sulle vere strade, marciapiedi, attraversamenti, tetti tridimensionali e dettagli urbani immaginari in stile pixel art. Strade, incroci e sagome dei palazzi si basano su OpenStreetMap.</p>
-<p class="instructions"><a href="./survey/index.html" target="_blank" rel="noopener noreferrer">🗺 TUTTA MELITO · 2.056 EDIFICI MODELLATI →</a> · 2.056 sagome OSM censite · 2.056 edifici con profilo grafico individuale. Piazza Santo Stefano dettagliata: una facciata verificata fotograficamente, le altre ancora stimate.</p>
+<p class="instructions">PC: WASD/frecce per muoverti e guidare · E entra/esci · SHIFT corri · SPAZIO freno a mano. Telefono: pulsanti direzionali, ENTRA/SCENDI, FRENO, CORRI e MAPPA. Telecamera automatica: massimo zoom a piedi; in auto arretra progressivamente con la velocità. ＋/－ personalizzano, AUTO ripristina. Missioni nel pannello dedicato; F per interagire, M per la mappa. Traffico che svolta sulle vere strade, marciapiedi, attraversamenti, tetti tridimensionali e dettagli urbani immaginari in stile pixel art. Strade, incroci e sagome dei palazzi si basano su OpenStreetMap.</p>
+<p class="instructions"><a href="./survey/index.html" target="_blank" rel="noopener noreferrer">🗺 TUTTA MELITO · 2.056 EDIFICI MODELLATI →</a> · 2.056 sagome OSM censite · 2.056 edifici con profilo grafico individuale e palazzi segnaposto aggiuntivi (NON rilievi OSM). Piazza Santo Stefano dettagliata: una facciata verificata fotograficamente, le altre ancora stimate.</p>
 <footer class="credits"><span>© OpenStreetMap contributors — ODbL · Confini: ISTAT 2026 — CC BY · MIT: ispirazione motore <a href="https://github.com/harmanhanjra/punjab-stories" target="_blank" rel="noreferrer">Punjab Stories</a></span><span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Crediti cartografia</a> · <a href="./README.md">Informazioni sul progetto</a></span></footer>
-</main><script type="module" src="./game.mjs?v=050"></script></body></html>
+</main><script type="module" src="./game.mjs?v=060"></script></body></html>
