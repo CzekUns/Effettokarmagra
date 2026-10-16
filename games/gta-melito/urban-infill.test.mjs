@@ -37,7 +37,7 @@ test('urban infill is deterministic, grouped and covers more than the church nei
  const one=generated(),two=generateUrbanInfill(map);
  assert.deepEqual(one.buildings.map(b=>b.p),two.buildings.map(b=>b.p));
  const centers=one.buildings.map(b=>bbox(b.p)).map(b=>[(b.x0+b.x1)/2,(b.y0+b.y1)/2]);
- assert.ok(centers.every((p,i)=>centers.some((q,j)=>i!==j&&Math.hypot(p[0]-q[0],p[1]-q[1])<=36)),
+ assert.ok(centers.every((p,i)=>centers.some((q,j)=>i!==j&&Math.hypot(p[0]-q[0],p[1]-q[1])<=29)),
   'every visual placeholder should belong to a nearby small cluster');
  const quadrants=new Set(one.buildings.map(b=>Math.floor(b.p[0]/550)+','+Math.floor(b.p[1]/550)));
  assert.ok(quadrants.size>=12,'must be broadly distributed across Melito');
@@ -84,5 +84,5 @@ test('game exposes placeholder count and camera mode to the player',async()=>{
  assert.ok(html.includes('id="inferred-count"'));
  assert.ok(html.includes('id="camera-mode"'));
  assert.ok(html.includes('id="zoom-auto"'));
- assert.ok(html.includes('game.mjs?v=076'));
+ assert.ok(html.includes('game.mjs?v=077'));
 });

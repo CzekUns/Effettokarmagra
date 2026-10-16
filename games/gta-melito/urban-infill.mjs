@@ -119,7 +119,7 @@ export function generateUrbanInfill(map,{pitch=23.5,max=2600}={}){
  // Drop solitary stands in empty OSM space. Infill remains a visual estimate,
  // but each retained footprint now belongs to a small, readable cluster.
  const centers=buildings.map(center),clustered=buildings.filter((b,i)=>
-  centers.some((q,j)=>j!==i&&Math.hypot(q[0]-centers[i][0],q[1]-centers[i][1])<=36));
+  centers.some((q,j)=>j!==i&&Math.hypot(q[0]-centers[i][0],q[1]-centers[i][1])<=29));
  stats.excludedOpen+=buildings.length-clustered.length;
  return {buildings:clustered,stats:{...stats,generated:clustered.length,candidates:buildings.length,
   excludedIsolated:buildings.length-clustered.length,osmBuildings:map.buildings.length,
