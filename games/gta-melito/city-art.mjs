@@ -108,6 +108,24 @@ export function drawTerrain(c,bb,zoom,ground=null){
    c.fillStyle=j%2?'#d9caaf4d':'#7e736540';
    c.fillRect(px,py,j%3===0?1.2:.6,.65);
   }
+  if(zoom>=1.65&&weight>=2){
+   // Deterministic worn paving joints and small repairs make dense urban
+   // parcels read as lived-in stone/concrete rather than empty color blocks.
+   const joints=1+Math.min(2,Math.floor(weight/3));
+   for(let j=0;j<joints;j++){
+    const sx=x+4+h(seed+j*23+71)%(cell-10);
+    const sy=y+4+h(seed+j*31+113)%(cell-10);
+    const span=4+h(seed+j*43+151)%8;
+    c.fillStyle=j%2?'#5b554b35':'#e6d9c13d';
+    c.fillRect(sx,sy,span,.38);
+    c.fillRect(sx,sy,.38,Math.max(2,span*.42));
+   }
+   if(weight>=5&&seed%4===0){
+    const px=x+8+h(seed+211)%(cell-14),py=y+8+h(seed+239)%(cell-14);
+    c.fillStyle='#746b5d2b';c.fillRect(px,py,4.5,2.4);
+    c.fillStyle='#ded0b53b';c.fillRect(px+.6,py+.5,3.1,1.1);
+   }
+  }
  }
 }
 export function drawCityStreets(c,roads,zoom){
@@ -359,10 +377,18 @@ function drawRaisedWalls(c,b,v,zoom){
     const tu=col/(columns+1);
     const wx=f.x1+edgeX*tu+shiftX*tv,wy=f.y1+edgeY*tu+shiftY*tv;
     const w=doors?2.4:1.5,hh=floors>=5?1.35:1.85;
-    c.fillStyle='#273e43';c.fillRect(wx-w*.5,wy-hh*.55,w,hh);
-    c.fillStyle='#abc4c085';c.fillRect(wx-w*.38,wy-hh*.43,w*.35,hh*.63);
+    const windowSeed=h(a.seed+floor*97+col*131+j*17);
+    c.fillStyle=windowSeed%7===0?'#b87951':windowSeed%5===0?'#344c50':'#273e43';
+    c.fillRect(wx-w*.5,wy-hh*.55,w,hh);
+    c.fillStyle=windowSeed%7===0?'#e0b1769c':'#abc4c085';
+    c.fillRect(wx-w*.38,wy-hh*.43,w*.35,hh*.63);
     c.fillStyle=shiftColor(wall,40);
     c.fillRect(wx-w*.7,wy+hh*.43,w*1.4,.35);
+    if(windowSeed%6===0&&w>12){
+     const shutter=windowSeed%2?'#71816f':'#a66e58';
+     c.fillStyle=shutter;c.fillRect(wx-w*.5-1.1,wy-hh*.58,.55,hh*1.15);
+     c.fillRect(wx+w*.5+.55,wy-hh*.58,.55,hh*1.15);
+    }
     if(a.surveyFeatures?.balconies&&isTall&&floor>0&&col%3===1){
      c.fillStyle='#454b45';c.fillRect(wx-1.7,wy+hh*.65,3.4,.45);
      c.strokeStyle='#66706d';c.lineWidth=.28;
