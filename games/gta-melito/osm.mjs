@@ -3,7 +3,9 @@
 export const ENDPOINTS=[
   "https://overpass.kumi.systems/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
-  "https://overpass-api.de/api/interpreter"
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.nchc.org.tw/api/interpreter",
+  "https://overpass.ultra.cc/api/interpreter"
 ];
 const RAD=Math.PI/180, METERS=111319.49079327358;
 export function getProjection(boundary){
@@ -72,17 +74,30 @@ export function buildMap(overpass,boundary){
 }
 export async function fetchOverpass(boundary,onAttempt=()=>{}){
  const query=buildQuery(getProjection(boundary));
- let error=null;
+ const errors=[];
  for(const endpoint of ENDPOINTS){
   onAttempt(endpoint);
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),65000);
-  try{
-   const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:new URLSearchParams({data:query}),signal:controller.signal});
-   if(!response.ok)throw Error('HTTP '+response.status);
-   const json=await response.json();
-   const map=buildMap(json,boundary);
-   return map;
-  }catch(e){error=e;}finally{clearTimeout(timer);}
+  for(const method of ['GET','POST']){
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),65000);
+   try{
+    const url=method==='GET'?endpoint+'?data='+encodeURIComponent(query):endpoint;
+    const response=await fetch(url,{
+     method,
+     headers:{'Accept':'application/json','User-Agent':'UnsArcadeMelito/0.1 (https://github.com/CzekUns/Effettokarmagra)'},
+     ...(method==='POST'?{headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json','User-Agent':'UnsArcadeMelito/0.1 (https://github.com/CzekUns/Effettokarmagra)'},body:new URLSearchParams({data:query})}:{}),
+     signal:controller.signal
+    });
+    if(!response.ok){
+      const reason=(await response.text()).slice(0,180).replace(/\\s+/g,' ');
+      throw Error('HTTP '+response.status+': '+reason);
+    }
+    const json=await response.json();
+    return buildMap(json,boundary);
+   }catch(e){
+    errors.push(new URL(endpoint).hostname+' '+method+': '+e.message);
+    console.warn('Melito OSM endpoint:',errors[errors.length-1]);
+   }finally{clearTimeout(timer);}
+  }
  }
- throw Error('Server cartografici non raggiungibili: '+(error?.message||'errore sconosciuto'));
+ throw Error('Server cartografici non raggiungibili. '+errors.slice(-3).join(' | '));
 }
