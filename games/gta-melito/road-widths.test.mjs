@@ -58,6 +58,15 @@ test('asphalt and sidewalks are drawn with the visual multiplier, not the old 7m
  assert.equal(SIDEWALK_OUTER,7.2,'outer painted sidewalk is twice its prior 3.6-unit reach');
  assert.ok(!widths.some(n=>n===6.5),'old asphalt width must not be used');
 });
+test('road repaint after buildings clears only the lane, not their sidewalk facades',()=>{
+ const widths=[];
+ const ctx=new Proxy({lineWidth:1,stroke(){widths.push(this.lineWidth);},setLineDash(){}},
+  {get:(obj,p)=>p in obj?obj[p]:(..._)=>{}});
+ const road={id:102,t:'residential',w:7,p:[0,0,100,0]};
+ drawCityStreets(ctx,[road],2.5,{surfaceOnly:true});
+ assert.ok(widths.includes(visualRoadWidth(road)-.5));
+ assert.ok(!widths.some(n=>n>visualRoadWidth(road)));
+});
 test('commercial frontage and crosswalks share the wider road estimate',()=>{
  const target=map.pois.find(q=>q.k==='post_office');
  const shops=prepareStorefronts([target],map.roads);
@@ -96,7 +105,7 @@ test('every consumer imports the same versioned road-width module for A/B',async
   assert.ok(text.includes("'./road-widths.mjs?v=043'"),file+' requires versioned singleton');
  }
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
- assert.ok(html.includes('game.mjs?v=101'));
+ assert.ok(html.includes('game.mjs?v=102'));
  assert.ok(html.includes('id="road-width-compare"'));
  assert.ok(html.includes('id="road-width-current"'));
 });
