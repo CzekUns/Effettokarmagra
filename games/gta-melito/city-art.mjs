@@ -9,13 +9,15 @@ import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-v
  * are original artistic interpretations: they do not claim photographic fidelity.
  */
 const PI=Math.PI,TAU=2*PI;
-const asphalt={motorway:'#3e4246',trunk:'#44484a',primary:'#4a4e50',secondary:'#505456',
- tertiary:'#565a5d',residential:'#5b5e60',unclassified:'#5c6061',service:'#686762',
- living_street:'#77736b',footway:'#b6a994',pedestrian:'#b8ad99',path:'#a79b84',
- steps:'#ab9f8e',track:'#8e8d75'};
-const oldtown=['#b77a63','#af856b','#bd9c7c','#c4a88a','#ac9074','#be8869'];
-const flat=['#bcb7a7','#b2aba1','#b7b0a0','#a69e92','#c6b5a1','#9d9d96'];
-const metal=['#929f97','#7e8c89','#a5a9a3'];
+const asphalt={motorway:'#303836',trunk:'#363d3b',primary:'#39403e',secondary:'#404643',
+ tertiary:'#474b46',residential:'#4b4e48',unclassified:'#50524c',service:'#59574e',
+ living_street:'#625d50',footway:'#a99d87',pedestrian:'#b4a68e',path:'#9b8c72',
+ steps:'#9a8c79',track:'#777864'};
+// Warm, high-contrast rooftops and cool shadow faces evoke GTA2's readable
+// arcade blocks while retaining an original Campanian palette.
+const oldtown=['#a95f4d','#b97959','#bc8d66','#c39b73','#a97559','#c0805d'];
+const flat=['#a6a093','#a69a87','#b2a18b','#99978a','#b5a58e','#8d9189'];
+const metal=['#7f938e','#73847f','#969a8d'];
 const h=n=>{let x=(Number(n)||1)|0;x=Math.imul(x^x>>>16,2246822519);x=Math.imul(x^x>>>13,3266489917);return (x^x>>>16)>>>0};
 const rnd=n=>h(n)/4294967295;
 const near=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
@@ -97,20 +99,20 @@ export function drawTerrain(c,bb,zoom,ground=null){
   // Rare green patches are illustrative; actual park boundaries are not known.
   const urban=weight>=2;
   c.fillStyle=urban?
-   ['#a59d91','#aaa296','#a29c92','#b1a698'][seed%4]:
-   weight>0?['#9c988e','#a29a8d','#938f85'][seed%3]:
+   ['#8a8479','#918a7e','#888379','#968d7d'][seed%4]:
+   weight>0?['#8a867b','#91897a','#827e73'][seed%3]:
    seed%23===0?'#79856e':
-   ['#979185','#938e82','#9c9588','#928c81'][seed%4];
+   ['#8e887b','#898274','#948c7d','#878274'][seed%4];
   c.fillRect(x,y,cell+.2,cell+.2);
   if(zoom<1.15)continue;
   for(let j=0;j<4;j++){
    const px=x+3+h(seed+j*9)%(cell-5),py=y+3+h(seed+j*17)%(cell-5);
-   c.fillStyle=j%2?'#d9caaf4d':'#7e736540';
+   c.fillStyle=j%2?'#d7c6a12f':'#554b3c32';
    c.fillRect(px,py,j%3===0?1.2:.6,.65);
   }
   if(zoom>=1.2&&weight>=2){
    // Repeated paving slabs give dense blocks a readable urban ground texture.
-   c.strokeStyle='#625b5033';c.lineWidth=.34;
+   c.strokeStyle='#473f343b';c.lineWidth=.42;
    c.beginPath();c.moveTo(x+cell*.5,y+2);c.lineTo(x+cell*.5,y+cell-2);
    c.moveTo(x+2,y+cell*.62);c.lineTo(x+cell*.5,y+cell*.62);c.stroke();
   }
@@ -122,13 +124,13 @@ export function drawTerrain(c,bb,zoom,ground=null){
     const sx=x+4+h(seed+j*23+71)%(cell-10);
     const sy=y+4+h(seed+j*31+113)%(cell-10);
     const span=4+h(seed+j*43+151)%8;
-    c.fillStyle=j%2?'#5b554b35':'#e6d9c13d';
+    c.fillStyle=j%2?'#51483c42':'#e4d1ae38';
     c.fillRect(sx,sy,span,.38);
     c.fillRect(sx,sy,.38,Math.max(2,span*.42));
    }
    if(weight>=5&&seed%4===0){
     const px=x+8+h(seed+211)%(cell-14),py=y+8+h(seed+239)%(cell-14);
-    c.fillStyle='#746b5d2b';c.fillRect(px,py,4.5,2.4);
+    c.fillStyle='#554d4038';c.fillRect(px,py,4.5,2.4);
     c.fillStyle='#ded0b53b';c.fillRect(px+.6,py+.5,3.1,1.1);
    }
   }
@@ -140,9 +142,9 @@ export function drawCityStreets(c,roads,zoom){
  const coat=(extra,color)=>{for(const road of roads){
   line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)+extra);c.strokeStyle=pedestrian(road)?color.ped:color.car;c.stroke();
  }};
- coat(5.2,{ped:'#77766e',car:'#817e70'});
- coat(3.8,{ped:'#b1a798',car:'#c9bca7'});
- coat(1.7,{ped:'#b7a997',car:'#ada48c'});
+ coat(5.2,{ped:'#424843',car:'#292f2d'}); // hard outer silhouette
+ coat(3.8,{ped:'#847a66',car:'#77705f'}); // cast curb shadow
+ coat(1.7,{ped:'#c2b18e',car:'#b7a782'}); // sunlit kerb / paving edge
  for(const road of roads){
   line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)-.5);c.strokeStyle=asphalt[road.t]||'#626362';c.stroke();
  }
@@ -198,16 +200,23 @@ function flatRoof(c,b,art,tone){
  const {x0,y0,x1,y1,cx,cy,w,h:bh,area,seed}=art;
  c.save();poly(c,b.p);c.clip();
  c.fillStyle=tone;c.fillRect(x0,y0,w,bh);
+ if(art.type!=='industrial'&&area>150){
+  c.strokeStyle='#6c64552b';c.lineWidth=.22;c.beginPath();
+  for(let x=x0+5;x<x1;x+=6){c.moveTo(x,y0+1);c.lineTo(x,y1-1);}
+  for(let y=y0+5;y<y1;y+=6){c.moveTo(x0+1,y);c.lineTo(x1-1,y);}
+  c.stroke();
+ }
  c.strokeStyle='#e6dcc0aa';c.lineWidth=.5;
  c.strokeRect(x0+1.3,y0+1.3,Math.max(0,w-2.6),Math.max(0,bh-2.6));
  if(area>55){
-  const steps=Math.min(7,Math.floor(area/170)+1);
+  const steps=Math.min(4,Math.floor(area/320)+1);
   for(let j=0;j<steps;j++){
    const x=x0+4+rnd(seed+j*37+11)*Math.max(1,w-8);
    const y=y0+4+rnd(seed+j*61+19)*Math.max(1,bh-8);
-   c.fillStyle=j%3?'#757e7a':'#d0c6b0';c.fillRect(x-1.3,y-1.3,3.7,2.8);
-   c.fillStyle='#434f53';c.fillRect(x-1.0,y-1,2.3,1.6);
-   c.fillStyle='#e4e2ce66';c.fillRect(x-1,y-1,2.3,.5);
+   c.fillStyle='#27312e58';c.fillRect(x-1.3,y-1,4.5,3.4);
+   c.fillStyle=j%3?'#85877b':'#c1b49b';c.fillRect(x-1.5,y-1.5,3.8,2.8);
+   c.fillStyle='#4c5853';c.fillRect(x-.8,y-.8,2.2,1.1);
+   c.fillStyle='#e8d6b378';c.fillRect(x-1.2,y-1.4,3,.4);
   }
  }
  if(art.type==='apartment'&&area>220){
@@ -277,11 +286,31 @@ function specialized(c,b,art){
   for(const dx of [-.26,.26]){c.beginPath();c.moveTo(cx+w*dx,art.y0+2);
    c.lineTo(cx+w*dx,art.y1-2);c.stroke();}
   c.restore();
+  // Concave entrance, paired pilasters and oculus: original roof-level glyph
+  // of the documented facade. Placement/proportions are symbolic, not a survey.
+  c.save();poly(c,b.p);c.clip();
+  const frontY=art.y1-3.8,frontX=1092.2;
+  c.strokeStyle='#796f5c';c.lineWidth=1.15;
+  c.beginPath();c.moveTo(frontX-12,frontY-2);c.quadraticCurveTo(frontX,frontY-7,frontX+12,frontY-2);c.stroke();
+  c.strokeStyle='#f8edd3';c.lineWidth=1.5;
+  for(const dx of [-10,-6,6,10]){c.beginPath();c.moveTo(frontX+dx,frontY-5);c.lineTo(frontX+dx,frontY+1);c.stroke();}
+  c.fillStyle='#554c40';c.fillRect(frontX-2,frontY-3.5,4,4);
+  c.fillStyle='#e9d5ac';c.fillRect(frontX-3,frontY-4.4,6,.8);
+  c.fillStyle='#615f54';c.beginPath();c.arc(frontX,frontY-7,1.45,0,TAU);c.fill();
+  c.strokeStyle='#eee3c6';c.lineWidth=.65;c.stroke();c.restore();
   const radius=clamp(Math.min(w,bh)*.24,4,12);
   c.save();c.translate(cx,cy);
   c.fillStyle='#b09f82';c.beginPath();c.arc(1.2,1.6,radius+1.8,0,TAU);c.fill();
-  c.fillStyle='#607176';c.beginPath();c.arc(0,0,radius+1.2,0,TAU);c.fill();
-  c.strokeStyle='#d5d5bd';c.lineWidth=.8;c.stroke();
+  // Stepped silhouette, shaded courses and ribs keep the dome legible as
+  // pixel art at walking zoom, with a single light direction.
+  c.fillStyle='#607176';c.beginPath();
+  const rr=radius+1.2,step=rr/5;
+  for(let row=-5;row<=5;row++){
+   const yy=row*step,half=Math.round(Math.sqrt(Math.max(0,rr*rr-yy*yy))/step)*step;
+   c.rect(-half,yy,half*2,step);
+  }
+  c.fill();
+  // No stroke on individual pixel courses: that would stripe the dome.
   for(let j=0;j<10;j++){const a=j*TAU/10;c.strokeStyle='#aab2a9';c.lineWidth=.35;
    c.beginPath();c.moveTo(0,0);c.lineTo(Math.cos(a)*radius,Math.sin(a)*radius);c.stroke();}
   c.fillStyle='#ded2ae';c.beginPath();c.arc(0,0,radius*.28,0,TAU);c.fill();
@@ -321,6 +350,10 @@ function specialized(c,b,art){
   c.strokeRect(art.x0+2,art.y0+2,Math.max(0,w-4),Math.max(0,bh-4));
   c.fillStyle='#828a8a';c.fillRect(cx-3.5,cy-2,7,4);
   c.fillStyle='#d1bdaa';c.fillRect(cx-2.7,cy-1.5,5.4,3);
+  // Civic identification, not an assertion about the actual flag location.
+  c.fillStyle='#416b55';c.fillRect(cx-3,cy+4,2,3);
+  c.fillStyle='#e9e2cf';c.fillRect(cx-1,cy+4,2,3);
+  c.fillStyle='#ac594b';c.fillRect(cx+1,cy+4,2,3);
   c.restore();return true;
  }
  if(art.type==='market'||art.type==='school'){
@@ -341,10 +374,10 @@ function drawRaisedWalls(c,b,v,zoom){
  const p=b.p,a=b.art;
  const wall=a.facadeTint||
   (a.type==='historic'?'#d0b99c':a.type==='industrial'?'#9da9a6':a.type==='market'?'#b7b5a7':a.type==='church'?'#ded0b6':a.type==='civic'?'#c9b39b':'#c0b19e');
- // The compact translated footprint forms the wall base. Avoid a second,
- // farther offset shadow footprint that used to spill over adjacent streets.
- c.save();c.translate(v.dx,v.dy);
- poly(c,p);c.fillStyle=shiftColor(wall,-60);c.fill();c.restore();
+ // Paint a directional contact shadow inside the roof. This gives the block
+ // the crisp top-down depth of an arcade city without expanding its footprint.
+ c.save();poly(c,p);c.clip();c.translate(Math.min(v.dx,3),Math.min(v.dy,3));
+ poly(c,p);c.fillStyle='#17211e38';c.fill();c.restore();
  for(let j=2;j<p.length;j+=2){
   const edgeX=p[j]-p[j-2],edgeY=p[j+1]-p[j-1];
   const len=Math.hypot(edgeX,edgeY);
@@ -353,12 +386,13 @@ function drawRaisedWalls(c,b,v,zoom){
   const south=Math.abs(edgeX)>=Math.abs(edgeY),isTall=v.stories>=3;
   c.beginPath();c.moveTo(f.x1,f.y1);c.lineTo(f.x2,f.y2);
   c.lineTo(f.x3,f.y3);c.lineTo(f.x4,f.y4);c.closePath();
-  c.fillStyle=shiftColor(wall,south?-14:-42);c.fill();
+  c.fillStyle=shiftColor(wall,south?-38:-58);c.fill();
+  // A crisp light lip separates the upper wall from its shaded face.
+  c.lineWidth=.72;c.strokeStyle=shiftColor(wall,34);
+  c.beginPath();c.moveTo(f.x1,f.y1);c.lineTo(f.x2,f.y2);c.stroke();
   // The wall-top lip, ground sill and vertically expressed front corners
   // visually join the facades to the roof and projected ground footprint.
-  c.lineWidth=.66;
-  c.strokeStyle=shiftColor(wall,25);
-  c.beginPath();c.moveTo(f.x1,f.y1);c.lineTo(f.x2,f.y2);c.stroke();
+  c.lineWidth=.55;
   c.strokeStyle=shiftColor(wall,-54);
   c.beginPath();c.moveTo(f.x4,f.y4);c.lineTo(f.x3,f.y3);c.stroke();
   c.lineWidth=.55;c.strokeStyle=shiftColor(wall,-27);
@@ -393,8 +427,8 @@ function drawRaisedWalls(c,b,v,zoom){
     c.fillStyle=shiftColor(wall,40);
     c.fillRect(wx-w*.72,wy+hh*.43,w*1.44,.38);
     c.fillStyle=shiftColor(wall,-22);c.fillRect(wx-w*.56,wy-hh*.63,w*1.12,.24);
-    if(windowSeed%6===0&&len>12){
-     const shutter=windowSeed%2?'#71816f':'#a66e58';
+    if(windowSeed%4===0&&len>12){
+     const shutter=windowSeed%2?'#58685a':'#955d48';
      c.fillStyle=shutter;c.fillRect(wx-w*.5-1.1,wy-hh*.58,.55,hh*1.15);
      c.fillRect(wx+w*.5+.55,wy-hh*.58,.55,hh*1.15);
     }
@@ -427,9 +461,9 @@ export function drawCityBuildings(c,buildings,zoom){
   }
   // High-contrast raised parapet defines the roof above the façades,
   // including tiny annexes, historic churches and one-floor workshops.
-  poly(c,b.p);c.strokeStyle='#353c38';c.lineWidth=1.1;c.stroke();
-  c.save();c.translate(-.35,-.35);poly(c,b.p);
-  c.strokeStyle='#efe6d45e';c.lineWidth=.5;c.stroke();c.restore();
+  poly(c,b.p);c.strokeStyle='#25302c';c.lineWidth=1.35;c.stroke();
+  c.save();c.translate(-.55,-.55);poly(c,b.p);
+  c.strokeStyle='#f1d9ac88';c.lineWidth=.48;c.stroke();c.restore();
   if(zoom>=1.45&&(b.id===733703600||/Chiesa di Santa Maria delle Grazie/i.test(b.n||''))){
    const label=b.id===733703600?'MUNICIPIO':'S. MARIA DELLE GRAZIE';
    const width=b.id===733703600?28:54;

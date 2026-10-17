@@ -13,8 +13,9 @@ La priorità è **l'impatto visivo REALE sul gioco**: confrontare luoghi identif
 
 Sito: https://czekuns.github.io/Effettokarmagra/games/gta-melito/?v=070
 
+- Stato successivo alla tranche GTA2 del 17-10-2026 registrato in `VISUAL_PROGRESS.md`: 505 placeholder sintetici; renderer `v080`; la palette e le ombre sono stilizzazioni, non rilievi.
 - **2.056 edifici mappati OSM**, con ID e poligoni in `data/melito-map.json`; rete stradale e confine comunale reali ma il database è incompleto. L'area cartografica misura ~2.146 × 2.925 unità di gioco.
-- **363 edifici aggiuntivi sintetici**, generati deterministicamente in `urban-infill.mjs`. Hanno ID negativi e sono placeholder per dare densità: **non sono immobili rilevati**. Le collisioni attualmente li considerano, quindi controllare accessi, strade e missioni.
+- **505 edifici aggiuntivi sintetici**, generati deterministicamente in `urban-infill.mjs`. Hanno ID negativi e sono placeholder per dare densità: **non sono immobili rilevati**. Le collisioni attualmente li considerano, quindi controllare accessi, strade e missioni.
 - **2.419 edifici disegnati volumetricamente**, grazie a `building-volume.mjs` e `city-art.mjs`. Ogni impronta riceve estrusione, pareti laterali, separazioni fra piani, tetto e ombra; l'altezza minima è stilizzata. La geometria OSM non viene alterata.
 - Quasi tutti i materiali e i piani sono *ipotetici*: `survey/town-visuals.json` contiene i 2.056 profili grafici del paese, generati da `survey/town-generator.mjs`. **Solo un edificio ha associazione fotografica registrata**: Chiesa di Santa Maria delle Grazie, way OSM **733703815**, in `survey/piazza-santo-stefano.json`. I restanti 2.055 non sono verificati fotograficamente.
 - Punto notevole Municipio, building way **733703600**. Altra chiesa OSM: `Chiesa Maria SS. di Piedigrotta`. La missione e la mappa includono Piazza Santo Stefano, Via Roma, Piazza Immacolata, Corso Europa e altri POI.

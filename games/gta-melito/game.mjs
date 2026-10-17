@@ -10,10 +10,10 @@ import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=043';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=043';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs';
-import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=074';
+import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=080';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
-import {generateUrbanInfill} from './urban-infill.mjs?v=077';
+import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=080';
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=060';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
@@ -89,7 +89,7 @@ function roadPoint(road,fraction){
  }
  return {x:p[0],y:p[1],a:0};
 }
-function prepareMap(map,surveyData=[]){
+function prepareMap(map,surveyData=[],infillCache=null){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
  state.map=map;
  state.roads=map.roads;state.buildings=map.buildings||[];
@@ -98,7 +98,13 @@ function prepareMap(map,surveyData=[]){
  console.info('Melito visual city scan: '+survey.applied+'/'+survey.total+' buildings styled, '+survey.verified+' photo-verified');
  // Synthetic fillers are visually plausible but not mapped real addresses.
  // Deterministically fill only urban gaps, clear of real buildings and roads.
- const inferred=generateUrbanInfill(map);
+ // The checked-in synthetic art cache avoids a multi-second geometry pass
+ // on modest phones. A mismatched map/version always regenerates safely.
+ const inferred=infillCache?.schema===1&&infillCache.generatorVersion===INFILL_VERSION&&
+  infillCache.sourceCreated===map.created&&infillCache.sourceFingerprint===mapFingerprint(map)&&
+  infillCache.sourceOsmBuildings===map.buildings.length&&
+  Array.isArray(infillCache.buildings)&&infillCache.stats?.generated===infillCache.buildings.length?
+  infillCache:generateUrbanInfill(map);
  state.inferredBuildings=inferred.buildings;state.infillStats=inferred.stats;
  prepareCityStyles(state.inferredBuildings,[]);
  const facade=['#b8ad9f','#cbb9a5','#c9c6b6','#b1a99b','#d0bba9','#aba99b'];
@@ -107,7 +113,9 @@ function prepareMap(map,surveyData=[]){
   const h=hash(Math.abs(b.id)),a=b.art;
   a.inferred=true;a.facadeTint=facade[h%facade.length];a.roofTint=roof[(h>>>5)%roof.length];
   a.renderHeight=b.h;
-  a.roof=b.p.length<=10&&h%5<3;
+  // Inferred urban apartment blocks mostly have terraces; roof form is a
+  // stylistic estimate, kept separate from the photo-verified church override.
+  a.roof=b.p.length<=10&&h%5===0;
  }
  state.ground=prepareUrbanGround([...state.buildings,...state.inferredBuildings],state.roads);
  state.roadGrid=makeIndex(state.roads);state.buildingGrid=makeIndex(state.buildings);
@@ -420,7 +428,20 @@ function draw(){
    if(placed.some(([lx,ly])=>Math.hypot(sx-lx,sy-ly)<78))continue;
    placed.push([sx,sy]);
    c.save();c.translate(q.x,q.y);let angle=q.a;if(angle>Math.PI/2||angle< -Math.PI/2)angle+=Math.PI;c.rotate(angle);
-   c.fillText(road.n.toUpperCase().slice(0,25),0,-visualRoadWidth(road)/2-3.4);c.restore();
+   const text=road.n.toUpperCase().slice(0,25),offset=visualRoadWidth(road)/2+3.4;
+   // Test the actual offset text rectangle, not only its road anchor. Long
+   // road names previously crossed the church dome and the mobile minimap.
+   const tx=q.x+Math.sin(angle)*offset,ty=q.y-Math.cos(angle)*offset;
+   const halfW=text.length*3.6*.61/2,halfH=3.6;
+   const rx=Math.abs(Math.cos(angle))*halfW+Math.abs(Math.sin(angle))*halfH;
+   const ry=Math.abs(Math.sin(angle))*halfW+Math.abs(Math.cos(angle))*halfH;
+   const coversLandmark=buildings.some(b=>['church','civic'].includes(b.art?.type)&&
+    tx+rx>b.art.x0&&tx-rx<b.art.x1&&ty+ry>b.art.y0&&ty-ry<b.art.y1);
+   const left=cw/2+(tx-rx-state.camera.x)*state.zoom,right=cw/2+(tx+rx-state.camera.x)*state.zoom;
+   const top=ch/2+(ty-ry-state.camera.y)*state.zoom,bottom=ch/2+(ty+ry-state.camera.y)*state.zoom;
+   if(!coversLandmark&&left>=3&&right<=cw-3&&top>=3&&bottom<=ch-3&&
+      !(right>cw-miniW&&top<miniH))c.fillText(text,0,-offset);
+   c.restore();
   }
  }
  // Storefront labels are tied to nearby real POIs, not floating over every roof.
@@ -480,7 +501,12 @@ async function load(){
     if(surveyReq.ok)surveyData.push(await surveyReq.json());
    }catch(error){console.warn('Optional building survey unavailable',path,error);}
   }
-  prepareMap(map,surveyData);
+  let infillCache=null;
+  try{
+   const req=await fetch('./data/urban-infill.json',{cache:'no-cache'});
+   if(req.ok)infillCache=await req.json();
+  }catch(error){console.warn('Optional synthetic art cache unavailable',error);}
+  prepareMap(map,surveyData,infillCache);
  }catch(e){console.error('GTA Melito map load',e);loading('MAPPA NON DISPONIBILE','Non posso mostrare una Melito inventata: '+e.message+'. Riprova quando la cartografia è disponibile.',true);}
  finally{state.loading=false;}
 }

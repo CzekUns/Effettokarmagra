@@ -1,6 +1,16 @@
 /* GTA Melito urban fabric fill. Synthetic buildings are NOT geographic facts.
  * Keep real OSM footprints and centerlines untouched. These visual stand-ins
- * occupy plausible uncharted urban gaps and are deliberately non-collidable. */
+ * occupy plausible uncharted urban gaps and retain explicit synthetic provenance. Collision policy belongs to game.mjs. */
+export const INFILL_VERSION='080';
+export function mapFingerprint(map){
+ let h=2166136261;
+ const add=value=>{h=Math.imul(h^(Number(value)||0),16777619)>>>0;};
+ for(const collection of [map.buildings||[],map.roads||[]])for(const item of collection){
+  add(item.id);add(item.t?.length||0);for(const char of item.t||'')add(char.charCodeAt(0));
+  for(const value of item.p||[])add(Math.round(value*10));
+ }
+ return h.toString(16).padStart(8,'0');
+}
 const widths={motorway:1.42,trunk:1.55,primary:1.75,secondary:1.90,tertiary:2.08,unclassified:2.18,residential:2.20,living_street:2.12,service:2,track:1.55,pedestrian:1.35,footway:1.2,path:1.18,steps:1.1};
 const hash=n=>{let x=n|0;x=Math.imul(x^x>>>16,2246822519);x=Math.imul(x^x>>>13,3266489917);return (x^x>>>16)>>>0;};
 const random=n=>hash(n)/4294967295;
@@ -51,7 +61,25 @@ function roadDistance(segments,x,y,max=100){
  }
  return {distance:best,segment:s};
 }
-export function generateUrbanInfill(map,{pitch=23.5,max=2600}={}){
+// Minimum distance between a road segment and the entire footprint, including
+// edge crossings (corner-only checks can miss a road passing through a roof).
+export function roadFootprintDistance(p,seg){
+ if(pointIn(p,seg.ax,seg.ay)||pointIn(p,seg.bx,seg.by))return 0;
+ let best=Infinity;
+ const cross=(ax,ay,bx,by,cx,cy)=>(bx-ax)*(cy-ay)-(by-ay)*(cx-ax);
+ for(let j=2;j<p.length;j+=2){
+  const edge={ax:p[j-2],ay:p[j-1],bx:p[j],by:p[j+1]};
+  const a=cross(edge.ax,edge.ay,edge.bx,edge.by,seg.ax,seg.ay);
+  const b=cross(edge.ax,edge.ay,edge.bx,edge.by,seg.bx,seg.by);
+  const c=cross(seg.ax,seg.ay,seg.bx,seg.by,edge.ax,edge.ay);
+  const d=cross(seg.ax,seg.ay,seg.bx,seg.by,edge.bx,edge.by);
+  if(a*b<0&&c*d<0)return 0;
+  best=Math.min(best,distSeg(edge.ax,edge.ay,seg),distSeg(edge.bx,edge.by,seg),
+   distSeg(seg.ax,seg.ay,edge),distSeg(seg.bx,seg.by,edge));
+ }
+ return best;
+}
+export function generateUrbanInfill(map,{pitch=15.5,max=2600}={}){
  if(!map?.buildings?.length||!map?.roads?.length||!map?.border?.length)throw Error('OSM map required');
  const occupied=new Map(),roads=new Map(),realCenters=new Map(),sources=[];
  for(const b of map.buildings){
@@ -67,15 +95,36 @@ export function generateUrbanInfill(map,{pitch=23.5,max=2600}={}){
    const ax=p[j-2],ay=p[j-1],bx=p[j],by=p[j+1],length=Math.hypot(bx-ax,by-ay);
    if(length<.3)continue;
    const seg={ax,ay,bx,by,a:Math.atan2(by-ay,bx-ax),w,t:road.t};
+   sources.push(seg);
    put(roads,seg,Math.min(ax,bx)-45,Math.min(ay,by)-45,Math.max(ax,bx)+45,Math.max(ay,by)+45);
   }
  }
  const buildings=[],boxBin=new Map(),stats={tested:0,excludedReal:0,excludedRoad:0,excludedOpen:0,excludedBorder:0,excludedPiazza:0};
  const P=map.projection;
+ const candidates=[];
  for(let gy=0;gy<Math.floor(P.height/pitch);gy++)for(let gx=0;gx<Math.floor(P.width/pitch);gx++){
+  const seed=hash(gx*73009+gy*170141);
+  candidates.push({gx,gy,seed,x:(gx+.5)*pitch+(random(seed+8)-.5)*5,
+   y:(gy+.5)*pitch+(random(seed+17)-.5)*5});
+ }
+ // A second, street-aligned pass fills frontage missed by the world grid.
+ // Two rows give depth to blocks; the same footprint/road checks still apply.
+ let serial=1000000;
+ for(const seg of sources){
+  if(['motorway','trunk','track','footway','pedestrian'].includes(seg.t))continue;
+  const length=Math.hypot(seg.bx-seg.ax,seg.by-seg.ay),nx=-Math.sin(seg.a),ny=Math.cos(seg.a);
+  for(let along=10;along<length;along+=20)for(const side of [-1,1])for(let row=0;row<2;row++){
+   const gx=serial++,gy=0,seed=hash(gx),offset=side*(seg.w/2+16+row*21);
+   candidates.push({gx,gy,seed,x:seg.ax+Math.cos(seg.a)*along+nx*offset,
+    y:seg.ay+Math.sin(seg.a)*along+ny*offset});
+  }
+ }
+ // Try apartment-sized masses before annex-sized fallback footprints. The
+ // previous fixed tiny rectangles made broad unmapped blocks look like sheds.
+ const large=candidates.map(c=>({...c,large:true}));
+ for(const {gx,gy,seed,x,y,large:isLarge} of [...large,...candidates]){
   if(buildings.length>=max)break;
-  const seed=hash(gx*73009+gy*170141),x=(gx+.5)*pitch+(random(seed+8)-.5)*5,
-   y=(gy+.5)*pitch+(random(seed+17)-.5)*5;stats.tested++;
+  stats.tested++;
   if(!pointIn(map.border,x,y)){stats.excludedBorder++;continue;}
   // Public squares and mission locations must remain readable and open.
   if(Math.hypot(x-1096,y-1150)<57||
@@ -83,31 +132,43 @@ export function generateUrbanInfill(map,{pitch=23.5,max=2600}={}){
    stats.excludedPiazza++;continue;
   }
   // Do not fill genuinely isolated fringe fields just because OSM has gaps.
+  const core=Math.hypot(x-1096,y-1150)<650;
   let nearCount=0,nearDist=Infinity;
   for(const b of nearby(realCenters,x,y,2)){
    const d=Math.hypot(x-b.x,y-b.y);
-   if(d<85){nearCount++;nearDist=Math.min(nearDist,d);}
+   if(d<(core?120:85)){nearCount++;nearDist=Math.min(nearDist,d);}
   }
   const street=roadDistance(roads,x,y,100),road=street.segment;
-  if(!road||street.distance>48||nearCount<1||nearDist>80){stats.excludedOpen++;continue;}
+  // In the first 650 map units around the historic centre, OSM omissions are
+  // especially visible. Nearby buildings support the wider-town estimate;
+  // inside the core, proximity to a mapped street and strict parcel/road
+  // clearance are the stronger signals, even in an entirely unmapped block.
+  const isolatedFringe=core?nearDist>190&&street.distance>46:
+   nearCount<1||nearDist>80;
+  if(!road||street.distance>(core?92:48)||isolatedFringe){stats.excludedOpen++;continue;}
   // Accept or omit small 2×2 cell clusters as a unit. This gives invented
   // infill a coherent block rhythm instead of peppering isolated footprints.
   const cluster=hash(Math.floor(gx/2)*73856093^Math.floor(gy/2)*19349663);
-  const fillRate=nearCount>=5?.82:.68;
+  const fillRate=nearCount>=3?1:.85;
   if(random(cluster)>fillRate){stats.excludedOpen++;continue;}
-  const w=11+Math.floor(random(seed+3)*8),d=10+Math.floor(random(seed+5)*9);
+  const w=(isLarge?27:11)+Math.floor(random(seed+3)*(isLarge?17:8)),
+   d=(isLarge?20:10)+Math.floor(random(seed+5)*(isLarge?14:9));
   // Orient with the nearest actual street segment; no fabricated street grid.
   const p=footprint(x,y,road.a,w,d),box=toBox(p);
   const corners=[x,y,...p.slice(0,-2)].reduce((out,v,i,arr)=>{if(i%2===0)out.push([v,arr[i+1]]);return out;},[]);
   if(corners.some(([px,py])=>!pointIn(map.border,px,py))){stats.excludedBorder++;continue;}
-  const nearSegments=new Set();for(const [px,py] of corners)for(const seg of nearby(roads,px,py,1))nearSegments.add(seg);
-  if([...nearSegments].some(seg=>corners.some(([px,py])=>
-    distSeg(px,py,seg)<seg.w/2+3.3))){stats.excludedRoad++;continue;}
-  // Conservative polygon AABB clearance. May leave gaps, never overwrites OSM.
+  // Reject occupied parcels before the more expensive polygon/road test.
   if([...nearby(occupied,x,y,2)].some(real=>rectanglesHit(real,box,2.4))||
      [...nearby(boxBin,x,y,1)].some(other=>rectanglesHit(other,box,2.2))){
    stats.excludedReal++;continue;
   }
+  const nearSegments=new Set();for(const [px,py] of corners)for(const seg of nearby(roads,px,py,1))nearSegments.add(seg);
+  if([...nearSegments].some(seg=>{
+   const clearance=seg.w/2+6;
+   const dx=Math.max(0,Math.min(seg.ax,seg.bx)-box.x1,box.x0-Math.max(seg.ax,seg.bx));
+   const dy=Math.max(0,Math.min(seg.ay,seg.by)-box.y1,box.y0-Math.max(seg.ay,seg.by));
+   return Math.hypot(dx,dy)<clearance&&roadFootprintDistance(p,seg)<clearance;
+  })){stats.excludedRoad++;continue;}
   const t=nearCount>=4&&random(seed+7)>.4?'residential':
     nearCount<3&&w*d>220?'commercial':'residential';
   const model={id:-(1+gx+gy*10000),n:'',p,h:8+(hash(seed+15)%4)*3,t,lv:null,roof:'',material:'',usage:'',
@@ -116,10 +177,12 @@ export function generateUrbanInfill(map,{pitch=23.5,max=2600}={}){
   buildings.push(model);put(boxBin,box,box.x0,box.y0,box.x1,box.y1);
  }
  const center=b=>{const box=toBox(b.p);return[(box.x0+box.x1)/2,(box.y0+box.y1)/2];};
- // Drop solitary stands in empty OSM space. Infill remains a visual estimate,
- // but each retained footprint now belongs to a small, readable cluster.
+ // Retain continuity with either OSM or synthetic neighbors. Requiring two
+ // invented neighbors erased real-looking street fronts around mapped blocks.
  const centers=buildings.map(center),clustered=buildings.filter((b,i)=>
-  centers.some((q,j)=>j!==i&&Math.hypot(q[0]-centers[i][0],q[1]-centers[i][1])<=29));
+  Math.hypot(centers[i][0]-1096,centers[i][1]-1150)<650||
+  centers.some((q,j)=>j!==i&&Math.hypot(q[0]-centers[i][0],q[1]-centers[i][1])<=29)||
+  [...nearby(realCenters,...centers[i],1)].some(q=>Math.hypot(q.x-centers[i][0],q.y-centers[i][1])<=45));
  stats.excludedOpen+=buildings.length-clustered.length;
  return {buildings:clustered,stats:{...stats,generated:clustered.length,candidates:buildings.length,
   excludedIsolated:buildings.length-clustered.length,osmBuildings:map.buildings.length,

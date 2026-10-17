@@ -1,9 +1,10 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {generateUrbanInfill} from './urban-infill.mjs';
+import {generateUrbanInfill,roadFootprintDistance,mapFingerprint} from './urban-infill.mjs';
 import {CAMERA_ZOOM_MAX,CAMERA_ZOOM_MIN,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs';
 import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityBuildings} from './city-art.mjs';
+import {resolveLandmarks} from './campaign.mjs';
 const map=JSON.parse(await readFile(new URL('./data/melito-map.json',import.meta.url),'utf8'));
 let cached;
 const generated=()=>cached||(cached=generateUrbanInfill(map));
@@ -37,8 +38,11 @@ test('urban infill is deterministic, grouped and covers more than the church nei
  const one=generated(),two=generateUrbanInfill(map);
  assert.deepEqual(one.buildings.map(b=>b.p),two.buildings.map(b=>b.p));
  const centers=one.buildings.map(b=>bbox(b.p)).map(b=>[(b.x0+b.x1)/2,(b.y0+b.y1)/2]);
- assert.ok(centers.every((p,i)=>centers.some((q,j)=>i!==j&&Math.hypot(p[0]-q[0],p[1]-q[1])<=29)),
-  'every visual placeholder should belong to a nearby small cluster');
+ const real=map.buildings.map(b=>bbox(b.p)).map(b=>[(b.x0+b.x1)/2,(b.y0+b.y1)/2]);
+ assert.ok(centers.every((p,i)=>Math.hypot(p[0]-1096,p[1]-1150)<650||
+  centers.some((q,j)=>i!==j&&Math.hypot(p[0]-q[0],p[1]-q[1])<=29)||
+  real.some(q=>Math.hypot(p[0]-q[0],p[1]-q[1])<=45)),
+  'continuity can come from mapped buildings as well as synthetic neighbors');
  const quadrants=new Set(one.buildings.map(b=>Math.floor(b.p[0]/550)+','+Math.floor(b.p[1]/550)));
  assert.ok(quadrants.size>=12,'must be broadly distributed across Melito');
 });
@@ -84,5 +88,48 @@ test('game exposes placeholder count and camera mode to the player',async()=>{
  assert.ok(html.includes('id="inferred-count"'));
  assert.ok(html.includes('id="camera-mode"'));
  assert.ok(html.includes('id="zoom-auto"'));
- assert.ok(html.includes('game.mjs?v=077'));
+ assert.ok(html.includes('game.mjs?v=080'));
+ assert.ok(game.includes('urban-infill.mjs?v=080'));
+});
+
+test('whole footprint road clearance catches crossings missed by corner sampling',()=>{
+ const p=[0,0,20,0,20,20,0,20,0,0];
+ assert.equal(roadFootprintDistance(p,{ax:-10,ay:10,bx:30,by:10}),0);
+ assert.equal(roadFootprintDistance(p,{ax:5,ay:5,bx:8,by:8}),0);
+ assert.equal(roadFootprintDistance(p,{ax:-5,ay:-5,bx:25,by:-5}),5);
+});
+test('every synthetic footprint and its projected walls clear the complete road network',async()=>{
+ const {ROAD_WIDTH_MULTIPLIER}=await import('./road-widths.mjs');
+ const segments=map.roads.flatMap(r=>r.t==='steps'||r.t==='path'?[]:
+  r.p.slice(2).flatMap((_,j)=>j%2?[]:[{ax:r.p[j],ay:r.p[j+1],bx:r.p[j+2],by:r.p[j+3],
+   clearance:(r.w||5)*(ROAD_WIDTH_MULTIPLIER[r.t]||1.6)/2+6}]));
+ for(const b of generated().buildings){
+  const box=bbox(b.p);
+  for(const seg of segments){
+   if(Math.min(seg.ax,seg.bx)>box.x1+seg.clearance||Math.max(seg.ax,seg.bx)<box.x0-seg.clearance||
+    Math.min(seg.ay,seg.by)>box.y1+seg.clearance||Math.max(seg.ay,seg.by)<box.y0-seg.clearance)continue;
+   assert.ok(roadFootprintDistance(b.p,seg)>=seg.clearance-1e-7,'road intersects synthetic building '+b.id);
+  }
+ }
+});
+test('the added centre infill does not occupy campaign interaction points',()=>{
+ const landmarks=resolveLandmarks(map,{x:map.projection.width/2,y:map.projection.height/2});
+ const contains=(p,x,y)=>{let hit=false;for(let i=0,j=p.length-2;i<p.length;j=i,i+=2){
+  const ax=p[i],ay=p[i+1],bx=p[j],by=p[j+1];
+  if((ay>y)!==(by>y)&&x<(bx-ax)*(y-ay)/(by-ay)+ax)hit=!hit;
+ }return hit;};
+ for(const point of landmarks.values())for(const building of generated().buildings)
+  assert.equal(contains(building.p,point.x,point.y),false,
+   `infill ${building.id} blocks campaign interaction point ${point.id}`);
+});
+
+test('precomputed mobile art cache exactly matches generator and current OSM snapshot',async()=>{
+ const cache=JSON.parse(await readFile(new URL('./data/urban-infill.json',import.meta.url),'utf8'));
+ const {INFILL_VERSION}=await import('./urban-infill.mjs');
+ assert.equal(cache.generatorVersion,INFILL_VERSION);
+ assert.equal(cache.sourceCreated,map.created);
+ assert.equal(cache.sourceFingerprint,mapFingerprint(map));
+ assert.equal(cache.sourceOsmBuildings,map.buildings.length);
+ assert.deepEqual(cache.buildings,generated().buildings);
+ assert.deepEqual(cache.stats,generated().stats);
 });
