@@ -1,7 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {auditDrivingTour,DRIVE_ROAD_TYPES,withinDriveSurface} from './road-clearance.mjs';
+import {auditDrivingTour,DRIVE_ROAD_TYPES,withinDriveSurface,nearestDrivableRoad} from './road-clearance.mjs';
+import {buildStreetProps} from './visuals.mjs';
+import {visualRoadWidth} from './road-widths.mjs';
 
 const map=JSON.parse(await readFile(new URL('./data/melito-map.json',import.meta.url),'utf8'));
 const infill=JSON.parse(await readFile(new URL('./data/urban-infill.json',import.meta.url),'utf8'));
@@ -32,4 +34,12 @@ test('car road clearance fits narrow roads and the render mask is above building
  assert.match(game,/onAsphalt=road&&road\.distance<=/);
  const visuals=await readFile(new URL('./visuals.mjs',import.meta.url),'utf8');
  assert.match(visuals,/visualRoadWidth\(road\)\/2\+5\.2/,'props need clearance beyond the curb');
+ const props=buildStreetProps(map.roads);
+ assert.ok(props.length>800,'enough decorative street props remain after clearance filtering');
+ for(const prop of props){
+  const closest=nearestDrivableRoad(prop.x,prop.y,map.roads,40);
+  assert.ok(!closest||closest.distance>=visualRoadWidth(closest.road)/2+4.4,
+   'street prop '+prop.roadId+' overlaps a drivable road');
+ }
+ assert.ok(game.includes("visuals.mjs?v=044"),'street prop change must bypass the browser cache');
 });

@@ -18,8 +18,35 @@ export function sampleRoad(p,metres){
  }
  return null;
 }
+function roadSegmentGrid(roads,cell=50){
+ const grid=new Map();
+ for(const road of roads){
+  if(!['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track'].includes(road.t))continue;
+  const p=road.p||[];
+  for(let i=2;i<p.length;i+=2){
+   const segment={road,ax:p[i-2],ay:p[i-1],bx:p[i],by:p[i+1]};
+   const pad=visualRoadWidth(road)/2+5;
+   for(let gx=Math.floor((Math.min(segment.ax,segment.bx)-pad)/cell);gx<=Math.floor((Math.max(segment.ax,segment.bx)+pad)/cell);gx++)
+    for(let gy=Math.floor((Math.min(segment.ay,segment.by)-pad)/cell);gy<=Math.floor((Math.max(segment.ay,segment.by)+pad)/cell);gy++){
+     const key=gx+','+gy;if(!grid.has(key))grid.set(key,[]);grid.get(key).push(segment);
+    }
+  }
+ }
+ return {grid,cell};
+}
+function hasRoadsideClearance(x,y,index){
+ const seen=new Set();
+ for(const segment of index.grid.get(Math.floor(x/index.cell)+','+Math.floor(y/index.cell))||[]){
+  if(seen.has(segment))continue;seen.add(segment);
+  const dx=segment.bx-segment.ax,dy=segment.by-segment.ay,l2=dx*dx+dy*dy;
+  const t=l2?Math.max(0,Math.min(1,((x-segment.ax)*dx+(y-segment.ay)*dy)/l2)):0;
+  const d=Math.hypot(x-segment.ax-t*dx,y-segment.ay-t*dy);
+  if(d<visualRoadWidth(segment.road)/2+4.45)return false;
+ }
+ return true;
+}
 export function buildStreetProps(roads){
- const props=[];
+ const props=[],roadGrid=roadSegmentGrid(roads);
  for(const road of roads){
   if(!road.p||road.p.length<4||['motorway','trunk','steps','path','track'].includes(road.t))continue;
   let len=0;for(let i=2;i<road.p.length;i+=2)len+=dist(road.p[i-2],road.p[i-1],road.p[i],road.p[i+1]);
@@ -31,7 +58,7 @@ export function buildStreetProps(roads){
    // Keep the whole largest prop silhouette outside the asphalt/curb strip.
    const margin=visualRoadWidth(road)/2+5.2;
    const x=point.x-Math.sin(point.a)*margin*side,y=point.y+Math.cos(point.a)*margin*side;
-   props.push({x,y,a:point.a,kind,side,p:[x-3,y-3,x+3,y+3],roadId:road.id});
+   if(hasRoadsideClearance(x,y,roadGrid))props.push({x,y,a:point.a,kind,side,p:[x-3,y-3,x+3,y+3],roadId:road.id});
   }
  }
  return props;
