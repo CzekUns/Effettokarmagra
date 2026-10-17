@@ -51,7 +51,7 @@ export function buildStreetProps(roads){
   if(!road.p||road.p.length<4||['motorway','trunk','steps','path','track'].includes(road.t))continue;
   let len=0;for(let i=2;i<road.p.length;i+=2)len+=dist(road.p[i-2],road.p[i-1],road.p[i],road.p[i+1]);
   if(len<22)continue;
-  const seed=hash(road.id),stride=38+seed%21;
+  const seed=hash(road.id),stride=14+seed%7;
   for(let d=14+seed%19,idx=0;d<len-9;d+=stride,idx++){
    const point=sampleRoad(road.p,d);if(!point)continue;
    const kind=(hash(seed+idx*333)%15),side=(idx+seed)%2?1:-1;
@@ -207,9 +207,11 @@ function dumpster(c,x,y,a){
  c.restore();
 }
 function lamp(c,x,y){
- c.fillStyle='#1f302d';c.fillRect(x+.5,y+.7,1.1,1.1);
- c.fillStyle='#344642';c.fillRect(x-.4,y-.4,.7,1.4);
- c.fillStyle='#f4d59c';c.beginPath();c.arc(x,y,1,0,pi*2);c.fill();
+ c.strokeStyle='#18292855';c.lineWidth=.6;c.beginPath();c.moveTo(x,y);c.lineTo(x+3,y+2);c.stroke();
+ c.fillStyle='#26332f';c.fillRect(x-.65,y-.3,1.3,.8);c.fillRect(x-.22,y-5.7,.44,5.7);
+ c.fillStyle='#131f20';c.fillRect(x-.9,y-6.6,1.8,1.5);
+ c.fillStyle='#ffe5a4';c.fillRect(x-.53,y-6.3,1.06,.8);
+ c.fillStyle='#718076';c.fillRect(x-1,y-6.9,2,.3);
 }
 export function drawStreetProps(c,props,zoom){
  if(zoom<.85)return;

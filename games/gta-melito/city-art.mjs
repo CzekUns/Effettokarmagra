@@ -4,7 +4,7 @@
  */
 import {visualRoadWidth} from './road-widths.mjs?v=043';
 import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-volume.mjs?v=088';
-import {material} from './arcade-materials.mjs?v=089';
+import {material} from './arcade-materials.mjs?v=090';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
  * are original artistic interpretations: they do not claim photographic fidelity.
@@ -386,7 +386,7 @@ function drawRaisedWalls(c,b,v,zoom){
   const len=Math.hypot(edgeX,edgeY);
   if(len<.08||!exposedFacade(edgeX,edgeY,v))continue;
   const f=facadePoints(p,j,v);
-  const south=Math.abs(edgeX)>=Math.abs(edgeY),isTall=v.stories>=3;
+  const south=Math.abs(edgeX)>=Math.abs(edgeY),isTall=v.stories>=2;
   c.beginPath();c.moveTo(f.x1,f.y1);c.lineTo(f.x2,f.y2);
   c.lineTo(f.x3,f.y3);c.lineTo(f.x4,f.y4);c.closePath();
   c.fillStyle=shiftColor(wall,south?8:-28);c.fill();
@@ -455,10 +455,12 @@ function drawRaisedWalls(c,b,v,zoom){
      c.fillStyle=shutter;c.fillRect(wx-w*.5-1.1,wy-hh*.58,.55,hh*1.15);
      c.fillRect(wx+w*.5+.55,wy-hh*.58,.55,hh*1.15);
     }
-    if((a.surveyFeatures?.balconies||a.type==='apartment')&&isTall&&floor>0&&col%3===1&&windowSeed%3!==1){
+    if((a.surveyFeatures?.balconies||['apartment','historic','house','mixed'].includes(a.type))&&isTall&&floor>0&&col%3===1&&windowSeed%3!==1){
      c.fillStyle='#454b45';c.fillRect(wx-1.7,wy+hh*.65,3.4,.45);
      c.strokeStyle='#66706d';c.lineWidth=.28;
      c.strokeRect(wx-1.7,wy+hh*.22,3.4,1.05);
+     c.fillStyle='#487c38';c.fillRect(wx-1.4,wy+hh*.55,1.3,.65);
+     c.fillStyle='#d64b32';c.fillRect(wx-1.1,wy+hh*.48,.38,.35);
     }
     if(a.type==='apartment'&&floor>0&&col%3===0&&windowSeed%2===0){
      // Small external AC housings: a stable urban detail, deliberately not
@@ -537,7 +539,7 @@ export function drawCityPeople(c,people,graph,clock,bounds){
  }
 }
 export function drawCityCar(c,x,y,a,type=0,focused=false,clock=0){
- const seed=h(type+41),col=['#b14e46','#d8b45b','#6b98a5','#8d9b83','#dbd2bb','#b5b2a5','#e6dfc6'][type%7];
+ const seed=h(type+41),col=['#cf3730','#e4b74c','#367caa','#477d67','#eee0b8','#9fa9ac','#e8d8af'][type%7];
  c.save();c.translate(x,y);c.rotate(a);
  c.fillStyle='#1e2c2a75';c.fillRect(-4.7,-1.5,10.8,6.4);
  if(type===5){
@@ -561,7 +563,7 @@ export function drawCityCar(c,x,y,a,type=0,focused=false,clock=0){
  c.fillStyle='#a0473c';c.fillRect(back,-wide+.4,.55,.95);c.fillRect(back,wide-1.35,.55,.95);
  c.fillStyle='#efe7d4';c.fillRect(front+.1,-.7,.45,1.4);
  c.fillStyle='#e8d6b999';c.fillRect(-1,-wide+.25,van?4.5:3,.38);
- if(focused){c.strokeStyle='#ffe6a9';c.lineWidth=.7;c.strokeRect(back-.65,-wide-.55,front-back+1.3,wide*2+1.1);}
+ if(focused){c.fillStyle='#ffe7a8';c.fillRect(-.4,-.45,.8,.9);}
  c.restore();
 }
 export function drawCityPlayer(c,player,clock=0,moving=false){
