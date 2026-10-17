@@ -240,3 +240,9 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 **Fatto nel codice:** `intersection-assist.mjs` ricava una volta sola dal grafo OSM gli imbocchi legalmente percorribili in auto. Vicino a un nodo, una sterzata analogica leggera nella direzione desiderata seleziona l'uscita; l'auto rallenta brevemente, punta prima al centro dell'incrocio e poi a un punto mobile sulla strada scelta. Il comando può essere rilasciato durante la svolta; sterzo deciso, retromarcia e uscita dal veicolo annullano l'aiuto. Non viene cambiata la posizione dell'auto né la collisione: marciapiedi attraversabili, palazzi, bordo mappa e altre auto restano come nella v096. Sulle strade dritte resta il richiamo già approvato. Cache pagina `v097`.
 
 **Verifica:** simulazione della sagoma a sei punti su svolta stretta con carreggiata e marciapiede, controlli di scelta destra/sinistra e rete reale OSM; suite Node 74/74 e sintassi superate. CI e deploy da verificare dopo il merge. La sensibilità e gli FPS Android restano da misurare sul dispositivo.
+
+### Sessione 2026-10-17 — Piccolo rimbalzo contro gli ostacoli
+
+**Fatto nel codice:** quando l'auto urta un muro, un edificio, un altro veicolo o il bordo percorribile, cerca un arretramento di 0,45–1,4 unità, eventualmente spostato di 0,55 unità di lato. Ogni posizione candidata usa la collisione completa esistente; se non c'è spazio libero, l'auto si ferma. Un breve impulso nella direzione opposta all'urto si attenua in circa 0,26 s e sospende temporaneamente gas e guida assistita, così tenere premuto l'acceleratore non la lascia ferma sul muro. Funziona anche in retromarcia. La velocità è limitata a 1,4–5 unità/s. Cache pagina `v098`.
+
+**Verifica:** test su arretramento sicuro, ostacolo sul lato, spazio chiuso, urto in retromarcia e acceleratore tenuto premuto contro una parete; suite Node 77/77, sintassi e controllo diff superati. Sensibilità e resa su Android fisico ancora da verificare.

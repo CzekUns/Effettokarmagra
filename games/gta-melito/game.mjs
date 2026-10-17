@@ -18,6 +18,7 @@ import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} f
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=094';
 import {guideCar} from './driving-assist.mjs?v=096';
 import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
+import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=096';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
@@ -263,7 +264,7 @@ function toggleVehicle(){
  const p=state.player;
  if(p.car>=0){
   const car=state.cars[p.car],xx=car.x-Math.sin(car.a)*3.8,yy=car.y+Math.cos(car.a)*3.8;
-  car.turnGuide=null;
+  car.turnGuide=null;car.recoil=0;car.speed=0;
   p.x=validWalk(xx,yy)?xx:car.x;p.y=validWalk(xx,yy)?yy:car.y;p.car=-1;
  }else{
   let close=-1,dist=11;
@@ -313,22 +314,34 @@ function tick(dt){
  if(p.car>=0){
   const car=state.cars[p.car];
   const axes=moveAxes();
-  let {speed,angle}=stepDriving(car.speed||0,car.a,axes,pressed.handbrake,dt);
-  const road=nearest(car.x,car.y,25,state.roads,true);
-  const turn=guideIntersection({x:car.x,y:car.y,angle,speed},axes.x,road,
-   state.graph,state.turnGuides,car.turnGuide||null,dt);
-  car.turnGuide=turn.turn;
-  if(turn.turn){angle=turn.angle;speed=turn.speed;car.assistRelease=.35;}
-  else{
-   const guided=guideCar(angle,car.x,car.y,speed,axes.x,
-    road?{...road,width:visualRoadWidth(road.road)}:null,car.assistRelease||0,dt);
-   angle=guided.angle;car.assistRelease=guided.release;
+  const previousAngle=car.a;
+  let speed,angle;
+  if(car.recoil>0){
+   const rebound=advanceRecoil(car.speed,car.recoil,dt);
+   speed=rebound.speed;car.recoil=rebound.recoil;angle=car.a;
+  }else{
+   ({speed,angle}=stepDriving(car.speed||0,car.a,axes,pressed.handbrake,dt));
+   const road=nearest(car.x,car.y,25,state.roads,true);
+   const turn=guideIntersection({x:car.x,y:car.y,angle,speed},axes.x,road,
+    state.graph,state.turnGuides,car.turnGuide||null,dt);
+   car.turnGuide=turn.turn;
+   if(turn.turn){angle=turn.angle;speed=turn.speed;car.assistRelease=.35;}
+   else{
+    const guided=guideCar(angle,car.x,car.y,speed,axes.x,
+     road?{...road,width:visualRoadWidth(road.road)}:null,car.assistRelease||0,dt);
+    angle=guided.angle;car.assistRelease=guided.release;
+   }
   }
   car.a=angle;
   const nx=car.x+Math.cos(car.a)*speed*dt,ny=car.y+Math.sin(car.a)*speed*dt;
   if(!carBlocked(nx,ny,car.a,p.car)){
    car.x=nx;car.y=ny;state.distance+=Math.abs(speed*dt);
-  }else{speed=0;car.turnGuide=null;}
+  }else if(car.recoil>0){speed=0;car.recoil=0;car.turnGuide=null;}
+  else{
+   const bounce=reboundCar(car,speed,previousAngle,(x,y,a)=>carBlocked(x,y,a,p.car));
+   car.x=bounce.x;car.y=bounce.y;car.a=bounce.angle;
+   speed=bounce.speed;car.recoil=bounce.recoil;car.turnGuide=null;car.assistRelease=.25;
+  }
   car.speed=speed;p.x=car.x;p.y=car.y;p.a=car.a;
  }else{
   const axis=moveAxes(),dx=axis.x,dy=axis.y;
