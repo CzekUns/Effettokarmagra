@@ -515,18 +515,20 @@ function historicalRoofTone(art){
  if(art.type==='historic'||art.type==='house')return oldtown[id%oldtown.length];
  return flat[id%flat.length];
 }
-export function drawCityPeople(c,people,graph,clock,bounds){
+export function drawCityPeople(c,people,graph,clock,bounds,alpha=1){
  const [x0,y0,x1,y1]=bounds;
  for(const p of people){
   if(p.x<x0-14||p.x>x1+14||p.y<y0-14||p.y>y1+14)continue;
-  const road=graph.edges[p.edge],side=p.kind%2?1:-1,margin=(road?.streetWidth||7)/2+1.25;
-  const x=p.x-Math.sin(p.a)*margin*side,y=p.y+Math.cos(p.a)*margin*side;
-  const walk=Math.sin(clock*p.speed*9+p.seed),palette=[
+  // The walking route already runs on the sidewalk; render the collision pose.
+  const x=p.prevX===undefined?p.x:p.prevX+(p.x-p.prevX)*alpha;
+  const y=p.prevY===undefined?p.y:p.prevY+(p.y-p.prevY)*alpha;
+  const angle=p.prevA===undefined?p.a:p.prevA+Math.atan2(Math.sin(p.a-p.prevA),Math.cos(p.a-p.prevA))*alpha;
+  const walk=p.braking?0:Math.sin(clock*p.speed*9+p.seed),palette=[
    ['#ae8669','#4b6b67','#1a2d38'],['#dfa97a','#a65c5e','#41414d'],
    ['#c88e6e','#707b91','#51453d'],['#e9bf8f','#caa16c','#36555a'],
    ['#b48162','#7b8770','#212a34'],['#c59675','#8b6c9a','#253347']];
   const c1=palette[p.kind%palette.length],coat=c1[1],pants=c1[2];
-  c.save();c.translate(x,y);c.rotate(p.a);
+  c.save();c.translate(x,y);c.rotate(angle);
   c.fillStyle='#1f2e2a80';c.beginPath();c.ellipse(.9,1.2,2.5,1.9,-.2,0,TAU);c.fill();
   c.fillStyle=pants;c.fillRect(-2,walk*.8-.75,1.7,1.6);c.fillRect(-2,-walk*.8+.65,1.7,1.6);
   c.fillStyle='#1b2729';c.fillRect(-2.3,walk*.8-.9,.65,.9);

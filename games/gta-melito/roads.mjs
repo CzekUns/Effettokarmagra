@@ -1,4 +1,5 @@
 import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
+import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked} from './traffic-collision.mjs?v=100';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
  * Simulates moving traffic through intersections with legal one-way exits. */
@@ -36,22 +37,29 @@ export function buildRoadGraph(roads){
  const junctions=nodes.filter(n=>n.out.filter(e=>edges[e].car).length>=3).length;
  return {nodes,edges,trafficStarts,walkStarts,junctions};
 }
-function position(graph,edgeIndex,t,lane=false){
+function position(graph,edgeIndex,t,body='walk',side=1){
  const e=graph.edges[edgeIndex],a=graph.nodes[e.from],b=graph.nodes[e.to];
- const offset=lane?roadTrafficLaneOffset(e.streetWidth):0;
+ const along=Math.min(t,1-t)*e.len;
+ const offset=body==='car'?roadTrafficLaneOffset(e.streetWidth):
+  e.car?side*Math.min(1,along/4)*(e.streetWidth/2+1.7):0;
  return {x:a.x+(b.x-a.x)*t-Math.sin(e.angle)*offset,y:a.y+(b.y-a.y)*t+Math.cos(e.angle)*offset,a:e.angle};
 }
-export function createAgents(graph,count,seed=10,kind='car'){
+export function createAgents(graph,count,seed=10,kind='car',avoid=[]){
  const options=kind==='car'?graph.trafficStarts:graph.walkStarts;
- const agents=[];
+ const agents=[],occupied=makeCollisionIndex(avoid);
  if(!options.length)return agents;
  for(let i=0;i<count;i++){
-  let edgeIndex=options[hash(seed+i*65537)%options.length];
-  const e=graph.edges[edgeIndex];
-  if(kind==='car'&&e.roadType==='service'&&i%3!==0){edgeIndex=options[hash(seed+i*2227+9)%options.length];}
-  const t=.05+rand(seed+i*7+13)*.85,at=position(graph,edgeIndex,t,kind==='car');
-  agents.push({...at,edge:edgeIndex,t,speed:kind==='car'?7+rand(i*13+seed)*7:.75+rand(i*11+seed)*.55,
-   kind:kind==='car'?i%7:i%5,seed:seed+i*17,wait:0,body:kind});
+  for(let attempt=0;attempt<24;attempt++){
+   const edgeIndex=options[hash(seed+i*65537+attempt*7349)%options.length];
+   const edge=graph.edges[edgeIndex];
+   if(kind==='car'&&edge.roadType==='service'&&i%3!==0&&attempt<12)continue;
+   const t=.05+rand(seed+i*7+13+attempt*181)*.85,side=i%2?1:-1;
+   const at=position(graph,edgeIndex,t,kind,side);
+   if(collidesWithTraffic(at,kind,occupied))continue;
+   const agent={...at,edge:edgeIndex,t,speed:kind==='car'?7+rand(i*13+seed)*7:.75+rand(i*11+seed)*.55,
+    kind:kind==='car'?i%7:i%5,seed:seed+i*17,wait:0,body:kind,side};
+   agents.push(agent);addToCollisionIndex(occupied,agent);break;
+  }
  }
  return agents;
 }
@@ -73,41 +81,55 @@ export function chooseTurn(graph,nodeId,oldEdge,agent,allowed){
  for(const q of choice){n-=q.weight;if(n<=0)return q.id;}
  return choice[choice.length-1].id;
 }
-export function stepAgent(graph,agent,dt,others=[],player=null){
- if(!Number.isFinite(dt)||dt<=0)return;
- let left=Math.min(dt,.1),hops=0;
- while(left>0.00001&&hops++<8){
-  const edge=graph.edges[agent.edge];if(!edge)break;
-  const target=agent.body==='car'?edge.car:edge.walk;
-  if(!target){break;}
-  let speed=agent.speed;
-  if(agent.body==='car'){
-   const current=position(graph,agent.edge,agent.t,true);
-   if(player&&Math.hypot(player.x-current.x,player.y-current.y)<7)speed*=.18;
-   for(const other of others){
-    if(other===agent||other.body!=='car'||other.edge!==agent.edge)continue;
-    const ahead=(other.t-agent.t)*edge.len;
-    if(ahead>0&&ahead<12){speed*=clamp((ahead-4)/8,0,1);}
-   }
+function nextPose(graph,agent,distance){
+ const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1};
+ let hops=0;
+ while(distance>.00001&&hops++<8){
+  const edge=graph.edges[route.edge];if(!edge)break;
+  const remaining=(1-route.t)*edge.len;
+  if(distance<remaining){route.t+=distance/edge.len;break;}
+  distance-=remaining;
+  const next=chooseTurn(graph,edge.to,route.edge,route,e=>agent.body==='car'?e.car:e.walk);
+  if(next==null){
+   // Recycle a terminal route on the next tick, away from the dead end.
+   const pool=agent.body==='car'?graph.trafficStarts:graph.walkStarts;
+   if(pool.length){route.edge=pool[hash(++route.seed)%pool.length];route.t=.05;}
+   route.wait=.3;break;
   }
-  if(agent.wait>0){agent.wait=Math.max(0,agent.wait-left);return;}
-  const remaining=(1-agent.t)*edge.len;
-  const distance=speed*left;
-  if(distance<remaining){agent.t+=distance/edge.len;left=0;}
-  else{
-   left=(distance-remaining)/Math.max(.1,speed);
-   const next=chooseTurn(graph,edge.to,agent.edge,agent,e=>agent.body==='car'?e.car:e.walk);
-   if(next==null){
-    // Terminal one-way has no legal exit: recycle a distant traffic agent.
-    const pool=agent.body==='car'?graph.trafficStarts:graph.walkStarts;
-    if(pool.length){agent.edge=pool[hash(++agent.seed)%pool.length];agent.t=.05;}
-    agent.wait=.3;left=0;
-   }else{agent.edge=next;agent.t=0;}
+  route.edge=next;route.t=0;
+ }
+ return {...route,...position(graph,route.edge,route.t,agent.body,route.side)};
+}
+export function stepAgent(graph,agent,dt,others=[],player=null,index=null){
+ if(!Number.isFinite(dt)||dt<=0)return;
+ const elapsed=Math.min(dt,.1);
+ if(agent.wait>0){agent.wait=Math.max(0,agent.wait-elapsed);return;}
+ const edge=graph.edges[agent.edge];if(!edge||!(agent.body==='car'?edge.car:edge.walk))return;
+ let speed=agent.speed;
+ if(agent.body==='car'){
+  // Following distance is checked only for traffic on this nearby segment.
+  const near=index?nearbyColliders(index,agent.x,agent.y,18):others;
+  for(const other of near){
+   if(other===agent||other.body!=='car'||other.edge!==agent.edge)continue;
+   const ahead=(other.t-agent.t)*edge.len;
+   if(ahead>0&&ahead<12)speed=Math.min(speed,agent.speed*clamp((ahead-5)/7,0,1));
   }
  }
- const p=position(graph,agent.edge,agent.t,agent.body==='car');
- agent.x=p.x;agent.y=p.y;agent.a=p.a;
+ // Try reduced motion before stopping; this lets traffic queue naturally.
+ for(const factor of [1,.5,.25]){
+  const next=nextPose(graph,agent,speed*elapsed*factor);
+  if(index&&trafficMoveBlocked(agent,next,agent.body,index,agent))continue;
+  Object.assign(agent,next);agent.braking=false;return;
+ }
+ agent.braking=true;
 }
-export function stepAgents(graph,agents,dt,player=null){
- for(const agent of agents)stepAgent(graph,agent,dt,agent.body==='car'?agents:[],player);
+export function stepAgents(graph,agents,dt,player=null,world={}){
+ const playerBody=player&&Number.isFinite(player.x)&&Number.isFinite(player.y)?
+  {x:player.x,y:player.y,a:player.a||0,body:player.car>=0?'car':'walk'}:null;
+ const index=makeCollisionIndex([...agents,...(world.parked||[]),...(world.traffic||[]),...(world.people||[]),playerBody]);
+ for(const agent of agents){
+  const x=agent.x,y=agent.y;
+  stepAgent(graph,agent,dt,agents,player,index);
+  if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);
+ }
 }
