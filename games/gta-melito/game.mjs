@@ -12,6 +12,7 @@ import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetP
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
 import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=100';
+import {loadCarSprites,drawCarSprite} from './car-sprites.mjs?v=101';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=091';
@@ -156,14 +157,14 @@ function prepareMap(map,surveyData=[],infillCache=null){
  state.shops=prepareStorefronts(map.pois||[],state.roads);
  state.shopGrid=makeIndex(state.shops);
  initCampaign(map);
- const nearCar={x:point.x+Math.cos(point.a)*9,y:point.y+Math.sin(point.a)*9,a:point.a,speed:0,type:0};
+ const nearCar={x:point.x+Math.cos(point.a)*9,y:point.y+Math.sin(point.a)*9,a:point.a,speed:0,type:0,model:'panda-modern-white'};
  state.cars=[nearCar];
  let k=0;
  for(const road of possible){
   if(arcLength(road.p)<25||rnd(road.id)%1>.33)continue;
   const pt=roadPoint(road,.2+rnd(road.id+11)*.6);
   if(Math.hypot(pt.x-point.x,pt.y-point.y)<19)continue;
-  const parked={x:pt.x,y:pt.y,a:pt.a,speed:0,type:k%5};
+  const parked={x:pt.x,y:pt.y,a:pt.a,speed:0,type:k%5,model:k%8===1?'panda-fire-red':null};
   if(state.cars.some(car=>vehiclesOverlap(parked,car)))continue;
   state.cars.push(parked);k++;
   if(state.cars.length>=105)break;
@@ -419,7 +420,11 @@ function updateHud(){
 }
 function drawLine(p){c.beginPath();c.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)c.lineTo(p[i],p[i+1]);}
 function poly(p){drawLine(p);c.closePath();}
-function drawCar(x,y,a,type,drive=false){drawCityCar(c,x,y,a,type,drive,state.clock);}
+function drawCar(x,y,a,type,drive=false,model=null){
+ // PNG is an optional visual skin. Collision and driving remain unchanged;
+ // if the picture is still loading, use the original procedural car.
+ if(!drawCarSprite(c,x,y,a,model,drive))drawCityCar(c,x,y,a,type,drive,state.clock);
+}
 function drawPlayer(){
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
  drawCityPlayer(c,state.player,state.clock,moving);
@@ -572,7 +577,7 @@ function draw(){
   const a=ai.prevA===undefined?ai.a:ai.prevA+Math.atan2(Math.sin(ai.a-ai.prevA),Math.cos(ai.a-ai.prevA))*alpha;
   drawCar(x,y,a,ai.kind);
  }
- state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car);});
+ state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model);});
  drawPlayer();
 }
 function prepareMini(){
@@ -742,4 +747,4 @@ function bind(){
   state.zoomBias=clamp(state.zoomBias*(e.deltaY>0?.91:1.1),.62,1.35);
  },{passive:false});
 }
-bind();requestAnimationFrame(frame);load();
+loadCarSprites();bind();requestAnimationFrame(frame);load();
