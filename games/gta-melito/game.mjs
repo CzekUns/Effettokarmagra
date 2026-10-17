@@ -17,6 +17,7 @@ import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=094';
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=094';
 import {guideCar} from './driving-assist.mjs?v=096';
+import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
 import {canDriveProbe} from './road-clearance.mjs?v=096';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
@@ -27,7 +28,7 @@ const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false};
 const stick={x:0,y:0};
 function moveAxes(){return {x:Math.abs(stick.x)>.08?stick.x:Number(pressed.right)-Number(pressed.left),y:Math.abs(stick.y)>.08?stick.y:Number(pressed.down)-Number(pressed.up)};}
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const colors=['#8f8271','#a29076','#797970','#ae947b','#938c7b','#7b8581','#a58c85'];
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
@@ -146,6 +147,7 @@ function prepareMap(map,surveyData=[],infillCache=null){
  state.spawn=[point.x,point.y];Object.assign(state.player,{x:point.x,y:point.y,a:point.a,car:-1});
  state.camera.x=point.x;state.camera.y=point.y;state.distance=0;
  state.graph=buildRoadGraph(state.roads);
+ state.turnGuides=buildTurnGuides(state.graph);
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
  state.propsGrid=makeIndex(state.props);
  state.shops=prepareStorefronts(map.pois||[],state.roads);
@@ -261,6 +263,7 @@ function toggleVehicle(){
  const p=state.player;
  if(p.car>=0){
   const car=state.cars[p.car],xx=car.x-Math.sin(car.a)*3.8,yy=car.y+Math.cos(car.a)*3.8;
+  car.turnGuide=null;
   p.x=validWalk(xx,yy)?xx:car.x;p.y=validWalk(xx,yy)?yy:car.y;p.car=-1;
  }else{
   let close=-1,dist=11;
@@ -312,14 +315,20 @@ function tick(dt){
   const axes=moveAxes();
   let {speed,angle}=stepDriving(car.speed||0,car.a,axes,pressed.handbrake,dt);
   const road=nearest(car.x,car.y,25,state.roads,true);
-  const guided=guideCar(angle,car.x,car.y,speed,axes.x,
-   road?{...road,width:visualRoadWidth(road.road)}:null,car.assistRelease||0,dt);
-  angle=guided.angle;car.assistRelease=guided.release;
+  const turn=guideIntersection({x:car.x,y:car.y,angle,speed},axes.x,road,
+   state.graph,state.turnGuides,car.turnGuide||null,dt);
+  car.turnGuide=turn.turn;
+  if(turn.turn){angle=turn.angle;speed=turn.speed;car.assistRelease=.35;}
+  else{
+   const guided=guideCar(angle,car.x,car.y,speed,axes.x,
+    road?{...road,width:visualRoadWidth(road.road)}:null,car.assistRelease||0,dt);
+   angle=guided.angle;car.assistRelease=guided.release;
+  }
   car.a=angle;
   const nx=car.x+Math.cos(car.a)*speed*dt,ny=car.y+Math.sin(car.a)*speed*dt;
   if(!carBlocked(nx,ny,car.a,p.car)){
    car.x=nx;car.y=ny;state.distance+=Math.abs(speed*dt);
-  }else speed=0;
+  }else{speed=0;car.turnGuide=null;}
   car.speed=speed;p.x=car.x;p.y=car.y;p.a=car.a;
  }else{
   const axis=moveAxes(),dx=axis.x,dy=axis.y;

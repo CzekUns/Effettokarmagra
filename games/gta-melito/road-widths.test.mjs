@@ -93,7 +93,7 @@ test('every consumer imports the same versioned road-width module for A/B',async
   assert.ok(text.includes("'./road-widths.mjs?v=043'"),file+' requires versioned singleton');
  }
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
- assert.ok(['043','044','050','060','070','071','072','073','074','075','076','077','078','079','080','081','082','083','084','085','086','087','088','089','090','091','092','093','094','095','096'].some(v=>html.includes('game.mjs?v='+v)));
+ assert.ok(['043','044','050','060','070','071','072','073','074','075','076','077','078','079','080','081','082','083','084','085','086','087','088','089','090','091','092','093','094','095','096','097'].some(v=>html.includes('game.mjs?v='+v)));
  assert.ok(html.includes('id="road-width-compare"'));
  assert.ok(html.includes('id="road-width-current"'));
 });
