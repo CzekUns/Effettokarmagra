@@ -516,6 +516,14 @@ async function load(){
  finally{state.loading=false;}
 }
 function bind(){
+ // Keep page/browser zoom disabled while preserving the game's own camera zoom.
+ window.addEventListener('keydown',e=>{
+  const zoomKey=['+','=','-','_','0','Add','Subtract','NumpadAdd','NumpadSubtract','Numpad0'].includes(e.key)||['NumpadAdd','NumpadSubtract','Numpad0'].includes(e.code);
+  if((e.ctrlKey||e.metaKey)&&zoomKey)e.preventDefault();
+ },{capture:true});
+ window.addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey)e.preventDefault();},{passive:false,capture:true});
+ for(const type of ['gesturestart','gesturechange','gestureend'])
+  window.addEventListener(type,e=>e.preventDefault(),{passive:false});
  window.addEventListener('keydown',e=>{
   const dir={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];
   if(dir){e.preventDefault();pressed[dir]=true;}

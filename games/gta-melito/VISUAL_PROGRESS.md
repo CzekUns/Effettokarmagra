@@ -154,3 +154,9 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 **Test e deploy:** Node locale 24.19.0: `node --check games/gta-melito/game.mjs` e suite prevista: 58/58 test superati. GitHub Actions su Node 22: esito positivo (step sintassi browser e test mappa/grafo/traffico verdi). GitHub Pages completato sul commit `78ef0b0`; pagina `v081` aperta e mappa caricata.
 
 **Aree successive:** verificare joystick multi-touch, due tasti, overlay pausa, safe-area e lock landscape su Android/iOS fisici; il fallback non deve coprire i controlli in landscape.
+
+### Sessione 2026-10-17 — Blocco zoom browser
+
+**Fatto nel codice:** viewport mobile limitata a scala 1 e senza pinch zoom; in modalità portrait/mobile `touch-action:none` impedisce i gesti di zoom/pan della pagina. Gesture Safari e wheel con Ctrl/Meta sono annullati a livello finestra, così le gesture browser non ingrandiscono la pagina. Le scorciatoie Ctrl/Meta con tasti zoom vengono bloccate. La rotella normale sul canvas continua a regolare lo zoom della camera di gioco; sono invariati zoom adattivo, joystick e controlli touch. Cache script aggiornata a `v082`.
+
+**Verifica:** test mirati aggiunti per viewport, gesture e continuità dello zoom interno; esito suite e deploy da registrare dopo l’esecuzione.

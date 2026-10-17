@@ -89,3 +89,12 @@ test('mobile play is landscape-only with analog movement, two action buttons and
  assert.match(game,/function moveAxes\(/);
  assert.match(game,/activeKey=\(\)=>id==='sprint'&&state\.player\.car>=0\?'handbrake':key/);
 });
+test('browser page zoom is locked without disabling in-game camera zoom',async()=>{
+ const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
+ const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
+ assert.match(html,/name="viewport"[^>]*maximum-scale=1,user-scalable=no/);
+ assert.match(html,/html,body\{touch-action:none;overscroll-behavior:none\}/);
+ assert.match(game,/e\.ctrlKey\|\|e\.metaKey/);
+ assert.match(game,/gesturestart','gesturechange','gestureend/);
+ assert.match(game,/canvas\.addEventListener\('wheel'/,'ordinary wheel remains mapped to camera zoom');
+});
