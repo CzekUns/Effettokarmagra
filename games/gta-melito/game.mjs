@@ -14,7 +14,8 @@ import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTe
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=091';
-import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=061';
+import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=094';
+import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=094';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 let staticScene=null;
@@ -302,17 +303,9 @@ function tick(dt){
  }
  const p=state.player;
  if(p.car>=0){
-  const car=state.cars[p.car],prior=car.speed||0;
-  let speed=prior;
-  const axis=moveAxes(),throttle=axis.y<-.08?-axis.y:axis.y>.08?-axis.y:0;
-  if(Math.abs(throttle)>.08)speed+=22*dt*throttle;
-  else speed-=Math.sign(speed)*Math.min(Math.abs(speed),6*dt);
-  if(pressed.handbrake)speed*=Math.pow(.045,dt);
-  speed=clamp(speed,-9,28);
-  const steer=moveAxes().x;
-  if(steer&&Math.abs(speed)>.25){
-   car.a+=steer*1.38*dt*(speed<0?-1:1)*clamp(Math.abs(speed)/9,.17,1);
-  }
+  const car=state.cars[p.car];
+  let {speed,angle}=stepDriving(car.speed||0,car.a,moveAxes(),pressed.handbrake,dt);
+  car.a=angle;
   const nx=car.x+Math.cos(car.a)*speed*dt,ny=car.y+Math.sin(car.a)*speed*dt;
   if(!carBlocked(nx,ny,car.a,p.car)){
    car.x=nx;car.y=ny;state.distance+=Math.abs(speed*dt);
@@ -321,7 +314,7 @@ function tick(dt){
  }else{
   const axis=moveAxes(),dx=axis.x,dy=axis.y;
   if(Math.hypot(dx,dy)>.08){
-   const len=Math.hypot(dx,dy),v=(pressed.run?7.5:5.0)*Math.min(1,len),nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
+   const len=Math.hypot(dx,dy),v=(pressed.run?RUN_SPEED:WALK_SPEED)*Math.min(1,len),nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
    if(validWalk(nx,p.y)&&inside([nx,p.y],toRing(state.map.border)))p.x=nx;
    if(validWalk(p.x,ny)&&inside([p.x,ny],toRing(state.map.border)))p.y=ny;
    p.a=Math.atan2(dy,dx);state.distance+=v*dt;
@@ -336,7 +329,7 @@ function tick(dt){
  }
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
  const movement={inVehicle:p.car>=0,
-  speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?7.5:5):0,
+  speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?RUN_SPEED:WALK_SPEED):0,
   running:pressed.run,moving:!!moving};
  state.zoomTarget=targetCameraZoom(movement,state.zoomBias);
  state.zoom=advanceCameraZoom(state.zoom,state.zoomTarget,dt);
@@ -381,7 +374,7 @@ function updateHud(){
  $('sprint').setAttribute('aria-label',p.car>=0?'Freno a mano':'Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
  const status={inVehicle:p.car>=0,
-  speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?7.5:5):0,
+  speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?RUN_SPEED:WALK_SPEED):0,
   running:pressed.run,moving:!!moving};
  $('camera-mode').textContent=describeCameraZoom(status)+' · '+state.zoom.toFixed(1)+'×';
 }

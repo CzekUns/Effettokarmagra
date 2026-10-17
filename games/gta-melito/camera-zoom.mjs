@@ -10,7 +10,7 @@ export function targetCameraZoom({inVehicle=false,speed=0,running=false,moving=f
  const v=Math.max(0,Number(speed)||0);
  let desired;
  if(inVehicle){
-  const t=Math.min(1,v/28);
+  const t=Math.min(1,v/40);
   desired=CAMERA_DEFAULT_CAR-(1.48*t);
  }else desired=CAMERA_DEFAULT_FOOT-(running&&moving?0.45:0);
  const b=Math.max(.62,Math.min(1.35,Number(bias)||1));
