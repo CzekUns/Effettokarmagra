@@ -143,14 +143,14 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 
 ### Sessione 2026-10-17 — Controlli touch in orizzontale
 
-**Commit / PR:** da registrare dopo commit e CI.
+**Commit / PR:** `78ef0b0` — [commit GitHub](https://github.com/CzekUns/Effettokarmagra/commit/78ef0b098a534ba3d33798ef02c904882c869123).
 
 **Fatto nel codice:** in `index.html` su smartphone il canvas passa a pieno schermo landscape; la modalità portrait è bloccata da uno schermo che chiede di ruotare. L’interfaccia di gioco mostra la levetta analogica in basso a sinistra, due pulsanti contestuali in basso a destra, minimappa e piccolo tasto pausa. HUD tecnico, missioni, mappa completa, zoom, reset e confronto strade sono accessibili dalla pausa. In `game.mjs` la levetta usa pointer capture e valori continui; in auto controlla accelerazione e sterzo, a piedi direzione e velocità. Il secondo tasto alterna corsa e freno a mano. Schermata pausa sospende la simulazione; tenta il blocco landscape al primo tocco quando supportato. `VISUAL_PROGRESS` e handoff aggiornati.
 
-**Confronto visuale:** il riferimento precedente mostrava il gioco desktop con HUD, pulsanti direzionali, molti tasti e istruzioni. Il nuovo layout è pensato per telefono landscape; la cattura su dispositivo fisico/browser emulato va registrata dopo il deploy. L’effettivo blocco orientamento dipende dal supporto del browser; il messaggio portrait resta il fallback.
+**Confronto visuale:** il riferimento precedente mostrava il gioco desktop con HUD, pulsanti direzionali, molti tasti e istruzioni. Ho riaperto su GitHub Pages la build `v081` a Via Roma dopo il deploy: la mappa si carica con 614 strade, 2.056 sagome OSM, 505 placeholder e 73 incroci. La verifica browser ha usato viewport desktop, quindi non dimostra il layout su telefono; test di struttura e breakpoint responsive sono passati, mentre la cattura mobile emulata/telefono resta da acquisire. L’effettivo blocco orientamento dipende dal supporto browser; il messaggio portrait è il fallback.
 
 **Edifici documentati:** nessun cambio ai dati cartografici o agli asset.
 
-**Test e deploy:** Node locale 24.19.0: `node --check games/gta-melito/game.mjs` e suite prevista: 58/58 test superati. Il workflow repository usa Node 22; da verificare dopo il push.
+**Test e deploy:** Node locale 24.19.0: `node --check games/gta-melito/game.mjs` e suite prevista: 58/58 test superati. GitHub Actions su Node 22: esito positivo (step sintassi browser e test mappa/grafo/traffico verdi). GitHub Pages completato sul commit `78ef0b0`; pagina `v081` aperta e mappa caricata.
 
 **Aree successive:** verificare joystick multi-touch, due tasti, overlay pausa, safe-area e lock landscape su Android/iOS fisici; il fallback non deve coprire i controlli in landscape.
