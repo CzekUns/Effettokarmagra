@@ -1,7 +1,7 @@
 /* GTA Melito urban fabric fill. Synthetic buildings are NOT geographic facts.
  * Keep real OSM footprints and centerlines untouched. These visual stand-ins
  * occupy plausible uncharted urban gaps and retain explicit synthetic provenance. Collision policy belongs to game.mjs. */
-export const INFILL_VERSION='080';
+export const INFILL_VERSION='091';
 export function mapFingerprint(map){
  let h=2166136261;
  const add=value=>{h=Math.imul(h^(Number(value)||0),16777619)>>>0;};
@@ -79,11 +79,20 @@ export function roadFootprintDistance(p,seg){
  }
  return best;
 }
+// Exact polygon separation avoids treating the empty corners of rotated OSM
+// bounding boxes as buildings. No original footprint is enlarged or deleted.
+export function footprintsClear(a,b,pad=1.8){
+ if(pointIn(a,b[0],b[1])||pointIn(b,a[0],a[1]))return false;
+ for(let j=2;j<a.length;j+=2){
+  if(roadFootprintDistance(b,{ax:a[j-2],ay:a[j-1],bx:a[j],by:a[j+1]})<pad)return false;
+ }
+ return true;
+}
 export function generateUrbanInfill(map,{pitch=15.5,max=2600}={}){
  if(!map?.buildings?.length||!map?.roads?.length||!map?.border?.length)throw Error('OSM map required');
  const occupied=new Map(),roads=new Map(),realCenters=new Map(),sources=[];
  for(const b of map.buildings){
-  const box=toBox(b.p),obj={...box};
+  const box=toBox(b.p),obj={...box,p:b.p};
   put(occupied,obj,box.x0-4,box.y0-4,box.x1+4,box.y1+4);
   const cx=(box.x0+box.x1)/2,cy=(box.y0+box.y1)/2;
   put(realCenters,{x:cx,y:cy},cx,cy,cx,cy);
@@ -109,7 +118,7 @@ export function generateUrbanInfill(map,{pitch=15.5,max=2600}={}){
  }
  // A second, street-aligned pass fills frontage missed by the world grid.
  // Two rows give depth to blocks; the same footprint/road checks still apply.
- let serial=1000000;
+ let serial=10000000; // disjoint from every grid-derived synthetic ID
  for(const seg of sources){
   if(['motorway','trunk','track','footway','pedestrian'].includes(seg.t))continue;
   const length=Math.hypot(seg.bx-seg.ax,seg.by-seg.ay),nx=-Math.sin(seg.a),ny=Math.cos(seg.a);
@@ -158,7 +167,7 @@ export function generateUrbanInfill(map,{pitch=15.5,max=2600}={}){
   const corners=[x,y,...p.slice(0,-2)].reduce((out,v,i,arr)=>{if(i%2===0)out.push([v,arr[i+1]]);return out;},[]);
   if(corners.some(([px,py])=>!pointIn(map.border,px,py))){stats.excludedBorder++;continue;}
   // Reject occupied parcels before the more expensive polygon/road test.
-  if([...nearby(occupied,x,y,2)].some(real=>rectanglesHit(real,box,2.4))||
+  if([...nearby(occupied,x,y,2)].some(real=>rectanglesHit(real,box,2.4)&&!footprintsClear(real.p,p,2.4))||
      [...nearby(boxBin,x,y,1)].some(other=>rectanglesHit(other,box,2.2))){
    stats.excludedReal++;continue;
   }

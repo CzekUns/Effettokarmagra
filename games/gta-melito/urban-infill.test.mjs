@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {generateUrbanInfill,roadFootprintDistance,mapFingerprint} from './urban-infill.mjs';
+import {generateUrbanInfill,roadFootprintDistance,mapFingerprint,footprintsClear} from './urban-infill.mjs';
 import {CAMERA_ZOOM_MAX,CAMERA_ZOOM_MIN,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs';
 import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityBuildings} from './city-art.mjs';
 import {resolveLandmarks} from './campaign.mjs';
@@ -27,12 +27,20 @@ test('urban infill adds honest placeholders only, preserving original OSM footpr
  }
  assert.deepEqual(map.buildings.map(b=>b.p),first);
 });
-test('synthetic roof rectangles do not cover the axis-aligned bounds of mapped buildings',()=>{
- const existing=map.buildings.map(b=>bbox(b.p));
+test('synthetic polygons stay separate from actual mapped polygons, including rotated footprints',()=>{
+ const existing=map.buildings.map(b=>({box:bbox(b.p),p:b.p}));
  for(const p of generated().buildings){
   const box=bbox(p.p);
-  assert.ok(existing.every(real=>separate(real,box,1.8)),'overlap with real OSM building '+p.id);
+  assert.ok(existing.every(real=>separate(real.box,box,1.8)||footprintsClear(real.p,p.p,1.8)),
+   'overlap with real OSM building '+p.id);
  }
+});
+test('empty corners of rotated footprint bounds permit infill but real edge crossings do not',()=>{
+ const diamond=[0,10,10,0,20,10,10,20,0,10];
+ const corner=[0,0,2,0,2,2,0,2,0,0];
+ const crossing=[8,8,12,8,12,12,8,12,8,8];
+ assert.equal(footprintsClear(diamond,corner,2),true);
+ assert.equal(footprintsClear(diamond,crossing,2),false);
 });
 test('urban infill is deterministic, grouped and covers more than the church neighborhood',()=>{
  const one=generated(),two=generateUrbanInfill(map);
@@ -88,8 +96,8 @@ test('game exposes placeholder count and camera mode to the player',async()=>{
  assert.ok(html.includes('id="inferred-count"'));
  assert.ok(html.includes('id="camera-mode"'));
  assert.ok(html.includes('id="zoom-auto"'));
- assert.ok(html.includes('game.mjs?v=090'));
- assert.ok(game.includes('urban-infill.mjs?v=080'));
+ assert.ok(html.includes('game.mjs?v=091'));
+ assert.ok(game.includes('urban-infill.mjs?v=091'));
 });
 
 test('whole footprint road clearance catches crossings missed by corner sampling',()=>{
