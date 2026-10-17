@@ -8,6 +8,10 @@ Ambito: solo `games/gta-melito/`. Questo è il gioco GTA Melito di Uns Arcade, *
 
 **LEGGI PER PRIMO:** [HANDOFF_WORK_REALISMO.md](./HANDOFF_WORK_REALISMO.md). Contiene stato verificato, file chiave, fonti, priorità, metodo di lavoro, test e criteri di accettazione. Dopo ogni sessione registra il lavoro in [VISUAL_PROGRESS.md](./VISUAL_PROGRESS.md).
 
+## Modus operandi veicoli — confermato e permanente
+
+Per ogni nuovo veicolo segui rigorosamente [VEHICLE_ART_GUIDE.md](./VEHICLE_ART_GUIDE.md): automobili reali come riferimento, **solo vista dall'alto**, un sheet per modello con colori d'epoca verificabili, ritagli PNG individuali **trasparenti**, scala corretta e introduzione effettiva nel gioco. Lo standard è approvato sulla Panda moderna e Panda Fire già integrate: non tornare ad auto SVG generiche e non generare viste prospettiche per gli sprite definitivi.
+
 ## Regole permanenti
 
 1. **Fedeltà locale, grafica originale**: Melito è densamente edificata; strade, palazzi, marciapiedi, insegne documentate e punti notevoli devono somigliarle nell'insieme. Stile coerente di pixel art 2.5D; non trasformare il gioco in una città generica o in una mappa piatta. Tutti gli edifici devono mantenere volume leggibile, incluso l'infill.
