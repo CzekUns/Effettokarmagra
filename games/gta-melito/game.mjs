@@ -6,11 +6,12 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=043';
+import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=100';
+import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap} from './traffic-collision.mjs?v=100';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=099';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=100';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=091';
@@ -30,7 +31,7 @@ const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false};
 const stick={x:0,y:0};
 function moveAxes(){return {x:Math.abs(stick.x)>.08?stick.x:Number(pressed.right)-Number(pressed.left),y:Math.abs(stick.y)>.08?stick.y:Number(pressed.down)-Number(pressed.up)};}
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const colors=['#8f8271','#a29076','#797970','#ae947b','#938c7b','#7b8581','#a58c85'];
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
@@ -162,11 +163,14 @@ function prepareMap(map,surveyData=[],infillCache=null){
   if(arcLength(road.p)<25||rnd(road.id)%1>.33)continue;
   const pt=roadPoint(road,.2+rnd(road.id+11)*.6);
   if(Math.hypot(pt.x-point.x,pt.y-point.y)<19)continue;
-  state.cars.push({x:pt.x,y:pt.y,a:pt.a,speed:0,type:k++%5});
+  const parked={x:pt.x,y:pt.y,a:pt.a,speed:0,type:k%5};
+  if(state.cars.some(car=>vehiclesOverlap(parked,car)))continue;
+  state.cars.push(parked);k++;
   if(state.cars.length>=105)break;
  }
- state.traffic=createAgents(state.graph,140,189,'car');
- state.people=createAgents(state.graph,190,310,'walk');
+ state.traffic=createAgents(state.graph,140,189,'car',state.cars);
+ state.people=createAgents(state.graph,190,310,'walk',[...state.cars,...state.traffic]);
+ state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
  $('inferred-count').textContent=String(state.inferredBuildings.length);
@@ -257,8 +261,18 @@ function toggleBigMap(){
 }
 
 function updateTraffic(dt){
- stepAgents(state.graph,state.traffic,dt,state.player);
- stepAgents(state.graph,state.people,dt);
+ state.trafficClock+=dt;
+ if(state.trafficClock<.05)return;
+ const elapsed=.05;state.trafficClock-=elapsed;
+ for(const agent of [...state.people,...state.traffic]){
+  agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
+ }
+ stepAgents(state.graph,state.people,elapsed,state.player,{parked:state.cars,traffic:state.traffic});
+ stepAgents(state.graph,state.traffic,elapsed,state.player,{parked:state.cars,people:state.people});
+ for(const agent of [...state.people,...state.traffic])if(Math.hypot(agent.x-agent.prevX,agent.y-agent.prevY)>15){
+  agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
+ }
+ state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);
 }
 function toggleVehicle(){
  if(!state.ready)return;
@@ -287,16 +301,7 @@ function carBlocked(x,y,a,which){
   if(!road||road.distance>width/2+SIDEWALK_DRIVE||!canDriveProbe(road.distance,width,
    road.distance>width/2-.55&&buildingAt(px,py)))return true;
  }
- for(let i=0;i<state.cars.length;i++){
-  if(i===which)continue;
-  const b=state.cars[i];
-  if(Math.abs(b.x-x)>5.7||Math.abs(b.y-y)>5.7)continue;
-  if(Math.hypot(b.x-x,b.y-y)<5.4)return true;
- }
- for(const ai of state.traffic){
-  if(Math.abs(ai.x-x)<4.2&&Math.abs(ai.y-y)<4.2&&Math.hypot(ai.x-x,ai.y-y)<4)return true;
- }
- return false;
+ return !!(state.dynamicCollision&&collidesWithTraffic({x,y,a},'car',state.dynamicCollision,state.cars[which]));
 }
 function toRing(border){
  if(state.borderRing)return state.borderRing;
@@ -387,8 +392,9 @@ function compareRoadWidths(){
  // Every consumer shares the same module instance, including roads/traffic,
  // street furniture, crosswalks and building-side storefront placements.
  state.graph=buildRoadGraph(state.roads);
- state.traffic=createAgents(state.graph,140,189,'car');
- state.people=createAgents(state.graph,190,310,'walk');
+ state.traffic=createAgents(state.graph,140,189,'car',state.cars);
+ state.people=createAgents(state.graph,190,310,'walk',[...state.cars,...state.traffic]);
+ state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
  state.propsGrid=makeIndex(state.props);
  state.shops=prepareStorefronts(state.map.pois||[],state.roads);
@@ -558,8 +564,14 @@ function draw(){
  }
  // Storefront labels are tied to nearby real POIs, not floating over every roof.
  if(state.progress)drawWorldLandmarks(c,state.landmarks,activeTarget(state.progress,state.landmarks),[x0,y0,x1,y1],state.clock,state.zoom,currentStep(state.progress)?.step.speaker);
- drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1]);
- for(const ai of state.traffic)if(ai.x>=x0&&ai.x<=x1&&ai.y>=y0&&ai.y<=y1)drawCar(ai.x,ai.y,ai.a,ai.kind);
+ const alpha=Math.min(1,state.trafficClock/.05);
+ drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
+ for(const ai of state.traffic)if(ai.x>=x0&&ai.x<=x1&&ai.y>=y0&&ai.y<=y1){
+  const x=ai.prevX===undefined?ai.x:ai.prevX+(ai.x-ai.prevX)*alpha;
+  const y=ai.prevY===undefined?ai.y:ai.prevY+(ai.y-ai.prevY)*alpha;
+  const a=ai.prevA===undefined?ai.a:ai.prevA+Math.atan2(Math.sin(ai.a-ai.prevA),Math.cos(ai.a-ai.prevA))*alpha;
+  drawCar(x,y,a,ai.kind);
+ }
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car);});
  drawPlayer();
 }

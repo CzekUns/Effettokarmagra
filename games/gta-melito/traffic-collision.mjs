@@ -1,0 +1,63 @@
+// Small world-space bins avoid scanning every NPC for each steering decision.
+export function makeCollisionIndex(items,cell=16){
+ const bins=new Map(),index={bins,cell};
+ for(const item of new Set(items))addToCollisionIndex(index,item);
+ return index;
+}
+const cellKey=(x,y,cell)=>Math.floor(x/cell)+','+Math.floor(y/cell);
+export function addToCollisionIndex(index,item){
+ if(!item||!Number.isFinite(item.x)||!Number.isFinite(item.y))return;
+ const key=cellKey(item.x,item.y,index.cell);
+ if(!index.bins.has(key))index.bins.set(key,new Set());index.bins.get(key).add(item);
+}
+export function moveInCollisionIndex(index,item,oldX,oldY){
+ const before=cellKey(oldX,oldY,index.cell),after=cellKey(item.x,item.y,index.cell);
+ if(before===after)return;
+ index.bins.get(before)?.delete(item);
+ if(!index.bins.has(after))index.bins.set(after,new Set());
+ index.bins.get(after).add(item);
+}
+export function nearbyColliders(index,x,y,radius=8){
+ const found=new Set(),cell=index.cell;
+ for(let gx=Math.floor((x-radius)/cell);gx<=Math.floor((x+radius)/cell);gx++)
+  for(let gy=Math.floor((y-radius)/cell);gy<=Math.floor((y+radius)/cell);gy++)
+   for(const item of index.bins.get(gx+','+gy)||[])found.add(item);
+ return found;
+}
+export function vehiclesOverlap(a,b,pad=.05){
+ if(Math.abs(a.x-b.x)>8||Math.abs(a.y-b.y)>8)return false;
+ const ca=Math.cos(a.a),sa=Math.sin(a.a),cb=Math.cos(b.a),sb=Math.sin(b.a);
+ const axes=[[ca,sa],[-sa,ca],[cb,sb],[-sb,cb]];
+ const dx=b.x-a.x,dy=b.y-a.y;
+ for(const [ux,uy] of axes){
+  const ra=(3.15+pad)*Math.abs(ux*ca+uy*sa)+(1.7+pad)*Math.abs(-ux*sa+uy*ca);
+  const rb=(3.15+pad)*Math.abs(ux*cb+uy*sb)+(1.7+pad)*Math.abs(-ux*sb+uy*cb);
+  if(Math.abs(dx*ux+dy*uy)>=ra+rb)return false;
+ }
+ return true;
+}
+export function vehicleHitsPedestrian(car,ped,pad=.8){
+ const dx=ped.x-car.x,dy=ped.y-car.y,ca=Math.cos(car.a),sa=Math.sin(car.a);
+ const forward=dx*ca+dy*sa,side=-dx*sa+dy*ca;
+ return forward>=-2.6-pad&&forward<=3.4+pad&&Math.abs(side)<1.7+pad;
+}
+function touches(pose,body,other){
+ const otherBody=other.body||'car';
+ return body==='car'?(otherBody==='car'?vehiclesOverlap(pose,other):vehicleHitsPedestrian(pose,other)):
+  otherBody==='car'&&vehicleHitsPedestrian(other,pose,.8);
+}
+export function collidesWithTraffic(pose,body,index,self=null){
+ for(const other of nearbyColliders(index,pose.x,pose.y,8)){
+  if(other===self)continue;
+  if(touches(pose,body,other))return other;
+ }
+ return null;
+}
+export function trafficMoveBlocked(current,next,body,index,self){
+ for(const other of nearbyColliders(index,next.x,next.y,8)){
+  if(other===self||!touches(next,body,other))continue;
+  if(!touches(current,body,other)||
+   Math.hypot(next.x-other.x,next.y-other.y)<=Math.hypot(current.x-other.x,current.y-other.y)+.001)return true;
+ }
+ return false;
+}
