@@ -16,6 +16,8 @@ import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=091';
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=094';
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=094';
+import {guideCar} from './driving-assist.mjs?v=096';
+import {canDriveProbe} from './road-clearance.mjs?v=096';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const STATIC_TILE=96,TILE_PIXELS=4,TILE_BLEED=20;
@@ -276,8 +278,9 @@ function carBlocked(x,y,a,which){
   const px=x+dirx*forward-diry*side,py=y+diry*forward+dirx*side;
   if(!inside([px,py],toRing(state.map.border)))return true;
   const road=nearest(px,py,25,state.roads,true);
-  const onAsphalt=road&&road.distance<=Math.max(0,visualRoadWidth(road.road)/2-.55);
-  if(!onAsphalt)return true;
+  const width=road?visualRoadWidth(road.road):0;
+  if(!road||road.distance>width/2+2.5||!canDriveProbe(road.distance,width,
+   road.distance>width/2-.55&&buildingAt(px,py)))return true;
  }
  for(let i=0;i<state.cars.length;i++){
   if(i===which)continue;
@@ -306,7 +309,12 @@ function tick(dt){
  const p=state.player;
  if(p.car>=0){
   const car=state.cars[p.car];
-  let {speed,angle}=stepDriving(car.speed||0,car.a,moveAxes(),pressed.handbrake,dt);
+  const axes=moveAxes();
+  let {speed,angle}=stepDriving(car.speed||0,car.a,axes,pressed.handbrake,dt);
+  const road=nearest(car.x,car.y,25,state.roads,true);
+  const guided=guideCar(angle,car.x,car.y,speed,axes.x,
+   road?{...road,width:visualRoadWidth(road.road)}:null,car.assistRelease||0,dt);
+  angle=guided.angle;car.assistRelease=guided.release;
   car.a=angle;
   const nx=car.x+Math.cos(car.a)*speed*dt,ny=car.y+Math.sin(car.a)*speed*dt;
   if(!carBlocked(nx,ny,car.a,p.car)){
