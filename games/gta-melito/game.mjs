@@ -11,7 +11,7 @@ import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap} from './traffic-
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=100';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=102';
 import {loadCarSprites,drawCarSprite} from './car-sprites.mjs?v=101';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
@@ -451,8 +451,9 @@ function paintStaticScene(ctx,bounds,zoom){
  const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
  drawCityStreets(ctx,roads,zoom);
  drawCityBuildings(ctx,[...inferred,...buildings],zoom);
- // Coarse OSM footprints occasionally overlap roads; keep the road above them.
- drawCityStreets(ctx,roads,zoom);
+ // Clear roofs projecting into the lane, while keeping facades visible on the
+ // widened sidewalk instead of painting the whole curb over every building.
+ drawCityStreets(ctx,roads,zoom,{surfaceOnly:true});
  drawCrosswalks(ctx,state.graph,bounds,zoom);
  drawStreetProps(ctx,query(state.props,state.propsGrid,x0,y0,x1,y1),zoom);
  drawStorefronts(ctx,query(state.shops,state.shopGrid,x0,y0,x1,y1),zoom);

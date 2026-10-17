@@ -124,15 +124,17 @@ export function drawTerrain(c,bb,zoom,ground=null){
   if(seed%5===0)c.fillRect(x+2,y+2,24,24);
  }
 }
-export function drawCityStreets(c,roads,zoom){
+export function drawCityStreets(c,roads,zoom,{surfaceOnly=false}={}){
  c.save();c.lineJoin='round';c.lineCap='round';
  const pedestrian=r=>['footway','pedestrian','path','steps'].includes(r.t);
  const coat=(extra,color)=>{for(const road of roads){
   line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)+extra);c.strokeStyle=pedestrian(road)?color.ped:color.car;c.stroke();
  }};
- coat(SIDEWALK_OUTER*2,{ped:'#424843',car:'#292f2d'}); // hard outer silhouette
- coat(SIDEWALK_SHADOW*2,{ped:'#c5ac83',car:'#c5ac83'}); // cast curb shadow
- coat(SIDEWALK_KERB*2,{ped:'#f0d4a8',car:'#f0d4a8'}); // sunlit kerb / paving edge
+ if(!surfaceOnly){
+  coat(SIDEWALK_OUTER*2,{ped:'#424843',car:'#292f2d'}); // hard outer silhouette
+  coat(SIDEWALK_SHADOW*2,{ped:'#c5ac83',car:'#c5ac83'}); // cast curb shadow
+  coat(SIDEWALK_KERB*2,{ped:'#f0d4a8',car:'#f0d4a8'}); // sunlit kerb / paving edge
+ }
  for(const road of roads){
   line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)-.5);c.strokeStyle=pedestrian(road)?material(c,'stone','#d6bf98'):material(c,'asphalt','#303638');c.stroke();
  }
@@ -165,6 +167,9 @@ function slopedRoof(c,b,art,tone){
  const {x0,y0,x1,y1,w,h:bh,cx,cy,seed}=art;
  c.save();poly(c,b.p);c.clip();
  c.fillStyle=material(c,'clay','#d96b36');c.fillRect(x0,y0,w,bh);
+ // The shared tile texture keeps its detail; a translucent local glaze lets
+ // each stylized roof use its assigned colour without another canvas pattern.
+ c.globalAlpha=.32;c.fillStyle=tone;c.fillRect(x0,y0,w,bh);c.globalAlpha=1;
  // Two distinct illuminated planes and a continuous ridge cap.
  c.fillStyle='#68281550';
  if(w>bh)c.fillRect(x0,cy,w,bh/2);else c.fillRect(cx,y0,w/2,bh);

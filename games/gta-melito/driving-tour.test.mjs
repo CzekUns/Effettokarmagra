@@ -30,7 +30,7 @@ test('car road clearance fits narrow roads and the render mask is above building
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  const underlay=game.indexOf('drawCityStreets(ctx,roads,zoom)');
  const buildings=game.indexOf('drawCityBuildings(ctx,[...inferred,...buildings],zoom)');
- const overlay=game.indexOf('drawCityStreets(ctx,roads,zoom)',underlay+1);
+ const overlay=game.indexOf('drawCityStreets(ctx,roads,zoom,{surfaceOnly:true})',underlay+1);
  assert.ok(underlay<buildings&&buildings<overlay,'street mask must paint over buildings that bleed into lanes');
  assert.match(game,/canDriveProbe\(road\.distance,width/);
  const visuals=await readFile(new URL('./visuals.mjs',import.meta.url),'utf8');
