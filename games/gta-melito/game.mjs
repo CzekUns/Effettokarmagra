@@ -7,10 +7,10 @@
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
 import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=043';
-import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=045';
+import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=088';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=084';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=088';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=080';
@@ -111,15 +111,15 @@ function prepareMap(map,surveyData=[],infillCache=null){
   infillCache:generateUrbanInfill(map);
  state.inferredBuildings=inferred.buildings;state.infillStats=inferred.stats;
  prepareCityStyles(state.inferredBuildings,[]);
- const facade=['#b8ad9f','#cbb9a5','#c9c6b6','#b1a99b','#d0bba9','#aba99b'];
- const roof=['#a58d79','#b8aa97','#c3b8a5','#9da29d','#ac9a87'];
+ const facade=['#e6bb7b','#edca92','#dfab67','#f0d59e','#d89c63','#e8b879'];
+ const roof=['#dc7138','#e18443','#c85c2e','#df793c','#d76631'];
  for(const b of state.inferredBuildings){
   const h=hash(Math.abs(b.id)),a=b.art;
   a.inferred=true;a.facadeTint=facade[h%facade.length];a.roofTint=roof[(h>>>5)%roof.length];
   a.renderHeight=b.h;
   // Inferred urban apartment blocks mostly have terraces; roof form is a
   // stylistic estimate, kept separate from the photo-verified church override.
-  a.roof=b.p.length<=10&&h%5===0;
+  a.roof=b.p.length<=10&&h%4!==0;
  }
  state.ground=prepareUrbanGround([...state.buildings,...state.inferredBuildings],state.roads);
  state.roadGrid=makeIndex(state.roads);state.buildingGrid=makeIndex(state.buildings);

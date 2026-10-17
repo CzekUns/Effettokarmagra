@@ -21,7 +21,7 @@ test('every OSM footprint and every generated visual infill building has actual 
  for(const b of all){
   const v=buildingVolume(b);
   assert.ok(v&&v.vertical>=9,'flat roof '+b.id);
-  assert.ok(v.dx>=1.4&&v.dx<=4.3&&v.dy>=1.6&&v.dy<=4.8,'wall projection outside shallow bounds '+b.id);
+  assert.ok(v.dx>=2&&v.dx<=6&&v.dy>=6&&v.dy<=18,'wall projection outside bounded oblique range '+b.id);
   assert.ok(Number.isFinite(v.stories)&&v.stories>=1,'missing stories '+b.id);
   let exposed=0;
   for(let j=2;j<b.p.length;j+=2)
@@ -47,7 +47,7 @@ test('reversed OSM rings and very small outbuildings still show visible walls',(
   assert.notEqual(signedFootprintArea(p),0);
  }
 });
-test('taller buildings keep a bounded shallow facade projection',()=>{
+test('taller buildings keep a bounded oblique facade projection',()=>{
  const p=[0,0,12,0,12,9,0,9,0,0];
  const b={id:3,p,h:2,art:{type:'house',seed:1,renderHeight:3,surveyFeatures:{stories:1}}};
  const high={id:4,p,h:19,art:{type:'apartment',seed:1,renderHeight:19,surveyFeatures:{stories:6}}};
@@ -91,7 +91,7 @@ test('renderer actually emits multiple opaque extruded side polygons before the 
 test('one coherent painter order merges placeholder and OSM buildings in the game',async()=>{
  const js=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  assert.match(js,/drawCityBuildings\(c,\[\.\.\.inferred,\.\.\.buildings\],state\.zoom\)/);
- assert.ok(js.includes('city-art.mjs?v=084'));
+ assert.ok(js.includes('city-art.mjs?v=088'));
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
- assert.ok(html.includes('game.mjs?v=087'));
+ assert.ok(html.includes('game.mjs?v=088'));
 });

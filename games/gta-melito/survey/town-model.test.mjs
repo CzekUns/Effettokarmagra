@@ -59,7 +59,7 @@ test('approved arcade style creates warm roofs on unverified drafts without inve
  const verified=all.find(b=>b.id===733703815);
  assert.ok(count>=500,'the town should read as a compact terracotta-roofed arcade');
  assert.ok(clay.length>=count-2);
- assert.ok(clay.every(b=>b.art.surveyStatus==='osm-draft'&&/^#[bcd]/i.test(b.art.roofTint)));
+ assert.ok(clay.every(b=>b.art.surveyStatus==='osm-draft'&&/^#[bcde]/i.test(b.art.roofTint)));
  assert.equal(verified.art.surveyStatus,'photo-verified');
  assert.deepEqual(all.map(b=>b.p),before,'roof art must not alter OSM footprints');
 });

@@ -52,7 +52,7 @@ test('asphalt and sidewalks are drawn with the visual multiplier, not the old 7m
  const road={id:102,n:'Via test',t:'residential',w:7,p:[0,0,100,0]};
  drawCityStreets(ctx,[road],2.5);
  assert.ok(widths.some(n=>Math.abs(n-(visualRoadWidth(road)-.5))<.01));
- assert.ok(widths.some(n=>Math.abs(n-(visualRoadWidth(road)+5.2))<.01));
+ assert.ok(widths.some(n=>Math.abs(n-(visualRoadWidth(road)+7.2))<.01));
  assert.ok(!widths.some(n=>n===6.5),'old asphalt width must not be used');
 });
 test('commercial frontage and crosswalks share the wider road estimate',()=>{
@@ -93,7 +93,7 @@ test('every consumer imports the same versioned road-width module for A/B',async
   assert.ok(text.includes("'./road-widths.mjs?v=043'"),file+' requires versioned singleton');
  }
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
- assert.ok(['043','044','050','060','070','071','072','073','074','075','076','077','078','079','080','081','082','083','084','085','086','087'].some(v=>html.includes('game.mjs?v='+v)));
+ assert.ok(['043','044','050','060','070','071','072','073','074','075','076','077','078','079','080','081','082','083','084','085','086','087','088'].some(v=>html.includes('game.mjs?v='+v)));
  assert.ok(html.includes('id="road-width-compare"'));
  assert.ok(html.includes('id="road-width-current"'));
 });

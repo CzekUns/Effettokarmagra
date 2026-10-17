@@ -3,7 +3,8 @@
  * Do not claim hypothetical materials or pixel geometry as photo-verified.
  */
 import {visualRoadWidth} from './road-widths.mjs?v=043';
-import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-volume.mjs?v=074';
+import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-volume.mjs?v=088';
+import {material} from './arcade-materials.mjs?v=088';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
  * are original artistic interpretations: they do not claim photographic fidelity.
@@ -64,16 +65,19 @@ export function prepareCityStyles(buildings,pois=[]){
 /* Approved Melito arcade art direction. Applies only to unsurveyed stylistic
  * drafts; explicit OSM flat-roof tags and photo-verified features win. */
 export function applyApprovedArcadeRoofStyle(buildings){
- const terracotta=['#c65e3f','#ce7047','#bb6344','#d17a4a','#b85b3c','#c66a43'];
+ const terracotta=['#df7139','#e98343','#ce5d30','#e27737','#d66733','#e48a48'];
+ const facades=['#e8bc77','#edcd94','#dcab69','#f1d8a3','#d99b5f','#e9bf83'];
  let count=0;
  for(const b of buildings){
   const a=b.art,category=a?.surveyCategory;
-  if(!a||a.surveyStatus==='photo-verified'||b.roof==='flat')continue;
+  if(!a||a.surveyStatus==='photo-verified')continue;
+  a.facadeTint=facades[h(b.id)%facades.length];
+  if(b.roof==='flat')continue;
   const aspect=Math.max(a.w,a.h)/Math.max(1,Math.min(a.w,a.h));
   const seed=h(b.id);
   const pitched=category==='historical'&&a.area<430||
-   category==='residential'&&a.area<900&&aspect<3&&seed%3===0||
-   category==='lowrise'&&aspect<2&&seed%3===0;
+   category==='residential'&&a.area<1200&&aspect<4&&seed%4!==0||
+   category==='lowrise'&&aspect<4;
   if(!pitched)continue;
   a.roof=true;
   a.roofTint=terracotta[(seed>>>5)%terracotta.length];
@@ -110,51 +114,13 @@ export function prepareUrbanGround(buildings,roads){
  return grid;
 }
 export function drawTerrain(c,bb,zoom,ground=null){
- const cell=28;
  const [x0,y0,x1,y1]=bb;
- for(let gx=Math.floor(x0/cell);gx<=Math.ceil(x1/cell);gx++)for(let gy=Math.floor(y0/cell);gy<=Math.ceil(y1/cell);gy++){
-  const seed=h(gx*907+gy*1867),x=gx*cell,y=gy*cell;
-  const weight=ground?.get(gx+','+gy)||0;
-  // Melito is highly urbanized: missing OSM building polygons DO NOT imply
-  // parks. Most ground is compacted stone, concrete, mixed courtyards.
-  // Rare green patches are illustrative; actual park boundaries are not known.
-  const urban=weight>=2;
-  c.fillStyle=urban?
-   ['#9a8b76','#a09179','#958671','#a4947b'][seed%4]:
-   weight>0?['#968a77','#9b8c76','#8b816f'][seed%3]:
-   seed%23===0?'#79856e':
-   ['#948a79','#908471','#9a907e','#8c8373'][seed%4];
-  c.fillRect(x,y,cell+.2,cell+.2);
-  if(zoom<1.15)continue;
-  for(let j=0;j<4;j++){
-   const px=x+3+h(seed+j*9)%(cell-5),py=y+3+h(seed+j*17)%(cell-5);
-   c.fillStyle=j%2?'#d7c6a12f':'#554b3c32';
-   c.fillRect(px,py,j%3===0?1.2:.6,.65);
-  }
-  if(zoom>=1.2&&weight>=2){
-   // Repeated paving slabs give dense blocks a readable urban ground texture.
-   c.strokeStyle='#473f343b';c.lineWidth=.42;
-   c.beginPath();c.moveTo(x+cell*.5,y+2);c.lineTo(x+cell*.5,y+cell-2);
-   c.moveTo(x+2,y+cell*.62);c.lineTo(x+cell*.5,y+cell*.62);c.stroke();
-  }
-  if(zoom>=1.65&&weight>=2){
-   // Deterministic worn joints and small repairs keep the paving from reading
-   // as a flat fill while remaining subordinate to streets and buildings.
-   const joints=1+Math.min(2,Math.floor(weight/3));
-   for(let j=0;j<joints;j++){
-    const sx=x+4+h(seed+j*23+71)%(cell-10);
-    const sy=y+4+h(seed+j*31+113)%(cell-10);
-    const span=4+h(seed+j*43+151)%8;
-    c.fillStyle=j%2?'#51483c42':'#e4d1ae38';
-    c.fillRect(sx,sy,span,.38);
-    c.fillRect(sx,sy,.38,Math.max(2,span*.42));
-   }
-   if(weight>=5&&seed%4===0){
-    const px=x+8+h(seed+211)%(cell-14),py=y+8+h(seed+239)%(cell-14);
-    c.fillStyle='#554d4038';c.fillRect(px,py,4.5,2.4);
-    c.fillStyle='#ded0b53b';c.fillRect(px+.6,py+.5,3.1,1.1);
-   }
-  }
+ c.fillStyle=material(c,'stone','#cfb58e');c.fillRect(x0,y0,x1-x0,y1-y0);
+ // Courtyard shading breaks up the repeating stone without random frame noise.
+ c.fillStyle='#70573f18';
+ for(let x=Math.floor(x0/28)*28;x<x1;x+=28)for(let y=Math.floor(y0/28)*28;y<y1;y+=28){
+  const seed=h(x*907+y*1867);
+  if(seed%5===0)c.fillRect(x+2,y+2,24,24);
  }
 }
 export function drawCityStreets(c,roads,zoom){
@@ -163,11 +129,11 @@ export function drawCityStreets(c,roads,zoom){
  const coat=(extra,color)=>{for(const road of roads){
   line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)+extra);c.strokeStyle=pedestrian(road)?color.ped:color.car;c.stroke();
  }};
- coat(5.2,{ped:'#424843',car:'#292f2d'}); // hard outer silhouette
- coat(3.8,{ped:'#847a66',car:'#77705f'}); // cast curb shadow
- coat(1.7,{ped:'#c2b18e',car:'#b7a782'}); // sunlit kerb / paving edge
+ coat(7.2,{ped:'#424843',car:'#292f2d'}); // hard outer silhouette
+ coat(5.8,{ped:'#c5ac83',car:'#c5ac83'}); // cast curb shadow
+ coat(1.7,{ped:'#f0d4a8',car:'#f0d4a8'}); // sunlit kerb / paving edge
  for(const road of roads){
-  line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)-.5);c.strokeStyle=asphalt[road.t]||'#626362';c.stroke();
+  line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)-.5);c.strokeStyle=pedestrian(road)?material(c,'stone','#d6bf98'):material(c,'asphalt','#303638');c.stroke();
  }
  if(zoom>=1.3){
   // Lane paint belongs on the main avenues; small residential streets stay
@@ -196,41 +162,46 @@ function roofOutline(c,p,fill,thick){
 }
 function slopedRoof(c,b,art,tone){
  const {x0,y0,x1,y1,w,h:bh,cx,cy,seed}=art;
- const mode=w>bh?'horizontal':'vertical';
  c.save();poly(c,b.p);c.clip();
- c.fillStyle=tone;c.fillRect(x0,y0,w,bh);
-  c.strokeStyle='#693a2cbd';c.lineWidth=.58;
- if(mode==='horizontal'){
-  c.beginPath();c.moveTo(x0,cy);c.lineTo(x1,cy);c.stroke();
-  c.strokeStyle='#ffd19a9c';c.beginPath();c.moveTo(x0+1,cy+1.1);c.lineTo(x1-1,cy+1.1);c.stroke();
-  c.strokeStyle='#713c2ca0';c.lineWidth=.3;
-  for(let x=x0+2;x<x1;x+=3.4){c.beginPath();c.moveTo(x,y0);c.lineTo(x,cy);c.moveTo(x+1.7,cy);c.lineTo(x+1.7,y1);c.stroke();}
-  // Broken, alternating tile courses read as hand placed terracotta at game
-  // zoom without turning the roof into a noisy photo texture.
-  c.strokeStyle='#f1b27a79';c.lineWidth=.27;
-  for(let y=y0+2.6;y<y1;y+=3.4){
-   c.beginPath();c.moveTo(x0+1,y);c.lineTo(cx-.8,y);c.moveTo(cx+1,y+.8);c.lineTo(x1-1,y+.8);c.stroke();
-  }
- }else{
-  c.beginPath();c.moveTo(cx,y0);c.lineTo(cx,y1);c.stroke();
-  c.strokeStyle='#ffd19a9c';c.beginPath();c.moveTo(cx+1,y0);c.lineTo(cx+1,y1);c.stroke();
-  c.strokeStyle='#713c2ca0';c.lineWidth=.3;
-  for(let y=y0+2;y<y1;y+=3.4){c.beginPath();c.moveTo(x0,y);c.lineTo(cx,y);c.moveTo(cx,y+1.7);c.lineTo(x1,y+1.7);c.stroke();}
-  c.strokeStyle='#f1b27a79';c.lineWidth=.27;
-  for(let x=x0+2.6;x<x1;x+=3.4){
-   c.beginPath();c.moveTo(x,y0+1);c.lineTo(x,cy-.8);c.moveTo(x+.8,cy+1);c.lineTo(x+.8,y1-1);c.stroke();
-  }
+ c.fillStyle=material(c,'clay','#d96b36');c.fillRect(x0,y0,w,bh);
+ // Two distinct illuminated planes and a continuous ridge cap.
+ c.fillStyle='#68281550';
+ if(w>bh)c.fillRect(x0,cy,w,bh/2);else c.fillRect(cx,y0,w/2,bh);
+ c.strokeStyle='#7d321e';c.lineWidth=1.1;c.beginPath();
+ if(w>bh){c.moveTo(x0,cy);c.lineTo(x1,cy);}else{c.moveTo(cx,y0);c.lineTo(cx,y1);}c.stroke();
+ c.strokeStyle='#ffba74';c.lineWidth=.48;c.beginPath();
+ if(w>bh){c.moveTo(x0,cy-.45);c.lineTo(x1,cy-.45);}else{c.moveTo(cx-.45,y0);c.lineTo(cx-.45,y1);}c.stroke();
+ if(w>13&&bh>13){
+  const x=x0+w*.27,y=y0+bh*.31;
+  c.fillStyle='#462e2470';c.fillRect(x+1,y+1,3.3,4);
+  c.fillStyle='#e4c69a';c.fillRect(x-1,y-2.5,2.4,3.8);
+  c.fillStyle='#784731';c.fillRect(x-1.4,y-3,3.2,1.1);
+  c.fillStyle='#302b25';c.fillRect(x-.8,y-2.9,1.8,.55);
  }
- if(seed%3===0&&w>12&&bh>12){
-  c.fillStyle='#b0b6a9';c.fillRect(cx-2,cy-2,3.3,2.6);
-  c.fillStyle='#344c52';c.fillRect(cx-1.5,cy-1.5,2.3,1.2);
- }
+ roofHardware(c,art);
  c.restore();
+}
+function roofHardware(c,a){
+ const {x0,y0,w,h:bh,seed}=a;if(w<12||bh<12)return;
+ const x=x0+w*.71,y=y0+bh*.3;
+ if(seed%3!==0){
+  c.fillStyle='#18272d65';c.beginPath();c.ellipse(x+1.1,y+2.3,2.1,1.3,0,0,TAU);c.fill();
+  c.fillStyle=seed%2?'#236678':'#28558b';c.fillRect(x-1.5,y-2.3,3,3.7);
+  c.beginPath();c.ellipse(x,y+1.4,1.5,.65,0,0,TAU);c.fill();
+  c.fillStyle='#619ca5';c.beginPath();c.ellipse(x,y-2.3,1.5,.65,0,0,TAU);c.fill();
+  c.fillStyle='#b5d0c0';c.fillRect(x-.8,y-2,.35,2.5);
+  c.strokeStyle='#173e55';c.lineWidth=.25;
+  for(let j=0;j<3;j++){c.beginPath();c.moveTo(x-1.4,y-.7+j*.7);c.lineTo(x+1.4,y-.7+j*.7);c.stroke();}
+ }
+ if(seed%2===0){
+  c.fillStyle='#dddcc5';c.beginPath();c.ellipse(x-4,y+3,1.6,1.1,-.6,0,TAU);c.fill();
+  c.strokeStyle='#56636a';c.lineWidth=.3;c.beginPath();c.moveTo(x-4,y+3);c.lineTo(x-3,y+1);c.stroke();
+ }
 }
 function flatRoof(c,b,art,tone){
  const {x0,y0,x1,y1,cx,cy,w,h:bh,area,seed}=art;
  c.save();poly(c,b.p);c.clip();
- c.fillStyle=tone;c.fillRect(x0,y0,w,bh);
+ c.fillStyle=material(c,'stone',tone);c.fillRect(x0,y0,w,bh);
  if(art.type!=='industrial'&&area>150){
   c.strokeStyle='#6c64552b';c.lineWidth=.22;c.beginPath();
   for(let x=x0+5;x<x1;x+=6){c.moveTo(x,y0+1);c.lineTo(x,y1-1);}
@@ -257,6 +228,7 @@ function flatRoof(c,b,art,tone){
   c.fillStyle='#464b48';c.fillRect(cx+1,cy-2,1.4,3.8);
  }
 
+ roofHardware(c,art);
  const features=art.surveyFeatures;
  if(features?.roofTerrace&&area>120&&w>10&&bh>10){
   // Stairwell access, light parapet and a few drying lines; original arcade art.
@@ -417,7 +389,7 @@ function drawRaisedWalls(c,b,v,zoom){
   const south=Math.abs(edgeX)>=Math.abs(edgeY),isTall=v.stories>=3;
   c.beginPath();c.moveTo(f.x1,f.y1);c.lineTo(f.x2,f.y2);
   c.lineTo(f.x3,f.y3);c.lineTo(f.x4,f.y4);c.closePath();
-  c.fillStyle=shiftColor(wall,south?-38:-58);c.fill();
+  c.fillStyle=shiftColor(wall,south?8:-28);c.fill();
   // A crisp light lip separates the upper wall from its shaded face.
   c.lineWidth=.82;c.strokeStyle=shiftColor(wall,38);
   c.beginPath();c.moveTo(f.x1,f.y1);c.lineTo(f.x2,f.y2);c.stroke();
@@ -428,9 +400,29 @@ function drawRaisedWalls(c,b,v,zoom){
   c.beginPath();c.moveTo(f.x4,f.y4);c.lineTo(f.x3,f.y3);c.stroke();
   c.lineWidth=.55;c.strokeStyle=shiftColor(wall,-27);
   c.beginPath();c.moveTo(f.x2,f.y2);c.lineTo(f.x3,f.y3);c.stroke();
+  if(zoom>=1.5&&len>10&&south&&a.type!=='industrial'){
+   const ux=edgeX/len,uy=edgeY/len,span=Math.min(8,len*.55),cx=(f.x3+f.x4)/2,cy=(f.y3+f.y4)/2;
+   // Shopfront canopy on the ground storey: striped fabric, dark valance,
+   // doorway and a pair of terracotta pots, all original stylized decoration.
+   c.fillStyle='#25423a';c.fillRect(cx-1.3,cy-3.1,2.6,3);
+   const colors=a.seed%3===0?['#af3b30','#f8dfab']:['#21745b','#f4dfa7'];
+   for(let k=0;k<8;k++){
+    const t=(k/8-.5)*span,t2=((k+1)/8-.5)*span;
+    c.beginPath();c.moveTo(cx+ux*t-v.dx*.22,cy+uy*t-v.dy*.22);
+    c.lineTo(cx+ux*t2-v.dx*.22,cy+uy*t2-v.dy*.22);
+    c.lineTo(cx+ux*t2,cy+uy*t2-.1);c.lineTo(cx+ux*t,cy+uy*t-.1);c.closePath();
+    c.fillStyle=colors[k%2];c.fill();
+   }
+   c.strokeStyle='#183a30';c.lineWidth=.45;c.beginPath();c.moveTo(cx-ux*span/2,cy-uy*span/2);c.lineTo(cx+ux*span/2,cy+uy*span/2);c.stroke();
+   for(const side of [-1,1]){const px=cx+ux*(span/2+1)*side,py=cy+uy*(span/2+1)*side;
+    c.fillStyle='#b55f35';c.fillRect(px-.6,py-1,1.2,1.2);
+    c.fillStyle='#39773e';c.fillRect(px-.9,py-2.2,1.8,1.5);
+    c.fillStyle='#90b546';c.fillRect(px-.6,py-2.2,.7,.55);
+   }
+  }
   if(zoom<1.1||len<2.6)continue;
   // Floor separation is visible even on very narrow buildings.
-  const floors=v.stories,shiftX=v.dx,shiftY=v.dy;
+  const floors=Math.min(v.stories,3),shiftX=v.dx,shiftY=v.dy;
   for(let floor=1;floor<floors;floor++){
    const t=floor/floors;
    c.strokeStyle=shiftColor(wall, south?-25:-45);c.lineWidth=.32;
@@ -440,7 +432,7 @@ function drawRaisedWalls(c,b,v,zoom){
    c.beginPath();c.moveTo(f.x1+shiftX*t,f.y1+shiftY*t-.42);
    c.lineTo(f.x2+shiftX*t,f.y2+shiftY*t-.42);c.stroke();
   }
-  if(zoom<1.5||len<6||Math.hypot(v.dx,v.dy)/floors<2.1)continue;
+  if(zoom<1.3||len<6)continue;
   const doors=a.type==='industrial'||a.type==='market';
   const columns=Math.max(1,Math.min(18,Math.floor(len/(doors?7.5:4.8))));
   for(let floor=0;floor<floors;floor++){
@@ -459,7 +451,7 @@ function drawRaisedWalls(c,b,v,zoom){
     c.fillRect(wx-w*.72,wy+hh*.43,w*1.44,.38);
     c.fillStyle=shiftColor(wall,-22);c.fillRect(wx-w*.56,wy-hh*.63,w*1.12,.24);
     if(windowSeed%4===0&&len>12){
-     const shutter=windowSeed%2?'#58685a':'#955d48';
+     const shutter=windowSeed%2?'#256556':'#244d56';
      c.fillStyle=shutter;c.fillRect(wx-w*.5-1.1,wy-hh*.58,.55,hh*1.15);
      c.fillRect(wx+w*.5+.55,wy-hh*.58,.55,hh*1.15);
     }
@@ -489,6 +481,10 @@ export function drawCityBuildings(c,buildings,zoom){
   if(!v)continue;
   const seed=a.seed;
   c.save();
+  // Directional ground shadow, then lift the roof; wall bases retain the
+  // original OSM footprint and collision coordinates.
+  c.save();c.translate(v.dx*.4+2,v.dy*.32+2);poly(c,b.p);c.fillStyle='#19252a50';c.fill();c.restore();
+  c.translate(-v.dx,-v.dy);
   drawRaisedWalls(c,b,v,zoom);
   const tone=a.roofTint||historicalRoofTone(a);
   if(!specialized(c,b,a)){
@@ -498,7 +494,7 @@ export function drawCityBuildings(c,buildings,zoom){
   }
   // High-contrast raised parapet defines the roof above the façades,
   // including tiny annexes, historic churches and one-floor workshops.
-  poly(c,b.p);c.strokeStyle='#25302c';c.lineWidth=1.35;c.stroke();
+  poly(c,b.p);c.strokeStyle='#643c29';c.lineWidth=.65;c.stroke();
   c.save();c.translate(-.55,-.55);poly(c,b.p);
   c.strokeStyle='#f1d9ac88';c.lineWidth=.48;c.stroke();c.restore();
   if(zoom>=1.45&&(b.id===733703600||/Chiesa di Santa Maria delle Grazie/i.test(b.n||''))){

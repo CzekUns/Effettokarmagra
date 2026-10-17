@@ -41,7 +41,7 @@ function hasRoadsideClearance(x,y,index){
   const dx=segment.bx-segment.ax,dy=segment.by-segment.ay,l2=dx*dx+dy*dy;
   const t=l2?Math.max(0,Math.min(1,((x-segment.ax)*dx+(y-segment.ay)*dy)/l2)):0;
   const d=Math.hypot(x-segment.ax-t*dx,y-segment.ay-t*dy);
-  if(d<visualRoadWidth(segment.road)/2+4.45)return false;
+  if(d<visualRoadWidth(segment.road)/2+7.4)return false;
  }
  return true;
 }
@@ -168,18 +168,19 @@ export function drawCrosswalks(c,graph,bounds,zoom){
  c.restore();
 }
 function pixelTree(c,x,y,seed){
- const greens=['#3e6848','#4f784b','#557a43','#69874d'];
  const crown=6.1+(seed%3)*.45;
- // Chunky irregular clusters read as leafy crowns at mobile scale while the
- // hard-edged highlights keep the original pixel-art treatment.
- c.fillStyle='#17231e9e';c.beginPath();c.ellipse(x+2.3,y+3,crown+1.8,crown*.78,.15,0,pi*2);c.fill();
- c.fillStyle='#654c32';c.fillRect(x-1.1,y-.4,2.1,5.2);
- c.fillStyle=greens[seed%4];c.beginPath();c.arc(x,y,crown,0,pi*2);c.fill();
- c.fillStyle='#78a65b';c.beginPath();c.arc(x-2.4,y-2.4,crown*.46,0,pi*2);c.fill();
- c.fillStyle='#87ac62';c.fillRect(x-4.1,y-4.2,2.5,1.6);
- c.fillStyle='#315b3c';c.beginPath();c.arc(x+3,y+2.2,crown*.4,0,pi*2);c.fill();
- c.fillStyle='#a1bd70';c.fillRect(x-2.7,y-3.2,1.2,1.1);
- c.fillStyle='#253f30';c.fillRect(x+1.1,y+1.2,1.3,2.3);
+ c.fillStyle='#13232a70';c.beginPath();c.ellipse(x+2,y+2.5,crown+1,crown*.75,.25,0,pi*2);c.fill();
+ c.fillStyle='#735034';c.fillRect(x-.6,y-1,1.3,4.5);
+ const greens=['#234a2b','#32662e','#49822d','#669933','#8cb13b','#b3c64c'];
+ // Irregular stepped leaf clusters, never a plain circular map symbol.
+ for(let i=0;i<95;i++){
+  const n=hash(seed*151+i*727),angle=(n%628)/100,rad=Math.sqrt(((n>>>10)%1000)/1000)*crown;
+  const px=Math.round((x+Math.cos(angle)*rad)*2)/2,py=Math.round((y+Math.sin(angle)*rad)*2)/2;
+  const shade=Math.max(0,Math.min(5,Math.floor(3-(px-x+py-y)/4)+(n%3)-1));
+  c.fillStyle=greens[shade];const size=.8+(n%4)*.28;
+  c.fillRect(px-size*.6,py-size*.4,size,size);
+  if(i%4===0){c.fillStyle='#b5c84d';c.fillRect(px-.3,py-.35,.4,.35);}
+ }
 }
 function bench(c,x,y,a){
  c.save();c.translate(x,y);c.rotate(a);
