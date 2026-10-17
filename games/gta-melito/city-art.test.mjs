@@ -82,6 +82,7 @@ test('mobile play is landscape-only with analog movement, two action buttons and
  assert.match(html,/id="sprint"/);
  assert.match(html,/id="pause-toggle"/);
  assert.match(html,/id="pause-menu" hidden/);
+ assert.match(html,/\.pause-menu\[hidden\]\{display:none\}/);
  assert.match(html,/orientation:landscape/);
  assert.match(game,/setPointerCapture\(e\.pointerId\)/);
  assert.match(game,/screen\.orientation\?\.lock/);
