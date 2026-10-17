@@ -31,8 +31,8 @@ globalThis.document={
 };
 globalThis.window={devicePixelRatio:1,addEventListener(type,handler){windowHandlers.set(type,handler);}};
 globalThis.localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>{storage.set(k,v);}};
-globalThis.requestAnimationFrame=(callback)=>{if(frames++<60)setTimeout(()=>callback(performance.now()),4);};
-let frames=0;
+let nextFrame=null;
+globalThis.requestAnimationFrame=callback=>{nextFrame=callback;};
 globalThis.fetch=async url=>{
  const path=String(url).replace(/^[.][\\/]/,'');
  const local=path==='data/boundary.json'?'./data/boundary.json':path==='data/melito-map.json'?'./data/melito-map.json':path==='survey/sector-001-002.json'?'./survey/sector-001-002.json':path==='survey/piazza-santo-stefano.json'?'./survey/piazza-santo-stefano.json':path==='survey/town-visuals.json'?'./survey/town-visuals.json':path==='data/urban-infill.json'?'./data/urban-infill.json':null;
@@ -44,8 +44,11 @@ test('browser entry boots and first NPC mission is interactable on Via Roma',asy
  await import('./game.mjs?smoke=1');
  for(let i=0;i<100&&!els.get('loading').hidden;i++)await new Promise(r=>setTimeout(r,10));
  assert.equal(els.get('loading').hidden,true,'real OSM map must load');
- await new Promise(r=>setTimeout(r,280));
- assert.equal(createdCanvases,2,'stationary frames reuse one static city canvas plus the minimap');
+ nextFrame(performance.now());
+ const initialTiles=createdCanvases;
+ assert.ok(initialTiles>2,'the opening viewport must be assembled from several tiles');
+ for(let i=0;i<6;i++)nextFrame(performance.now()+i*16);
+ assert.equal(createdCanvases,initialTiles,'stationary frames reuse the same city tiles');
  assert.match(els.get('mission-name').textContent,/primo contatto/i);
  assert.match(els.get('mission-destination').textContent,/Via Roma/);
  assert.ok(Number(els.get('road-count').textContent)>400);

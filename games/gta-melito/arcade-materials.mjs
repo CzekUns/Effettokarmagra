@@ -1,12 +1,16 @@
 /* Original generated pixel materials. No photography or third-party game art.
  * Small cached repeating bitmaps: texture creation occurs once, not per frame. */
 const cache=new WeakMap();
+const sources=new Map();
 function random(seed){let n=seed>>>0;return()=>{n=(Math.imul(n,1664525)+1013904223)>>>0;return n/4294967296;};}
 export function material(c,kind,fallback){
  if(typeof OffscreenCanvas==='undefined'||typeof DOMMatrix==='undefined')return fallback;
  let textures=cache.get(c);if(!textures){textures=new Map();cache.set(c,textures);}
  if(textures.has(kind))return textures.get(kind);
- const canvas=new OffscreenCanvas(128,128),g=canvas.getContext('2d'),r=random(71+kind.length*101);
+ let canvas=sources.get(kind);
+ if(!canvas){
+ canvas=new OffscreenCanvas(128,128);
+ const g=canvas.getContext('2d'),r=random(71+kind.length*101);
  if(kind==='clay'){
   g.fillStyle='#7b3020';g.fillRect(0,0,128,128);
   const colors=['#da6531','#e0773b','#c6542b','#ed8544','#ce592d'];
@@ -31,6 +35,8 @@ export function material(c,kind,fallback){
  }
  for(let i=0;i<1800;i++){
   g.fillStyle=i%2?'#ffffff0d':'#00000012';g.fillRect(Math.floor(r()*128),Math.floor(r()*128),1,1);
+ }
+ sources.set(kind,canvas);
  }
  const pattern=c.createPattern(canvas,'repeat');
  if(!pattern)return fallback;

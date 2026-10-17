@@ -10,7 +10,7 @@ import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=043';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=090';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=095';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=091';
@@ -18,7 +18,9 @@ import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} f
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=094';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
-let staticScene=null;
+const STATIC_TILE=96,TILE_PIXELS=4,TILE_BLEED=20;
+const staticTiles=new Map();
+let tileRoadMode=null,pendingTile=null;
 const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false};
 const stick={x:0,y:0};
@@ -98,7 +100,7 @@ function roadPoint(road,fraction){
 }
 function prepareMap(map,surveyData=[],infillCache=null){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
- staticScene=null;
+ staticTiles.clear();tileRoadMode=null;
  state.map=map;
  state.roads=map.roads;state.buildings=map.buildings||[];
  prepareCityStyles(state.buildings,map.pois||[]);
@@ -413,31 +415,62 @@ function paintStaticScene(ctx,bounds,zoom){
  drawStreetProps(ctx,query(state.props,state.propsGrid,x0,y0,x1,y1),zoom);
  drawStorefronts(ctx,query(state.shops,state.shopGrid,x0,y0,x1,y1),zoom);
 }
-function getStaticScene(cw,ch,ratio){
- const zoom=state.zoom,viewW=cw/zoom,viewH=ch/zoom;
- const left=state.camera.x-viewW/2,right=state.camera.x+viewW/2;
- const top=state.camera.y-viewH/2,bottom=state.camera.y+viewH/2;
- const mode=getRoadWidthMode();
- if(staticScene&&staticScene.mode===mode&&staticScene.ratio===ratio&&
-    Math.abs(zoom/staticScene.zoom-1)<.065&&
-    left>=staticScene.x0+12&&right<=staticScene.x1-12&&
-    top>=staticScene.y0+12&&bottom<=staticScene.y1-12)return staticScene;
- // An overscanned world canvas amortizes the expensive tiled roofs and walls
- // across many frames. Traffic, pedestrians, player and mission markers stay live.
- // At walking zoom the old 1.7x cache rendered nearly three viewports of
- // detailed roofs. Keep a smaller margin there; cars need longer lookahead
- // because they traverse the map much faster.
- const walking=zoom>=4.5,factor=walking?1.35:1.7,margin=walking?32:48;
- const worldW=viewW*factor+margin,worldH=viewH*factor+margin;
- const x0=state.camera.x-worldW/2,y0=state.camera.y-worldH/2;
+function staticTile(tx,ty){
+ const key=tx+','+ty;
+ if(staticTiles.has(key)){
+  const tile=staticTiles.get(key);staticTiles.delete(key);staticTiles.set(key,tile);
+  return tile;
+ }
+ const x=tx*STATIC_TILE,y=ty*STATIC_TILE;
  const layer=document.createElement('canvas');
- layer.width=Math.ceil(worldW*zoom*ratio);layer.height=Math.ceil(worldH*zoom*ratio);
+ layer.width=layer.height=STATIC_TILE*TILE_PIXELS;
  const ctx=layer.getContext('2d',{alpha:true});
  ctx.imageSmoothingEnabled=false;
- ctx.setTransform(zoom*ratio,0,0,zoom*ratio,-x0*zoom*ratio,-y0*zoom*ratio);
- paintStaticScene(ctx,[x0,y0,x0+worldW,y0+worldH],zoom);
- staticScene={canvas:layer,x0,y0,x1:x0+worldW,y1:y0+worldH,zoom,ratio,mode};
- return staticScene;
+ ctx.setTransform(TILE_PIXELS,0,0,TILE_PIXELS,-x*TILE_PIXELS,-y*TILE_PIXELS);
+ // The canvas clips to the tile; nearby geometry is queried with bleed so
+ // roofs, trees and road strokes crossing a seam remain continuous.
+ paintStaticScene(ctx,[x-TILE_BLEED,y-TILE_BLEED,x+STATIC_TILE+TILE_BLEED,y+STATIC_TILE+TILE_BLEED],3);
+ const tile={canvas:layer,x,y};staticTiles.set(key,tile);
+ return tile;
+}
+function drawStaticTiles(bounds){
+ const mode=getRoadWidthMode();
+ if(mode!==tileRoadMode){staticTiles.clear();tileRoadMode=mode;pendingTile=null;}
+ const [x0,y0,x1,y1]=bounds;
+ const minX=Math.floor(x0/STATIC_TILE),maxX=Math.floor(x1/STATIC_TILE);
+ const minY=Math.floor(y0/STATIC_TILE),maxY=Math.floor(y1/STATIC_TILE);
+ const visible=(maxX-minX+1)*(maxY-minY+1);
+ for(let ty=minY;ty<=maxY;ty++)for(let tx=minX;tx<=maxX;tx++){
+  const tile=staticTile(tx,ty);
+  c.drawImage(tile.canvas,tile.x,tile.y,STATIC_TILE,STATIC_TILE);
+ }
+ // Retain all visible tiles plus a small recent halo. Fixed memory bound on
+ // phones; large desktop windows get enough slots to avoid in-frame eviction.
+ const limit=Math.max(32,Math.min(100,visible+8));
+ while(staticTiles.size>limit)staticTiles.delete(staticTiles.keys().next().value);
+ // Ask the browser to prepare a single tile in the direction of travel during
+ // idle time. A fast car should rarely require its next tile on the hot frame.
+ if(typeof requestIdleCallback==='function'&&!pendingTile){
+  const car=state.player.car>=0?state.cars[state.player.car]:null;
+  const heading=car?.a??state.player.a,dx=Math.cos(heading),dy=Math.sin(heading);
+  const halfW=(x1-x0)/2,halfH=(y1-y0)/2;
+  const edge=Math.min(halfW/Math.max(.001,Math.abs(dx)),halfH/Math.max(.001,Math.abs(dy)));
+  const look=edge+STATIC_TILE*.6;
+  const tx=Math.floor((state.camera.x+dx*look)/STATIC_TILE);
+  const ty=Math.floor((state.camera.y+dy*look)/STATIC_TILE);
+  const key=tx+','+ty;
+  if(!staticTiles.has(key)){
+   pendingTile=key;
+   requestIdleCallback(deadline=>{
+    if(pendingTile!==key)return;
+    pendingTile=null;
+    if(state.ready&&getRoadWidthMode()===tileRoadMode&&deadline.timeRemaining()>4){
+     staticTile(tx,ty);
+     while(staticTiles.size>limit)staticTiles.delete(staticTiles.keys().next().value);
+    }
+   },{timeout:250});
+  }
+ }
 }
 function draw(){
  // Render at a compact palette resolution and let CSS scale nearest-neighbor;
@@ -453,8 +486,8 @@ function draw(){
  const [x0,y0,x1,y1]=visibleBounds();
  const buildings=query(state.buildings,state.buildingGrid,x0,y0,x1,y1);
  const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
- const scene=getStaticScene(cw,ch,ratio);
- c.drawImage(scene.canvas,scene.x0,scene.y0,scene.x1-scene.x0,scene.y1-scene.y0);
+ const halfW=cw/(2*state.zoom),halfH=ch/(2*state.zoom);
+ drawStaticTiles([state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH]);
  if(state.zoom>1.75){
   c.font='3.6px monospace';c.fillStyle='#e5d9bc';c.textAlign='center';
   const seen=new Set(),placed=[];
