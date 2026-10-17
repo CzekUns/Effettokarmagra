@@ -124,18 +124,18 @@ Questa lista **non è un certificato di qualità**. Le voci sono aperte fino a c
 
 ### Sessione 2026-10-17 — Passata GTA2: masse, ombre e contrasto
 
-**Commit / PR:** da registrare dopo la verifica CI.
+**Commit / PR:** `75fe95e` — [commit GitHub](https://github.com/CzekUns/Effettokarmagra/commit/75fe95e3fb5fae406b112488d0793cfbedf26e6f).
 
 **Fatto nel codice:** confronto della scena attuale a Piazza Santo Stefano, Via Roma e Municipio con schermate di gameplay di GTA 2. In `city-art.mjs` resa la palette più calda e contrastata: asfalto grafite, bordi marciapiede ocra, tetti terracotta e facciate in ombra più profonde. Il contatto d’ombra del tetto ora resta ritagliato dentro la sagoma; i fronti mantengono un rilievo corto, cornici marcate, imposte più leggibili e dettagli tetto concentrati. I vicoli minori restano senza righe centrali. Sono regole artistiche originali ispirate alla leggibilità arcade di GTA 2; non sono stati copiati loghi o asset Rockstar.
 
 In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più permissive per gli edifici vicini, estendendo la stima dove OSM non contiene sagome; i placeholder generati sono 505, tutti con ID negativi e marcati come sintetici. È stato aggiunto il controllo della distanza minima tra l’intero perimetro dell’impronta e la rete stradale. `data/urban-infill.json` contiene una cache riproducibile, legata alla versione del generatore e all’impronta digitale di edifici e strade OSM, per evitare una generazione geometrica lenta sui telefoni. OSM, strade e collisioni non vengono alterati. Cache del gioco/renderer aggiornata a `v080`.
 
-**Confronto visuale:** catture browser della versione precedente sono archiviate in `qa/2026-10-17/` con la stessa viewport desktop 1280×900 e mobile emulata 390×844. Le catture sono un riferimento della passata su densità e chiesa; non sono attribuite alla nuova palette `v080`. Un telefono fisico non è stato verificato in questa sessione.
+**Confronto visuale:** verificata la pagina pubblica `v080` su Chrome desktop, in Via Roma, a piedi 5×: HUD caricato con 614 strade, 2.056 edifici OSM, 505 placeholder sintetici e 73 incroci. La cattura live mostra asfalto grafite, bordi chiari, tetti terracotta, ombre compatte e massa urbana più densa; non è disponibile una cattura “prima” con la stessa camera e palette a confronto. Le catture precedenti in `qa/2026-10-17/` documentano solo la tranche di densità precedente, non il renderer `v080`. Un telefono fisico non è stato verificato; la viewport mobile resta da controllare.
 
 **Riferimenti osservati:** gameplay di GTA 2 per prospettiva dall’alto, tetti compatti, ombre dure e contrasto carreggiata/marciapiede. Fotografia istituzionale della chiesa: [Comune di Melito di Napoli](https://comune.melito.na.it/vivere-il-comune/luoghi/chiesa-di-santa-maria-delle-grazie/) (consultata il 17-10-2026). Il catalogo ICCD descrive il centro come abitato compatto lungo Via Roma e la chiesa a croce greca con grande cupola; questa descrizione riguarda il contesto, non identifica i palazzi OSM mancanti. La fotografia non è stata inclusa nei file del gioco.
 
 **Edifici documentati:** nessun nuovo palazzo residenziale è stato verificato per ID OSM. Santa Maria delle Grazie, way `733703815`, resta l’unica corrispondenza fotografica registrata; la posizione esatta della torre nel rendering e i dettagli dei prospetti restano stilizzati.
 
-**Test e deploy:** da completare dopo CI. I test locali eseguiti con il Node disponibile in questo ambiente non sostituiscono il controllo previsto su Node 22. Deploy GitHub Pages da verificare.
+**Test e deploy:** GitHub Actions `GTA Melito visual and campaign validation` sul commit `75fe95e`: completato con esito positivo (Node 22 nel workflow). Deploy GitHub Pages completato con esito positivo sullo stesso SHA. Test locali Node 24: 57/57 superati; `git diff --check` passato.
 
 **Aree successive:** ampliare la copertura sintetica solo dentro isolati con accesso stradale plausibile; censire foto con provenienza chiara per le facciate di Via Roma, Municipio e Piazza Immacolata; confrontare `v080` su telefono fisico.
