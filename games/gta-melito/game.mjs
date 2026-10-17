@@ -10,16 +10,17 @@ import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=043';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=095';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=099';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=091';
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=094';
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=094';
-import {guideCar} from './driving-assist.mjs?v=096';
+import {guideCar} from './driving-assist.mjs?v=099';
 import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
-import {canDriveProbe} from './road-clearance.mjs?v=096';
+import {canDriveProbe} from './road-clearance.mjs?v=099';
+import {SIDEWALK_DRIVE} from './sidewalk.mjs?v=099';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const STATIC_TILE=96,TILE_PIXELS=4,TILE_BLEED=20;
@@ -283,7 +284,7 @@ function carBlocked(x,y,a,which){
   if(!inside([px,py],toRing(state.map.border)))return true;
   const road=nearest(px,py,25,state.roads,true);
   const width=road?visualRoadWidth(road.road):0;
-  if(!road||road.distance>width/2+2.5||!canDriveProbe(road.distance,width,
+  if(!road||road.distance>width/2+SIDEWALK_DRIVE||!canDriveProbe(road.distance,width,
    road.distance>width/2-.55&&buildingAt(px,py)))return true;
  }
  for(let i=0;i<state.cars.length;i++){

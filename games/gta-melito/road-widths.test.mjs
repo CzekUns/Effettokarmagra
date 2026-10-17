@@ -5,6 +5,7 @@ import {ROAD_WIDTH_MULTIPLIER,visualRoadWidth,roadTrafficLaneOffset,setRoadWidth
 import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs';
 import {buildStreetProps,drawCrosswalks} from './visuals.mjs';
 import {drawCityStreets} from './city-art.mjs';
+import {SIDEWALK_OUTER,SIDEWALK_SHADOW,SIDEWALK_KERB} from './sidewalk.mjs';
 import {prepareStorefronts} from './storefronts.mjs';
 const map=JSON.parse(await readFile(new URL('./data/melito-map.json',import.meta.url),'utf8'));
 
@@ -52,7 +53,9 @@ test('asphalt and sidewalks are drawn with the visual multiplier, not the old 7m
  const road={id:102,n:'Via test',t:'residential',w:7,p:[0,0,100,0]};
  drawCityStreets(ctx,[road],2.5);
  assert.ok(widths.some(n=>Math.abs(n-(visualRoadWidth(road)-.5))<.01));
- assert.ok(widths.some(n=>Math.abs(n-(visualRoadWidth(road)+7.2))<.01));
+ for(const reach of [SIDEWALK_OUTER,SIDEWALK_SHADOW,SIDEWALK_KERB])
+  assert.ok(widths.some(n=>Math.abs(n-(visualRoadWidth(road)+reach*2))<.01),`sidewalk layer reaches ${reach} on each side`);
+ assert.equal(SIDEWALK_OUTER,7.2,'outer painted sidewalk is twice its prior 3.6-unit reach');
  assert.ok(!widths.some(n=>n===6.5),'old asphalt width must not be used');
 });
 test('commercial frontage and crosswalks share the wider road estimate',()=>{
@@ -93,7 +96,7 @@ test('every consumer imports the same versioned road-width module for A/B',async
   assert.ok(text.includes("'./road-widths.mjs?v=043'"),file+' requires versioned singleton');
  }
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
- assert.ok(['043','044','050','060','070','071','072','073','074','075','076','077','078','079','080','081','082','083','084','085','086','087','088','089','090','091','092','093','094','095','096','097','098'].some(v=>html.includes('game.mjs?v='+v)));
+ assert.ok(html.includes('game.mjs?v=099'));
  assert.ok(html.includes('id="road-width-compare"'));
  assert.ok(html.includes('id="road-width-current"'));
 });

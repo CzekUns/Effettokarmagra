@@ -1,4 +1,5 @@
 import {visualRoadWidth} from './road-widths.mjs?v=043';
+import {SIDEWALK_DRIVE} from './sidewalk.mjs?v=099';
 
 export const DRIVE_ROAD_TYPES=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 
@@ -37,10 +38,10 @@ export function withinDriveSurface(x,y,roads,margin=.55){
  return !!nearest&&nearest.distance<=Math.max(0,visualRoadWidth(nearest.road)/2-margin);
 }
 
-// The painted kerb reaches width/2 + 2.9; leave a small safety margin.
+// The painted rim reaches width/2 + 7.2; stop inside it, before its shadow.
 export function canDriveProbe(distance,width,onBuilding=false){
  if(!Number.isFinite(distance)||!Number.isFinite(width)||width<=0)return false;
- if(distance>width/2+2.5)return false;
+ if(distance>width/2+SIDEWALK_DRIVE)return false;
  return distance<=Math.max(0,width/2-.55)||!onBuilding;
 }
 

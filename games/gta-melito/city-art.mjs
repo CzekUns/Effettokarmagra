@@ -3,6 +3,7 @@
  * Do not claim hypothetical materials or pixel geometry as photo-verified.
  */
 import {visualRoadWidth} from './road-widths.mjs?v=043';
+import {SIDEWALK_OUTER,SIDEWALK_SHADOW,SIDEWALK_KERB} from './sidewalk.mjs?v=099';
 import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-volume.mjs?v=088';
 import {material} from './arcade-materials.mjs?v=095';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
@@ -129,9 +130,9 @@ export function drawCityStreets(c,roads,zoom){
  const coat=(extra,color)=>{for(const road of roads){
   line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)+extra);c.strokeStyle=pedestrian(road)?color.ped:color.car;c.stroke();
  }};
- coat(7.2,{ped:'#424843',car:'#292f2d'}); // hard outer silhouette
- coat(5.8,{ped:'#c5ac83',car:'#c5ac83'}); // cast curb shadow
- coat(1.7,{ped:'#f0d4a8',car:'#f0d4a8'}); // sunlit kerb / paving edge
+ coat(SIDEWALK_OUTER*2,{ped:'#424843',car:'#292f2d'}); // hard outer silhouette
+ coat(SIDEWALK_SHADOW*2,{ped:'#c5ac83',car:'#c5ac83'}); // cast curb shadow
+ coat(SIDEWALK_KERB*2,{ped:'#f0d4a8',car:'#f0d4a8'}); // sunlit kerb / paving edge
  for(const road of roads){
   line(c,road.p);c.lineWidth=Math.max(1,visualRoadWidth(road)-.5);c.strokeStyle=pedestrian(road)?material(c,'stone','#d6bf98'):material(c,'asphalt','#303638');c.stroke();
  }

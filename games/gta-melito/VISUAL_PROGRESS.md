@@ -246,3 +246,9 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 **Fatto nel codice:** quando l'auto urta un muro, un edificio, un altro veicolo o il bordo percorribile, cerca un arretramento di 0,45–1,4 unità, eventualmente spostato di 0,55 unità di lato. Ogni posizione candidata usa la collisione completa esistente; se non c'è spazio libero, l'auto si ferma. Un breve impulso nella direzione opposta all'urto si attenua in circa 0,26 s e sospende temporaneamente gas e guida assistita, così tenere premuto l'acceleratore non la lascia ferma sul muro. Funziona anche in retromarcia. La velocità è limitata a 1,4–5 unità/s. Cache pagina `v098`.
 
 **Verifica:** test su arretramento sicuro, ostacolo sul lato, spazio chiuso, urto in retromarcia e acceleratore tenuto premuto contro una parete; suite Node 77/77, sintassi e controllo diff superati. Sensibilità e resa su Android fisico ancora da verificare.
+
+### Sessione 2026-10-17 — Marciapiedi larghi il doppio
+
+**Fatto nel codice:** i tre strati pittorici del marciapiede (bordo esterno, ombra e bordo chiaro) si estendono ora rispettivamente di 7,2, 5,8 e 1,7 unità per lato oltre metà della larghezza stradale, il doppio dei 3,6, 2,9 e 0,85 precedenti. La carreggiata e gli assi OSM restano identici. L'auto può arrivare fino a 5 unità sul marciapiede, il doppio delle 2,5 precedenti, purché i suoi sei punti non tocchino edifici, veicoli o confine. Il bordo disegnato resta più esterno della zona guidabile. La guida assistita segue la stessa fascia. Cache `v099`.
+
+**Verifica:** test sugli strati disegnati e sui limiti percorribili, suite Node 77/77. Da ispezionare sul deploy l'effetto vicino agli edifici OSM e in viewport mobile; larghezza e guida su Android fisico ancora da provare.

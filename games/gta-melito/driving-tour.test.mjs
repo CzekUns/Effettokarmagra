@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {auditDrivingTour,DRIVE_ROAD_TYPES,withinDriveSurface,nearestDrivableRoad,canDriveProbe} from './road-clearance.mjs';
 import {buildStreetProps} from './visuals.mjs';
 import {visualRoadWidth} from './road-widths.mjs';
+import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs';
 
 const map=JSON.parse(await readFile(new URL('./data/melito-map.json',import.meta.url),'utf8'));
 const infill=JSON.parse(await readFile(new URL('./data/urban-infill.json',import.meta.url),'utf8'));
@@ -49,5 +50,7 @@ test('car may cross the painted sidewalk but not drive through a building or bey
  assert.equal(canDriveProbe(6,width,true),true,'mapped building overlap on asphalt is cleared');
  assert.equal(canDriveProbe(8.6,width,false),true,'sidewalk is traversable');
  assert.equal(canDriveProbe(8.6,width,true),false,'building on sidewalk is solid');
- assert.equal(canDriveProbe(10.4,width,false),false,'outside the kerb remains blocked');
+ assert.equal(canDriveProbe(width/2+SIDEWALK_DRIVE,width,false),true,'wider sidewalk is traversable to its safe edge');
+ assert.equal(canDriveProbe(width/2+SIDEWALK_DRIVE+.1,width,false),false,'outer rim is not a driving surface');
+ assert.ok(SIDEWALK_OUTER>SIDEWALK_DRIVE,'paint extends outside the drivable strip');
 });
