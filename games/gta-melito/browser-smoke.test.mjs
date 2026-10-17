@@ -19,18 +19,19 @@ function element(id=''){
  };
 }
 const els=new Map(ids.map(id=>[id,element(id)]));
+let createdCanvases=0;
 const arrows=['up','down','left','right'].map(d=>Object.assign(element(),{dataset:{dir:d}}));
 const windowHandlers=new Map();
 const storage=new Map();
 globalThis.document={
  getElementById(id){return els.get(id)||null;},
  querySelectorAll(query){return query==='[data-dir]'?arrows:[];},
- createElement(){return element();},
+ createElement(tag){if(tag==='canvas')createdCanvases++;return element();},
  addEventListener(type,handler){windowHandlers.set('document:'+type,handler);}
 };
 globalThis.window={devicePixelRatio:1,addEventListener(type,handler){windowHandlers.set(type,handler);}};
 globalThis.localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>{storage.set(k,v);}};
-globalThis.requestAnimationFrame=(callback)=>{if(frames++<8)setTimeout(()=>callback(performance.now()),4);};
+globalThis.requestAnimationFrame=(callback)=>{if(frames++<60)setTimeout(()=>callback(performance.now()),4);};
 let frames=0;
 globalThis.fetch=async url=>{
  const path=String(url).replace(/^[.][\\/]/,'');
@@ -43,6 +44,8 @@ test('browser entry boots and first NPC mission is interactable on Via Roma',asy
  await import('./game.mjs?smoke=1');
  for(let i=0;i<100&&!els.get('loading').hidden;i++)await new Promise(r=>setTimeout(r,10));
  assert.equal(els.get('loading').hidden,true,'real OSM map must load');
+ await new Promise(r=>setTimeout(r,280));
+ assert.equal(createdCanvases,2,'stationary frames reuse one static city canvas plus the minimap');
  assert.match(els.get('mission-name').textContent,/primo contatto/i);
  assert.match(els.get('mission-destination').textContent,/Via Roma/);
  assert.ok(Number(els.get('road-count').textContent)>400);

@@ -17,6 +17,7 @@ import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=061';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
+let staticScene=null;
 const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false};
 const stick={x:0,y:0};
@@ -93,6 +94,7 @@ function roadPoint(road,fraction){
 }
 function prepareMap(map,surveyData=[],infillCache=null){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
+ staticScene=null;
  state.map=map;
  state.roads=map.roads;state.buildings=map.buildings||[];
  prepareCityStyles(state.buildings,map.pois||[]);
@@ -391,10 +393,54 @@ function visibleBounds(){
  const x=state.camera.x,y=state.camera.y,pad=90;
  return [x-canvas.clientWidth/(2*state.zoom)-pad,y-canvas.clientHeight/(2*state.zoom)-pad,x+canvas.clientWidth/(2*state.zoom)+pad,y+canvas.clientHeight/(2*state.zoom)+pad];
 }
+function paintStaticScene(ctx,bounds,zoom){
+ const [x0,y0,x1,y1]=bounds,border=state.map.border;
+ ctx.beginPath();ctx.moveTo(border[0],border[1]);
+ for(let i=2;i<border.length;i+=2)ctx.lineTo(border[i],border[i+1]);
+ ctx.closePath();ctx.fillStyle='#988f81';ctx.fill();
+ ctx.lineWidth=10;ctx.strokeStyle='#9e998a';ctx.stroke();
+ if(zoom>=1.05){
+  ctx.save();ctx.beginPath();ctx.moveTo(border[0],border[1]);
+  for(let i=2;i<border.length;i+=2)ctx.lineTo(border[i],border[i+1]);
+  ctx.closePath();ctx.clip();drawTerrain(ctx,bounds,zoom,state.ground);ctx.restore();
+ }
+ const buildings=query(state.buildings,state.buildingGrid,x0,y0,x1,y1);
+ const inferred=query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1);
+ const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
+ drawCityStreets(ctx,roads,zoom);
+ drawCityBuildings(ctx,[...inferred,...buildings],zoom);
+ // Coarse OSM footprints occasionally overlap roads; keep the road above them.
+ drawCityStreets(ctx,roads,zoom);
+ drawCrosswalks(ctx,state.graph,bounds,zoom);
+ drawStreetProps(ctx,query(state.props,state.propsGrid,x0,y0,x1,y1),zoom);
+ drawStorefronts(ctx,query(state.shops,state.shopGrid,x0,y0,x1,y1),zoom);
+}
+function getStaticScene(cw,ch,ratio){
+ const zoom=state.zoom,viewW=cw/zoom,viewH=ch/zoom;
+ const left=state.camera.x-viewW/2,right=state.camera.x+viewW/2;
+ const top=state.camera.y-viewH/2,bottom=state.camera.y+viewH/2;
+ const mode=getRoadWidthMode();
+ if(staticScene&&staticScene.mode===mode&&staticScene.ratio===ratio&&
+    Math.abs(zoom/staticScene.zoom-1)<.065&&
+    left>=staticScene.x0+12&&right<=staticScene.x1-12&&
+    top>=staticScene.y0+12&&bottom<=staticScene.y1-12)return staticScene;
+ // An overscanned world canvas amortizes the expensive tiled roofs and walls
+ // across many frames. Traffic, pedestrians, player and mission markers stay live.
+ const worldW=viewW*1.7+48,worldH=viewH*1.7+48;
+ const x0=state.camera.x-worldW/2,y0=state.camera.y-worldH/2;
+ const layer=document.createElement('canvas');
+ layer.width=Math.ceil(worldW*zoom*ratio);layer.height=Math.ceil(worldH*zoom*ratio);
+ const ctx=layer.getContext('2d',{alpha:true});
+ ctx.imageSmoothingEnabled=false;
+ ctx.setTransform(zoom*ratio,0,0,zoom*ratio,-x0*zoom*ratio,-y0*zoom*ratio);
+ paintStaticScene(ctx,[x0,y0,x0+worldW,y0+worldH],zoom);
+ staticScene={canvas:layer,x0,y0,x1:x0+worldW,y1:y0+worldH,zoom,ratio,mode};
+ return staticScene;
+}
 function draw(){
  // Render at a compact palette resolution and let CSS scale nearest-neighbor;
  // the chunky edges read as pixel art and reduce fill/texture work on phones.
- const cw=canvas.clientWidth,ch=canvas.clientHeight,ratio=Math.max(.62,Math.min(window.devicePixelRatio||1,2)*.72);
+ const cw=canvas.clientWidth,ch=canvas.clientHeight,ratio=Math.max(.62,Math.min(window.devicePixelRatio||1,1.5)*.66);
  if(canvas.width!==Math.floor(cw*ratio)||canvas.height!==Math.floor(ch*ratio)){canvas.width=Math.floor(cw*ratio);canvas.height=Math.floor(ch*ratio);}
  c.setTransform(ratio,0,0,ratio,0,0);
  c.imageSmoothingEnabled=false;
@@ -402,28 +448,11 @@ function draw(){
  if(!state.ready)return;
  const p=state.player;
  c.translate(cw/2,ch/2);c.scale(state.zoom,state.zoom);c.translate(-state.camera.x,-state.camera.y);
- const border=state.map.border;
- c.beginPath();c.moveTo(border[0],border[1]);for(let i=2;i<border.length;i+=2)c.lineTo(border[i],border[i+1]);c.closePath();
- c.fillStyle='#988f81';c.fill();c.lineWidth=10;c.strokeStyle='#9e998a';c.stroke();
  const [x0,y0,x1,y1]=visibleBounds();
  const buildings=query(state.buildings,state.buildingGrid,x0,y0,x1,y1);
- const inferred=query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1);
  const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
- if(state.zoom>=1.05){
-  c.save();c.beginPath();c.moveTo(border[0],border[1]);for(let i=2;i<border.length;i+=2)c.lineTo(border[i],border[i+1]);
-  c.closePath();c.clip();drawTerrain(c,[x0,y0,x1,y1],state.zoom,state.ground);c.restore();
- }
- drawCityStreets(c,roads,state.zoom);
- // One global painter order: placeholders and genuine OSM roofs occlude
- // each other by their projected foot depth, not by their source type.
- drawCityBuildings(c,[...inferred,...buildings],state.zoom);
- // Repaint the complete road bed above OSM footprints and their 2.5D walls.
- // Some OSM ways run along/through coarse building polygons; the roads remain
- // intact and visually clear while the source building geometry stays intact.
- drawCityStreets(c,roads,state.zoom);
- drawCrosswalks(c,state.graph,[x0,y0,x1,y1],state.zoom);
- drawStreetProps(c,query(state.props,state.propsGrid,x0,y0,x1,y1),state.zoom);
- drawStorefronts(c,query(state.shops,state.shopGrid,x0,y0,x1,y1),state.zoom);
+ const scene=getStaticScene(cw,ch,ratio);
+ c.drawImage(scene.canvas,scene.x0,scene.y0,scene.x1-scene.x0,scene.y1-scene.y0);
  if(state.zoom>1.75){
   c.font='3.6px monospace';c.fillStyle='#e5d9bc';c.textAlign='center';
   const seen=new Set(),placed=[];
