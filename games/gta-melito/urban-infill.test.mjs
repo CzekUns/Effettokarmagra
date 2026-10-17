@@ -68,7 +68,7 @@ test('automatic camera starts at the maximum on foot and progressively pulls bac
  assert.equal(targetCameraZoom({inVehicle:false}),6);
  assert.equal(targetCameraZoom({inVehicle:false,moving:true,running:true}),5.55);
  const idle=targetCameraZoom({inVehicle:true,speed:0}),city=targetCameraZoom({inVehicle:true,speed:11});
- const fast=targetCameraZoom({inVehicle:true,speed:28});
+ const fast=targetCameraZoom({inVehicle:true,speed:40});
  assert.ok(idle<5&&idle>3);
  assert.ok(city<idle&&city>fast);
  assert.ok(fast>=CAMERA_ZOOM_MIN&&fast<2.1);
@@ -92,11 +92,11 @@ test('game exposes placeholder count and camera mode to the player',async()=>{
  assert.ok(game.includes('generateUrbanInfill(map)'));
  assert.ok(game.includes('targetCameraZoom(movement,state.zoomBias)'));
  assert.ok(game.includes('advanceCameraZoom'));
- assert.ok(game.includes('drawCityBuildings(c,[...inferred,...buildings]'));
+ assert.ok(game.includes('drawCityBuildings(ctx,[...inferred,...buildings],zoom)'));
  assert.ok(html.includes('id="inferred-count"'));
  assert.ok(html.includes('id="camera-mode"'));
  assert.ok(html.includes('id="zoom-auto"'));
- assert.ok(html.includes('game.mjs?v=091'));
+ assert.ok(html.includes('game.mjs?v=095'));
  assert.ok(game.includes('urban-infill.mjs?v=091'));
 });
 

@@ -10,13 +10,17 @@ import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=043';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=090';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=095';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=091';
-import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=061';
+import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=094';
+import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=094';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
+const STATIC_TILE=96,TILE_PIXELS=4,TILE_BLEED=20;
+const staticTiles=new Map();
+let tileRoadMode=null,pendingTile=null;
 const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false};
 const stick={x:0,y:0};
@@ -51,7 +55,10 @@ function query(items,grid,x0,y0,x1,y1){
  for(let gx=Math.floor(x0/CELL);gx<=Math.floor(x1/CELL);gx++)
   for(let gy=Math.floor(y0/CELL);gy<=Math.floor(y1/CELL);gy++)
    for(const i of grid.get(gx+','+gy)||[])out.add(i);
- return [...out].map(i=>items[i]);
+ return [...out].map(i=>items[i]).filter(item=>{
+  const b=item.bounds;
+  return b&&b[0]<=x1&&b[2]>=x0&&b[1]<=y1&&b[3]>=y0;
+ });
 }
 function nearest(x,y,max=24,roads=state.roads,driveOnly=false){
  let best=null,dd=max*max;
@@ -93,6 +100,7 @@ function roadPoint(road,fraction){
 }
 function prepareMap(map,surveyData=[],infillCache=null){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
+ staticTiles.clear();tileRoadMode=null;
  state.map=map;
  state.roads=map.roads;state.buildings=map.buildings||[];
  prepareCityStyles(state.buildings,map.pois||[]);
@@ -297,17 +305,9 @@ function tick(dt){
  }
  const p=state.player;
  if(p.car>=0){
-  const car=state.cars[p.car],prior=car.speed||0;
-  let speed=prior;
-  const axis=moveAxes(),throttle=axis.y<-.08?-axis.y:axis.y>.08?-axis.y:0;
-  if(Math.abs(throttle)>.08)speed+=22*dt*throttle;
-  else speed-=Math.sign(speed)*Math.min(Math.abs(speed),6*dt);
-  if(pressed.handbrake)speed*=Math.pow(.045,dt);
-  speed=clamp(speed,-9,28);
-  const steer=moveAxes().x;
-  if(steer&&Math.abs(speed)>.25){
-   car.a+=steer*1.38*dt*(speed<0?-1:1)*clamp(Math.abs(speed)/9,.17,1);
-  }
+  const car=state.cars[p.car];
+  let {speed,angle}=stepDriving(car.speed||0,car.a,moveAxes(),pressed.handbrake,dt);
+  car.a=angle;
   const nx=car.x+Math.cos(car.a)*speed*dt,ny=car.y+Math.sin(car.a)*speed*dt;
   if(!carBlocked(nx,ny,car.a,p.car)){
    car.x=nx;car.y=ny;state.distance+=Math.abs(speed*dt);
@@ -316,7 +316,7 @@ function tick(dt){
  }else{
   const axis=moveAxes(),dx=axis.x,dy=axis.y;
   if(Math.hypot(dx,dy)>.08){
-   const len=Math.hypot(dx,dy),v=(pressed.run?7.5:5.0)*Math.min(1,len),nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
+   const len=Math.hypot(dx,dy),v=(pressed.run?RUN_SPEED:WALK_SPEED)*Math.min(1,len),nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
    if(validWalk(nx,p.y)&&inside([nx,p.y],toRing(state.map.border)))p.x=nx;
    if(validWalk(p.x,ny)&&inside([p.x,ny],toRing(state.map.border)))p.y=ny;
    p.a=Math.atan2(dy,dx);state.distance+=v*dt;
@@ -331,7 +331,7 @@ function tick(dt){
  }
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
  const movement={inVehicle:p.car>=0,
-  speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?7.5:5):0,
+  speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?RUN_SPEED:WALK_SPEED):0,
   running:pressed.run,moving:!!moving};
  state.zoomTarget=targetCameraZoom(movement,state.zoomBias);
  state.zoom=advanceCameraZoom(state.zoom,state.zoomTarget,dt);
@@ -376,7 +376,7 @@ function updateHud(){
  $('sprint').setAttribute('aria-label',p.car>=0?'Freno a mano':'Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
  const status={inVehicle:p.car>=0,
-  speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?7.5:5):0,
+  speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?RUN_SPEED:WALK_SPEED):0,
   running:pressed.run,moving:!!moving};
  $('camera-mode').textContent=describeCameraZoom(status)+' · '+state.zoom.toFixed(1)+'×';
 }
@@ -388,13 +388,94 @@ function drawPlayer(){
  drawCityPlayer(c,state.player,state.clock,moving);
 }
 function visibleBounds(){
- const x=state.camera.x,y=state.camera.y,pad=90;
+ // Reserve space for sprites and road labels just outside the screen. A large
+ // generic radius needlessly painted pedestrians across several blocks.
+ const x=state.camera.x,y=state.camera.y,pad=18;
  return [x-canvas.clientWidth/(2*state.zoom)-pad,y-canvas.clientHeight/(2*state.zoom)-pad,x+canvas.clientWidth/(2*state.zoom)+pad,y+canvas.clientHeight/(2*state.zoom)+pad];
+}
+function paintStaticScene(ctx,bounds,zoom){
+ const [x0,y0,x1,y1]=bounds,border=state.map.border;
+ ctx.beginPath();ctx.moveTo(border[0],border[1]);
+ for(let i=2;i<border.length;i+=2)ctx.lineTo(border[i],border[i+1]);
+ ctx.closePath();ctx.fillStyle='#988f81';ctx.fill();
+ ctx.lineWidth=10;ctx.strokeStyle='#9e998a';ctx.stroke();
+ if(zoom>=1.05){
+  ctx.save();ctx.beginPath();ctx.moveTo(border[0],border[1]);
+  for(let i=2;i<border.length;i+=2)ctx.lineTo(border[i],border[i+1]);
+  ctx.closePath();ctx.clip();drawTerrain(ctx,bounds,zoom,state.ground);ctx.restore();
+ }
+ const buildings=query(state.buildings,state.buildingGrid,x0,y0,x1,y1);
+ const inferred=query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1);
+ const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
+ drawCityStreets(ctx,roads,zoom);
+ drawCityBuildings(ctx,[...inferred,...buildings],zoom);
+ // Coarse OSM footprints occasionally overlap roads; keep the road above them.
+ drawCityStreets(ctx,roads,zoom);
+ drawCrosswalks(ctx,state.graph,bounds,zoom);
+ drawStreetProps(ctx,query(state.props,state.propsGrid,x0,y0,x1,y1),zoom);
+ drawStorefronts(ctx,query(state.shops,state.shopGrid,x0,y0,x1,y1),zoom);
+}
+function staticTile(tx,ty){
+ const key=tx+','+ty;
+ if(staticTiles.has(key)){
+  const tile=staticTiles.get(key);staticTiles.delete(key);staticTiles.set(key,tile);
+  return tile;
+ }
+ const x=tx*STATIC_TILE,y=ty*STATIC_TILE;
+ const layer=document.createElement('canvas');
+ layer.width=layer.height=STATIC_TILE*TILE_PIXELS;
+ const ctx=layer.getContext('2d',{alpha:true});
+ ctx.imageSmoothingEnabled=false;
+ ctx.setTransform(TILE_PIXELS,0,0,TILE_PIXELS,-x*TILE_PIXELS,-y*TILE_PIXELS);
+ // The canvas clips to the tile; nearby geometry is queried with bleed so
+ // roofs, trees and road strokes crossing a seam remain continuous.
+ paintStaticScene(ctx,[x-TILE_BLEED,y-TILE_BLEED,x+STATIC_TILE+TILE_BLEED,y+STATIC_TILE+TILE_BLEED],3);
+ const tile={canvas:layer,x,y};staticTiles.set(key,tile);
+ return tile;
+}
+function drawStaticTiles(bounds){
+ const mode=getRoadWidthMode();
+ if(mode!==tileRoadMode){staticTiles.clear();tileRoadMode=mode;pendingTile=null;}
+ const [x0,y0,x1,y1]=bounds;
+ const minX=Math.floor(x0/STATIC_TILE),maxX=Math.floor(x1/STATIC_TILE);
+ const minY=Math.floor(y0/STATIC_TILE),maxY=Math.floor(y1/STATIC_TILE);
+ const visible=(maxX-minX+1)*(maxY-minY+1);
+ for(let ty=minY;ty<=maxY;ty++)for(let tx=minX;tx<=maxX;tx++){
+  const tile=staticTile(tx,ty);
+  c.drawImage(tile.canvas,tile.x,tile.y,STATIC_TILE,STATIC_TILE);
+ }
+ // Retain all visible tiles plus a small recent halo. Fixed memory bound on
+ // phones; large desktop windows get enough slots to avoid in-frame eviction.
+ const limit=Math.max(32,Math.min(100,visible+8));
+ while(staticTiles.size>limit)staticTiles.delete(staticTiles.keys().next().value);
+ // Ask the browser to prepare a single tile in the direction of travel during
+ // idle time. A fast car should rarely require its next tile on the hot frame.
+ if(typeof requestIdleCallback==='function'&&!pendingTile){
+  const car=state.player.car>=0?state.cars[state.player.car]:null;
+  const heading=car?.a??state.player.a,dx=Math.cos(heading),dy=Math.sin(heading);
+  const halfW=(x1-x0)/2,halfH=(y1-y0)/2;
+  const edge=Math.min(halfW/Math.max(.001,Math.abs(dx)),halfH/Math.max(.001,Math.abs(dy)));
+  const look=edge+STATIC_TILE*.6;
+  const tx=Math.floor((state.camera.x+dx*look)/STATIC_TILE);
+  const ty=Math.floor((state.camera.y+dy*look)/STATIC_TILE);
+  const key=tx+','+ty;
+  if(!staticTiles.has(key)){
+   pendingTile=key;
+   requestIdleCallback(deadline=>{
+    if(pendingTile!==key)return;
+    pendingTile=null;
+    if(state.ready&&getRoadWidthMode()===tileRoadMode&&deadline.timeRemaining()>4){
+     staticTile(tx,ty);
+     while(staticTiles.size>limit)staticTiles.delete(staticTiles.keys().next().value);
+    }
+   },{timeout:250});
+  }
+ }
 }
 function draw(){
  // Render at a compact palette resolution and let CSS scale nearest-neighbor;
  // the chunky edges read as pixel art and reduce fill/texture work on phones.
- const cw=canvas.clientWidth,ch=canvas.clientHeight,ratio=Math.max(.62,Math.min(window.devicePixelRatio||1,2)*.72);
+ const cw=canvas.clientWidth,ch=canvas.clientHeight,ratio=Math.max(.62,Math.min(window.devicePixelRatio||1,1.5)*.66);
  if(canvas.width!==Math.floor(cw*ratio)||canvas.height!==Math.floor(ch*ratio)){canvas.width=Math.floor(cw*ratio);canvas.height=Math.floor(ch*ratio);}
  c.setTransform(ratio,0,0,ratio,0,0);
  c.imageSmoothingEnabled=false;
@@ -402,28 +483,11 @@ function draw(){
  if(!state.ready)return;
  const p=state.player;
  c.translate(cw/2,ch/2);c.scale(state.zoom,state.zoom);c.translate(-state.camera.x,-state.camera.y);
- const border=state.map.border;
- c.beginPath();c.moveTo(border[0],border[1]);for(let i=2;i<border.length;i+=2)c.lineTo(border[i],border[i+1]);c.closePath();
- c.fillStyle='#988f81';c.fill();c.lineWidth=10;c.strokeStyle='#9e998a';c.stroke();
  const [x0,y0,x1,y1]=visibleBounds();
  const buildings=query(state.buildings,state.buildingGrid,x0,y0,x1,y1);
- const inferred=query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1);
  const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
- if(state.zoom>=1.05){
-  c.save();c.beginPath();c.moveTo(border[0],border[1]);for(let i=2;i<border.length;i+=2)c.lineTo(border[i],border[i+1]);
-  c.closePath();c.clip();drawTerrain(c,[x0,y0,x1,y1],state.zoom,state.ground);c.restore();
- }
- drawCityStreets(c,roads,state.zoom);
- // One global painter order: placeholders and genuine OSM roofs occlude
- // each other by their projected foot depth, not by their source type.
- drawCityBuildings(c,[...inferred,...buildings],state.zoom);
- // Repaint the complete road bed above OSM footprints and their 2.5D walls.
- // Some OSM ways run along/through coarse building polygons; the roads remain
- // intact and visually clear while the source building geometry stays intact.
- drawCityStreets(c,roads,state.zoom);
- drawCrosswalks(c,state.graph,[x0,y0,x1,y1],state.zoom);
- drawStreetProps(c,query(state.props,state.propsGrid,x0,y0,x1,y1),state.zoom);
- drawStorefronts(c,query(state.shops,state.shopGrid,x0,y0,x1,y1),state.zoom);
+ const halfW=cw/(2*state.zoom),halfH=ch/(2*state.zoom);
+ drawStaticTiles([state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH]);
  if(state.zoom>1.75){
   c.font='3.6px monospace';c.fillStyle='#e5d9bc';c.textAlign='center';
   const seen=new Set(),placed=[];
