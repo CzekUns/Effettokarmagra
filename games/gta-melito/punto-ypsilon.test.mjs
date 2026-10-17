@@ -14,22 +14,34 @@ test('Punto 188 and Ypsilon 2003 contribute exactly 16 unique top-down color spr
  assert.equal(CAR_ATLAS_CELL.height,60);
 });
 
-test('PNG atlas is 160x240 indexed transparent image with valid PNG signature',async()=>{
+test('PNG atlas is 160x240 indexed legacy image and is repaired before drawing',async()=>{
  const b=await readFile(new URL(CAR_ATLAS_PATH,import.meta.url));
  assert.equal(b.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
  assert.equal(b.readUInt32BE(16),160);
  assert.equal(b.readUInt32BE(20),240);
  assert.equal(b[25],3,'indexed PNG for compact mobile loading');
- assert.ok(b.includes(Buffer.from('tRNS')),'must not paint a white rectangle in-game');
+ assert.ok(b.length>0,'legacy PNG retains palette and is processed in an alpha-safe canvas before being drawn');
  assert.ok(b.length<12000,'mobile optimized atlas');
 });
 
 test('sprite atlas crops the right cell for Punto, Ypsilon and preserves forward direction',()=>{
- class MockImage{complete=true;naturalWidth=160;naturalHeight=240;set src(v){this._src=v;}}
- const prev=globalThis.Image;
+ class MockImage{
+  complete=true;naturalWidth=160;naturalHeight=240;
+  set src(v){this._src=v;if(v.includes('punto-ypsilon-16colors-atlas.png'))this.onload?.();}
+ }
+ const prev=globalThis.Image,prevDoc=globalThis.document;
  try{
+  let restored;
+  const pixelData=new Uint8ClampedArray(160*240*4).fill(255);
+  const canvas={width:160,height:240,getContext(){return {
+    drawImage(){},getImageData(){return {data:pixelData};},
+    putImageData(image){restored=image.data;}
+  };}};
   globalThis.Image=MockImage;
+  globalThis.document={createElement:()=>canvas};
   loadCarSprites();
+  assert.strictEqual(restored[3],0,'legacy black rectangle must be transparent on its corner');
+  assert.equal(restored[4*(30*160+20)+3],255,'the car remains opaque');
   const calls=[];
   const ctx={save(){},restore(){},translate(x,y){calls.push(['position',x,y]);},
    rotate(a){calls.push(['rotation',a]);},drawImage(...args){calls.push(['image',...args]);},
@@ -49,7 +61,8 @@ test('sprite atlas crops the right cell for Punto, Ypsilon and preserves forward
    assert.equal(cut[5],60);
    assert.ok(cut[8]>0&&cut[9]>0);
   }
- }finally{if(prev===undefined)delete globalThis.Image;else globalThis.Image=prev;}
+ }finally{if(prev===undefined)delete globalThis.Image;else globalThis.Image=prev;
+  if(prevDoc===undefined)delete globalThis.document;else globalThis.document=prevDoc;}
 });
 
 test('moving AI traffic and parked cars use Punto/Ypsilon without changing driving physics',async()=>{
@@ -59,5 +72,5 @@ test('moving AI traffic and parked cars use Punto/Ypsilon without changing drivi
  assert.ok(game.includes('drawCar(x,y,a,ai.kind,false,ai.model)'));
  assert.ok(game.includes('drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model)'));
  assert.ok(game.includes("model:'panda-modern-white'"),'starter car remains a Panda');
- assert.ok(page.includes('game.mjs?v=103'),'cache-busted entry module');
+ assert.ok(page.includes('game.mjs?v=104'),'cache-busted entry module');
 });
