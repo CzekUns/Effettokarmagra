@@ -196,3 +196,13 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 **Test e deploy:** da completare nel rilascio successivo. Cache renderer `visuals.mjs?v=045`, camera `v=061`, pagina `v087`.
 
 **Aree successive:** servono ulteriori asset originali per facciate e tetti, e una coppia di screenshot acquisita alla stessa inquadratura su desktop e smartphone landscape.
+
+### Sessione 2026-10-17 — Restyling esteso e verifica della build 091
+
+**Modifiche già pubblicate:** i commit `eabc222`, `92b1c05`, `907bf65` e `d16ec3f` hanno introdotto facciate più alte e dettagliate, tetti di cotto con tegole e volumi tecnici, materiali stradali e pavimentazione pixel, alberi e arredo più leggibili, indicatori di missione ridotti e riempimento dei vuoti urbani tramite sagome sintetiche. L'ultimo cache `urban-infill.json` contiene **612** placeholder (prima 505). Le 2.056 impronte OSM e la rete delle 614 strade non sono state sostituite.
+
+**Verifica della pagina pubblicata:** `?v=091` aperta in Chrome desktop a Via Roma. La schermata mostra facciate e tetti volumetrici, ombre, chiome, dettagli sulle pareti e asfalto a contrasto; il cambiamento rispetto alle schermate grigie precedenti è netto. La scena conserva tuttavia superfici pavimentate ampie e la disposizione dei fabbricati non coincide esattamente con il mockup approvato. Ingresso in auto, mappa completa, zoom a piedi 6× e arretramento della camera in auto osservati nella build pubblica. Non attribuire agli edifici sintetici accuratezza catastale o fotografica.
+
+**Validazione:** suite locale con Node 24.19.0: **63/63** test superati, inclusi distanza delle sagome sintetiche dalla carreggiata e punti missione. GitHub Actions Node 22 run [#84](https://github.com/CzekUns/Effettokarmagra/actions/runs/39015074118) e Pages [run](https://github.com/CzekUns/Effettokarmagra/actions/runs/39015073580): entrambi completati con successo sul commit `d16ec3f`. La pagina pubblica riporta 2.056 OSM, 612 placeholder, 614 strade e 73 incroci.
+
+**Limite della prova visiva:** la verifica diretta finale è desktop. Le immagini locali in `qa/2026-10-17/` risalgono a una fase anteriore del restyling e non vanno presentate come schermate finali della build 091. Mancano due catture sincronizzate della build attuale, un test in viewport mobile landscape e una prova su telefono fisico. La chiesa di Santa Maria delle Grazie resta l'unico edificio con riscontro fotografico registrato.
