@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {generateTownStyles,TOWN_SCAN_RADII} from './town-generator.mjs';
-import {prepareCityStyles} from '../city-art.mjs';
+import {applyApprovedArcadeRoofStyle,prepareCityStyles} from '../city-art.mjs';
 import {applySurveyDrafts} from './visual-profiles.mjs';
 
 const read=async p=>JSON.parse(await readFile(new URL(p,import.meta.url),'utf8'));
@@ -48,6 +48,20 @@ test('each OSM ID has its own classified textures and an explicit confidence lab
  assert.ok(categories.size>=5,'variety in architectural classes');
  assert.ok(usedFacades.size>=12);
  assert.ok(usedRoofs.size>=8);
+});
+test('approved arcade style creates warm roofs on unverified drafts without inventing photo evidence',()=>{
+ const all=map.buildings.map(b=>({...b,p:b.p.slice()}));
+ prepareCityStyles(all,map.pois);
+ applySurveyDrafts(all,[older,town,church]);
+ const before=all.map(b=>b.p.slice());
+ const count=applyApprovedArcadeRoofStyle(all);
+ const clay=all.filter(b=>b.art.surveyFeatures?.roofKind==='pitched-clay');
+ const verified=all.find(b=>b.id===733703815);
+ assert.ok(count>=500,'the town should read as a compact terracotta-roofed arcade');
+ assert.ok(clay.length>=count-2);
+ assert.ok(clay.every(b=>b.art.surveyStatus==='osm-draft'&&/^#[bcd]/i.test(b.art.roofTint)));
+ assert.equal(verified.art.surveyStatus,'photo-verified');
+ assert.deepEqual(all.map(b=>b.p),before,'roof art must not alter OSM footprints');
 });
 test('radial sweep from Piazza Santo Stefano reaches every mapped building without gaps',()=>{
  assert.equal(TOWN_SCAN_RADII[0],190);
