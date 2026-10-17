@@ -49,8 +49,8 @@ test('starter vehicle uses the new Panda asset but all traffic retains collision
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
  assert.match(game,/model:'panda-modern-white'/);
- assert.match(game,/model:k%8===1\?'panda-fire-red':null/);
+ assert.match(game,/model:k%8===1\?'panda-fire-red'/);
  assert.match(game,/if\(!drawCarSprite\(c,x,y,a,model,drive\)\)drawCityCar/);
  assert.match(game,/drawCar\(v\.x,v\.y,v\.a,v\.type,i===p\.car,v\.model\)/);
- assert.ok(html.includes('game.mjs?v=102'));
+ assert.ok(html.includes('game.mjs?v=103'));
 });

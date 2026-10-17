@@ -266,3 +266,7 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 **Modifica:** la strada completa si disegna sotto gli edifici; sopra di essi si ripassa soltanto la superficie della corsia per rimuovere le proiezioni che arrivano sull'asfalto. Il marciapiede rimane visibile dove non è occupato dall'edificio e le facciate non vengono tagliate dalla sua seconda passata. Ai tetti spioventi si applica una velatura della tinta preesistente sopra la texture unica, senza creare texture nuove per palazzo. Sagome OSM, collisioni, larghezza percorribile e classificazioni restano identiche. Cache pagina `v102` (la `v101` include i nuovi sprite delle auto).
 
 **Verifica:** suite locale Node 84/84, sintassi e diff superati. Da completare confronto della pagina pubblicata in desktop e viewport mobile; nessuna misura FPS o prova su telefono fisico. La chiesa Santa Maria delle Grazie rimane l'unico edificio con riscontro fotografico registrato.
+
+### Sessione 2026-10-17 — Fiat Punto 188 e Lancia Ypsilon 2003
+
+**Implementato:** due schede top-down su sfondo bianco e 16 PNG individuali ritagliati nella cartella di consegna del progetto; atlante PNG palettizzato trasparente 4×4 da 160×240 caricato nella repository, `car-sprites.mjs` esteso alle 16 varianti senza toccare la Panda iniziale. Traffico AI e alcune auto parcheggiate usano anche Punto e Ypsilon, con fallback grafico e hitbox invariate. Colori illustrativi plausibili, **non attestati uno per uno come tinte di fabbrica**. Test e deploy da verificare sul commit pertinente.
