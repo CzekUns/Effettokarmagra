@@ -55,6 +55,7 @@ test('mobile controls prevent selection but retain accessibility and mission UI'
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  for(const prop of ['user-select:none','-webkit-user-select:none','-webkit-touch-callout:none','touch-action:none'])
   assert.ok(html.includes(prop),prop);
+ assert.ok(html.includes('image-rendering:pixelated'),'world canvas should retain crisp low-resolution pixels');
  assert.match(html,/mission-panel-toggle.*aria-expanded="false"/);
  assert.match(html,/id="mission-panel" hidden/);
  assert.match(html,/button:focus-visible/);

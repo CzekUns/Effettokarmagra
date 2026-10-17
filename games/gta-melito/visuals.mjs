@@ -28,7 +28,8 @@ export function buildStreetProps(roads){
   for(let d=14+seed%19,idx=0;d<len-9;d+=stride,idx++){
    const point=sampleRoad(road.p,d);if(!point)continue;
    const kind=(hash(seed+idx*333)%15),side=(idx+seed)%2?1:-1;
-   const margin=visualRoadWidth(road)/2+3.5;
+   // Keep the whole largest prop silhouette outside the asphalt/curb strip.
+   const margin=visualRoadWidth(road)/2+5.2;
    const x=point.x-Math.sin(point.a)*margin*side,y=point.y+Math.cos(point.a)*margin*side;
    props.push({x,y,a:point.a,kind,side,p:[x-3,y-3,x+3,y+3],roadId:road.id});
   }

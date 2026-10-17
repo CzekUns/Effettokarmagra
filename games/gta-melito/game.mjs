@@ -10,7 +10,7 @@ import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=043';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=043';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs';
-import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=080';
+import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=081';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=080';
@@ -258,14 +258,17 @@ function toggleVehicle(){
  updateHud();
 }
 function carBlocked(x,y,a,which){
- // Test the car's front and corners, not only its centre.
+ // The OSM centreline is authoritative for driving. A building whose mapped
+ // footprint clips that corridor is visually masked by the road painter and
+ // cannot trap a car inside the drivable surface.
  const dirx=Math.cos(a),diry=Math.sin(a);
  for(const forward of [-2.6,0,3.4])for(const side of [-1.7,1.7]){
   const px=x+dirx*forward-diry*side,py=y+diry*forward+dirx*side;
-  if(buildingAt(px,py)||!inside([px,py],toRing(state.map.border)))return true;
+  if(!inside([px,py],toRing(state.map.border)))return true;
+  const road=nearest(px,py,25,state.roads,true);
+  const onAsphalt=road&&road.distance<=Math.max(0,visualRoadWidth(road.road)/2-.55);
+  if(!onAsphalt)return true;
  }
- const road=nearest(x,y,30,state.roads,true);
- if(!road||road.distance>visualRoadWidth(road.road)/2-1.2)return true;
  for(let i=0;i<state.cars.length;i++){
   if(i===which)continue;
   const b=state.cars[i];
@@ -387,9 +390,12 @@ function visibleBounds(){
  return [x-canvas.clientWidth/(2*state.zoom)-pad,y-canvas.clientHeight/(2*state.zoom)-pad,x+canvas.clientWidth/(2*state.zoom)+pad,y+canvas.clientHeight/(2*state.zoom)+pad];
 }
 function draw(){
- const cw=canvas.clientWidth,ch=canvas.clientHeight,ratio=Math.min(window.devicePixelRatio||1,2);
+ // Render at a compact palette resolution and let CSS scale nearest-neighbor;
+ // the chunky edges read as pixel art and reduce fill/texture work on phones.
+ const cw=canvas.clientWidth,ch=canvas.clientHeight,ratio=Math.max(.62,Math.min(window.devicePixelRatio||1,2)*.72);
  if(canvas.width!==Math.floor(cw*ratio)||canvas.height!==Math.floor(ch*ratio)){canvas.width=Math.floor(cw*ratio);canvas.height=Math.floor(ch*ratio);}
  c.setTransform(ratio,0,0,ratio,0,0);
+ c.imageSmoothingEnabled=false;
  c.fillStyle='#15221e';c.fillRect(0,0,cw,ch);
  if(!state.ready)return;
  const p=state.player;
@@ -406,10 +412,14 @@ function draw(){
   c.closePath();c.clip();drawTerrain(c,[x0,y0,x1,y1],state.zoom,state.ground);c.restore();
  }
  drawCityStreets(c,roads,state.zoom);
- drawCrosswalks(c,state.graph,[x0,y0,x1,y1],state.zoom);
  // One global painter order: placeholders and genuine OSM roofs occlude
  // each other by their projected foot depth, not by their source type.
  drawCityBuildings(c,[...inferred,...buildings],state.zoom);
+ // Repaint the complete road bed above OSM footprints and their 2.5D walls.
+ // Some OSM ways run along/through coarse building polygons; the roads remain
+ // intact and visually clear while the source building geometry stays intact.
+ drawCityStreets(c,roads,state.zoom);
+ drawCrosswalks(c,state.graph,[x0,y0,x1,y1],state.zoom);
  drawStreetProps(c,query(state.props,state.propsGrid,x0,y0,x1,y1),state.zoom);
  drawStorefronts(c,query(state.shops,state.shopGrid,x0,y0,x1,y1),state.zoom);
  if(state.zoom>1.75){

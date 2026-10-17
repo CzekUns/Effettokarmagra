@@ -432,10 +432,16 @@ function drawRaisedWalls(c,b,v,zoom){
      c.fillStyle=shutter;c.fillRect(wx-w*.5-1.1,wy-hh*.58,.55,hh*1.15);
      c.fillRect(wx+w*.5+.55,wy-hh*.58,.55,hh*1.15);
     }
-    if(a.surveyFeatures?.balconies&&isTall&&floor>0&&col%3===1){
+    if((a.surveyFeatures?.balconies||a.type==='apartment')&&isTall&&floor>0&&col%3===1&&windowSeed%3!==1){
      c.fillStyle='#454b45';c.fillRect(wx-1.7,wy+hh*.65,3.4,.45);
      c.strokeStyle='#66706d';c.lineWidth=.28;
      c.strokeRect(wx-1.7,wy+hh*.22,3.4,1.05);
+    }
+    if(a.type==='apartment'&&floor>0&&col%3===0&&windowSeed%2===0){
+     // Small external AC housings: a stable urban detail, deliberately not
+     // assigned to any one photo-unverified building as a factual feature.
+     c.fillStyle='#2d3835';c.fillRect(wx-1.15,wy+hh*.55,2.3,.85);
+     c.fillStyle='#b7b3a3';c.fillRect(wx-.9,wy+hh*.64,1.8,.22);
     }
    }
   }
