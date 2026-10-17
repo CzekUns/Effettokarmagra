@@ -52,7 +52,10 @@ function query(items,grid,x0,y0,x1,y1){
  for(let gx=Math.floor(x0/CELL);gx<=Math.floor(x1/CELL);gx++)
   for(let gy=Math.floor(y0/CELL);gy<=Math.floor(y1/CELL);gy++)
    for(const i of grid.get(gx+','+gy)||[])out.add(i);
- return [...out].map(i=>items[i]);
+ return [...out].map(i=>items[i]).filter(item=>{
+  const b=item.bounds;
+  return b&&b[0]<=x1&&b[2]>=x0&&b[1]<=y1&&b[3]>=y0;
+ });
 }
 function nearest(x,y,max=24,roads=state.roads,driveOnly=false){
  let best=null,dd=max*max;
@@ -390,7 +393,9 @@ function drawPlayer(){
  drawCityPlayer(c,state.player,state.clock,moving);
 }
 function visibleBounds(){
- const x=state.camera.x,y=state.camera.y,pad=90;
+ // Reserve space for sprites and road labels just outside the screen. A large
+ // generic radius needlessly painted pedestrians across several blocks.
+ const x=state.camera.x,y=state.camera.y,pad=18;
  return [x-canvas.clientWidth/(2*state.zoom)-pad,y-canvas.clientHeight/(2*state.zoom)-pad,x+canvas.clientWidth/(2*state.zoom)+pad,y+canvas.clientHeight/(2*state.zoom)+pad];
 }
 function paintStaticScene(ctx,bounds,zoom){
@@ -426,7 +431,11 @@ function getStaticScene(cw,ch,ratio){
     top>=staticScene.y0+12&&bottom<=staticScene.y1-12)return staticScene;
  // An overscanned world canvas amortizes the expensive tiled roofs and walls
  // across many frames. Traffic, pedestrians, player and mission markers stay live.
- const worldW=viewW*1.7+48,worldH=viewH*1.7+48;
+ // At walking zoom the old 1.7x cache rendered nearly three viewports of
+ // detailed roofs. Keep a smaller margin there; cars need longer lookahead
+ // because they traverse the map much faster.
+ const walking=zoom>=4.5,factor=walking?1.35:1.7,margin=walking?32:48;
+ const worldW=viewW*factor+margin,worldH=viewH*factor+margin;
  const x0=state.camera.x-worldW/2,y0=state.camera.y-worldH/2;
  const layer=document.createElement('canvas');
  layer.width=Math.ceil(worldW*zoom*ratio);layer.height=Math.ceil(worldH*zoom*ratio);
