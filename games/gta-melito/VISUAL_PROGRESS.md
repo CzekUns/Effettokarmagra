@@ -167,6 +167,20 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 
 **Tour auto, strada per strada:** controllo automatico sulla rete OSM completa, usando i sei punti della sagoma dell’auto a intervalli di 6 unità lungo ogni way percorribile: 546 ways, 545 ID unici e 11.433 campioni. Ha trovato 86 coppie way/edificio OSM con sovrapposizione ai punti di collisione; tutte le 394 interferenze campionate ricadono sulla superficie stradale e vengono risolte dalla precedenza della carreggiata, con 0 punti irrisolti. Nessuno dei 505 placeholder è tra gli ingombri. Il tour non modifica le geometrie OSM e non equivale a un rilievo fotografico o a un giro su strada fisico.
 
-**Confronto visivo:** confronto browser desktop `v082` → `v083` a Via Roma, stesso avvio a piedi 5×: i bordi sono più netti/pixelati e il fondo stradale ora passa sopra le sagome che invadevano il margine. Su `v083` ho anche verificato ingresso in auto e accelerazione: HUD passato da AUTO ferma 0 a 12 km/h e camera adattiva 3,3×. L’ultimo filtro dei props è servito come `v084`; controllo il risultato dopo il deploy. Nessuna verifica su telefono fisico.
+**Confronto visivo:** screenshot browser desktop `v082` → `v084` a Via Roma, identico avvio a piedi 5×: pixel più netti, asfalto ridipinto sopra le sagome interferenti e meno props vicino agli incroci. Sulla build finale ho verificato ingresso in auto, accelerazione (HUD 12 km/h) e variazione dello zoom adattivo. Nessuna verifica su telefono fisico.
 
-**Test e deploy:** Node locale 24.19.0: sintassi modulo, suite 61/61 e `git diff --check` superati. CI Node 22 e Pages da verificare sul commit della tranche.
+**Test e deploy:** Node locale 24.19.0: `node --check games/gta-melito/game.mjs`, suite 61/61 e `git diff --check` superati. GitHub Actions Node 22 e Pages sul commit `0e37134` completati con esito positivo. Aperta `?v=084`: cartografia caricata con 614 strade, 2.056 edifici OSM e 505 placeholder.
+
+### Sessione 2026-10-17 — Direzione approvata: arcade mediterraneo compatto
+
+**Riferimento approvato:** immagine fornita dall’utente il 17 ottobre 2026. Usata come guida di direzione artistica soltanto; non è stata inserita nel gioco né copiata come texture.
+
+**Fatto nel codice:** in `city-art.mjs` scurita la gerarchia stradale verso il grafite, scaldata la pavimentazione urbana e resa più satura la palette dei tetti storici in terracotta. Le falde ricevono corsi di tegole sfalsati, con luci e ombre ad alto contrasto; l’ombra di contatto e il bordo superiore delle facciate hanno una separazione più netta. Le geometrie OSM, le altezze/volumi, le collisioni, gli infill e il traffico restano invariati. Cache del renderer aggiornata a `city-art.mjs?v=082` e gioco a `v085`.
+
+**Confronto visuale:** osservata la build pubblica `v084` su Chrome desktop e analizzata la reference approvata; la nuova passata traduce palette e texture nel renderer Canvas. Non è stato possibile acquisire dalla stessa postazione una coppia di screenshot `v084`/`v085` sincronizzati sulla medesima camera dopo il push in questa tranche. Il controllo su browser conferma il caricamento della scena precedente; la cattura del dopo e il telefono fisico restano da verificare.
+
+**Edifici documentati:** nessuna nuova facciata. La reference è un mockup artistico, non una fonte fotografica del Municipio o delle abitazioni. Colori e tegole restano una stilizzazione; Santa Maria delle Grazie (way `733703815`) resta l’unico edificio con corrispondenza fotografica già registrata.
+
+**Test e deploy:** Node locale 24.19.0: `node --check` per `city-art.mjs` e `game.mjs`; suite GTA Melito completa: 61/61; `git diff --check` superato. Esito GitHub Actions e Pages da verificare dopo la pubblicazione.
+
+**Aree successive:** controllare `v085` in browser alla stessa inquadratura, poi catturare Piazza Santo Stefano, Via Roma e Municipio su desktop e viewport mobile; affinare eventualmente la massa dei tetti senza cambiare le impronte e distinguendo i dettagli stimati da quelli verificati.

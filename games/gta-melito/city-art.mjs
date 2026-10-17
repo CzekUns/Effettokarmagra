@@ -9,13 +9,13 @@ import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-v
  * are original artistic interpretations: they do not claim photographic fidelity.
  */
 const PI=Math.PI,TAU=2*PI;
-const asphalt={motorway:'#303836',trunk:'#363d3b',primary:'#39403e',secondary:'#404643',
- tertiary:'#474b46',residential:'#4b4e48',unclassified:'#50524c',service:'#59574e',
- living_street:'#625d50',footway:'#a99d87',pedestrian:'#b4a68e',path:'#9b8c72',
- steps:'#9a8c79',track:'#777864'};
+const asphalt={motorway:'#292f31',trunk:'#303638',primary:'#333a3b',secondary:'#38403f',
+ tertiary:'#3c4341',residential:'#3d4442',unclassified:'#414846',service:'#4a4a43',
+ living_street:'#514e45',footway:'#b5a68d',pedestrian:'#c2b193',path:'#a79679',
+ steps:'#a6957e',track:'#747565'};
 // Warm, high-contrast rooftops and cool shadow faces evoke GTA2's readable
 // arcade blocks while retaining an original Campanian palette.
-const oldtown=['#a95f4d','#b97959','#bc8d66','#c39b73','#a97559','#c0805d'];
+const oldtown=['#c65e3f','#ce7047','#bb6344','#d17a4a','#b85b3c','#c66a43'];
 const flat=['#a6a093','#a69a87','#b2a18b','#99978a','#b5a58e','#8d9189'];
 const metal=['#7f938e','#73847f','#969a8d'];
 const h=n=>{let x=(Number(n)||1)|0;x=Math.imul(x^x>>>16,2246822519);x=Math.imul(x^x>>>13,3266489917);return (x^x>>>16)>>>0};
@@ -99,10 +99,10 @@ export function drawTerrain(c,bb,zoom,ground=null){
   // Rare green patches are illustrative; actual park boundaries are not known.
   const urban=weight>=2;
   c.fillStyle=urban?
-   ['#8a8479','#918a7e','#888379','#968d7d'][seed%4]:
-   weight>0?['#8a867b','#91897a','#827e73'][seed%3]:
+   ['#9a8b76','#a09179','#958671','#a4947b'][seed%4]:
+   weight>0?['#968a77','#9b8c76','#8b816f'][seed%3]:
    seed%23===0?'#79856e':
-   ['#8e887b','#898274','#948c7d','#878274'][seed%4];
+   ['#948a79','#908471','#9a907e','#8c8373'][seed%4];
   c.fillRect(x,y,cell+.2,cell+.2);
   if(zoom<1.15)continue;
   for(let j=0;j<4;j++){
@@ -178,17 +178,27 @@ function slopedRoof(c,b,art,tone){
  const mode=w>bh?'horizontal':'vertical';
  c.save();poly(c,b.p);c.clip();
  c.fillStyle=tone;c.fillRect(x0,y0,w,bh);
- c.strokeStyle='#59483b99';c.lineWidth=.55;
+  c.strokeStyle='#693a2cbd';c.lineWidth=.58;
  if(mode==='horizontal'){
   c.beginPath();c.moveTo(x0,cy);c.lineTo(x1,cy);c.stroke();
-  c.strokeStyle='#dfc29b8e';c.beginPath();c.moveTo(x0+1,cy+1.1);c.lineTo(x1-1,cy+1.1);c.stroke();
-  c.strokeStyle='#73594760';c.lineWidth=.25;
+  c.strokeStyle='#ffd19a9c';c.beginPath();c.moveTo(x0+1,cy+1.1);c.lineTo(x1-1,cy+1.1);c.stroke();
+  c.strokeStyle='#713c2ca0';c.lineWidth=.3;
   for(let x=x0+2;x<x1;x+=3.4){c.beginPath();c.moveTo(x,y0);c.lineTo(x,cy);c.moveTo(x+1.7,cy);c.lineTo(x+1.7,y1);c.stroke();}
+  // Broken, alternating tile courses read as hand placed terracotta at game
+  // zoom without turning the roof into a noisy photo texture.
+  c.strokeStyle='#f1b27a79';c.lineWidth=.27;
+  for(let y=y0+2.6;y<y1;y+=3.4){
+   c.beginPath();c.moveTo(x0+1,y);c.lineTo(cx-.8,y);c.moveTo(cx+1,y+.8);c.lineTo(x1-1,y+.8);c.stroke();
+  }
  }else{
   c.beginPath();c.moveTo(cx,y0);c.lineTo(cx,y1);c.stroke();
-  c.strokeStyle='#d7bda18e';c.beginPath();c.moveTo(cx+1,y0);c.lineTo(cx+1,y1);c.stroke();
-  c.strokeStyle='#70584570';c.lineWidth=.25;
+  c.strokeStyle='#ffd19a9c';c.beginPath();c.moveTo(cx+1,y0);c.lineTo(cx+1,y1);c.stroke();
+  c.strokeStyle='#713c2ca0';c.lineWidth=.3;
   for(let y=y0+2;y<y1;y+=3.4){c.beginPath();c.moveTo(x0,y);c.lineTo(cx,y);c.moveTo(cx,y+1.7);c.lineTo(x1,y+1.7);c.stroke();}
+  c.strokeStyle='#f1b27a79';c.lineWidth=.27;
+  for(let x=x0+2.6;x<x1;x+=3.4){
+   c.beginPath();c.moveTo(x,y0+1);c.lineTo(x,cy-.8);c.moveTo(x+.8,cy+1);c.lineTo(x+.8,y1-1);c.stroke();
+  }
  }
  if(seed%3===0&&w>12&&bh>12){
   c.fillStyle='#b0b6a9';c.fillRect(cx-2,cy-2,3.3,2.6);
@@ -376,8 +386,8 @@ function drawRaisedWalls(c,b,v,zoom){
   (a.type==='historic'?'#d0b99c':a.type==='industrial'?'#9da9a6':a.type==='market'?'#b7b5a7':a.type==='church'?'#ded0b6':a.type==='civic'?'#c9b39b':'#c0b19e');
  // Paint a directional contact shadow inside the roof. This gives the block
  // the crisp top-down depth of an arcade city without expanding its footprint.
- c.save();poly(c,p);c.clip();c.translate(Math.min(v.dx,3),Math.min(v.dy,3));
- poly(c,p);c.fillStyle='#17211e38';c.fill();c.restore();
+  c.save();poly(c,p);c.clip();c.translate(Math.min(v.dx,3),Math.min(v.dy,3));
+  poly(c,p);c.fillStyle='#17211e55';c.fill();c.restore();
  for(let j=2;j<p.length;j+=2){
   const edgeX=p[j]-p[j-2],edgeY=p[j+1]-p[j-1];
   const len=Math.hypot(edgeX,edgeY);
@@ -388,7 +398,7 @@ function drawRaisedWalls(c,b,v,zoom){
   c.lineTo(f.x3,f.y3);c.lineTo(f.x4,f.y4);c.closePath();
   c.fillStyle=shiftColor(wall,south?-38:-58);c.fill();
   // A crisp light lip separates the upper wall from its shaded face.
-  c.lineWidth=.72;c.strokeStyle=shiftColor(wall,34);
+  c.lineWidth=.82;c.strokeStyle=shiftColor(wall,38);
   c.beginPath();c.moveTo(f.x1,f.y1);c.lineTo(f.x2,f.y2);c.stroke();
   // The wall-top lip, ground sill and vertically expressed front corners
   // visually join the facades to the roof and projected ground footprint.
