@@ -270,3 +270,7 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 ### Sessione 2026-10-17 — Fiat Punto 188 e Lancia Ypsilon 2003
 
 **Implementato:** due schede top-down su sfondo bianco e 16 PNG individuali ritagliati nella cartella di consegna del progetto; atlante PNG palettizzato trasparente 4×4 da 160×240 caricato nella repository, `car-sprites.mjs` esteso alle 16 varianti senza toccare la Panda iniziale. Traffico AI e alcune auto parcheggiate usano anche Punto e Ypsilon, con fallback grafico e hitbox invariate. Colori illustrativi plausibili, **non attestati uno per uno come tinte di fabbrica**. Test e deploy da verificare sul commit pertinente.
+
+### Sessione 2026-10-17 — Fix trasparenza Punto 188 / Ypsilon
+
+**Segnalazione:** rettangolo nero evidente intorno alle nuove auto. **Diagnosi:** atlante PNG legacy con sfondo scuro opaco. **Intervento implementato nel client (v104):** maschera pixel derivata dalle silhouette dei crop originali, applicata una sola volta all'atlante in Canvas 160×240 in caricamento, con alpha esterno azzerato. Solo l'atlante riparato è disegnato nel gioco; fallback Canvas se il ripristino non riesce; Panda inalterate. **Limite:** il PNG originale repository rimane opaco e va sostituito in futuro con un atlante RGBA corretto anche come file statico. Verifica dei test e deploy da riportare dopo GitHub Actions; controllo visuale Android ancora necessario.

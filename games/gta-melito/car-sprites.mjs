@@ -2,6 +2,7 @@
  * Punto 188 and Ypsilon 2003: 16 cropped cars, 4x4 PNG atlas, 40x60/cell.
  * Body colors are illustrative, not all factory paint codes verified.
  */
+import {restoreVehicleAtlasTransparency} from './vehicle-alpha.mjs?v=104';
 export const CAR_SPRITES=Object.freeze({
  'panda-modern-white':'./assets/vehicles/panda-modern-white.png',
  'panda-fire-red':'./assets/vehicles/panda-fire-red.png',
@@ -22,8 +23,22 @@ export function loadCarSprites(){
  attempted=true;
  for(const [model,path] of Object.entries({...CAR_SPRITES,'@punto-ypsilon-atlas':CAR_ATLAS_PATH})){
   const img=new Image();
-  cache.set(model,img);
+  const isAtlas=model==='@punto-ypsilon-atlas';
+  // Never allow the old opaque atlas into drawImage: it contained an entire
+  // dark rectangle around EVERY Punto/Ypsilon. Only the alpha-repaired
+  // offscreen canvas is promoted into the sprite cache.
+  if(!isAtlas)cache.set(model,img);
   img.onerror=()=>console.warn('Optional GTA Melito vehicle PNG unavailable:',model);
+  if(isAtlas)img.onload=()=>{
+   try{
+    const restored=restoreVehicleAtlasTransparency(img,(w,h)=>{
+     if(typeof document==='undefined')return null;
+     const cvs=document.createElement('canvas');cvs.width=w;cvs.height=h;return cvs;
+    });
+    if(restored)cache.set(model,restored);
+    else console.warn('Vehicle atlas alpha could not be restored; using procedural car fallback');
+   }catch(error){console.warn('Vehicle atlas alpha repair failed; using procedural car fallback:',error);}
+  };
   img.src=new URL(path,import.meta.url).href;
  }
 }
@@ -33,13 +48,14 @@ function loadedImage(model){
 }
 export function carSpriteReady(model){
  const img=loadedImage(model);
+ if(CAR_ATLAS_VARIANTS[model])return !!(img?.width===160&&img?.height===240);
  return !!(img?.complete&&img.naturalWidth>0&&img.naturalHeight>0);
 }
 export function drawCarSprite(ctx,x,y,angle,model,focused=false){
  if(!model)return false;
  if(!attempted)loadCarSprites();
  const img=loadedImage(model);
- if(!img?.complete||!img.naturalWidth||!img.naturalHeight)return false;
+ if(!carSpriteReady(model))return false;
  const variant=CAR_ATLAS_VARIANTS[model];
  const modern=model==='panda-modern-white';
  const width=variant?(variant.model==='punto-188'?5.45:5.25):(modern?5.5:5.1);

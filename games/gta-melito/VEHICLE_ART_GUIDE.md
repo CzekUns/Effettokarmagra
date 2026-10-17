@@ -48,3 +48,7 @@ Le liste rappresentano **ipotesi di varietà stradale plausibile**, non statisti
 ## Criterio di accettazione
 
 Per ogni modello consegna: sheet bianco con sole viste top-down e colori, PNG singoli trasparenti/centrati, scheda modello-generazione-anni-colori con fonti, anteprima in-game, integrazione e test. **Prima qualità e coerenza, poi quantità.**
+
+## Bug da non ripetere — trasparenza dell'atlante
+
+Il primo atlante Punto/Ypsilon caricato aveva un rettangolo scuro opaco sullo sfondo. **La sola presenza di un chunk PNG `tRNS` non prova la trasparenza corretta**: bisogna verificare realmente che ciascuno dei 16 angoli di ogni cella dell'atlante abbia **alpha=0** e che un pixel al centro dell'auto abbia alpha>0. Provare il rendering su asfalto e su fondo chiaro. Finché il file non è stato rigenerato, il client usa `vehicle-alpha.mjs` per recuperare il contorno RGBA e non mostra mai l'atlante originale opaco.

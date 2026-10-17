@@ -12,7 +12,7 @@ import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetP
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
 import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=102';
-import {loadCarSprites,drawCarSprite,CAR_ATLAS_VARIANT_IDS} from './car-sprites.mjs?v=103';
+import {loadCarSprites,drawCarSprite,CAR_ATLAS_VARIANT_IDS} from './car-sprites.mjs?v=104';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=091';
