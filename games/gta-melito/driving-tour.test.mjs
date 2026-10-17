@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {auditDrivingTour,DRIVE_ROAD_TYPES,withinDriveSurface,nearestDrivableRoad} from './road-clearance.mjs';
+import {auditDrivingTour,DRIVE_ROAD_TYPES,withinDriveSurface,nearestDrivableRoad,canDriveProbe} from './road-clearance.mjs';
 import {buildStreetProps} from './visuals.mjs';
 import {visualRoadWidth} from './road-widths.mjs';
 
@@ -31,7 +31,7 @@ test('car road clearance fits narrow roads and the render mask is above building
  const buildings=game.indexOf('drawCityBuildings(ctx,[...inferred,...buildings],zoom)');
  const overlay=game.indexOf('drawCityStreets(ctx,roads,zoom)',underlay+1);
  assert.ok(underlay<buildings&&buildings<overlay,'street mask must paint over buildings that bleed into lanes');
- assert.match(game,/onAsphalt=road&&road\.distance<=/);
+ assert.match(game,/canDriveProbe\(road\.distance,width/);
  const visuals=await readFile(new URL('./visuals.mjs',import.meta.url),'utf8');
  assert.match(visuals,/visualRoadWidth\(road\)\/2\+9\.2/,'larger tree crowns need clearance beyond the curb');
  const props=buildStreetProps(map.roads);
@@ -42,4 +42,12 @@ test('car road clearance fits narrow roads and the render mask is above building
    'street prop '+prop.roadId+' overlaps a drivable road');
  }
  assert.ok(game.includes("visuals.mjs?v=090"),'street prop change must bypass the browser cache');
+});
+
+test('car may cross the painted sidewalk but not drive through a building or beyond its edge',()=>{
+ const width=15.4;
+ assert.equal(canDriveProbe(6,width,true),true,'mapped building overlap on asphalt is cleared');
+ assert.equal(canDriveProbe(8.6,width,false),true,'sidewalk is traversable');
+ assert.equal(canDriveProbe(8.6,width,true),false,'building on sidewalk is solid');
+ assert.equal(canDriveProbe(10.4,width,false),false,'outside the kerb remains blocked');
 });

@@ -37,6 +37,13 @@ export function withinDriveSurface(x,y,roads,margin=.55){
  return !!nearest&&nearest.distance<=Math.max(0,visualRoadWidth(nearest.road)/2-margin);
 }
 
+// The painted kerb reaches width/2 + 2.9; leave a small safety margin.
+export function canDriveProbe(distance,width,onBuilding=false){
+ if(!Number.isFinite(distance)||!Number.isFinite(width)||width<=0)return false;
+ if(distance>width/2+2.5)return false;
+ return distance<=Math.max(0,width/2-.55)||!onBuilding;
+}
+
 function makeBuildingIndex(buildings,cell){
  const grid=new Map();
  for(const b of buildings){
