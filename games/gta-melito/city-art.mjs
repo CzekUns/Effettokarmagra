@@ -61,6 +61,27 @@ export function prepareCityStyles(buildings,pois=[]){
  }
  return counts;
 }
+/* Approved Melito arcade art direction. Applies only to unsurveyed stylistic
+ * drafts; explicit OSM flat-roof tags and photo-verified features win. */
+export function applyApprovedArcadeRoofStyle(buildings){
+ const terracotta=['#c65e3f','#ce7047','#bb6344','#d17a4a','#b85b3c','#c66a43'];
+ let count=0;
+ for(const b of buildings){
+  const a=b.art,category=a?.surveyCategory;
+  if(!a||a.surveyStatus==='photo-verified'||b.roof==='flat')continue;
+  const aspect=Math.max(a.w,a.h)/Math.max(1,Math.min(a.w,a.h));
+  const seed=h(b.id);
+  const pitched=category==='historical'&&a.area<430||
+   category==='residential'&&a.area<900&&aspect<3&&seed%3===0||
+   category==='lowrise'&&aspect<2&&seed%3===0;
+  if(!pitched)continue;
+  a.roof=true;
+  a.roofTint=terracotta[(seed>>>5)%terracotta.length];
+  if(a.surveyFeatures)a.surveyFeatures={...a.surveyFeatures,roofKind:'pitched-clay'};
+  count++;
+ }
+ return count;
+}
 /* Parcel-like surface colours are estimated from actual OSM building
  * density and road proximity, not claimed as surveyed lawns or pavements. */
 export function prepareUrbanGround(buildings,roads){
