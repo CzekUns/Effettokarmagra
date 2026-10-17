@@ -184,3 +184,15 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 **Test e deploy:** Node locale 24.19.0: `node --check` per `city-art.mjs` e `game.mjs`; suite GTA Melito completa: 62/62; `git diff --check` superato. GitHub Actions Node 22: run `#78` completato; GitHub Pages: run `#289` completato e pagina `?v=086` verificata in Chrome desktop. La verifica mobile fisica resta aperta.
 
 **Aree successive:** catturare screenshot PNG sincronizzati su Piazza Santo Stefano, Via Roma e Municipio in desktop e landscape mobile; poi aumentare la riconoscibilità dei luoghi con asset originali e riscontri fotografici leciti, senza cambiare le impronte e distinguendo i dettagli stimati da quelli verificati.
+
+### Sessione 2026-10-17 — Correzione di scala visiva dopo confronto utente
+
+**Fatto nel codice:** il confronto diretto fra lo screenshot mobile pubblicato e il mockup approvato mostra che non sono simili: l'inquadratura corrente è ancora rada e cartografica. Per migliorare la scala leggibile, le chiome sintetiche stradali passano da circa 4.4 a 6.1–7.0 unità, con gruppi di colore e ombre a pixel. Una quota maggiore degli arredi casuali deterministici diventa albero. I punti sono spostati di altri 4 unità dal bordo stradale per mantenere libera la corsia; filtri strade-edifici e collisioni restano invariati. Il massimo zoom a piedi sale da 5× a 6× (corsa 5.55×), con pullback auto invariato e transizione smussata. Nessun edificio è stato aggiunto o spostato.
+
+**Confronto visuale:** lo screenshot fornito dall'utente è la baseline mobile reale; il mockup approvato mostra alberi grandi e molto più densi, tetti dettagliati, isolati compatti e facciate alte. Le modifiche rendono chiome e dettagli esistenti più leggibili e avvicinano il campo visivo; non trasformano ancora la scena in una replica del mockup. Prima del deploy non è disponibile una cattura sincronizzata dopo su dispositivo mobile; non dichiarare parità visiva.
+
+**Fonti e fedeltà:** le posizioni degli alberi e le specie restano dressing sintetico procedurale; OSM fornisce soltanto viabilità e sagome. Nessun nuovo edificio o tratto è dichiarato fotograficamente verificato.
+
+**Test e deploy:** da completare nel rilascio successivo. Cache renderer `visuals.mjs?v=045`, camera `v=061`, pagina `v087`.
+
+**Aree successive:** servono ulteriori asset originali per facciate e tetti, e una coppia di screenshot acquisita alla stessa inquadratura su desktop e smartphone landscape.

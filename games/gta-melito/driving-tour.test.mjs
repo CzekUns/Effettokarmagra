@@ -33,7 +33,7 @@ test('car road clearance fits narrow roads and the render mask is above building
  assert.ok(underlay<buildings&&buildings<overlay,'street mask must paint over buildings that bleed into lanes');
  assert.match(game,/onAsphalt=road&&road\.distance<=/);
  const visuals=await readFile(new URL('./visuals.mjs',import.meta.url),'utf8');
- assert.match(visuals,/visualRoadWidth\(road\)\/2\+5\.2/,'props need clearance beyond the curb');
+ assert.match(visuals,/visualRoadWidth\(road\)\/2\+9\.2/,'larger tree crowns need clearance beyond the curb');
  const props=buildStreetProps(map.roads);
  assert.ok(props.length>800,'enough decorative street props remain after clearance filtering');
  for(const prop of props){
@@ -41,5 +41,5 @@ test('car road clearance fits narrow roads and the render mask is above building
   assert.ok(!closest||closest.distance>=visualRoadWidth(closest.road)/2+4.4,
    'street prop '+prop.roadId+' overlaps a drivable road');
  }
- assert.ok(game.includes("visuals.mjs?v=044"),'street prop change must bypass the browser cache');
+ assert.ok(game.includes("visuals.mjs?v=045"),'street prop change must bypass the browser cache');
 });

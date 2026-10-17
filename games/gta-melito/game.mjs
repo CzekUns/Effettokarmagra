@@ -7,14 +7,14 @@
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
 import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=043';
-import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=044';
+import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=045';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=083';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,prepareUrbanGround,drawTerrain,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer} from './city-art.mjs?v=084';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=080';
-import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=060';
+import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs?v=061';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const radar=$('radar'),r=radar.getContext('2d');

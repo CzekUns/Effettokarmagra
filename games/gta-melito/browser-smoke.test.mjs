@@ -48,7 +48,7 @@ test('browser entry boots and first NPC mission is interactable on Via Roma',asy
  assert.ok(Number(els.get('road-count').textContent)>400);
  assert.ok(Number(els.get('building-count').textContent)>1600);
  assert.ok(Number(els.get('inferred-count').textContent)>=250,'missing inferred buildings');
- assert.ok(els.get('camera-mode').textContent.includes('5.0'));
+ assert.ok(els.get('camera-mode').textContent.includes('6.0'));
  els.get('zoom-auto').fire('click');
  assert.match(els.get('mission-money').textContent,/0/);
  windowHandlers.get('keydown')({key:'f',repeat:false,preventDefault(){}});

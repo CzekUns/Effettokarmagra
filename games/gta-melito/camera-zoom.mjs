@@ -2,9 +2,9 @@
  * Zoom is a Canvas scale: higher = closer, lower = more visible surroundings.
  * On foot start at the maximum. In vehicles the visible field expands with
  * speed to improve orientation and avoid driving into offscreen junctions. */
-export const CAMERA_ZOOM_MAX=5;
+export const CAMERA_ZOOM_MAX=6;
 export const CAMERA_ZOOM_MIN=1.65;
-export const CAMERA_DEFAULT_FOOT=5;
+export const CAMERA_DEFAULT_FOOT=6;
 export const CAMERA_DEFAULT_CAR=3.35;
 export function targetCameraZoom({inVehicle=false,speed=0,running=false,moving=false}={},bias=1){
  const v=Math.max(0,Number(speed)||0);
@@ -12,7 +12,7 @@ export function targetCameraZoom({inVehicle=false,speed=0,running=false,moving=f
  if(inVehicle){
   const t=Math.min(1,v/28);
   desired=CAMERA_DEFAULT_CAR-(1.48*t);
- }else desired=CAMERA_DEFAULT_FOOT-(running&&moving?0.35:0);
+ }else desired=CAMERA_DEFAULT_FOOT-(running&&moving?0.45:0);
  const b=Math.max(.62,Math.min(1.35,Number(bias)||1));
  return Math.max(CAMERA_ZOOM_MIN,Math.min(CAMERA_ZOOM_MAX,desired*b));
 }

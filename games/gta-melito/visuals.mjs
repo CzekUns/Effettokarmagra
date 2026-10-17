@@ -56,7 +56,8 @@ export function buildStreetProps(roads){
    const point=sampleRoad(road.p,d);if(!point)continue;
    const kind=(hash(seed+idx*333)%15),side=(idx+seed)%2?1:-1;
    // Keep the whole largest prop silhouette outside the asphalt/curb strip.
-   const margin=visualRoadWidth(road)/2+5.2;
+   // Keep larger illustrated canopy crowns beyond the curb and driving lane.
+   const margin=visualRoadWidth(road)/2+9.2;
    const x=point.x-Math.sin(point.a)*margin*side,y=point.y+Math.cos(point.a)*margin*side;
    if(hasRoadsideClearance(x,y,roadGrid))props.push({x,y,a:point.a,kind,side,p:[x-3,y-3,x+3,y+3],roadId:road.id});
   }
@@ -167,11 +168,18 @@ export function drawCrosswalks(c,graph,bounds,zoom){
  c.restore();
 }
 function pixelTree(c,x,y,seed){
- const greens=['#465f4b','#537254','#617c51','#6d8058'];
- c.fillStyle='#222d25a9';c.beginPath();c.arc(x+1.5,y+2,4,0,pi*2);c.fill();
- c.fillStyle=greens[seed%4];c.beginPath();c.arc(x,y,4.4,0,pi*2);c.fill();
- c.fillStyle='#7f9a6a';c.fillRect(x-2.2,y-2,2.2,1.6);
- c.fillStyle='#394f41';c.fillRect(x+1,y+.8,1.2,2);
+ const greens=['#3e6848','#4f784b','#557a43','#69874d'];
+ const crown=6.1+(seed%3)*.45;
+ // Chunky irregular clusters read as leafy crowns at mobile scale while the
+ // hard-edged highlights keep the original pixel-art treatment.
+ c.fillStyle='#17231e9e';c.beginPath();c.ellipse(x+2.3,y+3,crown+1.8,crown*.78,.15,0,pi*2);c.fill();
+ c.fillStyle='#654c32';c.fillRect(x-1.1,y-.4,2.1,5.2);
+ c.fillStyle=greens[seed%4];c.beginPath();c.arc(x,y,crown,0,pi*2);c.fill();
+ c.fillStyle='#78a65b';c.beginPath();c.arc(x-2.4,y-2.4,crown*.46,0,pi*2);c.fill();
+ c.fillStyle='#87ac62';c.fillRect(x-4.1,y-4.2,2.5,1.6);
+ c.fillStyle='#315b3c';c.beginPath();c.arc(x+3,y+2.2,crown*.4,0,pi*2);c.fill();
+ c.fillStyle='#a1bd70';c.fillRect(x-2.7,y-3.2,1.2,1.1);
+ c.fillStyle='#253f30';c.fillRect(x+1.1,y+1.2,1.3,2.3);
 }
 function bench(c,x,y,a){
  c.save();c.translate(x,y);c.rotate(a);
@@ -204,11 +212,11 @@ export function drawStreetProps(c,props,zoom){
  if(zoom<.85)return;
  for(const p of props){
   // Urban Melito: isolated street trees rather than dense roadside greenery.
-  if(p.kind<2)pixelTree(c,p.x,p.y,p.kind);
-  else if(p.kind<4)lamp(c,p.x,p.y);
-  else if(p.kind<6)bench(c,p.x,p.y,p.a);
-  else if(p.kind===6||p.kind===7)dumpster(c,p.x,p.y,p.a);
-  else if(p.kind===8||p.kind===9)scooter(c,p.x,p.y,p.a);
+  if(p.kind<5)pixelTree(c,p.x,p.y,p.kind);
+  else if(p.kind<7)lamp(c,p.x,p.y);
+  else if(p.kind<9)bench(c,p.x,p.y,p.a);
+  else if(p.kind===9||p.kind===10)dumpster(c,p.x,p.y,p.a);
+  else if(p.kind===11||p.kind===12)scooter(c,p.x,p.y,p.a);
   else if(p.kind<14)lamp(c,p.x,p.y);
   else{
    c.fillStyle='#a6a08b';c.fillRect(p.x-1.4,p.y-1.4,2.8,2.8);
