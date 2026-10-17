@@ -41,5 +41,5 @@ test('car road clearance fits narrow roads and the render mask is above building
   assert.ok(!closest||closest.distance>=visualRoadWidth(closest.road)/2+4.4,
    'street prop '+prop.roadId+' overlaps a drivable road');
  }
- assert.ok(game.includes("visuals.mjs?v=088"),'street prop change must bypass the browser cache');
+ assert.ok(game.includes("visuals.mjs?v=089"),'street prop change must bypass the browser cache');
 });

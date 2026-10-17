@@ -4,7 +4,7 @@
  */
 import {visualRoadWidth} from './road-widths.mjs?v=043';
 import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-volume.mjs?v=088';
-import {material} from './arcade-materials.mjs?v=088';
+import {material} from './arcade-materials.mjs?v=089';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
  * are original artistic interpretations: they do not claim photographic fidelity.

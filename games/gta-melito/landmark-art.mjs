@@ -26,43 +26,20 @@ function icon(c,item,x,y,size=1){
 }
 export function drawWorldLandmarks(c,landmarks,focus,bounds,clock,zoom,speaker=''){
  const [x0,y0,x1,y1]=bounds;
- for(const item of landmarks.values()){
-  if(item.x<x0||item.x>x1||item.y<y0||item.y>y1)continue;
-  const selected=focus?.id===item.id;
-  const pulse=.6+.4*Math.sin(clock*4);
-  c.save();
-  if(selected){
-   c.lineWidth=.7;c.strokeStyle='#ffe8a5aa';
-   c.beginPath();c.arc(item.x,item.y,9+3*pulse,0,T);c.stroke();
-   c.beginPath();c.arc(item.x,item.y,6,0,T);c.strokeStyle='#ffe6a0';c.stroke();
-   c.fillStyle='#ffce68';c.beginPath();c.moveTo(item.x,item.y-21);c.lineTo(item.x+3.8,item.y-14);c.lineTo(item.x,item.y-9);c.lineTo(item.x-3.8,item.y-14);c.closePath();c.fill();
-  }
-  if(zoom>1.15||selected)icon(c,item,item.x,item.y,selected?1.5:1);
-  if(selected&&speaker!=='RADIO'){
-   // Fictional quest giver; not a representation of a real local resident.
-   const bob=Math.sin(clock*3)*.18;
-   const x=item.x+8,y=item.y+2+bob;
-   c.fillStyle='#10221d';c.fillRect(x-2,y-2,4,5);
-   c.fillStyle=speaker==='NICO'?'#d8a146':'#73a8b7';c.fillRect(x-2,y-2,3,3);
-   c.fillStyle='#dfa97a';c.fillRect(x+1,y-1,1.7,2);
-   c.fillStyle='#333432';c.fillRect(x-2,y+1,1,2);c.fillRect(x+.5,y+1,1,2);
-   c.fillStyle='#ffe6a8';c.font='bold 2.8px monospace';c.textAlign='center';c.fillText(speaker,x,y-7);
-  }
-  if(zoom>1.8||selected){
-   const church=/santa maria delle grazie/i.test(item.name);
-   const txt=church?'S. MARIA DELLE GRAZIE':item.name.toUpperCase();
-   const width=Math.min(church?58:95,txt.length*2.3+6);
-   // Keep the church name compact and bias it away from the top-right
-   // minimap; the screenshot showed its long label being clipped underneath it.
-   const labelX=church?item.x-9:item.x;
-   const labelY=church?item.y-12:item.y-(selected?25:10);
-   c.fillStyle='#14231edb';c.fillRect(labelX-width/2-2,labelY-4.2,width+4,6.5);
-   c.fillStyle=selected?'#f6d78e':'#e4dfc8';
-   c.font=selected?'bold 3.8px monospace':'3px monospace';
-   c.textAlign='center';c.fillText(txt,labelX,labelY,width);
-  }
-  c.restore();
+ if(!focus)return;
+ const item=landmarks.get(focus.id);if(!item||item.x<x0||item.x>x1||item.y<y0||item.y>y1)return;
+ c.save();
+ // Compact waypoint retains guidance without hiding buildings or vehicles.
+ const x=item.x+8,y=item.y+2;
+ c.strokeStyle='#f4cc75b0';c.lineWidth=.4;c.beginPath();c.arc(x,y+1,2.6,0,T);c.stroke();
+ if(speaker!=='RADIO'){
+  c.fillStyle='#263128';c.fillRect(x-1,y-.8,2,3);
+  c.fillStyle=speaker==='NICO'?'#d29c49':'#72a2ab';c.fillRect(x-1.2,y-1,2.4,1.7);
+  c.fillStyle='#e5ad7c';c.fillRect(x-.65,y-2,1.3,1.3);
  }
+ const bob=Math.sin(clock*3)*.4;
+ c.fillStyle='#ffdc79';c.beginPath();c.moveTo(x,y-6+bob);c.lineTo(x+1.4,y-4.5+bob);c.lineTo(x,y-3+bob);c.lineTo(x-1.4,y-4.5+bob);c.closePath();c.fill();
+ c.restore();
 }
 export function drawMinimapLandmarks(c,landmarks,focus,mini){
  for(const item of landmarks.values()){

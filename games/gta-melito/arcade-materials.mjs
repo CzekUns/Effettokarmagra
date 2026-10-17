@@ -18,12 +18,12 @@ export function material(c,kind,fallback){
    g.fillStyle='#f0954f';g.fillRect(x+2,y+1,4,1);
   }
  }else if(kind==='stone'){
-  g.fillStyle='#8d785c';g.fillRect(0,0,128,128);
-  const colors=['#d5bb90','#d9c299','#c7ae86','#e1c8a0','#cbb38d'];
+  g.fillStyle='#a58e6e';g.fillRect(0,0,128,128);
+  const colors=['#cbb58f','#d2bc96','#c3ac89','#dac49d','#cbb595'];
   for(let row=0;row<8;row++)for(let col=-1;col<8;col++){
    const x=col*16+(row%2)*8,y=row*16;
    g.fillStyle=colors[Math.floor(r()*5)];g.fillRect(x+1,y+1,15,15);
-   g.fillStyle='#ecd7ad';g.fillRect(x+2,y+1,13,1);
+   g.fillStyle='#e2cea9';g.fillRect(x+2,y+1,13,1);
    g.fillStyle='#b49b77';g.fillRect(x+14,y+2,1,13);
   }
  }else{
@@ -34,6 +34,6 @@ export function material(c,kind,fallback){
  }
  const pattern=c.createPattern(canvas,'repeat');
  if(!pattern)return fallback;
- pattern.setTransform(new DOMMatrix().scale(kind==='clay'?.15:kind==='stone'?.18:.22));
+ pattern.setTransform(new DOMMatrix().scale(kind==='clay'?.15:kind==='stone'?.115:.22));
  textures.set(kind,pattern);return pattern;
 }

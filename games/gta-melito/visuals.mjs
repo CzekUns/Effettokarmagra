@@ -171,6 +171,8 @@ function pixelTree(c,x,y,seed){
  const crown=6.1+(seed%3)*.45;
  c.fillStyle='#13232a70';c.beginPath();c.ellipse(x+2,y+2.5,crown+1,crown*.75,.25,0,pi*2);c.fill();
  c.fillStyle='#735034';c.fillRect(x-.6,y-1,1.3,4.5);
+ c.fillStyle='#315a2c';
+ for(let row=-6;row<=6;row++){const half=Math.sqrt(Math.max(0,36-row*row));c.fillRect(x-half,y+row,half*2,1.1);}
  const greens=['#234a2b','#32662e','#49822d','#669933','#8cb13b','#b3c64c'];
  // Irregular stepped leaf clusters, never a plain circular map symbol.
  for(let i=0;i<95;i++){
