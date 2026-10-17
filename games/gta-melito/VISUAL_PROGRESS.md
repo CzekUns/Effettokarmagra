@@ -139,3 +139,18 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 **Test e deploy:** GitHub Actions `GTA Melito visual and campaign validation` sul commit `75fe95e`: completato con esito positivo (Node 22 nel workflow). Deploy GitHub Pages completato con esito positivo sullo stesso SHA. Test locali Node 24: 57/57 superati; `git diff --check` passato.
 
 **Aree successive:** ampliare la copertura sintetica solo dentro isolati con accesso stradale plausibile; censire foto con provenienza chiara per le facciate di Via Roma, Municipio e Piazza Immacolata; confrontare `v080` su telefono fisico.
+
+
+### Sessione 2026-10-17 — Controlli touch in orizzontale
+
+**Commit / PR:** da registrare dopo commit e CI.
+
+**Fatto nel codice:** in `index.html` su smartphone il canvas passa a pieno schermo landscape; la modalità portrait è bloccata da uno schermo che chiede di ruotare. L’interfaccia di gioco mostra la levetta analogica in basso a sinistra, due pulsanti contestuali in basso a destra, minimappa e piccolo tasto pausa. HUD tecnico, missioni, mappa completa, zoom, reset e confronto strade sono accessibili dalla pausa. In `game.mjs` la levetta usa pointer capture e valori continui; in auto controlla accelerazione e sterzo, a piedi direzione e velocità. Il secondo tasto alterna corsa e freno a mano. Schermata pausa sospende la simulazione; tenta il blocco landscape al primo tocco quando supportato. `VISUAL_PROGRESS` e handoff aggiornati.
+
+**Confronto visuale:** il riferimento precedente mostrava il gioco desktop con HUD, pulsanti direzionali, molti tasti e istruzioni. Il nuovo layout è pensato per telefono landscape; la cattura su dispositivo fisico/browser emulato va registrata dopo il deploy. L’effettivo blocco orientamento dipende dal supporto del browser; il messaggio portrait resta il fallback.
+
+**Edifici documentati:** nessun cambio ai dati cartografici o agli asset.
+
+**Test e deploy:** Node locale 24.19.0: `node --check games/gta-melito/game.mjs` e suite prevista: 58/58 test superati. Il workflow repository usa Node 22; da verificare dopo il push.
+
+**Aree successive:** verificare joystick multi-touch, due tasti, overlay pausa, safe-area e lock landscape su Android/iOS fisici; il fallback non deve coprire i controlli in landscape.

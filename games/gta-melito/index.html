@@ -128,7 +128,7 @@ button:focus-visible{outline:3px solid #f5d78a;outline-offset:2px}
 #camera-mode{color:#ffe0a0;font-weight:900}
 #zoom-auto{background:#1e4745;border:1px solid #82b1a2;color:#e0f4da;font-size:11px;font-weight:900}
 @media(max-width:680px){#camera-mode{display:inline-block;max-width:190px;white-space:nowrap}}
-<style id="gta-visual-refresh">
+
 :root{
  color-scheme:dark;
  --ink:#14201c;--panel:#1b2a25;--panel-raised:#263931;--line:#71816e;
@@ -189,7 +189,50 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  .controls{padding-top:10px}
  .hud{box-shadow:inset 0 1px #d5d3a02a}
 }
-</style>
+
+/* Immersive mobile landscape layout: only map, stick, two actions and pause. */
+.rotate-screen,.touch-stick,.pause-toggle,.pause-menu{display:none}
+.touch-actions{display:flex;align-items:center;gap:8px}
+@media(max-width:760px),(pointer:coarse) and (orientation:landscape){
+ html,body{width:100%;height:100%;min-height:100%;overflow:hidden;overscroll-behavior:none}
+ .app{width:100%;height:100dvh;max-width:none;margin:0;padding:0}
+ .header,.hud,.road-width-bar,.instructions,.credits{display:none!important}
+ .controls{display:block!important;position:static;height:0;padding:0}
+ .controls .buttons,.controls .dpad{display:none!important}
+ .coins{display:none!important}
+ #mission-panel-toggle{display:none!important}
+ #mission-panel-toggle[aria-expanded=true]{display:block!important;top:max(12px,env(safe-area-inset-top));bottom:auto;right:58px;padding:7px 9px;font-size:9px}
+ .stage{height:100dvh;min-height:0;border:0;outline:0;box-shadow:none}
+ #radar{top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));width:clamp(92px,19vw,142px);height:clamp(72px,16vw,110px)}
+ .coins{top:max(10px,env(safe-area-inset-top));left:max(58px,calc(env(safe-area-inset-left) + 52px));max-width:32vw;font-size:9px;padding:6px 8px}
+ .touch-stick,.touch-actions,.pause-toggle{display:flex;position:absolute;z-index:4;touch-action:none}
+ .touch-stick{left:max(20px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));width:clamp(104px,24vw,150px);height:clamp(104px,24vw,150px);border:2px solid #e5d19b8c;border-radius:50%;background:#15241c68;align-items:center;justify-content:center;box-shadow:0 4px 14px #0008}
+ .touch-stick:before{content:"";position:absolute;width:34%;height:34%;border:1px solid #e7d29a44;border-radius:50%}
+ .stick-knob{width:42%;height:42%;border:2px solid #ffe9ae;background:linear-gradient(145deg,#829273,#34483b);border-radius:50%;box-shadow:0 4px 0 #101913b8,0 0 15px #0008;pointer-events:none;transform:translate(0,0)}
+ .touch-actions{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:max(20px,env(safe-area-inset-bottom));align-items:flex-end;gap:clamp(9px,2vw,18px)}
+ .touch-actions button{border-radius:50%;width:clamp(64px,15vw,88px);height:clamp(64px,15vw,88px);font-size:10px;line-height:1.15;font-weight:1000;padding:4px;touch-action:none}
+ #action{border:2px solid #fff0b4;background:linear-gradient(145deg,#f2d98f,#d4aa55);color:#223228;box-shadow:0 5px 0 #76603b,0 8px 16px #0009}
+ #sprint{border:2px solid #a0c4ac;background:linear-gradient(145deg,#537d68,#304a3f);color:#fff4d4;box-shadow:0 5px 0 #17271f,0 8px 16px #0009}
+ .touch-actions button.pressed{transform:translateY(4px);box-shadow:0 1px #111}
+ .pause-toggle{top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));width:38px;height:38px;align-items:center;justify-content:center;border:1px solid #d8c48c;background:#17261eeb;color:#ffdf99;border-radius:50%;font-size:17px;box-shadow:0 3px 8px #0009}
+ .rotate-screen{display:flex;position:fixed;inset:0;z-index:20;background:#101916f5;color:#f6ebce;align-items:center;justify-content:center;text-align:center;padding:28px}
+ .rotate-screen[hidden]{display:none}
+ .rotate-card{max-width:320px}.rotate-icon{font-size:56px;display:block;color:#f2ce7c;animation:turn-phone 1.8s ease-in-out infinite}
+ .rotate-card h2{color:#f3d084;font-size:19px}.rotate-card p{font-size:12px;line-height:1.6;color:#d6dccd}
+ @keyframes turn-phone{0%,20%{transform:rotate(0)}65%,100%{transform:rotate(90deg)}}
+ .pause-menu{display:block;position:absolute;z-index:8;inset:0;background:#09120edb;backdrop-filter:blur(5px);overflow:auto;padding:max(56px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom))}
+ .pause-menu[hidden]{display:none}
+ .pause-card{width:min(620px,100%);margin:auto;padding:16px;background:linear-gradient(150deg,#25372c,#121e18);border:2px solid #d0b772;box-shadow:5px 6px #050b08;color:#f6ebce}
+ .pause-head{display:flex;align-items:center;justify-content:space-between}.pause-head h2{font-size:18px;margin:0;color:#f2d18a}
+ .pause-close{background:#dfc27b;color:#1c2a23;border:1px solid #fff0ba;font-weight:bold;padding:8px 12px}
+ .pause-info{font-size:11px;line-height:1.7;color:#c6d0bf;margin:10px 0}
+ .pause-shortcuts{display:flex;flex-wrap:wrap;gap:8px}.pause-shortcuts button{background:#30483f;border:1px solid #82927a;color:#f2e0b9;padding:9px 11px;font-size:11px;font-weight:bold}
+ .pause-details{font-size:10px;line-height:1.7;color:#d5dbc7;background:#101b17;border:1px solid #536951;padding:9px;margin:10px 0}
+ .pause-shortcuts button{min-height:38px}
+ .pause-menu .missions{position:relative;left:auto;bottom:auto;width:100%;max-width:none;margin-top:10px}
+ .waypoint{top:16px;max-width:40%;right:160px;left:auto;transform:none}
+}
+@media(max-width:760px) and (orientation:landscape),(pointer:coarse) and (orientation:landscape){.rotate-screen{display:none}}
 </style>
 </head><body><main class="app">
 <header class="header"><div><h1>GTA: MELITO <span aria-hidden="true">★</span></h1><small>UNS ARCADE / MELITO DI NAPOLI / VERSIONE 0.7.0</small></div><a class="back" href="../../index.html">← SALA GIOCHI</a></header>
@@ -202,6 +245,9 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  <canvas id="world" aria-label="Mappa giocabile di Melito, muoviti con frecce o WASD" tabindex="0"></canvas>
  <canvas id="radar" width="168" height="142" aria-label="Minimappa di Melito"></canvas>
  <div class="coins">MELITO · LIBERA ESPLORAZIONE <span id="street">RETE STRADALE REALE</span></div>
+ <button class="pause-toggle" id="pause-toggle" type="button" aria-expanded="false" aria-label="Pausa e altre informazioni">Ⅱ</button>
+ <div class="touch-stick" id="touch-stick" role="application" aria-label="Levetta analogica: muovi il personaggio o guida"><div class="stick-knob" id="stick-knob"></div></div>
+
  <div class="waypoint" id="waypoint" hidden aria-live="off"></div>
  <button id="mission-panel-toggle" type="button" aria-controls="mission-panel" aria-expanded="false">🎯 MISSIONI</button>
  <aside class="missions" id="mission-panel" hidden aria-label="Missioni di GTA Melito">
@@ -222,15 +268,11 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
   <button id="map-close">CHIUDI MAPPA · M</button>
  </section>
  <section class="loading" id="loading"><h2 id="loading-title">CARICO MELITO…</h2><p id="loading-text">Preparo strade ed edifici reali da OpenStreetMap.</p><button id="retry" hidden>RIPROVA ↻</button></section>
+ <div class="pause-menu" id="pause-menu" hidden><div class="pause-card"><div class="pause-head"><h2>PAUSA · MELITO</h2><button id="pause-close" class="pause-close">RIPRENDI</button></div><p class="pause-info">Stato · zoom · mappa · missioni · controlli secondari</p><div class="pause-shortcuts"><button id="pause-missions">MISSIONI</button><button id="pause-map">MAPPA COMPLETA</button><button id="pause-zoom-auto">ZOOM AUTO</button><button id="pause-zoom-in">＋ ZOOM</button><button id="pause-zoom-out">－ ZOOM</button><button id="pause-reset">TORNA ALL’INIZIO</button><button id="pause-road-compare">CONFRONTA STRADE</button></div><div class="pause-details" id="pause-details">Carico i dati del gioco…</div><p class="pause-info">Su PC restano disponibili tastiera e tasti WASD/frecce; missioni e mappa completa sono qui.</p></div></div>
+ <div class="rotate-screen" id="rotate-screen" hidden><div class="rotate-card"><span class="rotate-icon" aria-hidden="true">▰</span><h2>RUOTA LO SCHERMO</h2><p>GTA Melito si gioca in orizzontale. Ruota il telefono per continuare.</p></div></div>
 </div>
-<div class="controls">
- <div class="dpad" aria-label="Comandi di movimento e guida">
-  <button data-dir="up" aria-label="Avanti">▲</button><button data-dir="left" aria-label="Sinistra">◀</button>
-  <button data-dir="down" aria-label="Indietro">▼</button><button data-dir="right" aria-label="Destra">▶</button>
- </div>
- <div class="buttons"><button class="control-action" id="action">E · ENTRA IN AUTO</button><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="sprint" aria-label="Tieni premuto per correre">CORRI</button><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-auto" aria-label="Ripristina zoom automatico">AUTO</button><button class="mini" id="zoom-in" aria-label="Regola zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div>
-</div>
-<p class="instructions">PC: WASD/frecce per muoverti e guidare · E entra/esci · SHIFT corri · SPAZIO freno a mano. Telefono: pulsanti direzionali, ENTRA/SCENDI, FRENO, CORRI e MAPPA. Telecamera automatica: massimo zoom a piedi; in auto arretra progressivamente con la velocità. ＋/－ personalizzano, AUTO ripristina. Missioni nel pannello dedicato; F per interagire, M per la mappa. Traffico che svolta sulle vere strade, marciapiedi, attraversamenti, tetti tridimensionali e dettagli urbani immaginari in stile pixel art. Strade, incroci e sagome dei palazzi si basano su OpenStreetMap.</p>
+<div class="controls" aria-label="Comandi"><div class="touch-actions" aria-label="Azioni"><button class="control-action" id="action">ENTRA IN AUTO</button><button id="sprint" aria-label="Corri o frena">CORRI</button></div><div class="dpad" aria-hidden="true"></div><div class="buttons"><button id="brake" aria-label="Freno a mano">FRENO</button><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-auto" aria-label="Ripristina zoom automatico">AUTO</button><button class="mini" id="zoom-in" aria-label="Regola zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div></div>
+<p class="instructions">PC: WASD/frecce per muoverti e guidare · E entra/esci · SHIFT corri · SPAZIO freno a mano. Telefono: schermo orizzontale, levetta analogica, tasto azione e tasto CORRI/FRENO; START apre pausa, missioni e impostazioni. Telecamera automatica: massimo zoom a piedi; in auto arretra progressivamente con la velocità. ＋/－ personalizzano, AUTO ripristina. Missioni nel pannello dedicato; F per interagire, M per la mappa. Traffico che svolta sulle vere strade, marciapiedi, attraversamenti, tetti tridimensionali e dettagli urbani immaginari in stile pixel art. Strade, incroci e sagome dei palazzi si basano su OpenStreetMap.</p>
 <p class="instructions"><a href="./survey/index.html" target="_blank" rel="noopener noreferrer">🗺 TUTTA MELITO · 2.056 EDIFICI MODELLATI →</a> · 2.056 sagome OSM censite · 2.056 edifici con profilo grafico individuale e palazzi segnaposto aggiuntivi (NON rilievi OSM). Piazza Santo Stefano dettagliata: una facciata verificata fotograficamente, le altre ancora stimate.</p>
 <footer class="credits"><span>© OpenStreetMap contributors — ODbL · Confini: ISTAT 2026 — CC BY · MIT: ispirazione motore <a href="https://github.com/harmanhanjra/punjab-stories" target="_blank" rel="noreferrer">Punjab Stories</a></span><span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Crediti cartografia</a> · <a href="./README.md">Informazioni sul progetto</a></span></footer>
-</main><script type="module" src="./game.mjs?v=080"></script></body></html>
+</main><script type="module" src="./game.mjs?v=081"></script></body></html>

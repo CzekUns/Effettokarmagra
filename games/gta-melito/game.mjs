@@ -19,6 +19,8 @@ const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false};
+const stick={x:0,y:0};
+function moveAxes(){return {x:Math.abs(stick.x)>.08?stick.x:Number(pressed.right)-Number(pressed.left),y:Math.abs(stick.y)>.08?stick.y:Number(pressed.down)-Number(pressed.up)};}
 const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const colors=['#8f8271','#a29076','#797970','#ae947b','#938c7b','#7b8581','#a58c85'];
@@ -283,20 +285,21 @@ function toRing(border){
 }
 function tick(dt){
  if(!state.ready)return;
- if(state.mapOpen||!$('dialog').hidden){
+ if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden){
   for(const key of Object.keys(pressed))pressed[key]=false;
+  stick.x=0;stick.y=0;
   return;
  }
  const p=state.player;
  if(p.car>=0){
   const car=state.cars[p.car],prior=car.speed||0;
   let speed=prior;
-  if(pressed.up)speed+=17*dt;
-  if(pressed.down)speed-=22*dt;
-  if(!pressed.up&&!pressed.down)speed-=Math.sign(speed)*Math.min(Math.abs(speed),6*dt);
+  const axis=moveAxes(),throttle=axis.y<-.08?-axis.y:axis.y>.08?-axis.y:0;
+  if(Math.abs(throttle)>.08)speed+=22*dt*throttle;
+  else speed-=Math.sign(speed)*Math.min(Math.abs(speed),6*dt);
   if(pressed.handbrake)speed*=Math.pow(.045,dt);
   speed=clamp(speed,-9,28);
-  const steer=Number(pressed.right)-Number(pressed.left);
+  const steer=moveAxes().x;
   if(steer&&Math.abs(speed)>.25){
    car.a+=steer*1.38*dt*(speed<0?-1:1)*clamp(Math.abs(speed)/9,.17,1);
   }
@@ -306,9 +309,9 @@ function tick(dt){
   }else speed=0;
   car.speed=speed;p.x=car.x;p.y=car.y;p.a=car.a;
  }else{
-  const dx=Number(pressed.right)-Number(pressed.left),dy=Number(pressed.down)-Number(pressed.up);
-  if(dx||dy){
-   const len=Math.hypot(dx,dy),v=pressed.run?7.5:5.0,nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
+  const axis=moveAxes(),dx=axis.x,dy=axis.y;
+  if(Math.hypot(dx,dy)>.08){
+   const len=Math.hypot(dx,dy),v=(pressed.run?7.5:5.0)*Math.min(1,len),nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
    if(validWalk(nx,p.y)&&inside([nx,p.y],toRing(state.map.border)))p.x=nx;
    if(validWalk(p.x,ny)&&inside([p.x,ny],toRing(state.map.border)))p.y=ny;
    p.a=Math.atan2(dy,dx);state.distance+=v*dt;
@@ -321,7 +324,7 @@ function tick(dt){
   state.lastSave+=dt;
   if(state.lastSave>4){state.lastSave=0;saveProgress(localStorage,state.progress);}
  }
- const moving=pressed.up||pressed.down||pressed.left||pressed.right;
+ const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
  const movement={inVehicle:p.car>=0,
   speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?7.5:5):0,
   running:pressed.run,moving:!!moving};
@@ -363,8 +366,10 @@ function updateHud(){
  const n=state.roadGrid?nearest(p.x,p.y,70):null;
  if(n&&n.road.n)$('street').textContent=n.road.n.toUpperCase();
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
- $('action').textContent=p.car>=0?'E · SCENDI':'E · ENTRA IN AUTO';
- const moving=pressed.up||pressed.down||pressed.left||pressed.right;
+ $('action').textContent=p.car>=0?'SCENDI':'ENTRA IN AUTO';
+ $('sprint').textContent=p.car>=0?'FRENO':'CORRI';
+ $('sprint').setAttribute('aria-label',p.car>=0?'Freno a mano':'Corri');
+ const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
  const status={inVehicle:p.car>=0,
   speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?7.5:5):0,
   running:pressed.run,moving:!!moving};
@@ -374,7 +379,7 @@ function drawLine(p){c.beginPath();c.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+
 function poly(p){drawLine(p);c.closePath();}
 function drawCar(x,y,a,type,drive=false){drawCityCar(c,x,y,a,type,drive,state.clock);}
 function drawPlayer(){
- const moving=pressed.up||pressed.down||pressed.left||pressed.right;
+ const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
  drawCityPlayer(c,state.player,state.clock,moving);
 }
 function visibleBounds(){
@@ -519,7 +524,7 @@ function bind(){
   if(e.key.toLowerCase()==='e'&&!e.repeat){e.preventDefault();toggleVehicle();}
   if(e.key.toLowerCase()==='f'&&!e.repeat){e.preventDefault();interactMission();}
   if(e.key.toLowerCase()==='m'&&!e.repeat){e.preventDefault();toggleBigMap();}
-  if(e.key==='Escape'){$('fullmap').hidden=true;state.mapOpen=false;$('dialog').hidden=true;}
+  if(e.key==='Escape'){$('fullmap').hidden=true;state.mapOpen=false;$('dialog').hidden=true;if(!pause.hidden)closePause();else openPause();}
  });
  window.addEventListener('keyup',e=>{
   const dir={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];
@@ -527,6 +532,28 @@ function bind(){
   if(e.key==='Shift')pressed.run=false;
   if(e.code==='Space')pressed.handbrake=false;
  });
+ const stickPad=$('touch-stick'),stickKnob=$('stick-knob');
+ const resetStick=()=>{stick.x=0;stick.y=0;stickKnob.style.transform='translate(0,0)';};
+ const updateStick=e=>{
+  const box=stickPad.getBoundingClientRect(),cx=box.left+box.width/2,cy=box.top+box.height/2,radius=box.width*.34;
+  let dx=e.clientX-cx,dy=e.clientY-cy,len=Math.hypot(dx,dy);if(len>radius){dx*=radius/len;dy*=radius/len;len=radius;}
+  stick.x=dx/radius;stick.y=dy/radius;stickKnob.style.transform=`translate(${dx}px,${dy}px)`;
+ };
+ stickPad.addEventListener('pointerdown',e=>{e.preventDefault();try{stickPad.setPointerCapture(e.pointerId);}catch(_){}updateStick(e);});
+ stickPad.addEventListener('pointermove',e=>{if(stickPad.hasPointerCapture?.(e.pointerId))updateStick(e);});
+ for(const name of ['pointerup','pointercancel','lostpointercapture'])stickPad.addEventListener(name,resetStick);
+ const pause=$('pause-menu'),pauseButton=$('pause-toggle');
+ const openPause=()=>{Object.keys(pressed).forEach(k=>pressed[k]=false);stick.x=0;stick.y=0;pause.hidden=false;pauseButton.setAttribute('aria-expanded','true');$('pause-details').textContent='MEZZO: '+$('vehicle').textContent+'  ·  CAMERA: '+$('camera-mode').textContent+'  ·  STRADE: '+$('road-count').textContent+'  ·  EDIFICI OSM: '+$('building-count').textContent+'  ·  PLACEHOLDER: '+$('inferred-count').textContent+'  ·  INCROCI: '+$('junction-count').textContent+'  ·  '+$('road-width-current').textContent+' unità';};
+ const closePause=()=>{pause.hidden=true;pauseButton.setAttribute('aria-expanded','false');};
+ pauseButton.addEventListener('click',()=>pause.hidden?openPause():closePause());
+ $('pause-close').addEventListener('click',closePause);
+ $('pause-missions').addEventListener('click',()=>{closePause();if($('mission-panel').hidden)$('mission-panel-toggle').click();});
+ $('pause-map').addEventListener('click',()=>{closePause();toggleBigMap();});
+ for(const [id,target] of [['pause-zoom-auto','zoom-auto'],['pause-zoom-in','zoom-in'],['pause-zoom-out','zoom-out'],['pause-reset','reset'],['pause-road-compare','road-width-compare']])$(id).addEventListener('click',()=>$(target).click());
+ const orient=()=>{const rotate=$('rotate-screen');rotate.hidden=typeof matchMedia!=='function'||matchMedia('(orientation: landscape)').matches;};
+ orient();window.addEventListener('orientationchange',orient);window.addEventListener('resize',orient);
+ const lockLandscape=()=>{try{if(typeof screen!=='undefined'&&screen.orientation?.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(_){}};
+ for(const id of ['touch-stick','action','sprint'])$(id).addEventListener('pointerdown',lockLandscape,{once:true});
  document.querySelectorAll('[data-dir]').forEach(btn=>{
   const key=btn.dataset.dir;
   btn.addEventListener('pointerdown',e=>{e.preventDefault();pressed[key]=true;btn.classList.add('pressed');try{btn.setPointerCapture(e.pointerId);}catch(_){}});
@@ -568,8 +595,10 @@ function bind(){
  });
  for(const [id,key] of [['brake','handbrake'],['sprint','run']]){
   const btn=$(id);if(!btn)continue;
-  btn.addEventListener('pointerdown',e=>{e.preventDefault();pressed[key]=true;btn.classList.add('pressed');try{btn.setPointerCapture(e.pointerId);}catch(_){}});
-  for(const name of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(name,()=>{pressed[key]=false;btn.classList.remove('pressed');});
+  const activeKey=()=>id==='sprint'&&state.player.car>=0?'handbrake':key;
+  btn.addEventListener('pointerdown',e=>{e.preventDefault();const k=activeKey();btn.dataset.activeKey=k;pressed[k]=true;btn.classList.add('pressed');try{btn.setPointerCapture(e.pointerId);}catch(_){}});
+  const release=()=>{pressed[btn.dataset.activeKey||key]=false;btn.classList.remove('pressed');};
+  for(const name of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(name,release);
  }
 
  $('retry').addEventListener('click',load);
@@ -580,8 +609,8 @@ function bind(){
   if(!state.ready)return;const p=state.player;p.car=-1;p.x=state.spawn[0];p.y=state.spawn[1];p.a=0;state.camera.x=p.x;state.camera.y=p.y;
   state.zoom=CAMERA_ZOOM_MAX;state.zoomBias=1;state.zoomTarget=CAMERA_ZOOM_MAX;updateHud();
  });
- window.addEventListener('blur',()=>Object.keys(pressed).forEach(k=>pressed[k]=false));
- document.addEventListener('visibilitychange',()=>{if(document.hidden)Object.keys(pressed).forEach(k=>pressed[k]=false);});
+ window.addEventListener('blur',()=>{Object.keys(pressed).forEach(k=>pressed[k]=false);resetStick();});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){Object.keys(pressed).forEach(k=>pressed[k]=false);resetStick();}});
  canvas.addEventListener('wheel',e=>{e.preventDefault();
   state.zoomBias=clamp(state.zoomBias*(e.deltaY>0?.91:1.1),.62,1.35);
  },{passive:false});

@@ -69,3 +69,22 @@ test('terrain derives urban versus open land from real OSM building and road geo
  const again=prepareUrbanGround(map.buildings,map.roads);
  assert.deepEqual([...grid],[...again]);
 });
+
+
+test('mobile play is landscape-only with analog movement, two action buttons and pause drawer',async()=>{
+ const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
+ const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
+ assert.match(html,/id="rotate-screen"/);
+ assert.match(html,/RUOTA LO SCHERMO/);
+ assert.match(html,/id="touch-stick"/);
+ assert.match(html,/id="radar"/);
+ assert.match(html,/id="action"/);
+ assert.match(html,/id="sprint"/);
+ assert.match(html,/id="pause-toggle"/);
+ assert.match(html,/id="pause-menu" hidden/);
+ assert.match(html,/orientation:landscape/);
+ assert.match(game,/setPointerCapture\(e\.pointerId\)/);
+ assert.match(game,/screen\.orientation\?\.lock/);
+ assert.match(game,/function moveAxes\(/);
+ assert.match(game,/activeKey=\(\)=>id==='sprint'&&state\.player\.car>=0\?'handbrake':key/);
+});

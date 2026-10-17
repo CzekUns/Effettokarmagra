@@ -88,7 +88,7 @@ test('game exposes placeholder count and camera mode to the player',async()=>{
  assert.ok(html.includes('id="inferred-count"'));
  assert.ok(html.includes('id="camera-mode"'));
  assert.ok(html.includes('id="zoom-auto"'));
- assert.ok(html.includes('game.mjs?v=080'));
+ assert.ok(html.includes('game.mjs?v=081'));
  assert.ok(game.includes('urban-infill.mjs?v=080'));
 });
 

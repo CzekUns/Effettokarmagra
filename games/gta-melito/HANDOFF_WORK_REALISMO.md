@@ -126,3 +126,10 @@ Quando una singola facciata non è documentabile, continua a migliorare l'esteti
 Il progetto [PatrickGTR/gta-open](https://github.com/PatrickGTR/gta-open) è una modalità multiplayer per open.mp ambientata a Los Santos e usa l'ambiente 3D già fornito da GTA San Andreas. Il suo sistema case registra ingressi, proprietari e ID degli interni; gli arredi sono oggetti selezionabili tramite model ID, mentre il mapping aggiunge oggetti in luoghi specifici. Questo è un riferimento per interazioni, interni e posizionamento di oggetti nel mondo 3D, **non** per generare o disegnare le facciate della città.
 
 Per GTA Melito si può trasferire il principio di separare identità dell'edificio, dati d'interazione e oggetti posizionati. La resa esterna deve invece continuare a partire dalle impronte e dai tag OSM, usando override per way ID solo quando supportati da fonti verificabili. Non importare asset/modelli di GTA San Andreas né interpretare gli interni di GTAopen come rilievi degli edifici di Melito.
+
+
+## Interfaccia touch aggiornata — 17 ottobre 2026
+
+Su telefoni il gioco richiede la modalità orizzontale: in verticale mostra una schermata che invita a ruotare; in orizzontale tenta anche il blocco `ScreenOrientation` al primo tocco, quando il browser lo consente. La scena occupa lo schermo. Controlli attivi: levetta analogica in basso a sinistra; pulsante contestuale entra/esci auto a destra e pulsante corri/freno a mano accanto; minimappa in alto a destra; pulsante piccolo `Ⅱ` apre la pausa. HUD, conteggi OSM, missioni, mappa completa, zoom, reset e confronto carreggiate sono accessibili dalla pausa o dal pannello missioni. Su desktop restano WASD/frecce, E, F, M, Shift, Spazio e i controlli classici.
+
+I tasti touch usano pointer capture e movimento analogico proporzionale; in auto la levetta regola accelerazione e sterzo, mentre il tasto contestuale frena a mano. La pausa sospende simulazione e input; il gioco conserva telecamera adattiva, collisioni e mappa. Verificare sui browser mobili che supportano orientation lock e su iOS, dove l’invito a ruotare resta il fallback visivo.
