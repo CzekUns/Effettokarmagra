@@ -44,6 +44,18 @@ Per ogni tranche completata aggiungi una sezione:
 
 **Aree successive:** …
 
+### Sessione 2026-10-18 — Primo ingresso in banca
+
+**Commit / PR:** in preparazione.
+
+**Fatto nel codice:** aggiunto `bank-interior.mjs`: individua i POI OSM `bank`, risolve un punto pedonale libero vicino a una strada e disegna un anello luminoso con invito `BANCA · E`. Avvicinandosi a piedi, il comando contestuale diventa `ENTRA IN BANCA`; E o il pulsante touch apre una scena pixel art autonoma del Banco BPM, con pavimento, sportelli, area d’attesa e ATM. Nella sala si può camminare e uscire con E, Escape o il pulsante `ESCI DALLA BANCA`, che riporta alle coordinate esterne salvate. Il radar e gli elementi di navigazione stradale scompaiono durante l’interno. La prima banca disponibile nello snapshot OSM è Banco BPM; l’individuazione per tag OSM permette di aggiungere automaticamente altri punti banca e in futuro indirizzi specifici.
+
+**Edifici documentati:** l’identità e la coordinata del POI Banco BPM provengono dallo snapshot cartografico OSM; il layout interno è una scena inventata per il gioco, non una ricostruzione dell’interno reale. L’accesso viene posto su una posizione pedonale libera vicino al POI e fuori dagli ingombri degli edifici mappati.
+
+**Test e deploy:** suite locale aggiornata: 139 test superati. Il test dedicato risolve il POI Banco BPM della mappa effettiva e controlla che il marker resti vicino al punto banca; test grafico verifica che la scena interna venga disegnata senza stato della strada. Cache pagina aggiornata a `v129`. Pubblicazione da verificare.
+
+**Aree successive:** l’utente indicherà gli indirizzi ulteriori; resta da verificare la scena su telefono dopo il deploy.
+
 ## Avvertenza
 
 Questa lista **non è un certificato di qualità**. Le voci sono aperte fino a commit, verifica visiva e fonti specifiche. Se una scena migliora ma non corrisponde al fabbricato reale, chiamarla “resa artistica migliorata”, non “ricostruzione fedele”.
