@@ -22,11 +22,12 @@ export function motorcycleVariant(model){
  const index=MOTORCYCLE_IDS.indexOf(model);
  return index>=0?{index,column:index%4,row:Math.floor(index/4)}:null;
 }
-export function stepMotorcycle(speed,angle,axis,braking,dt){
+export function stepMotorcycle(speed,angle,axis,braking,dt,serviceBrake=false){
  const x=clamp(Number(axis?.x)||0,-1,1),y=clamp(Number(axis?.y)||0,-1,1);
  const elapsed=clamp(Number(dt)||0,0,.05);
- let throttle=y<-.08?-y:y>.18?-y:Math.abs(x)>.14?.5*Math.abs(x):0;
- if(Math.abs(throttle)>.08)speed+=39*elapsed*throttle;
+ const throttle=y<-.08?-y:y>.18?-y:0;
+ if(serviceBrake)speed-=Math.sign(speed)*Math.min(Math.abs(speed),65*elapsed);
+ else if(Math.abs(throttle)>.08)speed+=39*elapsed*throttle;
  else speed-=Math.sign(speed)*Math.min(Math.abs(speed),16*elapsed);
  if(braking)speed*=Math.pow(.011,elapsed);
  speed=clamp(speed,-4,33);
