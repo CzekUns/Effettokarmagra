@@ -19,8 +19,8 @@ import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=100';
-import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=094';
-import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=002';
+import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=095';
+import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=003';
 import {nearestEnterableVehicle,starterMotorcycleCandidates} from './vehicle-entry.mjs?v=001';
 import {PARKED_BIKE_TARGET,PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP,motorcycleParkingRoadOrder,motorcycleParkingCandidates,parkedBikeLabel} from './motorcycle-parking.mjs?v=001';
 import {guideCar} from './driving-assist.mjs?v=099';
@@ -30,6 +30,7 @@ import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
 import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=003';
 import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=001';
+import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 const $=id=>document.getElementById(id);
@@ -39,9 +40,29 @@ const staticTiles=new Map();
 const roofReveal=new Map();
 let tileRoadMode=null,pendingTile=null;
 const radar=$('radar'),r=radar.getContext('2d');
-const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false};
+const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false,accelerate:false,brake:false};
 const stick={x:0,y:0};
 function moveAxes(){return {x:Math.abs(stick.x)>.08?stick.x:Number(pressed.right)-Number(pressed.left),y:Math.abs(stick.y)>.08?stick.y:Number(pressed.down)-Number(pressed.up)};}
+const wheel={angle:0,held:false,pointerId:null,pointerAngle:0};
+function driveAxes(){
+ const keys=Number(pressed.right)-Number(pressed.left);
+ return {x:keys||steeringInput(wheel.angle),
+  y:pressed.accelerate||pressed.up?-1:pressed.down?1:0};
+}
+function resetDrivingControls(){
+ pressed.accelerate=false;pressed.brake=false;
+ wheel.angle=0;wheel.held=false;wheel.pointerId=null;
+ const face=$('steering-face');if(face)face.style.transform='rotate(0rad)';
+}
+function animateSteeringWheel(dt){
+ if(!wheel.held){
+  const keys=Number(pressed.right)-Number(pressed.left);
+  wheel.angle=keys?wheel.angle+(keys*WHEEL_MAX_ANGLE*.7-wheel.angle)*Math.min(1,dt*9):
+   returnSteeringWheel(wheel.angle,dt);
+ }
+ const face=$('steering-face');
+ if(face)face.style.transform='rotate('+wheel.angle+'rad)';
+}
 const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const WALK=new Set([...DRIVE,'pedestrian','footway','path','steps']);
@@ -394,7 +415,7 @@ function toggleVehicle(){
    const local={x:.5,y:.89,a:-Math.PI/2,moving:false};
     state.bankInterior={bank:entrance.bank,outside:{x:p.x,y:p.y,a:p.a},player:local,
      camera:bankInteriorCamera(local,canvas.clientWidth,canvas.clientHeight,interiorZoom())};
-   for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
+   for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;resetDrivingControls();
    updateHud();return;
   }
  }
@@ -423,7 +444,7 @@ function toggleVehicle(){
    p.x=target.vehicle.x;p.y=target.vehicle.y;
   }else{$('street').textContent='AVVICINATI A UN VEICOLO PER SALIRE';}
  }
- updateHud();
+ resetDrivingControls();updateHud();
 }
 function carBlocked(x,y,a,which,vehicle=state.cars[which]){
  // Both classes stay within the OSM road; scooters use narrow side probes.
@@ -454,6 +475,7 @@ function tick(dt){
   stick.x=0;stick.y=0;
   return;
  }
+ animateSteeringWheel(dt);
  if(state.bankInterior){
   const axes=moveAxes(),local=state.bankInterior.player;
   stepBankInteriorPlayer(local,axes,pressed.run,dt);
@@ -466,7 +488,7 @@ function tick(dt){
  const p=state.player;
  if(p.car>=0){
   const car=state.cars[p.car];
-  const axes=moveAxes();
+  const axes=driveAxes();
   car.prevX=car.x;car.prevY=car.y;car.prevA=car.a;
   if(car.impactTime>0){
    advanceNonlethalImpact(car,dt,canKnockbackMove);
@@ -481,7 +503,7 @@ function tick(dt){
    speed=rebound.speed;car.recoil=rebound.recoil;angle=car.a;
   }else{
    advanceNonlethalImpact(car,dt,canKnockbackMove);
-   ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt));
+   ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt,pressed.brake));
    const road=nearest(car.x,car.y,25,state.roads,true);
    const turn=guideIntersection({x:car.x,y:car.y,angle,speed},axes.x,road,
     state.graph,state.turnGuides,car.turnGuide||null,dt);
@@ -580,7 +602,10 @@ function compareRoadWidths(){
 
 function updateHud(){
  const p=state.player;
+ const driving=p.car>=0&&!state.bankInterior;
  $('stage')?.classList.toggle('interior',!!state.bankInterior);
+ $('stage')?.classList.toggle('driving',driving);
+ document.querySelector('.controls')?.classList.toggle('driving',driving);
  if(state.bankInterior){
   $('vehicle').textContent='ALL’INTERNO DELLA BANCA';$('street').textContent=state.bankInterior.bank.n.toUpperCase();
   $('action').textContent='ESCI DALLA BANCA';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
@@ -592,8 +617,8 @@ function updateHud(){
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
  const bank= p.car<0?nearestBankEntrance(state.bankEntrances,p):null;
  $('action').textContent=bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':nearestEnterableVehicle(state.cars,p)?.bike?'SALTA IN SELLA':'ENTRA IN AUTO';
- $('sprint').textContent=p.car>=0?'FRENO':'CORRI';
- $('sprint').setAttribute('aria-label',p.car>=0?'Freno a mano':'Corri');
+ $('sprint').textContent='CORRI';
+ $('sprint').setAttribute('aria-label','Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
  const status={inVehicle:p.car>=0,
   speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?RUN_SPEED:WALK_SPEED):0,
@@ -915,6 +940,29 @@ function bind(){
   if(e.key==='Shift')pressed.run=false;
   if(e.code==='Space')pressed.handbrake=false;
  });
+ const steeringPad=$('steering-wheel');
+ const wheelPointer=e=>{
+  const box=steeringPad.getBoundingClientRect();
+  return pointerWheelAngle(e.clientX,e.clientY,box.left+box.width/2,box.top+box.height/2);
+ };
+ steeringPad.addEventListener('pointerdown',e=>{
+  if(state.player.car<0||state.bankInterior||wheel.held)return;
+  e.preventDefault();wheel.held=true;wheel.pointerId=e.pointerId;wheel.pointerAngle=wheelPointer(e);
+  try{steeringPad.setPointerCapture(e.pointerId);}catch(_){}
+ });
+ steeringPad.addEventListener('pointermove',e=>{
+  if(!wheel.held||wheel.pointerId!==e.pointerId)return;
+  e.preventDefault();
+  const next=wheelPointer(e);
+  wheel.angle=turnSteeringWheel(wheel.angle,wheel.pointerAngle,next);
+  wheel.pointerAngle=next;
+  $('steering-face').style.transform='rotate('+wheel.angle+'rad)';
+ });
+ const releaseWheel=e=>{
+  if(wheel.pointerId===e.pointerId){wheel.held=false;wheel.pointerId=null;}
+ };
+ for(const name of ['pointerup','pointercancel','lostpointercapture'])steeringPad.addEventListener(name,releaseWheel);
+ // Keyboard wheel accessibility: left/right arrows or A/D already steer.
  const stickPad=$('touch-stick'),stickKnob=$('stick-knob');
  const resetStick=()=>{stick.x=0;stick.y=0;stickKnob.style.transform='translate(0,0)';};
  const updateStick=e=>{
@@ -926,7 +974,7 @@ function bind(){
  stickPad.addEventListener('pointermove',e=>{if(stickPad.hasPointerCapture?.(e.pointerId))updateStick(e);});
  for(const name of ['pointerup','pointercancel','lostpointercapture'])stickPad.addEventListener(name,resetStick);
  const pause=$('pause-menu'),pauseButton=$('pause-toggle');
- const openPause=()=>{Object.keys(pressed).forEach(k=>pressed[k]=false);stick.x=0;stick.y=0;pause.hidden=false;pauseButton.setAttribute('aria-expanded','true');$('pause-details').textContent='MEZZO: '+$('vehicle').textContent+'  ·  CAMERA: '+$('camera-mode').textContent+'  ·  STRADE: '+$('road-count').textContent+'  ·  EDIFICI OSM: '+$('building-count').textContent+'  ·  PLACEHOLDER: '+$('inferred-count').textContent+'  ·  INCROCI: '+$('junction-count').textContent+'  ·  '+$('road-width-current').textContent+' unità';};
+ const openPause=()=>{Object.keys(pressed).forEach(k=>pressed[k]=false);stick.x=0;stick.y=0;resetDrivingControls();pause.hidden=false;pauseButton.setAttribute('aria-expanded','true');$('pause-details').textContent='MEZZO: '+$('vehicle').textContent+'  ·  CAMERA: '+$('camera-mode').textContent+'  ·  STRADE: '+$('road-count').textContent+'  ·  EDIFICI OSM: '+$('building-count').textContent+'  ·  PLACEHOLDER: '+$('inferred-count').textContent+'  ·  INCROCI: '+$('junction-count').textContent+'  ·  '+$('road-width-current').textContent+' unità';};
  const closePause=()=>{pause.hidden=true;pauseButton.setAttribute('aria-expanded','false');};
  pauseButton.addEventListener('click',()=>pause.hidden?openPause():closePause());
  $('pause-close').addEventListener('click',closePause);
@@ -936,7 +984,7 @@ function bind(){
  const orient=()=>{const rotate=$('rotate-screen');rotate.hidden=typeof matchMedia!=='function'||matchMedia('(orientation: landscape)').matches;};
  orient();window.addEventListener('orientationchange',orient);window.addEventListener('resize',orient);
  const lockLandscape=()=>{try{if(typeof screen!=='undefined'&&screen.orientation?.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(_){}};
- for(const id of ['touch-stick','action','sprint'])$(id).addEventListener('pointerdown',lockLandscape,{once:true});
+ for(const id of ['touch-stick','steering-wheel','action','sprint','accelerator','brake'])$(id).addEventListener('pointerdown',lockLandscape,{once:true});
  document.querySelectorAll('[data-dir]').forEach(btn=>{
   const key=btn.dataset.dir;
   btn.addEventListener('pointerdown',e=>{e.preventDefault();pressed[key]=true;btn.classList.add('pressed');try{btn.setPointerCapture(e.pointerId);}catch(_){}});
@@ -976,11 +1024,13 @@ function bind(){
    message('Nuova partita iniziata!','NUOVA PARTITA');refreshCampaign();
   }
  });
- for(const [id,key] of [['brake','handbrake'],['sprint','run']]){
-  const btn=$(id);if(!btn)continue;
-  const activeKey=()=>id==='sprint'&&state.player.car>=0?'handbrake':key;
-  btn.addEventListener('pointerdown',e=>{e.preventDefault();const k=activeKey();btn.dataset.activeKey=k;pressed[k]=true;btn.classList.add('pressed');try{btn.setPointerCapture(e.pointerId);}catch(_){}});
-  const release=()=>{pressed[btn.dataset.activeKey||key]=false;btn.classList.remove('pressed');};
+ for(const [id,key] of [['accelerator','accelerate'],['brake','brake'],['sprint','run']]){
+  const btn=$(id);
+  btn.addEventListener('pointerdown',e=>{
+   e.preventDefault();pressed[key]=true;btn.classList.add('pressed');
+   try{btn.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  const release=()=>{pressed[key]=false;btn.classList.remove('pressed');};
   for(const name of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(name,release);
  }
 
@@ -990,10 +1040,10 @@ function bind(){
  $('zoom-auto').addEventListener('click',()=>{state.zoomBias=1;});
  $('reset').addEventListener('click',()=>{
   if(!state.ready)return;const p=state.player;p.car=-1;p.vehicleType=null;p.x=state.spawn[0];p.y=state.spawn[1];p.a=0;state.camera.x=p.x;state.camera.y=p.y;
-  state.zoom=CAMERA_ZOOM_MAX;state.zoomBias=1;state.zoomTarget=CAMERA_ZOOM_MAX;updateHud();
+  state.zoom=CAMERA_ZOOM_MAX;state.zoomBias=1;state.zoomTarget=CAMERA_ZOOM_MAX;resetDrivingControls();updateHud();
  });
- window.addEventListener('blur',()=>{Object.keys(pressed).forEach(k=>pressed[k]=false);resetStick();});
- document.addEventListener('visibilitychange',()=>{if(document.hidden){Object.keys(pressed).forEach(k=>pressed[k]=false);resetStick();}});
+ window.addEventListener('blur',()=>{Object.keys(pressed).forEach(k=>pressed[k]=false);resetStick();resetDrivingControls();});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){Object.keys(pressed).forEach(k=>pressed[k]=false);resetStick();resetDrivingControls();}});
  canvas.addEventListener('wheel',e=>{e.preventDefault();
   state.zoomBias=clamp(state.zoomBias*(e.deltaY>0?.91:1.1),.62,1.35);
  },{passive:false});
