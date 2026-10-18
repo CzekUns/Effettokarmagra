@@ -87,6 +87,24 @@ export function applyApprovedArcadeRoofStyle(buildings){
  }
  return count;
 }
+// Three original pixel-art roof studies around Piazza Santo Stefano. The
+// satellite view establishes dense urban massing, while these individual
+// materials and roof fixtures remain illustrative, not photo observations.
+const piazzaStudies=new Map([
+ [733703625,{kind:'courtyard',roof:'#a7a99c',wall:'#dac4aa'}],
+ [733703811,{kind:'longblock',roof:'#adb2a6',wall:'#d8c4ad'}],
+ [733703751,{kind:'terrace',roof:'#c0b8a4',wall:'#dec5a1'}]
+]);
+export function applyPiazzaRoofStudies(buildings){
+ let count=0;
+ for(const b of buildings){
+  const study=piazzaStudies.get(b.id),a=b.art;
+  if(!study||!a||a.surveyStatus==='photo-verified'||b.roof==='flat')continue;
+  a.roof=false;a.roofStudy=study.kind;a.roofTint=study.roof;
+  a.facadeTint=study.wall;count++;
+ }
+ return count;
+}
 /* Parcel-like surface colours are estimated from actual OSM building
  * density and road proximity, not claimed as surveyed lawns or pavements. */
 export function prepareUrbanGround(buildings,roads){
@@ -208,7 +226,10 @@ function flatRoof(c,b,art,tone){
  const {x0,y0,x1,y1,cx,cy,w,h:bh,area,seed}=art;
  c.save();poly(c,b.p);c.clip();
  c.fillStyle=material(c,'stone',tone);c.fillRect(x0,y0,w,bh);
- if(art.type!=='industrial'&&area>150){
+ if(art.roofStudy){
+  c.globalAlpha=.42;c.fillStyle=art.roofTint;c.fillRect(x0,y0,w,bh);c.globalAlpha=1;
+ }
+ if(!art.roofStudy&&art.type!=='industrial'&&area>150){
   c.strokeStyle='#6c64552b';c.lineWidth=.22;c.beginPath();
   for(let x=x0+5;x<x1;x+=6){c.moveTo(x,y0+1);c.lineTo(x,y1-1);}
   for(let y=y0+5;y<y1;y+=6){c.moveTo(x0+1,y);c.lineTo(x1-1,y);}
@@ -216,7 +237,7 @@ function flatRoof(c,b,art,tone){
  }
  c.strokeStyle='#e6dcc0aa';c.lineWidth=.5;
  c.strokeRect(x0+1.3,y0+1.3,Math.max(0,w-2.6),Math.max(0,bh-2.6));
- if(area>55){
+ if(area>55&&!art.roofStudy){
   const steps=Math.min(4,Math.floor(area/320)+1);
   for(let j=0;j<steps;j++){
    const x=x0+4+rnd(seed+j*37+11)*Math.max(1,w-8);
@@ -227,14 +248,15 @@ function flatRoof(c,b,art,tone){
    c.fillStyle='#e8d6b378';c.fillRect(x-1.2,y-1.4,3,.4);
   }
  }
- if(art.type==='apartment'&&area>220){
+ if(art.type==='apartment'&&area>220&&!art.roofStudy){
   // Antennas, roof stairs and a small water reservoir — drawn as texture.
   c.fillStyle='#c1baab';c.fillRect(cx-2.9,cy-2.7,5.8,5);
   c.strokeStyle='#777365';c.lineWidth=.35;c.strokeRect(cx-2.9,cy-2.7,5.8,5);
   c.fillStyle='#464b48';c.fillRect(cx+1,cy-2,1.4,3.8);
  }
 
- roofHardware(c,art);
+ if(art.roofStudy)studyRoofHardware(c,art);
+ else roofHardware(c,art);
  const features=art.surveyFeatures;
  if(features?.roofTerrace&&area>120&&w>10&&bh>10){
   // Stairwell access, light parapet and a few drying lines; original arcade art.
@@ -270,6 +292,30 @@ function flatRoof(c,b,art,tone){
   }
  }
  c.restore();
+}
+function studyRoofHardware(c,a){
+ const {cx,cy,w,h:bh,roofStudy:kind}=a;
+ const raised=(x,y,width,height,tone)=>{
+  c.fillStyle='#26302c70';c.fillRect(x+1.2,y+1.6,width,height);
+  c.fillStyle=tone;c.fillRect(x,y,width,height);
+  c.strokeStyle='#e9dfc2';c.lineWidth=.43;c.strokeRect(x+.35,y+.35,width-.7,height-.7);
+  c.strokeStyle='#52615c';c.lineWidth=.33;c.strokeRect(x,y,width,height);
+ };
+ // All rooftop fixtures share the same northwest light and southeast shadow.
+ if(kind==='courtyard'){
+  raised(cx-9,cy-6,10,7,'#d4cbb4');
+  raised(cx+5,cy-3,4,5,'#778b83');
+  c.fillStyle='#445e67';c.fillRect(cx-6,cy+5,9,2.4);
+  c.fillStyle='#b8c8bd';c.fillRect(cx-6,cy+5,9,.45);
+ }else if(kind==='longblock'){
+  raised(cx-13,cy-4,12,6,'#d4c9b4');
+  raised(cx+4,cy-5,7,5,'#b9b8a7');
+  c.fillStyle='#53767a';c.fillRect(cx-12,cy+5,18,2);
+  c.fillStyle='#c5d4ca';c.fillRect(cx-12,cy+5,18,.38);
+ }else{
+  raised(cx-5,cy-3,7,5,'#d7ceba');
+  raised(cx+5,cy+2,2.7,2.7,'#6e817e');
+ }
 }
 function specialized(c,b,art){
  const {cx,cy,w,h:bh,seed}=art;
