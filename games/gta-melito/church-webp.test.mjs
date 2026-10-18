@@ -55,5 +55,5 @@ test('entrypoint invalidates cached tiles when church artwork becomes ready',asy
  const page=await readFile(new URL('./index.html',import.meta.url),'utf8');
  assert.ok(game.includes('loadChurchWebp(()=>{staticTiles.clear();pendingTile=null;})'));
  assert.ok(game.includes('city-art.mjs?v=120'));
- assert.ok(page.includes('game.mjs?v=121'));
+ assert.ok(page.includes('game.mjs?v=122'));
 });

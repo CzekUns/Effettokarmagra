@@ -24,22 +24,28 @@ export function nearbyColliders(index,x,y,radius=8){
    for(const item of index.bins.get(gx+','+gy)||[])found.add(item);
  return found;
 }
+export function vehicleShape(v){
+ return v?.vehicleType==='motorcycle'?{halfLength:2.8,halfWidth:1.05}:{halfLength:3.15,halfWidth:1.7};
+}
 export function vehiclesOverlap(a,b,pad=.05){
- if(Math.abs(a.x-b.x)>8||Math.abs(a.y-b.y)>8)return false;
+ const da=vehicleShape(a),db=vehicleShape(b);
+ const span=Math.hypot(da.halfLength+pad,da.halfWidth+pad)+Math.hypot(db.halfLength+pad,db.halfWidth+pad);
+ if(Math.abs(a.x-b.x)>span||Math.abs(a.y-b.y)>span)return false;
  const ca=Math.cos(a.a),sa=Math.sin(a.a),cb=Math.cos(b.a),sb=Math.sin(b.a);
  const axes=[[ca,sa],[-sa,ca],[cb,sb],[-sb,cb]];
  const dx=b.x-a.x,dy=b.y-a.y;
  for(const [ux,uy] of axes){
-  const ra=(3.15+pad)*Math.abs(ux*ca+uy*sa)+(1.7+pad)*Math.abs(-ux*sa+uy*ca);
-  const rb=(3.15+pad)*Math.abs(ux*cb+uy*sb)+(1.7+pad)*Math.abs(-ux*sb+uy*cb);
+  const ra=(da.halfLength+pad)*Math.abs(ux*ca+uy*sa)+(da.halfWidth+pad)*Math.abs(-ux*sa+uy*ca);
+  const rb=(db.halfLength+pad)*Math.abs(ux*cb+uy*sb)+(db.halfWidth+pad)*Math.abs(-ux*sb+uy*cb);
   if(Math.abs(dx*ux+dy*uy)>=ra+rb)return false;
  }
  return true;
 }
 export function vehicleHitsPedestrian(car,ped,pad=.8){
+ const d=vehicleShape(car);
  const dx=ped.x-car.x,dy=ped.y-car.y,ca=Math.cos(car.a),sa=Math.sin(car.a);
  const forward=dx*ca+dy*sa,side=-dx*sa+dy*ca;
- return forward>=-2.6-pad&&forward<=3.4+pad&&Math.abs(side)<1.7+pad;
+ return forward>=-d.halfLength-pad&&forward<=d.halfLength+pad&&Math.abs(side)<d.halfWidth+pad;
 }
 function touches(pose,body,other){
  const otherBody=other.body||'car';

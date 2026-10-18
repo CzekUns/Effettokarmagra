@@ -6,8 +6,8 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=115';
-import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap} from './traffic-collision.mjs?v=114';
+import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=116';
+import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap} from './traffic-collision.mjs?v=115';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
@@ -20,6 +20,7 @@ import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=100';
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=094';
+import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=001';
 import {guideCar} from './driving-assist.mjs?v=099';
 import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
@@ -153,7 +154,7 @@ function prepareMap(map,surveyData=[],infillCache=null){
  const chosen=pool.map(q=>({q,p:roadPoint(q,.5)})).sort((a,b)=>Math.hypot(a.p.x-center[0],a.p.y-center[1])-Math.hypot(b.p.x-center[0],b.p.y-center[1]))[0];
  const point=chosen.p;
  state.zoom=CAMERA_ZOOM_MAX;state.zoomTarget=CAMERA_ZOOM_MAX;state.zoomBias=1;
- state.spawn=[point.x,point.y];Object.assign(state.player,{x:point.x,y:point.y,a:point.a,car:-1});
+ state.spawn=[point.x,point.y];Object.assign(state.player,{x:point.x,y:point.y,a:point.a,car:-1,vehicleType:null});
  state.camera.x=point.x;state.camera.y=point.y;state.distance=0;
  state.graph=buildRoadGraph(state.roads);
  state.turnGuides=buildTurnGuides(state.graph);
@@ -171,6 +172,17 @@ function prepareMap(map,surveyData=[],infillCache=null){
  })).find(car=>Math.hypot(car.x-point.x,car.y-point.y)<10.8&&!carBlocked(car.x,car.y,car.a,-1))||
   {x:point.x+Math.cos(point.a)*9,y:point.y+Math.sin(point.a)*9,a:point.a,speed:0,type:0,model:'panda-modern-white'};
  state.cars=[nearCar];
+ // Offer one scooter close to the starter Panda, only if the opposite curb
+ // has clearance from OSM walls and other vehicles.
+ const shoulderBike=Math.max(3.3,visualRoadWidth(chosen.q)/2+1.15);
+ for(const side of [-1,1]){
+  const bike={x:point.x+Math.cos(point.a)*7-Math.sin(point.a)*shoulderBike*side,
+   y:point.y+Math.sin(point.a)*7+Math.cos(point.a)*shoulderBike*side,
+   a:point.a,speed:0,type:0,model:MOTORCYCLE_IDS[0],vehicleType:'motorcycle'};
+  if(Math.hypot(bike.x-point.x,bike.y-point.y)<12.8&&
+     !carBlocked(bike.x,bike.y,bike.a,-1,bike)&&
+     state.cars.every(v=>!vehiclesOverlap(bike,v))){state.cars.push(bike);break;}
+ }
  let k=0;
  for(const road of possible){
   if(arcLength(road.p)<25||rnd(road.id)%1>.33)continue;
@@ -182,14 +194,14 @@ function prepareMap(map,surveyData=[],infillCache=null){
   const first=rnd(road.id+29)<.5?1:-1;
   const parked=[first,-first].map(side=>({
    x:pt.x-Math.sin(pt.a)*shoulder*side,y:pt.y+Math.cos(pt.a)*shoulder*side,
-   a:pt.a,speed:0,type:k%5,model:k%8===1?'panda-fire-red':k%3===0?CAR_TRAFFIC_SPRITE_IDS[(k*7)%CAR_TRAFFIC_SPRITE_IDS.length]:null
+   a:pt.a,speed:0,type:k%5,vehicleType:k%8===3?'motorcycle':'car',model:k%8===3?MOTORCYCLE_IDS[(k+Math.floor(k/8)*5)%MOTORCYCLE_IDS.length]:k%8===1?'panda-fire-red':k%3===0?CAR_TRAFFIC_SPRITE_IDS[(k*7)%CAR_TRAFFIC_SPRITE_IDS.length]:null
   })).find(car=>!carBlocked(car.x,car.y,car.a,-1)&&!state.cars.some(other=>vehiclesOverlap(car,other)));
   if(!parked)continue;
   state.cars.push(parked);k++;
   if(state.cars.length>=105)break;
  }
  state.traffic=createAgents(state.graph,140,189,'car',state.cars);
- state.traffic.forEach((v,i)=>{v.model=i%3===0?CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length]:null;});
+ state.traffic.forEach((v,i)=>{const bike=i%12===2;v.vehicleType=bike?'motorcycle':'car';v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/12)*5)%MOTORCYCLE_IDS.length]:i%3===0?CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length]:null;v.rider=bike;});
  state.people=createAgents(state.graph,190,310,'walk',[...state.cars,...state.traffic]);
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  $('road-count').textContent=String(state.roads.length);
@@ -301,22 +313,35 @@ function toggleVehicle(){
  if(!state.ready)return;
  const p=state.player;
  if(p.car>=0){
-  const car=state.cars[p.car],xx=car.x-Math.sin(car.a)*3.8,yy=car.y+Math.cos(car.a)*3.8;
-  car.turnGuide=null;car.recoil=0;car.speed=0;
-  p.x=validWalk(xx,yy)?xx:car.x;p.y=validWalk(xx,yy)?yy:car.y;p.car=-1;
+  const vehicle=state.cars[p.car],bike=isMotorcycle(vehicle);
+  if(bike&&Math.abs(vehicle.speed||0)>2.3){
+   $('street').textContent='FERMATI PRIMA DI SCENDERE DALLA MOTO';return;
+  }
+  const blocked=(x,y)=>!!(state.dynamicCollision&&
+   collidesWithTraffic({x,y,a:p.a},'walk',state.dynamicCollision,vehicle));
+  const exit=bike?chooseMotorcycleDismount(vehicle,validWalk,blocked):
+   [{x:vehicle.x-Math.sin(vehicle.a)*3.8,y:vehicle.y+Math.cos(vehicle.a)*3.8},
+    {x:vehicle.x+Math.sin(vehicle.a)*3.8,y:vehicle.y-Math.cos(vehicle.a)*3.8}]
+    .find(q=>validWalk(q.x,q.y)&&!blocked(q.x,q.y));
+  if(!exit){$('street').textContent='NESSUNO SPAZIO LIBERO PER SCENDERE';return;}
+  vehicle.turnGuide=null;vehicle.recoil=0;vehicle.speed=0;
+  p.x=exit.x;p.y=exit.y;p.car=-1;p.vehicleType=null;
  }else{
-  let close=-1,dist=11;
-  state.cars.forEach((car,i)=>{const d=Math.hypot(car.x-p.x,car.y-p.y);if(d<dist){dist=d;close=i;}});
-  if(close>=0){p.car=close;p.a=state.cars[close].a;}else{$('street').textContent='AVVICINATI A UN\u2019AUTO PER SALIRE';}
+  let close=-1,dist=10.5;
+  state.cars.forEach((v,i)=>{const d=Math.hypot(v.x-p.x,v.y-p.y);if(d<dist){dist=d;close=i;}});
+  if(close>=0){
+   p.car=close;p.a=state.cars[close].a;
+   p.vehicleType=state.cars[close].vehicleType||'car';
+  }else{$('street').textContent='AVVICINATI A UN VEICOLO PER SALIRE';}
  }
  updateHud();
 }
-function carBlocked(x,y,a,which){
- // The OSM centreline is authoritative for driving. A building whose mapped
- // footprint clips that corridor is visually masked by the road painter and
- // cannot trap a car inside the drivable surface.
- const dirx=Math.cos(a),diry=Math.sin(a);
- for(const forward of [-2.6,0,3.4])for(const side of [-1.7,1.7]){
+function carBlocked(x,y,a,which,vehicle=state.cars[which]){
+ // Both classes stay within the OSM road; scooters use narrow side probes.
+ const dirx=Math.cos(a),diry=Math.sin(a),bike=isMotorcycle(vehicle);
+ const forwards=bike?[-2.25,0,2.25]:[-2.6,0,3.4];
+ const sides=bike?[-.85,.85]:[-1.7,1.7];
+ for(const forward of forwards)for(const side of sides){
   const px=x+dirx*forward-diry*side,py=y+diry*forward+dirx*side;
   if(!inside([px,py],toRing(state.map.border)))return true;
   const road=nearest(px,py,25,state.roads,true);
@@ -324,7 +349,8 @@ function carBlocked(x,y,a,which){
   if(!road||road.distance>width/2+SIDEWALK_DRIVE||!canDriveProbe(road.distance,width,
    road.distance>width/2-.55&&buildingAt(px,py)))return true;
  }
- return !!(state.dynamicCollision&&collidesWithTraffic({x,y,a},'car',state.dynamicCollision,state.cars[which]));
+ return !!(state.dynamicCollision&&collidesWithTraffic(
+  {x,y,a,vehicleType:bike?'motorcycle':'car'},'car',state.dynamicCollision,vehicle));
 }
 function toRing(border){
  if(state.borderRing)return state.borderRing;
@@ -349,7 +375,7 @@ function tick(dt){
    const rebound=advanceRecoil(car.speed,car.recoil,dt);
    speed=rebound.speed;car.recoil=rebound.recoil;angle=car.a;
   }else{
-   ({speed,angle}=stepDriving(car.speed||0,car.a,axes,pressed.handbrake,dt));
+   ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt));
    const road=nearest(car.x,car.y,25,state.roads,true);
    const turn=guideIntersection({x:car.x,y:car.y,angle,speed},axes.x,road,
     state.graph,state.turnGuides,car.turnGuide||null,dt);
@@ -418,7 +444,7 @@ function compareRoadWidths(){
  // street furniture, crosswalks and building-side storefront placements.
  state.graph=buildRoadGraph(state.roads);
  state.traffic=createAgents(state.graph,140,189,'car',state.cars);
- state.traffic.forEach((v,i)=>{v.model=i%3===0?CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length]:null;});
+ state.traffic.forEach((v,i)=>{const bike=i%12===2;v.vehicleType=bike?'motorcycle':'car';v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/12)*5)%MOTORCYCLE_IDS.length]:i%3===0?CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length]:null;v.rider=bike;});
  state.people=createAgents(state.graph,190,310,'walk',[...state.cars,...state.traffic]);
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
@@ -431,11 +457,11 @@ function compareRoadWidths(){
 
 function updateHud(){
  const p=state.player;
- $('vehicle').textContent=p.car>=0?'AUTO · '+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H':'A PIEDI';
+ $('vehicle').textContent=p.car>=0?(isMotorcycle(state.cars[p.car])?'MOTO · ':'AUTO · ')+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H':'A PIEDI';
  const n=state.roadGrid?nearest(p.x,p.y,70):null;
  if(n&&n.road.n)$('street').textContent=n.road.n.toUpperCase();
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
- $('action').textContent=p.car>=0?'SCENDI':'ENTRA IN AUTO';
+ $('action').textContent=p.car>=0?'SCENDI':state.cars.some(v=>isMotorcycle(v)&&Math.hypot(v.x-p.x,v.y-p.y)<7)?'SALTA IN SELLA':'ENTRA IN AUTO';
  $('sprint').textContent=p.car>=0?'FRENO':'CORRI';
  $('sprint').setAttribute('aria-label',p.car>=0?'Freno a mano':'Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
@@ -446,9 +472,12 @@ function updateHud(){
 }
 function drawLine(p){c.beginPath();c.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)c.lineTo(p[i],p[i+1]);}
 function poly(p){drawLine(p);c.closePath();}
-function drawCar(x,y,a,type,drive=false,model=null){
- // PNG is an optional visual skin. Collision and driving remain unchanged;
- // if the picture is still loading, use the original procedural car.
+function drawCar(x,y,a,type,drive=false,model=null,vehicle=null){
+ if(isMotorcycle(vehicle)){
+  drawMotorcycle(c,x,y,a,model,{rider:drive||!!vehicle.rider,focused:drive,
+   jacket:drive?'#b7343b':vehicle.kind%3===0?'#406b87':'#86896e'});
+  return;
+ }
  if(!drawCarSprite(c,x,y,a,model,drive))drawCityCar(c,x,y,a,type,drive,state.clock);
 }
 function drawPlayer(){
@@ -622,9 +651,9 @@ function draw(dt=0){
   const x=ai.prevX===undefined?ai.x:ai.prevX+(ai.x-ai.prevX)*alpha;
   const y=ai.prevY===undefined?ai.y:ai.prevY+(ai.y-ai.prevY)*alpha;
   const a=ai.prevA===undefined?ai.a:ai.prevA+Math.atan2(Math.sin(ai.a-ai.prevA),Math.cos(ai.a-ai.prevA))*alpha;
-  drawCar(x,y,a,ai.kind,false,ai.model);
+  drawCar(x,y,a,ai.kind,false,ai.model,ai);
  }
- state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model);});
+ state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);});
  drawPlayer();
 }
 function prepareMini(){
@@ -785,7 +814,7 @@ function bind(){
  $('zoom-out').addEventListener('click',()=>{state.zoomBias=clamp(state.zoomBias/1.17,.62,1.35);});
  $('zoom-auto').addEventListener('click',()=>{state.zoomBias=1;});
  $('reset').addEventListener('click',()=>{
-  if(!state.ready)return;const p=state.player;p.car=-1;p.x=state.spawn[0];p.y=state.spawn[1];p.a=0;state.camera.x=p.x;state.camera.y=p.y;
+  if(!state.ready)return;const p=state.player;p.car=-1;p.vehicleType=null;p.x=state.spawn[0];p.y=state.spawn[1];p.a=0;state.camera.x=p.x;state.camera.y=p.y;
   state.zoom=CAMERA_ZOOM_MAX;state.zoomBias=1;state.zoomTarget=CAMERA_ZOOM_MAX;updateHud();
  });
  window.addEventListener('blur',()=>{Object.keys(pressed).forEach(k=>pressed[k]=false);resetStick();});
@@ -795,4 +824,4 @@ function bind(){
  },{passive:false});
 }
 loadChurchWebp(()=>{staticTiles.clear();pendingTile=null;});
-loadExtraPedestrianSprites();loadPedestrianSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();
+loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();
