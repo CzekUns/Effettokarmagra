@@ -43,7 +43,7 @@ test('responsive UI swaps thumbstick for steering wheel only while riding and ha
  assert.match(html,/\.stage\.driving \.touch-stick\{display:none!important\}/);
  assert.match(html,/\.stage\.driving \.steering-wheel\{display:flex\}/);
  assert.match(html,/\.controls\.driving \.pedals\{display:flex\}/);
- assert.match(html,/game\.mjs\?v=137/);
+ assert.match(html,/game\.mjs\?v=138/);
  assert.match(game,/const axes=driveAxes\(\)/);
  assert.match(game,/pressed\.handbrake,dt,pressed\.brake/);
  assert.match(game,/turnSteeringWheel\(wheel\.angle,wheel\.pointerAngle,next\)/);
@@ -114,4 +114,47 @@ test('real HUD switches visible controls between car, walking and interior scene
  state.bankInterior={bank:{n:'BANCA'}};update();
  assert.ok(nodes.get('stage').classes.has('interior'),'interior cutaway mode must be active');
  assert.ok(!nodes.get('stage').classes.has('driving'),'no wheel inside a bank');
+});
+
+test('retromarcia has its own hold button below the service brake and smaller touch dimensions',async()=>{
+ const [html,game]=await Promise.all([
+  readFile(new URL('./index.html',import.meta.url),'utf8'),
+  readFile(new URL('./game.mjs',import.meta.url),'utf8')
+ ]);
+ assert.match(html,/id="accelerator"[^>]*>ACCELERA<\/button><button id="brake"[^>]*>FRENO<\/button><button id="reverse"[^>]*>RETRO<\/button>/);
+ assert.match(html,/\.touch-actions \.pedals button\{width:clamp\(56px,12vw,72px\);height:clamp\(50px,11vw,64px\)/);
+ assert.match(html,/\.touch-actions button\{border-radius:50%;width:clamp\(56px,13vw,76px\)/);
+ assert.match(html,/\.touch-actions \.pedals #reverse\{/);
+ assert.match(game,/for\(const \[id,key\] of \[\['accelerator','accelerate'\],\['brake','brake'\],\['reverse','reverse'\]/);
+ assert.match(game,/for\(const id of \['touch-stick','steering-wheel','action','sprint','accelerator','brake','reverse'\]/);
+ assert.match(game,/pressed\.reverse=false/,'reverse must clear on dismount, pause and focus loss');
+});
+
+test('reverse pedal actually reverses car and motorcycle; opposing pedals cancel',async()=>{
+ const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
+ const begin=game.indexOf('function driveAxes(){');
+ const end=game.indexOf('\nfunction resetDrivingControls()',begin);
+ assert.ok(begin>=0&&end>begin);
+ const pressed={accelerate:false,up:false,reverse:false,down:false,left:false,right:false};
+ const driveAxes=new Function('pressed','wheel','steeringInput',[
+  game.slice(begin,end),'return driveAxes;'
+ ].join('\n'))(pressed,{angle:0},steeringInput);
+ assert.equal(driveAxes().y,0);
+ pressed.reverse=true;
+ assert.equal(driveAxes().y,1,'reverse pedal feeds the drivetrain independently of the wheel');
+ let car=0,bike=0;
+ for(let i=0;i<15;i++){
+  car=stepDriving(car,0,driveAxes(),false,.05).speed;
+  bike=stepMotorcycle(bike,0,driveAxes(),false,.05).speed;
+ }
+ assert.ok(car< -4,'car must travel backwards when RETRO is held');
+ assert.ok(bike< -.5,'motorcycle must travel backwards when RETRO is held');
+ pressed.accelerate=true;
+ assert.equal(driveAxes().y,0,'gas and reverse together must be neutral');
+ pressed.reverse=false;
+ assert.equal(driveAxes().y,-1,'gas resumes normally after RETRO release');
+ assert.ok(stepDriving(-2,0,driveAxes(),false,.05).speed> -2);
+ pressed.accelerate=false;
+ pressed.down=true;
+ assert.equal(driveAxes().y,1,'keyboard S continues to work as reverse');
 });
