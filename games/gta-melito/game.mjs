@@ -6,7 +6,8 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=127';
+import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=139';
+import {createRoutineResidents} from './resident-routines.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=125';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
@@ -156,6 +157,15 @@ function roadPoint(road,fraction){
  }
  return {x:p[0],y:p[1],a:0};
 }
+function createCityPedestrians(){
+ const border=toRing(state.map.border);
+ const residents=createRoutineResidents(state.graph,10,405,
+  {x:state.spawn[0],y:state.spawn[1]},[...state.cars,...state.traffic],
+  (x,y)=>validWalk(x,y)&&inside([x,y],border));
+ const walkers=createAgents(state.graph,170-residents.length,310,'walk',
+  [...state.cars,...state.traffic,...residents]);
+ return [...residents,...walkers];
+}
 function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
  staticTiles.clear();roofReveal.clear();tileRoadMode=null;
@@ -265,7 +275,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  }
  state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
  state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
- state.people=createAgents(state.graph,170,310,'walk',[...state.cars,...state.traffic]);
+ state.people=createCityPedestrians();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
@@ -615,7 +625,7 @@ function compareRoadWidths(){
  state.graph=buildRoadGraph(state.roads);
  state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
  state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
- state.people=createAgents(state.graph,170,310,'walk',[...state.cars,...state.traffic]);
+ state.people=createCityPedestrians();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
  state.propsGrid=makeIndex(state.props);

@@ -1,4 +1,5 @@
 import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
+import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=001';
 import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked} from './traffic-collision.mjs?v=125';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
@@ -219,6 +220,7 @@ function nextPose(graph,agent,distance){
 export function stepAgent(graph,agent,dt,others=[],player=null,index=null){
  if(!Number.isFinite(dt)||dt<=0||agent.impactTime>0||agent.needsRoutineRecovery)return;
  const elapsed=Math.min(dt,.1);
+ if(agent.residentRoutine){stepResidentRoutine(graph,agent,elapsed,index);return;}
  if(agent.wait>0){agent.wait=Math.max(0,agent.wait-elapsed);return;}
  const edge=graph.edges[agent.edge];if(!edge||!(agent.body==='car'?edge.car:edge.walk))return;
  let speed=agent.speed;
@@ -290,6 +292,7 @@ function outsideView(x,y,view,padding=16){
 }
 export function restoreAgentRoutine(graph,agent,dt,world={},index=null){
  if(!agent.needsRoutineRecovery)return false;
+ if(agent.residentRoutine)return restoreResidentRoutine(graph,agent,dt,world,index);
  const offscreen=outsideView(agent.x,agent.y,world.view);
  const home=agent.home;
  const far=home&&Math.hypot(agent.x-home.x,agent.y-home.y)>home.radius*.85;
@@ -366,7 +369,7 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
     }
     if(agent.stalled>8)agent.stalled=6;
    }
-  }else if(agent.stalled>12&&world.view&&
+  }else if(!agent.residentRoutine&&agent.stalled>12&&world.view&&
    (x<world.view[0]-15||x>world.view[2]+15||y<world.view[1]-15||y>world.view[3]+15)){
    // Unconnected OSM sidewalk ends cannot hold a walker forever. Re-enter
    // on another pavement only when the whole move is outside the camera.
