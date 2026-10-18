@@ -62,6 +62,16 @@ test('Canvas functions paint world/cars/people without depending on external ass
  assert.doesNotThrow(()=>drawCityPlayer(ctx,{x:1200,y:1200,a:.5,car:-1},1,true));
  assert.doesNotThrow(()=>drawStorefronts(ctx,prepareStorefronts(map.pois,map.roads).slice(0,12),3));
 });
+test('details on diagonal facades follow the OSM wall and its extrusion',()=>{
+ const building={id:987654321,p:[0,0,24,8,18,25,-6,17],t:'apartments'};
+ prepareCityStyles([building]);
+ const transforms=[];
+ const ctx=new Proxy({transform:(...args)=>transforms.push(args)},{get(o,k){return k in o?o[k]:()=>{}},set(o,k,v){o[k]=v;return true;}});
+ drawCityBuildings(ctx,[building],2.5);
+ assert.ok(transforms.length>0,'visible facades should receive a detail plane');
+ assert.ok(transforms.some(([a,b,c,d])=>Math.abs(a)>.1&&Math.abs(b)>.1&&c>0&&d>0),
+  'the facade axis must follow an oblique edge and its depth must follow the building projection');
+});
 test('mobile controls prevent selection but retain accessibility and mission UI',async()=>{
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');

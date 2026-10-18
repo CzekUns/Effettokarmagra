@@ -303,3 +303,11 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 **Regolazione zoom su richiesta:** la curva in auto sale del 40% rispetto alla versione `v110`: auto ferma `3.35 → 4.69`, auto alla velocità massima della curva `1.87 → 2.618`. La posizione del veicolo nella viewport e la transizione fluida non cambiano; lo zoom a piedi resta invariato. Cache pagina `v111`, modulo camera `v099`. Questa modifica della camera non aggiunge verifiche fotografiche agli edifici.
 
 **Secondo aumento zoom auto:** interpretato “un altro 40x” come un ulteriore aumento del 40% della scala di visualizzazione in auto rispetto a `v111`. Auto ferma `4.69 → 6.566`, al massimo della curva `2.618 → 3.6652`. La scala a riposo rimane sotto il massimo globale `6.6`, evitando che l'aumento richiesto sia tagliato dal limite. Inquadratura direzionale, interpolazione e zoom a piedi non sono modificati. Cache pagina `v112`, modulo camera `v100`.
+
+### Sessione 2026-10-18 — Precisione delle facciate esistenti
+
+**Osservazione:** nella scena iniziale di Via Roma, finestre e balconi sulle pareti oblique erano orientati orizzontalmente rispetto allo schermo, anziché seguire la parete. Il risultato accentuava la ripetizione e staccava i dettagli dai volumi. Screenshot della build `v112` osservato nel browser desktop; manca ancora un confronto fotografico edificio per edificio.
+
+**Fatto nel codice:** finestre, persiane, balconi e piccoli impianti ora usano un sistema di coordinate per singola facciata: un asse segue il lato OSM, l'altro la proiezione obliqua già usata per il muro. La trasformazione viene applicata una volta per parete durante la rasterizzazione del tassello statico. Non sono introdotti WebP né nuove texture, e non cambiano sagome, collisioni, numero di edifici o telecamera. Si tratta di una correzione grafica, non di una verifica dei materiali reali degli immobili. Cache pagina e modulo arte `v113`.
+
+**Verifica:** 94/94 test Node superati, inclusa facciata diagonale, sintassi e `git diff --check`. Confronto visivo della versione pubblicata e prova FPS su telefono ancora da completare dopo il deploy. Come evoluzione, un catalogo limitato di circa 20 tipologie riutilizzabili può differenziare tetti e facciate secondo sagoma e categoria, con benchmark sulla cache attuale prima di adottare eventuali asset WebP.

@@ -105,7 +105,7 @@ test('every consumer imports the same versioned road-width module for A/B',async
   assert.ok(text.includes("'./road-widths.mjs?v=043'"),file+' requires versioned singleton');
  }
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
- assert.ok(html.includes('game.mjs?v=112'));
+ assert.ok(html.includes('game.mjs?v=113'));
  assert.ok(html.includes('id="road-width-compare"'));
  assert.ok(html.includes('id="road-width-current"'));
 });

@@ -487,11 +487,18 @@ function drawRaisedWalls(c,b,v,zoom){
   if(zoom<1.3||len<6)continue;
   const doors=a.type==='industrial'||a.type==='market';
   const columns=Math.max(1,Math.min(18,Math.floor(len/(doors?7.5:4.8))));
+  // Draw facade details in the plane of this wall. The horizontal axis follows
+  // its OSM edge; the vertical axis follows the same extrusion as the wall.
+  // A single transform per edge keeps diagonal windows and balconies attached
+  // to their actual facade without changing the footprint or tile cache.
+  const depth=Math.hypot(shiftX,shiftY);
+  c.save();
+  c.transform(edgeX/len,edgeY/len,shiftX/depth,shiftY/depth,f.x1,f.y1);
   for(let floor=0;floor<floors;floor++){
    const tv=(floor+.48)/floors;
    for(let col=1;col<=columns;col++){
     const tu=col/(columns+1);
-    const wx=f.x1+edgeX*tu+shiftX*tv,wy=f.y1+edgeY*tu+shiftY*tv;
+    const wx=len*tu,wy=depth*tv;
     const windowSeed=h(a.seed+floor*97+col*131+j*17);
     const w=doors?2.4:windowSeed%4===0?1.8:1.45,hh=floors>=5?1.35:1.85;
     c.fillStyle='#283532';c.fillRect(wx-w*.58,wy-hh*.59,w*1.16,hh*1.12);
@@ -522,6 +529,7 @@ function drawRaisedWalls(c,b,v,zoom){
     }
    }
   }
+  c.restore();
  }
 }
 export function drawCityBuildings(c,buildings,zoom){
