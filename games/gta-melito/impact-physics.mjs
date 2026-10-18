@@ -2,11 +2,11 @@
  * An impact throws the actor, decays with friction, and then hands NPCs back
  * to their original road routine. Never destroys/removes an NPC or the player.
  */
-import {vehicleHitsPedestrian,vehiclesOverlap,vehicleShape} from './traffic-collision.mjs?v=125';
+import {vehicleHitsPedestrian,vehiclesOverlap} from './traffic-collision.mjs?v=125';
 export const IMPACT_MIN_SPEED=3.4;
 export const IMPACT_LOCK_SECONDS=.8;
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-const isCar=o=>(o?.body==='car'||o?.vehicleType==='car'||o?.vehicleType==='motorcycle');
+const isCar=o=>(o?.body==='car'||o?.vehicleType==='car'||o?.vehicleType==='motorcycle'||o?.model!==undefined||o?.type!==undefined);
 const heading=(actor)=>{
  const a=Number(actor?.a)||0,s=Number(actor?.speed)||0;
  return {x:Math.cos(a)*(s<0?-1:1),y:Math.sin(a)*(s<0?-1:1)};
