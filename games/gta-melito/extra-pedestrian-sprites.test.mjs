@@ -56,5 +56,5 @@ test('hero gets the new red hoodie; NPCs include three more identities without a
  assert.ok(game.includes('loadExtraPedestrianSprites()'));
  assert.ok(game.includes('roads.mjs?v=127'));
  assert.ok(game.includes('city-art.mjs?v=125'));
- assert.ok(page.includes('game.mjs?v=135'));
+ assert.ok(page.includes('game.mjs?v=136'));
 });
