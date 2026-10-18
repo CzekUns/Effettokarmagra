@@ -40,8 +40,8 @@ test('legacy procedural motorcycle removed, and UI shares exact board selection 
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  const art=await readFile(new URL('./city-art.mjs',import.meta.url),'utf8');
  const page=await readFile(new URL('./index.html',import.meta.url),'utf8');
- assert.equal(game.split('nearestEnterableVehicle(state.cars,p)').length-1,2,
-   'E and touch HUD both choose the same vehicle');
+ assert.equal(game.split('nearestEnterableVehicle(state.cars,p)').length-1,3,
+   'E, touch HUD and near-bike label share the same selection');
  assert.match(game,/p\.car=target\.index/);
  assert.match(game,/starterMotorcycleCandidates\(point,nearCar,visualRoadWidth\(chosen\.q\)\)/);
  assert.ok(!art.includes('if(type===5)'), 'old procedural scooter no longer appears among normal car variants');
