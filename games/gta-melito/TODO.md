@@ -137,3 +137,13 @@ Spuntare una casella solo dopo codice integrato e verifica specifica. Per ciascu
 3. Aggiornare queste checkbox solo per ciò che è stato verificato. Continuare con P1/P2 solo se P0 è stabile e c'è margine nella sessione.
 4. Commit di codice e test nel branch appropriato con passaggio di consegne nel WORK_LOG; se non si riesce a scrivere su GitHub, dichiarare blocco e fornire patch completa.
 5. Nel riepilogo indicare commit, cosa il giocatore può vedere/fare, test realmente eseguiti e prossimo punto esatto da implementare.
+
+
+## Prototipo radio in auto — integrazione separata dalla roadmap NPC
+- [x] Creare sintonizzatore HTMLAudio con sei emittenti richieste, solo in auto; cambio stazione, ON/OFF, link sito emittente, messaggi errore/autoplay, salvataggio locale.
+- [x] Integrare controlli su tastiera e schermo touch con arresto audio all'uscita dall'auto e al reset.
+- [x] Scrivere test di selezione/stato radio e verifiche sintattiche isolate; eseguite 4 prove logiche in sandbox V8, tutte riuscite.
+- [ ] Eseguire la suite Node 22 completa dopo le modifiche e verificare GitHub Actions/Pages sul commit definitivo.
+- [ ] Provare realmente su Chrome/Firefox desktop e Android landscape la riproduzione di **ognuna delle sei stazioni**; classificare flussi validi, errori HTTP, AAC/MP3, limitazioni HTTPS e autoplay.
+- [ ] Confermare permesso/termini delle emittenti per incorporare lo streaming nel gioco pubblico, oppure utilizzare soltanto collegamenti verso i lettori ufficiali.
+- [ ] Chiedere se estendere l'ascolto anche alle moto; per ora la radio è riservata alle auto.
