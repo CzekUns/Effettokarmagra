@@ -464,3 +464,8 @@ Il poligono OSM è conservato per collisioni, gioco e navigazione. Gli altri edi
 **File:** `index.html` (volante SVG e pedali CSS), `game.mjs` (pointer capture del volante, multitouch dei pedali, commutazione dei controlli e input separati), nuovo `steering-wheel.mjs`, `driving-controls.mjs`, `motorcycles.mjs`, test dedicati e controlli cache `game.mjs?v=135`, `driving-controls.mjs?v=095`, `motorcycles.mjs?v=003`, `steering-wheel.mjs?v=001`.
 
 **Verifica:** smoke test funzionale su codice GitHub superato per sintassi dei quattro moduli, volante CW/CCW, ritorno al centro, accelerazione indipendente su auto/moto, freno attivo anche tenendo il gas, presenza e ordine dei pulsanti e versioni cache. Aggiunti/aggiornati test automatici Node. **Suite completa GitHub Actions, screenshot in browser e prova touch Android non eseguiti** in questa sessione; restano verifiche necessarie.
+
+
+### 2026-10-19 — Radio in auto: interfaccia di prova, non nuova grafica della città
+
+Aggiunta una barretta compatta nella parte superiore della scena, visibile solo quando il giocatore guida un'automobile, con stazione, stato, comandi ◀/▶/▶▶ e collegamento esterno ↗. CSS mobile landscape coerente con palette e controlli esistenti; nessun cambio a edifici, strada, mappe, veicoli o sprite. Il sintonizzatore `car-radio.mjs` tenta di ricevere sei stream HTTPS reali senza proxy o audio locale. Controlli DOM e parsing JavaScript verificati staticamente; **nessuna cattura browser/Android né ascolto dal vivo compiuti**. Possibili collisioni con altre sovrimpressioni su viewport particolarmente strette ancora da controllare.
