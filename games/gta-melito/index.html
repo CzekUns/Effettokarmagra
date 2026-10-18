@@ -255,6 +255,25 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  .waypoint{top:16px;max-width:40%;right:160px;left:auto;transform:none}
 }
 @media(max-width:760px) and (orientation:landscape),(pointer:coarse) and (orientation:landscape){.rotate-screen{display:none}}
+
+/* Experimental third-party live radio: compact, no overlay above the driving pedals. */
+.car-radio{position:absolute;z-index:4;top:9px;left:50%;transform:translateX(-50%);
+ display:flex;align-items:center;gap:4px;padding:5px 7px;max-width:44%;min-width:240px;
+ border:2px solid #d5bd79;background:#10211def;color:#f5eac7;box-shadow:0 4px 12px #0008}
+.car-radio button,.car-radio a{flex:0 0 auto;min-width:31px;height:31px;padding:4px 6px;
+ display:flex;align-items:center;justify-content:center;border:1px solid #b7ab7a;background:#294237;
+ color:#ffe1a0;text-decoration:none;font-size:11px;font-weight:900;touch-action:manipulation}
+.car-radio button:active{background:#d9be7d;color:#14251e}
+.car-radio #radio-toggle{background:#dbbd76;color:#1e2b22}
+.radio-info{min-width:0;flex:1;text-align:center;line-height:1.25}
+.radio-info strong{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.radio-info small{display:block;margin-top:2px;font-size:9px;color:#bdc8b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:760px),(pointer:coarse) and (orientation:landscape){
+ .car-radio{top:max(10px,env(safe-area-inset-top));max-width:none;width:min(315px,49vw);min-width:230px;
+  padding:4px;gap:3px}
+ .car-radio button,.car-radio a{height:28px;min-width:27px;padding:2px;font-size:10px}
+ .radio-info strong{font-size:10px}.radio-info small{font-size:8px}
+}
 </style>
 </head><body><main class="app">
 <header class="header"><div><h1>GTA: MELITO <span aria-hidden="true">★</span></h1><small>UNS ARCADE / MELITO DI NAPOLI / VERSIONE 0.7.0</small></div><a class="back" href="../../index.html">← SALA GIOCHI</a></header>
@@ -267,6 +286,13 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  <canvas id="world" aria-label="Mappa giocabile di Melito, muoviti con frecce o WASD" tabindex="0"></canvas>
  <canvas id="radar" width="168" height="142" aria-label="Minimappa di Melito"></canvas>
  <div class="coins">MELITO · LIBERA ESPLORAZIONE <span id="street">RETE STRADALE REALE</span></div>
+ <aside class="car-radio" id="car-radio" hidden aria-label="Radio auto, ascolto in diretta di prova">
+  <button id="radio-prev" type="button" aria-label="Radio precedente">◀</button>
+  <button id="radio-toggle" type="button" aria-label="Accendi o spegni radio" aria-pressed="false">▶</button>
+  <div class="radio-info"><strong id="radio-name">RADIO MARTE</strong><small id="radio-status" aria-live="polite">RADIO SPENTA</small></div>
+  <button id="radio-next" type="button" aria-label="Radio successiva">▶▶</button>
+  <a id="radio-official" href="https://www.radiomarte.it/" target="_blank" rel="noopener noreferrer" aria-label="Ascolta sul sito della radio" title="Apri il sito ufficiale della radio">↗</a>
+ </aside>
  <button class="pause-toggle" id="pause-toggle" type="button" aria-expanded="false" aria-label="Pausa e altre informazioni">Ⅱ</button>
  <div class="touch-stick" id="touch-stick" role="application" aria-label="Levetta analogica: muovi il personaggio a piedi"><div class="stick-knob" id="stick-knob"></div></div>
  <div class="steering-wheel" id="steering-wheel" role="application" tabindex="0" aria-label="Sterzo: trascina il volante in senso orario o antiorario per girare">
@@ -309,7 +335,7 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  <div class="rotate-screen" id="rotate-screen" hidden><div class="rotate-card"><span class="rotate-icon" aria-hidden="true">▰</span><h2>RUOTA LO SCHERMO</h2><p>GTA Melito si gioca in orizzontale. Ruota il telefono per continuare.</p></div></div>
 </div>
 <div class="controls" aria-label="Comandi"><div class="touch-actions" aria-label="Azioni"><button class="control-action" id="action">ENTRA IN VEICOLO</button><button id="sprint" aria-label="Corri a piedi">CORRI</button><div class="pedals" aria-label="Pedali di guida"><button id="accelerator" aria-label="Tieni premuto per accelerare">ACCELERA</button><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button></div></div><div class="dpad" aria-hidden="true"></div><div class="buttons"><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-auto" aria-label="Ripristina zoom automatico">AUTO</button><button class="mini" id="zoom-in" aria-label="Regola zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div></div>
-<p class="instructions">PC: WASD/frecce a piedi; in auto A/D sterzo, W acceleratore, S retromarcia, SPAZIO freno a mano · E sali/scendi · SHIFT corri. Telefono: a piedi levetta e CORRI, alla guida volante vero a sinistra, ACCELERA e FRENO a destra; START apre pausa, missioni e impostazioni. Telecamera automatica: massimo zoom a piedi; su veicoli arretra progressivamente con la velocità. ＋/－ personalizzano, AUTO ripristina. Missioni nel pannello dedicato; F per interagire, M per la mappa. Traffico che svolta sulle vere strade, marciapiedi, attraversamenti, tetti tridimensionali e dettagli urbani immaginari in stile pixel art. Strade, incroci e sagome dei palazzi si basano su OpenStreetMap.</p>
+<p class="instructions">PC: WASD/frecce a piedi; in auto A/D sterzo, W acceleratore, S retromarcia, SPAZIO freno a mano · E sali/scendi · SHIFT corri · R cambia radio, SHIFT+R precedente, T accendi/spegni. Telefono: a piedi levetta e CORRI, alla guida volante vero a sinistra, ACCELERA e FRENO a destra; START apre pausa, missioni e impostazioni. In macchina la radio di prova permette di scegliere sei emittenti in diretta; l’audio richiede una connessione e può richiedere un tocco iniziale. Telecamera automatica: massimo zoom a piedi; su veicoli arretra progressivamente con la velocità. ＋/－ personalizzano, AUTO ripristina. Missioni nel pannello dedicato; F per interagire, M per la mappa. Traffico che svolta sulle vere strade, marciapiedi, attraversamenti, tetti tridimensionali e dettagli urbani immaginari in stile pixel art. Strade, incroci e sagome dei palazzi si basano su OpenStreetMap.</p>
 <p class="instructions"><a href="./survey/index.html" target="_blank" rel="noopener noreferrer">🗺 TUTTA MELITO · 2.056 EDIFICI MODELLATI →</a> · 2.056 sagome OSM censite · 2.056 edifici con profilo grafico individuale e palazzi segnaposto aggiuntivi (NON rilievi OSM). Piazza Santo Stefano dettagliata: una facciata verificata fotograficamente, le altre ancora stimate.</p>
 <footer class="credits"><span>© OpenStreetMap contributors — ODbL · Confini: ISTAT 2026 — CC BY · MIT: ispirazione motore <a href="https://github.com/harmanhanjra/punjab-stories" target="_blank" rel="noreferrer">Punjab Stories</a></span><span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Crediti cartografia</a> · <a href="./README.md">Informazioni sul progetto</a></span></footer>
-</main><script type="module" src="./game.mjs?v=135"></script></body></html>
+</main><script type="module" src="./game.mjs?v=136"></script></body></html>
