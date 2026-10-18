@@ -109,3 +109,12 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Verifiche/stato:** aggiornamento documento su GitHub confermato; nessun nuovo asset, codice, test Node o prova in browser eseguiti. Nessuna Q spuntata come completata.
 - **Da fare:** proseguire dalla prima Q aperta della coda; quando arriverà a Q16, seguire `VEHICLE_ART_GUIDE.md` e collaudare proporzioni, trasparenza e comportamento in-game, poi sviluppare Q17 separatamente.
 - **Riferimenti:** `games/gta-melito/TODO.md`, `VEHICLE_ART_GUIDE.md`, commit TODO `d29fcd60e6aa0d7702dd7dfb721a39fc213d7d11`; branch `main`.
+
+### 2026-10-19 — Sviluppo orario Q01: residenti con routine visibile
+- **Fatto:** integrata coorte deterministica di massimo 10 pedoni nel centro, senza aumentare la popolazione complessiva (170); percorso zona di partenza → sosta su marciapiede OSM → ritorno.
+- **Come/dove:** nuovo `resident-routines.mjs`, collegato a `roads.mjs` e ai due percorsi di inizializzazione in `game.mjs`; cache pagina v139, test `resident-routines.test.mjs`.
+- **Fisica:** collisioni con auto gestite dal sistema esistente; dopo un urto recupero graduale verso il tratto di origine, nessun salto in camera; fermate simulate e non associate a negozi veri.
+- **Verifiche:** cinque scenari eseguiti in V8 con moduli reali (spawn a seed, ciclo completo, limiti del movimento, recupero, 10 pedoni sul grafo OSM); controllo parsing dei moduli e presenza dei file pubblicati.
+- **Non verificati:** suite completa Node 22, prova visiva PC/Android, performance e GitHub Pages dopo il commit.
+- **Da fare:** registrare Q01 nella TODO se la scrittura remota torna disponibile, poi Q02 (agenda/orologio) e smoke test reale; evitare di presentare le soste come ingressi negli edifici.
+- **Riferimenti:** `main`, commit `ebcf34a` (modulo), `f1a456c` (test), `f1a3f4c` (integrazione).
