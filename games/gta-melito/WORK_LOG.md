@@ -100,4 +100,12 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Automazioni:** per evitare sovrapposizioni, disabilitate le tre precedenti pianificazioni separate GTA Melito (giorno/notte, eventi/economia, gameplay 04–07); viene riconfigurata la precedente task NPC come unico lavoratore orario. L'automazione di ricerca lavoro dell'utente rimane indipendente e non viene modificata.
 - **Verifiche/stato:** aggiornamento GitHub della sola documentazione confermato; **nessun nuovo codice di gioco, test Node, screenshot, audio stream o deploy eseguito** in questa sessione.
 - **Da fare:** prima esecuzione selezionerà Q01 in `TODO.md`, proverà a implementarla, registrerà esito/commit/test sulla riga Q e appenderà il proprio log; se incompleta la riprenderà nell'ora successiva senza saltare alla Q02.
-- **Riferimenti:** branch `main`; TODO con queue introdotta nel commit `e37bbe5`, priorità corretta nel commit `a153498`. 
+- **Riferimenti:** branch `main`; TODO con queue introdotta nel commit `e37bbe5`, priorità corretta nel commit `a153498`.
+
+### 2026-10-19 — ChatGPT/GitHub — Nuovi veicoli nella coda unica: Ape Car e friggitore ambulante
+- **Fatto:** aggiunte in `TODO.md` le voci operative Q16 per Ape Car a tre ruote e Q17 per furgoncino del friggitore ambulante; entrambe non completate, dopo Q15.
+- **Come/dove:** definite istruzioni per sprite esclusivamente dall'alto in pixel art coerente coi veicoli approvati, PNG RGBA trasparenti, proporzioni realistiche, integrazione NPC/parcheggi/guida, collisioni e verifiche; per il venditore ambulante prevista sosta e interazione commerciale se disponibile.
+- **Automazione:** aggiornato il lavoratore orario unico affinché includa Q16, Q17 e qualunque nuova voce Q futura, mantenendo rigorosamente una sola attività per esecuzione e ordine della TODO.
+- **Verifiche/stato:** aggiornamento documento su GitHub confermato; nessun nuovo asset, codice, test Node o prova in browser eseguiti. Nessuna Q spuntata come completata.
+- **Da fare:** proseguire dalla prima Q aperta della coda; quando arriverà a Q16, seguire `VEHICLE_ART_GUIDE.md` e collaudare proporzioni, trasparenza e comportamento in-game, poi sviluppare Q17 separatamente.
+- **Riferimenti:** `games/gta-melito/TODO.md`, `VEHICLE_ART_GUIDE.md`, commit TODO `d29fcd60e6aa0d7702dd7dfb721a39fc213d7d11`; branch `main`.
