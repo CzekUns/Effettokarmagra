@@ -189,7 +189,7 @@ function stepSidewalkCorner(agent,distance,index){
  agent.braking=false;
 }
 function nextPose(graph,agent,distance){
- const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1};
+ const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1,body:agent.body,routine:agent.routine,home:agent.home};
  let hops=0;
  while(distance>.00001&&hops++<8){
   const edge=graph.edges[route.edge];if(!edge)break;
@@ -221,7 +221,7 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null){
     const plan=sidewalkTurn(graph,agent.edge,id,agent.side||1);
     if(plan)plans.set(id,plan);
    }
-   const route={seed:agent.seed,body:'walk'};
+   const route={seed:agent.seed,body:'walk',routine:agent.routine,home:agent.home};
    const chosen=chooseTurn(graph,edge.to,agent.edge,route,(_,id)=>plans.has(id));
    if(chosen!=null){
     const at=position(graph,agent.edge,1,'walk',agent.side);
