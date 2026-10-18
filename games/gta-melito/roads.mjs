@@ -94,7 +94,7 @@ export function createAgents(graph,count,seed=10,kind='car',avoid=[]){
    if(kind==='car'&&[...nearbyColliders(occupied,at.x,at.y,10)].some(other=>
     (other.body||'car')==='car'&&Math.hypot(at.x-other.x,at.y-other.y)<9))continue;
    const agent={...at,edge:edgeIndex,t,speed:kind==='car'?7+rand(i*13+seed)*7:.75+rand(i*11+seed)*.55,
-    kind:kind==='car'?i%7:i%5,seed:seed+i*17,wait:0,body:kind,side};
+    kind:i%7,seed:seed+i*17,wait:0,body:kind,side};
    agents.push(agent);addToCollisionIndex(occupied,agent);break;
   }
  }

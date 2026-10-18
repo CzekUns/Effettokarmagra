@@ -6,14 +6,15 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=114';
+import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=115';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap} from './traffic-collision.mjs?v=114';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp} from './city-art.mjs?v=119';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp} from './city-art.mjs?v=120';
 import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS} from './car-sprites.mjs?v=106';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
+import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
@@ -794,4 +795,4 @@ function bind(){
  },{passive:false});
 }
 loadChurchWebp(()=>{staticTiles.clear();pendingTile=null;});
-loadPedestrianSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();
+loadExtraPedestrianSprites();loadPedestrianSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();
