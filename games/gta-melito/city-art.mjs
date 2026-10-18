@@ -589,6 +589,57 @@ function historicalRoofTone(art){
  if(art.type==='historic'||art.type==='house')return oldtown[id%oldtown.length];
  return flat[id%flat.length];
 }
+// +X is forward. Keep the whole sprite close to its collision point and
+// distinguish head, shoulders, waist, swinging arms and separate shoes even
+// at the compact, nearest-neighbor canvas resolution used on phones.
+function drawPixelPerson(c,{skin,hair,coat,pants,trim,variant=0},step){
+ const swing=step*.46;
+ c.fillStyle='#1726228c';c.beginPath();c.ellipse(-.35,.65,2.65,1.8,-.12,0,TAU);c.fill();
+ // Shoes and legs emerge from behind the jacket; left and right alternate.
+ for(const side of [-1,1]){
+  const stride=swing*side,y=side*.72;
+  c.fillStyle='#222b2b';c.fillRect(-2.85+stride,y-.46,1.12,.88);
+  c.fillStyle=pants;c.fillRect(-2.18+stride,y-.48,1.35,.96);
+  c.fillStyle='#afb9b122';c.fillRect(-1.85+stride,y-.42,.3,.56);
+ }
+ if(variant===2||variant===5){
+  c.fillStyle='#273b3d';c.fillRect(-1.65,-.98,1.05,1.96);
+  c.fillStyle='#71958c';c.fillRect(-1.5,-.66,.22,1.32);
+ }
+ // Arms are independent of the torso and swing opposite the feet.
+ for(const side of [-1,1]){
+  const armX=-.55-swing*side,y=side*1.26;
+  c.fillStyle='#263332';c.fillRect(armX-.55,y-.46,1.43,.93);
+  c.fillStyle=coat;c.fillRect(armX-.43,y-.53,1.24,1.05);
+  c.fillStyle=skin;c.fillRect(armX-.83,y-.36,.52,.72);
+ }
+ // Tapered shoulders and waist replace the old square torso.
+ c.beginPath();c.moveTo(-1.32,-.94);c.lineTo(-.88,-1.33);
+ c.lineTo(.63,-1.45);c.lineTo(1.02,-.96);
+ c.lineTo(1.02,.96);c.lineTo(.63,1.45);
+ c.lineTo(-.88,1.33);c.lineTo(-1.32,.94);c.closePath();
+ c.fillStyle='#26302f';c.fill();
+ c.beginPath();c.moveTo(-1.2,-.78);c.lineTo(-.71,-1.17);
+ c.lineTo(.55,-1.25);c.lineTo(.91,-.82);
+ c.lineTo(.91,.82);c.lineTo(.55,1.25);
+ c.lineTo(-.71,1.17);c.lineTo(-1.2,.78);c.closePath();
+ c.fillStyle=coat;c.fill();
+ c.fillStyle=trim;c.fillRect(-.8,-.08,1.5,.17);
+ c.fillStyle='#18282b';c.fillRect(-1.24,-.87,.23,1.74);
+ if(variant===1||variant===4){
+  c.fillStyle='#e6d49d';c.fillRect(-.31,-1.08,.62,.31);
+ }
+ // Neck and a hair-framed oval head, with a small face in the heading.
+ c.fillStyle=skin;c.fillRect(.72,-.47,.45,.94);
+ c.fillStyle=hair;c.beginPath();c.ellipse(1.62,0,1.05,.91,0,0,TAU);c.fill();
+ c.fillStyle=skin;c.beginPath();c.ellipse(1.79,0,.79,.67,0,0,TAU);c.fill();
+ c.fillStyle=hair;c.fillRect(1.04,-.68,.42,1.36);
+ c.fillStyle='#362f2a';c.fillRect(2.18,-.27,.16,.13);c.fillRect(2.18,.14,.16,.13);
+ if(variant===3){
+  c.fillStyle='#d7b87b';c.fillRect(1.09,-.9,.97,1.8);
+  c.fillStyle=hair;c.fillRect(1.19,-.55,.61,1.1);
+ }
+}
 export function drawCityPeople(c,people,graph,clock,bounds,alpha=1){
  const [x0,y0,x1,y1]=bounds;
  for(const p of people){
@@ -598,20 +649,15 @@ export function drawCityPeople(c,people,graph,clock,bounds,alpha=1){
   const y=p.prevY===undefined?p.y:p.prevY+(p.y-p.prevY)*alpha;
   const angle=p.prevA===undefined?p.a:p.prevA+Math.atan2(Math.sin(p.a-p.prevA),Math.cos(p.a-p.prevA))*alpha;
   const walk=p.braking?0:Math.sin(clock*p.speed*9+p.seed),palette=[
-   ['#ae8669','#4b6b67','#1a2d38'],['#dfa97a','#a65c5e','#41414d'],
-   ['#c88e6e','#707b91','#51453d'],['#e9bf8f','#caa16c','#36555a'],
-   ['#b48162','#7b8770','#212a34'],['#c59675','#8b6c9a','#253347']];
-  const c1=palette[p.kind%palette.length],coat=c1[1],pants=c1[2];
+   ['#ae8669','#302c2a','#4b6b67','#273a40','#e3c59a'],
+   ['#dfa97a','#44322e','#a65c5e','#41414d','#efd0ad'],
+   ['#c88e6e','#303c43','#707b91','#51453d','#d9cba7'],
+   ['#e9bf8f','#514333','#caa16c','#36555a','#e8e0bf'],
+   ['#b48162','#2f2927','#7b8770','#212a34','#e4d2ae'],
+   ['#c59675','#41353a','#8b6c9a','#253347','#e6d5b7']];
+  const c1=palette[(p.kind||0)%palette.length];
   c.save();c.translate(x,y);c.rotate(angle);
-  c.fillStyle='#1f2e2a80';c.beginPath();c.ellipse(.9,1.2,2.5,1.9,-.2,0,TAU);c.fill();
-  c.fillStyle=pants;c.fillRect(-2,walk*.8-.75,1.7,1.6);c.fillRect(-2,-walk*.8+.65,1.7,1.6);
-  c.fillStyle='#1b2729';c.fillRect(-2.3,walk*.8-.9,.65,.9);
-  c.fillStyle=coat;c.fillRect(-1.5,-1.6,3.5,3.15);
-  c.fillStyle=c1[0];c.fillRect(1.4,-1.75,1.3,1.8);
-  c.fillStyle='#3c3530';c.fillRect(2.0,-1.75,.8,1.7);
-  c.fillStyle=c1[0];c.fillRect(-1,walk*.6+1.45,1.3,.75);
-  if(p.kind===2){c.fillStyle='#2b343c';c.fillRect(-1.5,-1.3,1,2.1);}
-  if(p.kind===3){c.fillStyle='#e0bb75';c.fillRect(-1,-.4,1.5,.9);}
+  drawPixelPerson(c,{skin:c1[0],hair:c1[1],coat:c1[2],pants:c1[3],trim:c1[4],variant:(p.kind||0)%6},walk);
   c.restore();
  }
 }
@@ -646,15 +692,9 @@ export function drawCityCar(c,x,y,a,type=0,focused=false,clock=0){
 export function drawCityPlayer(c,player,clock=0,moving=false){
  if(player.car>=0)return;
  c.save();c.translate(player.x,player.y);c.rotate(player.a);
- const walk=moving?Math.sin(clock*12):0,active=walk*.65;
- c.fillStyle='#172b28a6';c.beginPath();c.ellipse(.6,1.2,2.6,2.0,0,0,TAU);c.fill();
- c.fillStyle='#2c343e';c.fillRect(-1.5,active-1.6,1.7,2);c.fillRect(-1.5,-active+.6,1.7,2);
- c.fillStyle='#242927';c.fillRect(-1.9,active-1.6,.8,1);c.fillRect(-1.9,-active+.75,.8,1);
- c.fillStyle='#ca593b';c.fillRect(-1.3,-1.65,3,3.4);
- c.fillStyle='#e2b988';c.fillRect(1.3,-1.45,1.65,2.1);
- c.fillStyle='#44372e';c.fillRect(2.15,-1.5,.9,1.7);
- c.fillStyle='#f2dfb8';c.fillRect(.2,-1.3,1.1,1.1);
- c.fillStyle='#20292f';c.fillRect(-1.3,-1.9,1,3.5);
- c.fillStyle='#ffe0a1';c.fillRect(-.7,1.1,1,.5);
+ drawPixelPerson(c,{skin:'#e2b988',hair:'#342b27',coat:'#c9563b',pants:'#303c47',trim:'#f2dfb8'},
+  moving?Math.sin(clock*12):0);
+ // The player keeps a narrow gold shoulder seam for instant identification.
+ c.fillStyle='#ffe0a1';c.fillRect(.25,-1.4,.64,.3);
  c.restore();
 }

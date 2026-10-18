@@ -332,3 +332,11 @@ Due nuovi atlas PNG indicizzati da 160×240 (4×4, cella 40×60) con alfa corret
 **Modifica:** la prima scelta dei segnaposto sintetici segue i tratti di strada, con il fronte parallelo al segmento e la distanza derivata dalla profondità effettiva del palazzo. La griglia globale riempie soltanto i vuoti residui. Il margine minimo richiesto alla rete stradale sale da 6 a 9,2 unità oltre la metà della larghezza stilizzata: la cache precomputata passa da 612 a 553 edifici inventati e nessuno dei 553 attraversa la fascia dipinta del marciapiede. Una sottile soglia di pavimento, ancorata a ogni impronta, interrompe la texture continua e collega visivamente la base al terreno; è disegnata sotto strade e palazzi. I nuovi profili di lotto sono ornamentali, non confini catastali. La disposizione sintetica e le sue collisioni cambiano; ID, impronte e collisioni OSM, strade e camera non cambiano. Cache pagina e moduli `v116`.
 
 **Verifica:** suite Node, desktop pubblicato e viewport mobile da riportare dopo il merge; ancora necessaria una misura FPS su dispositivo reale. Colori, altezze e posizioni dei placeholder non sono edifici verificati fotograficamente.
+
+### Sessione 2026-10-18 — Personaggi dall'alto più leggibili
+
+**Osservazione:** giocatore e pedoni erano disegnati con torso, testa e arti rettangolari sovrapposti. Alla scala di gioco il contorno diventava un blocco quadrato, poco distinguibile dal fondo e dai dettagli architettonici.
+
+**Modifica:** un'unica silhouette procedurale vista dall'alto disegna testa ovale incorniciata dai capelli, collo, spalle larghe, vita stretta, due braccia separate, due gambe e scarpe che si alternano con il passo. Sei palette e piccoli dettagli (zainetto, collo, cappello) differenziano i pedoni; il giocatore conserva giacca rossa e un segno dorato sulla spalla. La direzione segue l'angolo fisico già interpolato degli NPC. Nessuna immagine esterna, download o modifica a collisioni, velocità e dimensioni delle auto. Cache modulo arte e pagina `v117`.
+
+**Verifica:** 103 test Node e sintassi superati localmente. Resa pubblicata da osservare dopo il deploy; gli FPS su telefono fisico non sono stati misurati.
