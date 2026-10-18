@@ -33,7 +33,21 @@ import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpa
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
+import {createCarRadio} from './car-radio.mjs?v=001';
 const $=id=>document.getElementById(id);
+function updateCarRadioUi({inVehicle,status,station,enabled}){
+ const panel=$('car-radio');
+ panel.hidden=!inVehicle;
+ $('radio-name').textContent=station.name;
+ $('radio-official').href=station.site;
+ const messages={off:'RADIO SPENTA',connecting:'CONNESSIONE…',live:'IN DIRETTA',tap:'TOCCA ▶ PER ASCOLTARE',unavailable:'STREAM NON DISPONIBILE · ↗'};
+ $('radio-status').textContent=messages[status]||'PROVA RADIO';
+ const button=$('radio-toggle');
+ button.textContent=enabled&&(status==='live'||status==='connecting')?'■':'▶';
+ button.setAttribute('aria-pressed',String(enabled&&status!=='off'));
+ button.setAttribute('aria-label',enabled&&(status==='live'||status==='connecting')?'Spegni radio':'Avvia o riprova radio');
+}
+const carRadio=createCarRadio({storage:globalThis.localStorage,onChange:updateCarRadioUi});
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const STATIC_TILE=96,TILE_PIXELS=4,TILE_BLEED=20;
 const staticTiles=new Map();
@@ -434,6 +448,7 @@ function toggleVehicle(){
   if(!exit){$('street').textContent='NESSUNO SPAZIO LIBERO PER SCENDERE';return;}
   vehicle.turnGuide=null;vehicle.recoil=0;vehicle.speed=0;
   p.x=exit.x;p.y=exit.y;p.car=-1;p.vehicleType=null;
+  carRadio.leaveVehicle();
   p.impactTime=0;p.impactVX=0;p.impactVY=0;p.impactLock=0;
  }else{
   // Same targeted vehicle for keyboard E and the touch/HUD label.
@@ -443,6 +458,8 @@ function toggleVehicle(){
    p.vehicleType=target.bike?'motorcycle':'car';
    p.impactTime=0;p.impactVX=0;p.impactVY=0;p.impactLock=0;
    p.x=target.vehicle.x;p.y=target.vehicle.y;
+   if(!target.bike)carRadio.enterVehicle();
+   else carRadio.leaveVehicle();
   }else{$('street').textContent='AVVICINATI A UN VEICOLO PER SALIRE';}
  }
  resetDrivingControls();updateHud();
@@ -933,6 +950,14 @@ function bind(){
   if(e.key.toLowerCase()==='e'&&!e.repeat){e.preventDefault();toggleVehicle();}
   if(e.key.toLowerCase()==='f'&&!e.repeat){e.preventDefault();interactMission();}
   if(e.key.toLowerCase()==='m'&&!e.repeat){e.preventDefault();toggleBigMap();}
+  const carRadioAvailable=state.player.car>=0&&!state.bankInterior&&
+   !isMotorcycle(state.cars[state.player.car])&&pause.hidden&&!state.mapOpen&&$('dialog').hidden;
+  if(carRadioAvailable&&e.key.toLowerCase()==='r'&&!e.repeat){
+   e.preventDefault();e.shiftKey?carRadio.previous():carRadio.next();
+  }
+  if(carRadioAvailable&&e.key.toLowerCase()==='t'&&!e.repeat){
+   e.preventDefault();carRadio.toggle();
+  }
   if(e.key==='Escape'){if(state.bankInterior){toggleVehicle();return;}$('fullmap').hidden=true;state.mapOpen=false;$('dialog').hidden=true;if(!pause.hidden)closePause();else openPause();}
  });
  window.addEventListener('keyup',e=>{
@@ -992,6 +1017,9 @@ function bind(){
   for(const name of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(name,()=>{pressed[key]=false;btn.classList.remove('pressed');});
  });
  $('action').addEventListener('click',toggleVehicle);
+ $('radio-prev').addEventListener('click',()=>carRadio.previous());
+ $('radio-next').addEventListener('click',()=>carRadio.next());
+ $('radio-toggle').addEventListener('click',()=>carRadio.toggle());
  $('road-width-compare').addEventListener('click',compareRoadWidths);
  const panel=$('mission-panel'),panelButton=$('mission-panel-toggle');
  panelButton.addEventListener('click',()=>{
@@ -1040,11 +1068,11 @@ function bind(){
  $('zoom-out').addEventListener('click',()=>{state.zoomBias=clamp(state.zoomBias/1.17,.62,1.35);});
  $('zoom-auto').addEventListener('click',()=>{state.zoomBias=1;});
  $('reset').addEventListener('click',()=>{
-  if(!state.ready)return;const p=state.player;p.car=-1;p.vehicleType=null;p.x=state.spawn[0];p.y=state.spawn[1];p.a=0;state.camera.x=p.x;state.camera.y=p.y;
+  if(!state.ready)return;const p=state.player;carRadio.leaveVehicle();p.car=-1;p.vehicleType=null;p.x=state.spawn[0];p.y=state.spawn[1];p.a=0;state.camera.x=p.x;state.camera.y=p.y;
   state.zoom=CAMERA_ZOOM_MAX;state.zoomBias=1;state.zoomTarget=CAMERA_ZOOM_MAX;resetDrivingControls();updateHud();
  });
  window.addEventListener('blur',()=>{Object.keys(pressed).forEach(k=>pressed[k]=false);resetStick();resetDrivingControls();});
- document.addEventListener('visibilitychange',()=>{if(document.hidden){Object.keys(pressed).forEach(k=>pressed[k]=false);resetStick();resetDrivingControls();}});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){Object.keys(pressed).forEach(k=>pressed[k]=false);resetStick();resetDrivingControls();carRadio.suspend();}});
  canvas.addEventListener('wheel',e=>{e.preventDefault();
   state.zoomBias=clamp(state.zoomBias*(e.deltaY>0?.91:1.1),.62,1.35);
  },{passive:false});
