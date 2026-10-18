@@ -1,3 +1,7 @@
+import {drawCityPlayer} from './city-art.mjs?v=125';
+import {drawPedestrianSprite} from './pedestrian-sprites.mjs?v=001';
+import {WALK_SPEED,RUN_SPEED} from './driving-controls.mjs?v=094';
+
 const WALKABLE=new Set(['primary','secondary','tertiary','unclassified','residential','living_street','service','pedestrian','footway','path','steps']);
 
 function projectPoint(point,a,b){
@@ -59,8 +63,6 @@ export function drawBankEntrance(ctx,bank,clock){
 // Bank interiors use the *same world units, top-down camera conventions and
 // player renderer* as the street. All furniture below is illustrated arcade art,
 // not a claim about the actual floor plan of any real bank in Melito.
-import {drawCityPlayer} from './city-art.mjs?v=125';
-import {drawPedestrianSprite} from './pedestrian-sprites.mjs?v=001';
 
 export const BANK_ROOM=Object.freeze({width:100,height:64});
 const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
@@ -92,8 +94,10 @@ export function stepBankInteriorPlayer(player,axes,running,dt){
  player.moving=mag>.08;
  if(!player.moving)return player;
  player.a=Math.atan2(ay,ax);
- const step=(running?.31:.21)*Math.min(mag,1)*Math.min(Math.max(dt,0),.05);
- const dx=ax/mag*step,dy=ay/mag*step;
+ // Walk and run at exactly the same physical world-units/second as outside.
+ // X and Y normalizations differ because this room is 100×64, not a square.
+ const distance=(running?RUN_SPEED:WALK_SPEED)*Math.min(mag,1)*Math.min(Math.max(dt,0),.05);
+ const dx=ax/mag*distance/BANK_ROOM.width,dy=ay/mag*distance/BANK_ROOM.height;
  // Separate X/Y checks allow sliding along counters instead of walking
  // through furniture or becoming stuck when approaching at an angle.
  if(bankInteriorWalkable(player.x+dx,player.y+dy)){player.x+=dx;player.y+=dy;}
