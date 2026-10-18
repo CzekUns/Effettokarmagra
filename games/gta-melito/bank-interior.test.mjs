@@ -60,7 +60,7 @@ test('exterior marker and interior-only scene draw without touching street state
 test('public game page loads the bank-scene build',()=>{
  const page=fs.readFileSync(new URL('./index.html',import.meta.url),'utf8');
  const game=fs.readFileSync(new URL('./game.mjs',import.meta.url),'utf8');
- assert.match(page,/game\.mjs\?v=132/);
+ assert.match(page,/game\.mjs\?v=133/);
  assert.match(game,/bank-interior\.mjs\?v=003/);
 });
 
