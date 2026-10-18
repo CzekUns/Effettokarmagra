@@ -40,7 +40,7 @@ test('motorcycle canvas paints the correct atlas cell with a visible seated helm
   assert.equal(draw.length,10);
   assert.equal(draw[2],120);assert.equal(draw[3],204);
   assert.equal(draw[4],40);assert.equal(draw[5],68);
-  assert.ok(draw[8]<3&&draw[9]<6);
+  assert.ok(draw[8]<=3.3&&draw[9]<=6.6,'still smaller than a car');
   assert.ok(operations.filter(x=>x[0]==='ellipse').length>=4,'helmet and seated body shown');
  }finally{
   if(previous===undefined)delete globalThis.Image;else globalThis.Image=previous;
@@ -99,5 +99,5 @@ test('the user can ride motorcycles, NPCs ride too, and auto logic remains',asyn
  assert.match(road,/vehicleType:player.vehicleType/);
  assert.ok(game.includes("traffic-collision.mjs?v=125"));
  assert.ok(game.includes("roads.mjs?v=125"));
- assert.ok(page.includes('game.mjs?v=125'));
+ assert.ok(page.includes('game.mjs?v=126'));
 });

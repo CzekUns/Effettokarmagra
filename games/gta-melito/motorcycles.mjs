@@ -51,7 +51,7 @@ export function chooseMotorcycleDismount(vehicle,valid,blocked=()=>false){
 }
 export function drawMotorcycle(ctx,x,y,angle,model,{rider=false,focused=false,jacket='#b7343b'}={}){
  const variant=motorcycleVariant(model);
- const bodyWidth=2.85,bodyLength=5.8;
+ const bodyWidth=3.15,bodyLength=6.45;
  ctx.save();ctx.translate(x,y);ctx.rotate(angle+Math.PI/2);
  if(variant&&motorcycleSpriteReady()){
   ctx.imageSmoothingEnabled=false;
@@ -63,6 +63,11 @@ export function drawMotorcycle(ctx,x,y,angle,model,{rider=false,focused=false,ja
   ctx.fillStyle='#353b43';ctx.fillRect(-.58,-.5,1.16,2.3);
   ctx.strokeStyle='#cbd1cb';ctx.lineWidth=.16;
   ctx.beginPath();ctx.moveTo(-1.55,-1.5);ctx.lineTo(1.55,-1.5);ctx.stroke();
+ }
+ if(!rider){
+  // A small kickstand keeps an unoccupied scooter visually distinct.
+  ctx.strokeStyle='#171d21';ctx.lineWidth=.17;
+  ctx.beginPath();ctx.moveTo(-.58,.95);ctx.lineTo(-1.4,1.68);ctx.stroke();
  }
  if(rider){
   // Helmet, shoulders, hands and legs. Face/helmet point toward bike front.

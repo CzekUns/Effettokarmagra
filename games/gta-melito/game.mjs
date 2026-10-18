@@ -20,8 +20,9 @@ import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=100';
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=094';
-import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=001';
+import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=002';
 import {nearestEnterableVehicle,starterMotorcycleCandidates} from './vehicle-entry.mjs?v=001';
+import {PARKED_BIKE_TARGET,PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP,motorcycleParkingRoadOrder,motorcycleParkingCandidates,parkedBikeLabel} from './motorcycle-parking.mjs?v=001';
 import {guideCar} from './driving-assist.mjs?v=099';
 import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
@@ -183,6 +184,23 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
   .find(bike=>!carBlocked(bike.x,bike.y,bike.a,-1,bike)&&
     state.cars.every(v=>!vehiclesOverlap(bike,v)));
  if(starterBike)state.cars.push(starterBike);
+ // Separate two-wheel parking pass; OSM road candidates remain subject to
+ // all road/building and existing parked-vehicle collision validations.
+ let parkedBikeCount=state.cars.filter(isMotorcycle).length;
+ const bikeRoads=motorcycleParkingRoadOrder(possible,point,roadPoint,arcLength,rnd);
+ for(const road of bikeRoads){
+  if(parkedBikeCount>=PARKED_BIKE_TARGET||state.cars.length>=PARKED_VEHICLE_CAP)break;
+  const options=motorcycleParkingCandidates(road,roadPoint,visualRoadWidth(road),rnd);
+  for(const at of options){
+   if(Math.hypot(at.x-point.x,at.y-point.y)<9)continue;
+   const bike={x:at.x,y:at.y,a:at.a,speed:0,type:0,
+    model:MOTORCYCLE_IDS[Math.floor(rnd(road.id+parkedBikeCount*31+819)*MOTORCYCLE_IDS.length)],
+    vehicleType:'motorcycle',rider:false};
+   if(carBlocked(bike.x,bike.y,bike.a,-1,bike)||
+     state.cars.some(other=>vehiclesOverlap(bike,other)))continue;
+   state.cars.push(bike);parkedBikeCount++;break;
+  }
+ }
  let k=0;
  for(const road of possible){
   if(arcLength(road.p)<25||rnd(road.id)%1>.33)continue;
@@ -198,7 +216,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
   })).find(car=>!carBlocked(car.x,car.y,car.a,-1)&&!state.cars.some(other=>vehiclesOverlap(car,other)));
   if(!parked)continue;
   state.cars.push(parked);k++;
-  if(state.cars.length>=105)break;
+  if(state.cars.length>=Math.min(PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP+parkedBikeCount))break;
  }
  state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
  state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
@@ -481,6 +499,25 @@ function drawCar(x,y,a,type,drive=false,model=null,vehicle=null){
  }
  if(!drawCarSprite(c,x,y,a,model,drive))drawCityCar(c,x,y,a,type,drive,state.clock);
 }
+function drawParkedMotorcycleHints(){
+ // Only near the walking player: avoid labeling the entire street scene.
+ if(state.player.car>=0||state.zoom<3)return;
+ const p=state.player;
+ const nearby=state.cars.filter(v=>isMotorcycle(v)&&!v.rider&&
+  Math.hypot(v.x-p.x,v.y-p.y)<19)
+  .sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y)).slice(0,2);
+ if(!nearby.length)return;
+ c.save();c.font='bold 2.15px monospace';c.textAlign='center';
+ for(const v of nearby){
+  const label=parkedBikeLabel(v);
+  if(!label)continue;
+  const text=label+' · E',width=text.length*1.35+2.2;
+  c.fillStyle='#182725e8';c.fillRect(v.x-width/2,v.y-8.9,width,3.25);
+  c.strokeStyle='#ecd18e';c.lineWidth=.17;c.strokeRect(v.x-width/2,v.y-8.9,width,3.25);
+  c.fillStyle='#ffe6a7';c.fillText(text,v.x,v.y-6.55);
+ }
+ c.restore();
+}
 function drawPlayer(){
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
  drawCityPlayer(c,state.player,state.clock,moving);
@@ -655,6 +692,7 @@ function draw(dt=0){
   drawCar(x,y,a,ai.kind,false,ai.model,ai);
  }
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);});
+ drawParkedMotorcycleHints();
  drawPlayer();
 }
 function prepareMini(){
