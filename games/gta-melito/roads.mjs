@@ -100,7 +100,10 @@ export function createAgents(graph,count,seed=10,kind='car',avoid=[],settings={}
     ['through','local','courier'][hash(seed+i*31)%3];
    const agent={...at,edge:edgeIndex,t,speed:kind==='car'?(vehicleType==='motorcycle'?9:7)+rand(i*13+seed)*7:
     (role==='stroller'?.68:role==='commuter'?1.08:.85)+rand(i*11+seed)*.35,
-    kind:i%7,seed:seed+i*17,wait:0,body:kind,side,routine:role,segments:0};
+    kind:i%7,seed:seed+i*17,wait:0,body:kind,side,routine:role,segments:0,
+    home:{x:at.x,y:at.y,edge:edgeIndex,side,radius:kind==='walk'?
+     (role==='stroller'?58:role==='errand'?85:125):
+     (role==='local'?185:role==='courier'?250:360)}};
    agents.push(agent);addToCollisionIndex(occupied,agent);break;
   }
  }
@@ -128,6 +131,17 @@ export function chooseTurn(graph,nodeId,oldEdge,agent,allowed){
   if(agent.routine==='errand'||agent.routine==='local')weight*=a>.35&&a<2.1?1.8:1;
   if(agent.routine==='stroller')weight*=edge.roadType==='footway'||edge.roadType==='pedestrian'?2.2:1;
   if(agent.routine==='courier')weight*=edge.roadType==='service'||edge.roadType==='residential'?1.6:1;
+  // Every civilian is assigned a deterministic home district at spawn.
+  // When close to its edge, keep normal wandering; beyond it, prefer turns
+  // pointing home instead of drifting across Melito forever.
+  if(agent.home){
+   const now=graph.nodes[nodeId],to=graph.nodes[edge.to],home=agent.home;
+   const current=Math.hypot(now.x-home.x,now.y-home.y);
+   if(current>home.radius*.7){
+    const after=Math.hypot(to.x-home.x,to.y-home.y);
+    weight*=clamp(Math.exp((current-after)/18),.18,10);
+   }
+  }
   return {id,weight};
  });
  const sum=choice.reduce((t,q)=>t+q.weight,0);
@@ -193,7 +207,7 @@ function nextPose(graph,agent,distance){
  return {...route,...position(graph,route.edge,route.t,agent.body,route.side),vehicleType:agent.vehicleType};
 }
 export function stepAgent(graph,agent,dt,others=[],player=null,index=null){
- if(!Number.isFinite(dt)||dt<=0)return;
+ if(!Number.isFinite(dt)||dt<=0||agent.impactTime>0||agent.needsRoutineRecovery)return;
  const elapsed=Math.min(dt,.1);
  if(agent.wait>0){agent.wait=Math.max(0,agent.wait-elapsed);return;}
  const edge=graph.edges[agent.edge];if(!edge||!(agent.body==='car'?edge.car:edge.walk))return;
@@ -237,12 +251,85 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null){
  }
  agent.braking=true;
 }
+// Recover from an impact without snapping an on-screen NPC to a random
+// highway. Return to a legal nearby lane/sidewalk; once offscreen, the agent
+// may resume in its own original neighborhood instead.
+function routinePosition(graph,agent,nearHome=false){
+ let best=null,bestD=Infinity;
+ const home=agent.home;
+ for(let edgeId=0;edgeId<graph.edges.length;edgeId++){
+  const e=graph.edges[edgeId];
+  if(!(agent.body==='car'?e.car:e.walk))continue;
+  const a=graph.nodes[e.from],b=graph.nodes[e.to];
+  const dx=b.x-a.x,dy=b.y-a.y,denom=dx*dx+dy*dy;
+  const base=nearHome&&home?home:agent;
+  // Fast bounding-box rejection before the more expensive projection.
+  if(Math.abs(a.x-base.x)>80&&Math.abs(b.x-base.x)>80||
+     Math.abs(a.y-base.y)>80&&Math.abs(b.y-base.y)>80)continue;
+  const t=clamp(denom?((base.x-a.x)*dx+(base.y-a.y)*dy)/denom:0,.06,.94);
+  const pose=position(graph,edgeId,t,agent.body,agent.side||1);
+  if(nearHome&&home&&Math.hypot(pose.x-home.x,pose.y-home.y)>Math.min(28,home.radius*.4))continue;
+  const distance=Math.hypot(pose.x-base.x,pose.y-base.y);
+  if(distance<bestD){best={...pose,edge:edgeId,t};bestD=distance;}
+ }
+ return best;
+}
+function outsideView(x,y,view,padding=16){
+ return !!view&&(x<view[0]-padding||x>view[2]+padding||y<view[1]-padding||y>view[3]+padding);
+}
+export function restoreAgentRoutine(graph,agent,dt,world={},index=null){
+ if(!agent.needsRoutineRecovery)return false;
+ const offscreen=outsideView(agent.x,agent.y,world.view);
+ const home=agent.home;
+ const far=home&&Math.hypot(agent.x-home.x,agent.y-home.y)>home.radius*.85;
+ if(offscreen&&far){
+  const landing=routinePosition(graph,agent,true);
+  if(landing&&!collidesWithTraffic(landing,agent.body,index,agent)){
+   Object.assign(agent,landing,{corner:null,wait:.3,stalled:0,braking:false,
+    needsRoutineRecovery:false,prevX:landing.x,prevY:landing.y,prevA:landing.a});
+   return true;
+  }
+ }
+ // Prefer local rejoin, including pedestrian sidewalk offset.
+ const pose=routinePosition(graph,agent,far&&offscreen);
+ if(!pose)return true;
+ const dx=pose.x-agent.x,dy=pose.y-agent.y,len=Math.hypot(dx,dy);
+ if(len<1.2){
+  Object.assign(agent,pose,{corner:null,wait:.15,stalled:0,braking:false,
+   needsRoutineRecovery:false});
+  return true;
+ }
+ const distance=Math.min(len,(agent.body==='car'?5.5:3.8)*Math.min(dt,.1));
+ const nx=agent.x+dx/len*distance,ny=agent.y+dy/len*distance;
+ if((!world.validRecovery||world.validRecovery(nx,ny,agent))&&
+    (!index||!collidesWithTraffic({x:nx,y:ny,a:Math.atan2(dy,dx),
+     vehicleType:agent.vehicleType},agent.body,index,agent))){
+  agent.x=nx;agent.y=ny;agent.a=Math.atan2(dy,dx);
+ }
+ agent.recoverySeconds=(agent.recoverySeconds||0)+dt;
+ // If a building blocks a clear return route, defer the final reset until
+ // hidden. Do not walk an NPC through an OSM building to reach its path.
+ if(offscreen&&agent.recoverySeconds>3){
+  const landing=routinePosition(graph,agent,true);
+  if(landing&&!collidesWithTraffic(landing,agent.body,index,agent)){
+   Object.assign(agent,landing,{corner:null,wait:.3,stalled:0,braking:false,
+    needsRoutineRecovery:false,prevX:landing.x,prevY:landing.y,prevA:landing.a,
+    recoverySeconds:0});
+  }
+ }
+ return true;
+}
 export function stepAgents(graph,agents,dt,player=null,world={}){
  const playerBody=player&&Number.isFinite(player.x)&&Number.isFinite(player.y)?
   {x:player.x,y:player.y,a:player.a||0,body:player.car>=0?'car':'walk',vehicleType:player.vehicleType||'car'}:null;
  const index=makeCollisionIndex([...agents,...(world.parked||[]),...(world.traffic||[]),...(world.people||[]),playerBody]);
  for(const agent of agents){
   const x=agent.x,y=agent.y;
+  if(agent.impactTime>0){agent.braking=true;continue;}
+  if(restoreAgentRoutine(graph,agent,dt,world,index)){
+   if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);
+   continue;
+  }
   stepAgent(graph,agent,dt,agents,player,index);
   agent.stalled=Math.hypot(agent.x-x,agent.y-y)<.02?
    (agent.stalled||0)+dt:0;
@@ -257,6 +344,7 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
      const edgeId=options[hash(agent.seed+attempt*3253)%options.length];
      const t=.15+rand(agent.seed+attempt*1459)*.7;
      const at={...position(graph,edgeId,t,'car'),vehicleType:agent.vehicleType};
+     if(agent.home&&Math.hypot(at.x-agent.home.x,at.y-agent.home.y)>agent.home.radius*.65)continue;
      if(at.x>=view[0]-15&&at.x<=view[2]+15&&at.y>=view[1]-15&&at.y<=view[3]+15)continue;
      if(collidesWithTraffic(at,'car',index,agent)||[...nearbyColliders(index,at.x,at.y,10)].some(other=>
        other!==agent&&(other.body||'car')==='car'&&Math.hypot(at.x-other.x,at.y-other.y)<9))continue;
@@ -274,6 +362,7 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
     const edgeId=graph.walkStarts[hash(agent.seed+attempt*3253)%graph.walkStarts.length];
     const t=.2+rand(agent.seed+attempt*1459)*.6;
     const at=position(graph,edgeId,t,'walk',agent.side);
+    if(agent.home&&Math.hypot(at.x-agent.home.x,at.y-agent.home.y)>agent.home.radius*.65)continue;
     if(at.x>=world.view[0]-15&&at.x<=world.view[2]+15&&at.y>=world.view[1]-15&&at.y<=world.view[3]+15)continue;
     if(collidesWithTraffic(at,'walk',index,agent))continue;
     if([...nearbyColliders(index,at.x,at.y,2)].some(other=>
