@@ -21,7 +21,7 @@ export function targetCameraZoom({inVehicle=false,speed=0,running=false,moving=f
 export function vehicleCameraTarget({x=0,y=0,a=0,speed=0}={},width=0,height=0,zoom=1){
  const dx=Math.cos(a),dy=Math.sin(a),span=(Math.abs(dx)*Math.max(0,width)+Math.abs(dy)*Math.max(0,height))/Math.max(.01,zoom);
  const moving=Math.max(0,Math.min(1,Math.abs(Number(speed)||0)/12));
- const trailingFraction=.5-.4*moving;
+ const trailingFraction=.5-.2*moving;
  const lead=span*(.5-trailingFraction);
  return {x:x+dx*lead,y:y+dy*lead};
 }
