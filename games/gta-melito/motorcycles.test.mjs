@@ -92,12 +92,12 @@ test('the user can ride motorcycles, NPCs ride too, and auto logic remains',asyn
  assert.match(game,/drawMotorcycle\(c,x,y,a,model/);
  assert.match(game,/chooseMotorcycleDismount\(vehicle,validWalk,blocked\)/);
  assert.match(game,/isMotorcycle\(car\)\?stepMotorcycle:stepDriving/);
- assert.match(game,/MOTORCYCLE_IDS\[\(k\+Math.floor\(k\/8\)\*5\)/);
- assert.match(game,/MOTORCYCLE_IDS\[\(i\+Math.floor\(i\/12\)\*5\)/);
- assert.match(game,/const bike=i%12===2/);
+ assert.match(game,/MOTORCYCLE_IDS\[\(k\+Math.floor\(k\/3\)\*5\)/);
+ assert.match(game,/MOTORCYCLE_IDS\[\(i\+Math.floor\(i\/4\)\*5\)/);
+ assert.match(game,/motorcycleEvery:4/);
  assert.match(game,/MOTO · /);
  assert.match(road,/vehicleType:player.vehicleType/);
- assert.ok(game.includes("traffic-collision.mjs?v=115"));
- assert.ok(game.includes("roads.mjs?v=116"));
- assert.ok(page.includes('game.mjs?v=124'));
+ assert.ok(game.includes("traffic-collision.mjs?v=125"));
+ assert.ok(game.includes("roads.mjs?v=125"));
+ assert.ok(page.includes('game.mjs?v=125'));
 });

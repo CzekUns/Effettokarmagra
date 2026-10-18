@@ -6,8 +6,8 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=116';
-import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap} from './traffic-collision.mjs?v=115';
+import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=125';
+import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap} from './traffic-collision.mjs?v=125';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
@@ -194,15 +194,15 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
   const first=rnd(road.id+29)<.5?1:-1;
   const parked=[first,-first].map(side=>({
    x:pt.x-Math.sin(pt.a)*shoulder*side,y:pt.y+Math.cos(pt.a)*shoulder*side,
-   a:pt.a,speed:0,type:k%5,vehicleType:k%8===3?'motorcycle':'car',model:k%8===3?MOTORCYCLE_IDS[(k+Math.floor(k/8)*5)%MOTORCYCLE_IDS.length]:k%8===1?'panda-fire-red':CAR_TRAFFIC_SPRITE_IDS[(k*7)%CAR_TRAFFIC_SPRITE_IDS.length]
+   a:pt.a,speed:0,type:k%5,vehicleType:k%3===1?'motorcycle':'car',model:k%3===1?MOTORCYCLE_IDS[(k+Math.floor(k/3)*5)%MOTORCYCLE_IDS.length]:k%8===1?'panda-fire-red':CAR_TRAFFIC_SPRITE_IDS[(k*7)%CAR_TRAFFIC_SPRITE_IDS.length]
   })).find(car=>!carBlocked(car.x,car.y,car.a,-1)&&!state.cars.some(other=>vehiclesOverlap(car,other)));
   if(!parked)continue;
   state.cars.push(parked);k++;
   if(state.cars.length>=105)break;
  }
- state.traffic=createAgents(state.graph,140,189,'car',state.cars);
- state.traffic.forEach((v,i)=>{const bike=i%12===2;v.vehicleType=bike?'motorcycle':'car';v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/12)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
- state.people=createAgents(state.graph,190,310,'walk',[...state.cars,...state.traffic]);
+ state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
+ state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
+ state.people=createAgents(state.graph,170,310,'walk',[...state.cars,...state.traffic]);
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
@@ -300,9 +300,9 @@ function updateTraffic(dt){
  for(const agent of [...state.people,...state.traffic]){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
  }
- stepAgents(state.graph,state.people,elapsed,state.player,{parked:state.cars,traffic:state.traffic});
  const halfW=canvas.clientWidth/(2*state.zoom),halfH=canvas.clientHeight/(2*state.zoom);
  const view=[state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH];
+ stepAgents(state.graph,state.people,elapsed,state.player,{parked:state.cars,traffic:state.traffic,view});
  stepAgents(state.graph,state.traffic,elapsed,state.player,{parked:state.cars,people:state.people,view});
  for(const agent of [...state.people,...state.traffic])if(Math.hypot(agent.x-agent.prevX,agent.y-agent.prevY)>15){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
@@ -444,9 +444,9 @@ function compareRoadWidths(){
  // Every consumer shares the same module instance, including roads/traffic,
  // street furniture, crosswalks and building-side storefront placements.
  state.graph=buildRoadGraph(state.roads);
- state.traffic=createAgents(state.graph,140,189,'car',state.cars);
- state.traffic.forEach((v,i)=>{const bike=i%12===2;v.vehicleType=bike?'motorcycle':'car';v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/12)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
- state.people=createAgents(state.graph,190,310,'walk',[...state.cars,...state.traffic]);
+ state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
+ state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
+ state.people=createAgents(state.graph,170,310,'walk',[...state.cars,...state.traffic]);
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
  state.propsGrid=makeIndex(state.props);

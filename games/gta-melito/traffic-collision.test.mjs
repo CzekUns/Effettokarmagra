@@ -81,6 +81,28 @@ test('pedestrians keep the pavement through a corner without a position jump',()
  }
  assert.ok(!person.corner,'the walker eventually reaches the next sidewalk');
 });
+test('walkers on the reverse side of a one-way street never occupy its centreline',()=>{
+ const g=buildRoadGraph([{id:75,t:'residential',o:true,w:7,p:[0,0,30,0]}]);
+ const walkers=createAgents(g,8,71,'walk');
+ const reversed=walkers.filter(p=>!g.edges[p.edge].car);
+ assert.ok(reversed.length>0);
+ for(const p of reversed){
+  assert.ok(Math.abs(p.y)>8,'reverse pedestrian uses a physical sidewalk');
+  for(let i=0;i<20;i++)stepAgent(g,p,.05);
+  assert.ok(Math.abs(p.y)>8);
+ }
+});
+test('NPC profiles and motorcycles are assigned before collision-aware spawning',()=>{
+ const g=buildRoadGraph([{id:76,t:'residential',w:7,p:[0,0,350,0,700,0]}]);
+ const vehicles=createAgents(g,12,91,'car',[],{motorcycleEvery:4});
+ assert.equal(vehicles.length,12);
+ assert.equal(vehicles.filter(v=>v.vehicleType==='motorcycle').length,3);
+ assert.ok(vehicles.every(v=>['through','local','courier'].includes(v.routine)));
+ const walkers=createAgents(g,12,98,'walk',vehicles);
+ assert.ok(walkers.every(v=>['commuter','errand','stroller'].includes(v.routine)));
+ const index=makeCollisionIndex([...vehicles,...walkers]);
+ for(const v of vehicles)assert.equal(collidesWithTraffic(v,'car',index,v),null);
+});
 
 test('NPC cars queue before a parked car and separate at a crossing',()=>{
  const parked={x:35,y:3.542,a:0,body:'car'};
@@ -124,7 +146,7 @@ test('pedestrian walks on the sidewalk and yields before a car; traffic yields t
  for(let i=0;i<50;i++)stepAgents(graph,[driver],.05,player);
  assert.ok(driver.x<32,'driver stops for the player pedestrian');
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
- assert.match(game,/vehicleType:bike\?'motorcycle':'car'/);
+ assert.match(game,/motorcycleEvery:4/);
   assert.match(game,/collidesWithTraffic\(/);
 });
 

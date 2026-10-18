@@ -67,7 +67,7 @@ export function trafficMoveBlocked(current,next,body,index,self){
  const steps=Math.max(1,Math.min(24,Math.ceil(Math.hypot(dx,dy)/1.5)));
  const turn=Math.atan2(Math.sin(next.a-current.a),Math.cos(next.a-current.a));
  for(let i=1;i<=steps;i++){
-  const t=i/steps,pose={x:current.x+dx*t,y:current.y+dy*t,a:current.a+turn*t};
+  const t=i/steps,pose={x:current.x+dx*t,y:current.y+dy*t,a:current.a+turn*t,vehicleType:current.vehicleType};
   for(const other of nearbyColliders(index,pose.x,pose.y,8)){
    if(other===self||!touches(pose,body,other))continue;
    if(!touches(current,body,other)||
