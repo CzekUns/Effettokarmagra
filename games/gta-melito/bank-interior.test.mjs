@@ -81,6 +81,10 @@ test('bank room keeps the street sprite scale and preserves compact device trans
 
 test('bank player turns and cannot cross counters, ATM, chairs or walls',()=>{
  const p={x:.5,y:.82,a:0,moving:false};
+ const oneStep={x:.5,y:.82,a:0,moving:false};
+ stepBankInteriorPlayer(oneStep,{x:0,y:-1},false,.05);
+ assert.ok(Math.abs(oneStep.y-(.82-8.5*.05/64))<1e-10,
+  'walk must match the 8.5 world units/second used on the street');
  for(let i=0;i<110;i++)stepBankInteriorPlayer(p,{x:0,y:-1},false,.05);
  assert.ok(p.y>=28.5/64&&p.y<.82,'player should approach counter and stop');
  assert.equal(bankInteriorWalkable(.5,.3),false);
