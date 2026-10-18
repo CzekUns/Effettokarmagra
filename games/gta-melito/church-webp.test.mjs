@@ -13,7 +13,7 @@ test('authored church WebP is transparent, compact and kept separate from Google
  assert.ok(bytes.length<12000,'church image is compact enough for mobile');
 });
 
-test('generated roof is clipped to church way 733703815 only; original OSM collision polygon unchanged',async()=>{
+test('authored church image replaces the old roof without a polygon clip',async()=>{
  const map=JSON.parse(await readFile(new URL('./data/melito-map.json',import.meta.url),'utf8'));
  const building=map.buildings.find(b=>b.id===churchId);
  const chapel=map.buildings.find(b=>b.n==='Chiesa Maria SS. di Piedigrotta');
@@ -21,9 +21,12 @@ test('generated roof is clipped to church way 733703815 only; original OSM colli
  const coordinates=building.p.slice();
  prepareCityStyles([building,chapel],[]);
  const calls=[];
+ let clips=0;const stack=[];
  const ctx=new Proxy({},{
-  get(o,k){if(k==='drawImage')return (...args)=>calls.push(['image',...args]);
-   if(k==='clip')return ()=>calls.push(['clip']);
+  get(o,k){if(k==='drawImage')return (...args)=>calls.push(['image',clips,...args]);
+   if(k==='save')return ()=>stack.push(clips);
+   if(k==='restore')return ()=>{clips=stack.pop()??0;};
+   if(k==='clip')return ()=>{clips++;};
    return k in o?o[k]:()=>{};},
   set(o,k,v){o[k]=v;return true;}
  });
@@ -40,7 +43,7 @@ test('generated roof is clipped to church way 733703815 only; original OSM colli
   assert.equal(updated,1,'raster tile invalidation callback is invoked on load');
   drawCityBuildings(ctx,[building],3);
   assert.equal(calls.filter(c=>c[0]==='image').length,1);
-  assert.ok(calls.some(c=>c[0]==='clip'),'clip artwork to mapped building footprint');
+  assert.equal(calls.find(c=>c[0]==='image')[1],0,'authored silhouette must remain complete');
   assert.deepEqual(building.p,coordinates,'do not change OSM collision geometry');
   calls.length=0;
   drawCityBuildings(ctx,[chapel],3);
@@ -54,6 +57,6 @@ test('entrypoint invalidates cached tiles when church artwork becomes ready',asy
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  const page=await readFile(new URL('./index.html',import.meta.url),'utf8');
  assert.ok(game.includes('loadChurchWebp(()=>{staticTiles.clear();pendingTile=null;})'));
- assert.ok(game.includes('city-art.mjs?v=120'));
- assert.ok(page.includes('game.mjs?v=122'));
+ assert.ok(game.includes('city-art.mjs?v=123'));
+ assert.ok(page.includes('game.mjs?v=123'));
 });

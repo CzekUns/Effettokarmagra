@@ -355,18 +355,20 @@ function studyRoofHardware(c,a){
 function specialized(c,b,art){
  const {cx,cy,w,h:bh,seed}=art;
  if(art.type==='church'){
+  // The authored sprite owns the complete silhouette, including its outline.
+  // Do not paint the old procedural roof below its transparent pixels.
+  if(b.id===733703815&&churchWebpReady()){
+   c.save();c.imageSmoothingEnabled=false;
+   c.drawImage(churchWebp,art.x0,art.y0,art.w,art.h);
+   c.restore();
+   return true;
+  }
   // Actual OSM church footprint; rooftop is an interpretation of the
   // central dome of Santa Maria delle Grazie, not a measured 3D survey.
   roofOutline(c,b.p,'#e2d1af',.9);
   // Texture the ORIGINAL raised OSM roof only. Generated picture details
   // outside this church's mapped polygon are intentionally discarded:
   // northern nave and surrounding annexes have their own OSM footprints.
-  if(b.id===733703815&&/Santa Maria delle Grazie/i.test(b.n||'')&&churchWebpReady()){
-   c.save();poly(c,b.p);c.clip();c.imageSmoothingEnabled=true;
-   c.drawImage(churchWebp,art.x0,art.y0,art.w,art.h);
-   c.restore();
-   return true;
-  }
   if(!/Santa Maria delle Grazie/i.test(b.n||'')){
    // The other historic church has a different roof silhouette in OSM.
    c.strokeStyle='#bfa886';c.lineWidth=.7;c.beginPath();c.moveTo(art.x0+1,cy);c.lineTo(art.x1-1,cy);c.stroke();
@@ -600,9 +602,11 @@ export function drawCityBuildings(c,buildings,zoom){
   }
   // High-contrast raised parapet defines the roof above the façades,
   // including tiny annexes, historic churches and one-floor workshops.
-  poly(c,b.p);c.strokeStyle='#643c29';c.lineWidth=.65;c.stroke();
-  c.save();c.translate(-.55,-.55);poly(c,b.p);
-  c.strokeStyle='#f1d9ac88';c.lineWidth=.48;c.stroke();c.restore();
+  if(!(b.id===733703815&&churchWebpReady())){
+   poly(c,b.p);c.strokeStyle='#643c29';c.lineWidth=.65;c.stroke();
+   c.save();c.translate(-.55,-.55);poly(c,b.p);
+   c.strokeStyle='#f1d9ac88';c.lineWidth=.48;c.stroke();c.restore();
+  }
   if(zoom>=1.45&&(b.id===733703600||/Chiesa di Santa Maria delle Grazie/i.test(b.n||''))){
    const label=b.id===733703600?'MUNICIPIO':'S. MARIA DELLE GRAZIE';
    const width=b.id===733703600?28:54;
