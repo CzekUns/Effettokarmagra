@@ -508,10 +508,12 @@ function drawParkedMotorcycleHints(){
   .sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y)).slice(0,2);
  if(!nearby.length)return;
  c.save();c.font='bold 2.15px monospace';c.textAlign='center';
+ const selectable=nearestEnterableVehicle(state.cars,p)?.vehicle;
  for(const v of nearby){
   const label=parkedBikeLabel(v);
   if(!label)continue;
-  const text=label+' · E',width=text.length*1.35+2.2;
+  // E is offered only for the same bike selected by the touch button.
+  const text=label+(selectable===v?' · E':''),width=text.length*1.35+2.2;
   c.fillStyle='#182725e8';c.fillRect(v.x-width/2,v.y-8.9,width,3.25);
   c.strokeStyle='#ecd18e';c.lineWidth=.17;c.strokeRect(v.x-width/2,v.y-8.9,width,3.25);
   c.fillStyle='#ffe6a7';c.fillText(text,v.x,v.y-6.55);

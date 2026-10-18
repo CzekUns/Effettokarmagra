@@ -80,9 +80,9 @@ test('game truly spawns parked motorcycles and gives on-foot player a readable p
  assert.match(game,/state\.cars\.push\(bike\);parkedBikeCount\+\+/);
  assert.match(game,/state\.cars\.some\(other=>vehiclesOverlap\(bike,other\)\)/);
  assert.match(game,/function drawParkedMotorcycleHints\(/);
- assert.match(game,/parkedBikeLabel\\(v\\)/,'labels follow actual vehicle type');
+ assert.match(game,/parkedBikeLabel\(v\)/,'labels follow actual vehicle type');
  assert.match(game,/drawParkedMotorcycleHints\(\)/);
  assert.match(game,/rider:false/,'empty scooter has no human already seated');
  assert.match(game,/drawMotorcycle\(c,x,y,a,model/);
- assert.match(page,/game\.mjs\?v=126/);
+ assert.match(page,/game\.mjs\?v=127/);
 });
