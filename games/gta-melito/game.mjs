@@ -412,12 +412,14 @@ function toggleVehicle(){
   if(!exit){$('street').textContent='NESSUNO SPAZIO LIBERO PER SCENDERE';return;}
   vehicle.turnGuide=null;vehicle.recoil=0;vehicle.speed=0;
   p.x=exit.x;p.y=exit.y;p.car=-1;p.vehicleType=null;
+  p.impactTime=0;p.impactVX=0;p.impactVY=0;p.impactLock=0;
  }else{
   // Same targeted vehicle for keyboard E and the touch/HUD label.
   const target=nearestEnterableVehicle(state.cars,p);
   if(target){
    p.car=target.index;p.a=target.vehicle.a;
    p.vehicleType=target.bike?'motorcycle':'car';
+   p.impactTime=0;p.impactVX=0;p.impactVY=0;p.impactLock=0;
    p.x=target.vehicle.x;p.y=target.vehicle.y;
   }else{$('street').textContent='AVVICINATI A UN VEICOLO PER SALIRE';}
  }
