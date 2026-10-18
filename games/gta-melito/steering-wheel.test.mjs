@@ -47,5 +47,5 @@ test('responsive UI swaps thumbstick for steering wheel only while riding and ha
  assert.match(game,/const axes=driveAxes\(\)/);
  assert.match(game,/pressed\.handbrake,dt,pressed\.brake/);
  assert.match(game,/turnSteeringWheel\(wheel\.angle,wheel\.pointerAngle,next\)/);
- assert.match(game,/document\.querySelector\('\.controls'\)\?\.classList\.toggle\('driving',driving\)/);
+ assert.match(game,/document\.querySelector\?\.\('\.controls'\)\?\.classList\.toggle\('driving',driving\)/);
 });
