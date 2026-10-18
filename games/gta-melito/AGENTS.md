@@ -2,11 +2,19 @@
 
 Ambito: solo `games/gta-melito/`. Questo è il gioco GTA Melito di Uns Arcade, **non Ninomon** né gli altri giochi della repository.
 
+## Passaggio di mano obbligatorio — QUALSIASI intervento
+
+**Regola permanente per tutti: persone, agenti AI, ChatGPT e Work.** Chi lavora in questo gioco deve consultare l'ultima voce di [WORK_LOG.md](./WORK_LOG.md) **prima** di iniziare e lasciare una nuova voce **prima di consegnare o terminare la sessione**. Questa regola vale per codice, grafica, asset, AI, missioni, mappa, bug, refactoring e documentazione, non soltanto per i lavori estetici.
+
+Il log può essere breve (5–10 righe), ma deve dire chiaramente **cosa è stato fatto**, **come e in quali file**, **quali test/verifiche sono stati fatti o non fatti**, **cosa resta da fare** e **dove riprendere**. Indicare commit/branch/PR se noti. Se la sessione non ha concluso il lavoro, registrare ciò che è stato tentato e i blocchi incontrati. Aggiungere le voci in fondo senza eliminare lo storico; includere il log nel commit delle modifiche quando possibile. Non inventare deploy o test. Una risposta in chat **non sostituisce** il registro in repository.
+
+[VISUAL_PROGRESS.md](./VISUAL_PROGRESS.md) rimane obbligatorio *in aggiunta* per gli interventi grafici dettagliati; [WORK_LOG.md](./WORK_LOG.md) è il riepilogo universale per i passaggi di mano. Si applicano anche le [regole generali della repository](../../AGENTS.md).
+
 ## Missione vincolante
 
 **Proseguire lo sviluppo concreto della resa visiva**, non limitarsi a produrre un piano: trasformare Melito in un'interpretazione **pixel art 2.5D dall'alto, giocabile e riconoscibile** rispetto alla Melito di Napoli reale. Iniziare dal centro storico, **Piazza Santo Stefano**, e continuare progressivamente con le altre aree del paese. Il committente vuole vedere un miglioramento tangibile nel gioco.
 
-**LEGGI PER PRIMO:** [HANDOFF_WORK_REALISMO.md](./HANDOFF_WORK_REALISMO.md). Contiene stato verificato, file chiave, fonti, priorità, metodo di lavoro, test e criteri di accettazione. Dopo ogni sessione registra il lavoro in [VISUAL_PROGRESS.md](./VISUAL_PROGRESS.md).
+**PRIMA DI MODIFICARE:** leggi [HANDOFF_WORK_REALISMO.md](./HANDOFF_WORK_REALISMO.md) e le ultime voci di [WORK_LOG.md](./WORK_LOG.md). L'handoff contiene stato verificato, file chiave, fonti, priorità, metodo di lavoro, test e criteri di accettazione. Dopo ogni sessione aggiorna il registro operativo e, se hai lavorato sulla grafica, anche [VISUAL_PROGRESS.md](./VISUAL_PROGRESS.md).
 
 ## Modus operandi veicoli — confermato e permanente
 
