@@ -28,7 +28,7 @@ import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
-import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer} from './bank-interior.mjs?v=002';
+import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=003';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 const $=id=>document.getElementById(id);
@@ -331,6 +331,9 @@ function updateTraffic(dt){
  }
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);
 }
+function interiorZoom(){
+ return targetCameraZoom({inVehicle:false,moving:false},state.zoomBias)*BANK_FOOT_ZOOM_MULTIPLIER;
+}
 function toggleVehicle(){
  if(!state.ready)return;
  const p=state.player;
@@ -342,7 +345,9 @@ function toggleVehicle(){
  if(p.car<0){
   const entrance=nearestBankEntrance(state.bankEntrances,p);
   if(entrance){
-   state.bankInterior={bank:entrance.bank,outside:{x:p.x,y:p.y,a:p.a},player:{x:.5,y:.82,a:-Math.PI/2,moving:false}};
+   const local={x:.5,y:.89,a:-Math.PI/2,moving:false};
+    state.bankInterior={bank:entrance.bank,outside:{x:p.x,y:p.y,a:p.a},player:local,
+     camera:bankInteriorCamera(local,canvas.clientWidth,canvas.clientHeight,interiorZoom())};
    for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
    updateHud();return;
   }
@@ -404,6 +409,8 @@ function tick(dt){
  if(state.bankInterior){
   const axes=moveAxes(),local=state.bankInterior.player;
   stepBankInteriorPlayer(local,axes,pressed.run,dt);
+  state.bankInterior.camera=bankInteriorCamera(local,canvas.clientWidth,canvas.clientHeight,
+   interiorZoom(),state.bankInterior.camera,dt);
   state.clock+=dt;state.hud+=dt;
   if(state.hud>.18){state.hud=0;updateHud();}
   return;
@@ -504,7 +511,7 @@ function updateHud(){
  if(state.bankInterior){
   $('vehicle').textContent='ALL’INTERNO DELLA BANCA';$('street').textContent=state.bankInterior.bank.n.toUpperCase();
   $('action').textContent='ESCI DALLA BANCA';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
-  $('camera-mode').textContent='INTERNO · TOP-DOWN';return;
+  $('camera-mode').textContent='INTERNO · '+interiorZoom().toFixed(1)+'×';return;
  }
  $('vehicle').textContent=p.car>=0?(isMotorcycle(state.cars[p.car])?'MOTO · ':'AUTO · ')+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H':'A PIEDI';
  const n=state.roadGrid?nearest(p.x,p.y,70):null;
@@ -685,7 +692,7 @@ function draw(dt=0){
  c.imageSmoothingEnabled=false;
  c.fillStyle='#15221e';c.fillRect(0,0,cw,ch);
  if(!state.ready)return;
- if(state.bankInterior){drawBankInterior(c,cw,ch,state.clock,state.bankInterior.bank,state.bankInterior.player);return;}
+ if(state.bankInterior){drawBankInterior(c,cw,ch,state.clock,state.bankInterior.bank,state.bankInterior.player,interiorZoom(),state.bankInterior.camera);return;}
  const p=state.player;
  c.translate(cw/2,ch/2);c.scale(state.zoom,state.zoom);c.translate(-state.camera.x,-state.camera.y);
  const [x0,y0,x1,y1]=visibleBounds();
