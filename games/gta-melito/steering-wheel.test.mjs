@@ -43,9 +43,25 @@ test('responsive UI swaps thumbstick for steering wheel only while riding and ha
  assert.match(html,/\.stage\.driving \.touch-stick\{display:none!important\}/);
  assert.match(html,/\.stage\.driving \.steering-wheel\{display:flex\}/);
  assert.match(html,/\.controls\.driving \.pedals\{display:flex\}/);
- assert.match(html,/game\.mjs\?v=135/);
+ assert.match(html,/game\.mjs\?v=137/);
  assert.match(game,/const axes=driveAxes\(\)/);
  assert.match(game,/pressed\.handbrake,dt,pressed\.brake/);
  assert.match(game,/turnSteeringWheel\(wheel\.angle,wheel\.pointerAngle,next\)/);
  assert.match(game,/document\.querySelector\?\.\('\.controls'\)\?\.classList\.toggle\('driving',driving\)/);
+});
+
+test('regression: vehicle state reaches the actual stage element, hiding the stuck joystick',async()=>{
+ const [html,game]=await Promise.all([
+  readFile(new URL('./index.html',import.meta.url),'utf8'),
+  readFile(new URL('./game.mjs',import.meta.url),'utf8')
+ ]);
+ assert.match(html,/<div class="stage" id="stage">/,
+  'the stage must have the exact ID looked up by updateHud');
+ assert.match(game,/const stage=\$\('stage'\)\|\|document\.querySelector\?\.\('\.stage'\)/);
+ assert.match(game,/stage\?\.classList\.toggle\('driving',driving\)/);
+ assert.match(game,/stage\?\.classList\.toggle\('interior',!!state\.bankInterior\)/);
+ // Both visual modes depend on this CSS class, not on the keyboard state.
+ assert.match(html,/\.stage\.driving \.touch-stick\{display:none!important\}/);
+ assert.match(html,/\.stage\.driving \.steering-wheel\{display:flex\}/);
+ assert.match(html,/\.controls\.driving \.pedals\{display:flex\}/);
 });
