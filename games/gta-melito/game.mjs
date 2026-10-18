@@ -11,7 +11,7 @@ import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap} from './traffic-
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp} from './city-art.mjs?v=123';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp} from './city-art.mjs?v=124';
 import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS} from './car-sprites.mjs?v=106';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
@@ -21,6 +21,7 @@ import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=100';
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=094';
 import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=001';
+import {nearestEnterableVehicle,starterMotorcycleCandidates} from './vehicle-entry.mjs?v=001';
 import {guideCar} from './driving-assist.mjs?v=099';
 import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
@@ -175,15 +176,13 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  state.cars=[nearCar];
  // Offer one scooter close to the starter Panda, only if the opposite curb
  // has clearance from OSM walls and other vehicles.
- const shoulderBike=Math.max(3.3,visualRoadWidth(chosen.q)/2+1.15);
- for(const side of [-1,1]){
-  const bike={x:point.x+Math.cos(point.a)*7-Math.sin(point.a)*shoulderBike*side,
-   y:point.y+Math.sin(point.a)*7+Math.cos(point.a)*shoulderBike*side,
-   a:point.a,speed:0,type:0,model:MOTORCYCLE_IDS[0],vehicleType:'motorcycle'};
-  if(Math.hypot(bike.x-point.x,bike.y-point.y)<12.8&&
-     !carBlocked(bike.x,bike.y,bike.a,-1,bike)&&
-     state.cars.every(v=>!vehiclesOverlap(bike,v))){state.cars.push(bike);break;}
- }
+ // The original scooter spawned outside the actual boarding radius.
+ // Search near the start first, on the opposite side of the parked Panda.
+ const starterBike=starterMotorcycleCandidates(point,nearCar,visualRoadWidth(chosen.q))
+  .map(({x,y,a})=>({x,y,a,speed:0,type:0,model:MOTORCYCLE_IDS[0],vehicleType:'motorcycle'}))
+  .find(bike=>!carBlocked(bike.x,bike.y,bike.a,-1,bike)&&
+    state.cars.every(v=>!vehiclesOverlap(bike,v)));
+ if(starterBike)state.cars.push(starterBike);
  let k=0;
  for(const road of possible){
   if(arcLength(road.p)<25||rnd(road.id)%1>.33)continue;
@@ -195,14 +194,14 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
   const first=rnd(road.id+29)<.5?1:-1;
   const parked=[first,-first].map(side=>({
    x:pt.x-Math.sin(pt.a)*shoulder*side,y:pt.y+Math.cos(pt.a)*shoulder*side,
-   a:pt.a,speed:0,type:k%5,vehicleType:k%8===3?'motorcycle':'car',model:k%8===3?MOTORCYCLE_IDS[(k+Math.floor(k/8)*5)%MOTORCYCLE_IDS.length]:k%8===1?'panda-fire-red':k%3===0?CAR_TRAFFIC_SPRITE_IDS[(k*7)%CAR_TRAFFIC_SPRITE_IDS.length]:null
+   a:pt.a,speed:0,type:k%5,vehicleType:k%8===3?'motorcycle':'car',model:k%8===3?MOTORCYCLE_IDS[(k+Math.floor(k/8)*5)%MOTORCYCLE_IDS.length]:k%8===1?'panda-fire-red':CAR_TRAFFIC_SPRITE_IDS[(k*7)%CAR_TRAFFIC_SPRITE_IDS.length]
   })).find(car=>!carBlocked(car.x,car.y,car.a,-1)&&!state.cars.some(other=>vehiclesOverlap(car,other)));
   if(!parked)continue;
   state.cars.push(parked);k++;
   if(state.cars.length>=105)break;
  }
  state.traffic=createAgents(state.graph,140,189,'car',state.cars);
- state.traffic.forEach((v,i)=>{const bike=i%12===2;v.vehicleType=bike?'motorcycle':'car';v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/12)*5)%MOTORCYCLE_IDS.length]:i%3===0?CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length]:null;v.rider=bike;});
+ state.traffic.forEach((v,i)=>{const bike=i%12===2;v.vehicleType=bike?'motorcycle':'car';v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/12)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
  state.people=createAgents(state.graph,190,310,'walk',[...state.cars,...state.traffic]);
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  $('road-count').textContent=String(state.roads.length);
@@ -328,11 +327,12 @@ function toggleVehicle(){
   vehicle.turnGuide=null;vehicle.recoil=0;vehicle.speed=0;
   p.x=exit.x;p.y=exit.y;p.car=-1;p.vehicleType=null;
  }else{
-  let close=-1,dist=10.5;
-  state.cars.forEach((v,i)=>{const d=Math.hypot(v.x-p.x,v.y-p.y);if(d<dist){dist=d;close=i;}});
-  if(close>=0){
-   p.car=close;p.a=state.cars[close].a;
-   p.vehicleType=state.cars[close].vehicleType||'car';
+  // Same targeted vehicle for keyboard E and the touch/HUD label.
+  const target=nearestEnterableVehicle(state.cars,p);
+  if(target){
+   p.car=target.index;p.a=target.vehicle.a;
+   p.vehicleType=target.bike?'motorcycle':'car';
+   p.x=target.vehicle.x;p.y=target.vehicle.y;
   }else{$('street').textContent='AVVICINATI A UN VEICOLO PER SALIRE';}
  }
  updateHud();
@@ -445,7 +445,7 @@ function compareRoadWidths(){
  // street furniture, crosswalks and building-side storefront placements.
  state.graph=buildRoadGraph(state.roads);
  state.traffic=createAgents(state.graph,140,189,'car',state.cars);
- state.traffic.forEach((v,i)=>{const bike=i%12===2;v.vehicleType=bike?'motorcycle':'car';v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/12)*5)%MOTORCYCLE_IDS.length]:i%3===0?CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length]:null;v.rider=bike;});
+ state.traffic.forEach((v,i)=>{const bike=i%12===2;v.vehicleType=bike?'motorcycle':'car';v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/12)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
  state.people=createAgents(state.graph,190,310,'walk',[...state.cars,...state.traffic]);
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
@@ -462,7 +462,7 @@ function updateHud(){
  const n=state.roadGrid?nearest(p.x,p.y,70):null;
  if(n&&n.road.n)$('street').textContent=n.road.n.toUpperCase();
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
- $('action').textContent=p.car>=0?'SCENDI':state.cars.some(v=>isMotorcycle(v)&&Math.hypot(v.x-p.x,v.y-p.y)<7)?'SALTA IN SELLA':'ENTRA IN AUTO';
+ $('action').textContent=p.car>=0?'SCENDI':nearestEnterableVehicle(state.cars,p)?.bike?'SALTA IN SELLA':'ENTRA IN AUTO';
  $('sprint').textContent=p.car>=0?'FRENO':'CORRI';
  $('sprint').setAttribute('aria-label',p.car>=0?'Freno a mano':'Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;

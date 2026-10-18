@@ -704,14 +704,8 @@ export function drawCityCar(c,x,y,a,type=0,focused=false,clock=0){
  const seed=h(type+41),col=['#cf3730','#e4b74c','#367caa','#477d67','#eee0b8','#9fa9ac','#e8d8af'][type%7];
  c.save();c.translate(x,y);c.rotate(a);
  c.fillStyle='#1e2c2a75';c.fillRect(-4.7,-1.5,10.8,6.4);
- if(type===5){
-  c.fillStyle='#141e20';c.fillRect(-2.8,-.75,1.6,1.7);c.fillRect(1.9,-.75,1.6,1.7);
-  c.fillStyle='#bc6350';c.fillRect(-2,-.62,5.1,1.2);
-  c.fillStyle='#e3d3b5';c.fillRect(-.1,-.85,1.2,1.65);
-  c.fillStyle='#3e4540';c.fillRect(2.4,-1.9,.65,3.8);
-  c.fillStyle='#f9dea6';c.fillRect(3.3,-.6,.5,1.2);
-  c.restore();return;
- }
+ // Old type=5 was an obsolete motorcycle pretending to be a car.
+ // All real two-wheelers now use drawMotorcycle; this fallback is always a car.
  const van=type===6,back=van?-5.1:-4.2,front=van?5.6:4.4,wide=van?2.7:2.25;
  c.fillStyle='#162327';c.fillRect(back-1,-wide-.8,2,1);c.fillRect(back-1,wide,2,1);
  c.fillRect(front-1.2,-wide-.8,2,1);c.fillRect(front-1.2,wide,2,1);
