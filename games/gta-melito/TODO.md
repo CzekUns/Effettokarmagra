@@ -167,7 +167,7 @@ Spuntare una casella solo dopo codice integrato e verifica specifica. Per ciascu
 - [ ] Aggiornare `WORK_LOG.md` dopo **ogni** sessione (anche parziale); modifiche grafiche anche in `VISUAL_PROGRESS.md`.
 
 ## Criteri di consegna per l'automazione di sviluppo
-1. Iniziare da **P0**, non da P7. Leggere TODO aggiornata, istruzioni AGENTS e ultimo WORK_LOG: potrebbero esserci modifiche successive.
+1. **Seguire la CODA OPERATIVA UNICA Q01… in cima al file:** una sola Q per esecuzione oraria, senza saltare la prima incompleta. Le sezioni P0–P7 rimangono linee guida e backlog di dettaglio. Leggere sempre TODO aggiornata, AGENTS e ultimo WORK_LOG.
 2. Implementare realmente la prima tranche utile nel gioco e relativi test, preferendo una vertical slice funzionante a una grande riscrittura incompleta.
 3. Aggiornare queste checkbox solo per ciò che è stato verificato. Continuare con P1/P2 solo se P0 è stabile e c'è margine nella sessione.
 4. Commit di codice e test nel branch appropriato con passaggio di consegne nel WORK_LOG; se non si riesce a scrivere su GitHub, dichiarare blocco e fornire patch completa.
