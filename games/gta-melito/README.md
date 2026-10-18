@@ -27,6 +27,8 @@ Piccolo gioco arcade originale ispirato alla visuale dall'alto dei GTA degli ann
 - Confine amministrativo reale di Melito di Napoli: ISTAT, 1 gennaio 2026 (CC BY).
 - Vie, curve, incroci, sagome edilizie e punti d'interesse: importati dai dati OpenStreetMap (ODbL). **Nessuna strada viene inventata con una griglia fittizia.**
 - Movimento a piedi, guida arcade top-down con auto guidabili, salita/discesa, freno a mano, corsa, camera con inseguimento morbido e minimappa.
+- **Incidenti arcade non letali**: auto/moto possono sbalzare via pedoni, altre vetture e il protagonista; entità e giocatore si rialzano/riprendono senza morti o rimozioni, con spinta proporzionale alla velocità e recupero dopo l'urto.
+- **Routine NPC con zona di riferimento**: ogni pedone o veicolo conserva la zona e le strade d'origine; le svolte privilegiano il ritorno e gli eventuali riposizionamenti, necessari dopo incidenti o stalli, avvengono fuori camera vicino alla propria area, non in una strada casuale della città.
 - **Viabilità a grafo**: 1.423 nodi geografici e 73 intersezioni con almeno tre diramazioni nell'estrazione del 16 ottobre 2026 (rete delimitata dal confine ISTAT); il traffico può scegliere una svolta e proseguire in un'altra via, con rispetto delle strade a senso unico.
 - Pedoni animati sulle vie percorribili a piedi, traffico distribuito nei quartieri e rallentamenti tra auto sullo stesso segmento.
 - Edifici con impronte OSM (2.056 sagome), tetti in pixel art, facciate proiettate, ombre, lucernari, impianti e variazioni cromatiche deterministiche.
