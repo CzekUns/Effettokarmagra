@@ -444,3 +444,13 @@ Il poligono OSM è conservato per collisioni, gioco e navigazione. Gli altri edi
 **Prossimi passi:** aprire ingresso banca su telefono/desktop, verificare il protagonista e il percorso fino allo sportello, qualità visiva allo zoom e assenza di compenetrazioni con i mobili; applicare lo stesso standard a futuri interni. Regola permanente introdotta in `AGENTS.md`.
 
 **Allineamento velocità:** `stepBankInteriorPlayer` ora usa precisamente `WALK_SPEED=8.5` e `RUN_SPEED=13` unità di mondo al secondo da `driving-controls.mjs` sia in X sia in Y, convertendole nelle coordinate normalizzate della stanza 100×64. Evita accelerazioni e proporzioni diverse entrando nell'edificio. Aggiunto controllo numerico nel test dedicato.
+
+### 2026-10-18 — Banca esplorabile con telecamera GTA e zoom pedonale +8%
+
+**Fatto:** eliminato definitivamente il fit-to-screen che mostrava tutta la banca. La nuova camera interna segue il protagonista in unità mondo, con lo stesso zoom del pedone esterno e moltiplicatore **1.08**; l'inquadratura è limitata agli estremi della stanza, adattandosi a rotazione e dimensioni del display. Il movimento, gli sprite, la camera della città, le collisioni esterne e l'uscita dalla banca restano indipendenti e invariati.
+
+**Spazio ingrandito:** da 100×64 a 160×120 unità con vestibolo d'ingresso, pavimentazione urbana, sedute, segnaletica, bacheca e accesso centrale all'atrio degli sportelli. Il nucleo esistente della banca è traslato di (30,14) senza ingrandire artificiosamente mobili e personaggi. Collisioni aggiornate con muri, arredi e passaggio centrale percorribile. Il protagonista entra nella lobby e avanza per scoprire l'ambiente. Scene e arredi rimangono artistici, senza pretendere fedeltà a una banca reale.
+
+**File:** `bank-interior.mjs`, `game.mjs`, `bank-interior.test.mjs`, `index.html`, `church-webp.test.mjs`, `AGENTS.md`; versioni cache aggiornate a `game.mjs?v=132`, `bank-interior.mjs?v=003`.
+
+**Verifica eseguita:** smoke test JavaScript delle funzioni effettive (sintassi del renderer e del motore, rendering con sprite esterno condiviso, viewport 780×340/390×590/1250×750/1920×1100, zoom 7.128× da base 6.6×, tracking con easing, collisioni, ingresso tramite porta e cammino fino allo sportello) superato. Aggiunti test automatici per questi scenari. **Suite Node completa, test di browser e screenshot su Android non eseguiti in questa sessione**; verificare dopo deploy.
