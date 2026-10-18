@@ -118,3 +118,4 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Non verificati:** suite completa Node 22, prova visiva PC/Android, performance e GitHub Pages dopo il commit.
 - **Da fare:** registrare Q01 nella TODO se la scrittura remota torna disponibile, poi Q02 (agenda/orologio) e smoke test reale; evitare di presentare le soste come ingressi negli edifici.
 - **Riferimenti:** `main`, commit `ebcf34a` (modulo), `f1a456c` (test), `f1a3f4c` (integrazione).
+- **Registro TODO:** tentati aggiornamento checkbox Q01 ed esito nel `TODO.md`, ma le scritture sono state bloccate dai controlli del connettore. La checkbox resta `[ ]`; riprovare prima di avviare Q02, senza perdere i commit già pubblicati.
