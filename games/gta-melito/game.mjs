@@ -27,7 +27,7 @@ import {guideCar} from './driving-assist.mjs?v=099';
 import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
-import {projectedRoofCovers,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=119';
+import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 const $=id=>document.getElementById(id);
@@ -42,6 +42,7 @@ const stick={x:0,y:0};
 function moveAxes(){return {x:Math.abs(stick.x)>.08?stick.x:Number(pressed.right)-Number(pressed.left),y:Math.abs(stick.y)>.08?stick.y:Number(pressed.down)-Number(pressed.up)};}
 const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
+const WALK=new Set([...DRIVE,'pedestrian','footway','path','steps']);
 const colors=['#8f8271','#a29076','#797970','#ae947b','#938c7b','#7b8581','#a58c85'];
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const hash=n=>{let x=(Number(n)||1)|0;x=Math.imul(x^x>>>16,2246822519);x=Math.imul(x^x>>>13,3266489917);return (x^x>>>16)>>>0;};
@@ -75,10 +76,10 @@ function query(items,grid,x0,y0,x1,y1){
   return b&&b[0]<=x1&&b[2]>=x0&&b[1]<=y1&&b[3]>=y0;
  });
 }
-function nearest(x,y,max=24,roads=state.roads,driveOnly=false){
+function nearest(x,y,max=24,roads=state.roads,driveOnly=false,walkOnly=false){
  let best=null,dd=max*max;
  for(const road of query(roads,state.roadGrid,x-max,y-max,x+max,y+max)){
-  if(driveOnly&&!DRIVE.has(road.t))continue;
+  if((driveOnly&&!DRIVE.has(road.t))||(walkOnly&&!WALK.has(road.t)))continue;
   const p=road.p;
   for(let i=2;i<p.length;i+=2){
    const ax=p[i-2],ay=p[i-1],bx=p[i],by=p[i+1],dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy;
@@ -553,21 +554,37 @@ function paintStaticScene(ctx,bounds,zoom){
  drawStreetProps(ctx,query(state.props,state.propsGrid,x0,y0,x1,y1),zoom);
  drawStorefronts(ctx,query(state.shops,state.shopGrid,x0,y0,x1,y1),zoom);
 }
-function drawRoofReveal(ctx,buildings,roads,dt){
+function drawRoofReveal(ctx,buildings,roads,dt,bounds){
  const car=state.player.car>=0?state.cars[state.player.car]:null;
- const actor=car||state.player;
- const street=nearest(actor.x,actor.y,42);
- const onStreet=!!street&&street.distance<=visualRoadWidth(street.road)/2+SIDEWALK_OUTER;
+ const [x0,y0,x1,y1]=bounds;
+ const actors=[car||{...state.player,body:'walk'}];
+ for(const person of state.people){
+  if(person.x<x0-12||person.x>x1+12||person.y<y0-12||person.y>y1+12)continue;
+  actors.push(person);
+ }
+ const revealActors=actors.map(actor=>{
+  const walking=actor.body==='walk';
+  const street=nearest(actor.x,actor.y,42,state.roads,false,walking);
+  return {...actor,onStreet:!!street&&street.distance<=visualRoadWidth(street.road)/2+SIDEWALK_OUTER,
+   radius:isMotorcycle(actor)?2.4:actor.body==='car'?3.4:1.35};
+ });
  const visible=new Set();
  for(const b of buildings){
   visible.add(b.id);
-  const target=onStreet&&projectedRoofCovers(b,actor.x,actor.y,car?3.4:1.1)?1:0;
+  const target=roofRevealTarget(b,revealActors);
   const amount=easeRoofReveal(roofReveal.get(b.id)||0,target,dt);
   if(amount<.01){roofReveal.delete(b.id);continue;}
   roofReveal.set(b.id,amount);
   ctx.save();traceRoofCover(ctx,b);ctx.clip();
-  ctx.globalAlpha=.78*amount;
-  drawCityStreets(ctx,roads,state.zoom,{surfaceOnly:true});
+  ctx.globalCompositeOperation='destination-out';ctx.globalAlpha=.72*amount;
+  ctx.fillStyle='#000';ctx.fill();
+  ctx.globalCompositeOperation='source-over';ctx.globalAlpha=amount;
+  const art=b.art;
+  drawTerrain(ctx,[art.x0-22,art.y0-22,art.x1+22,art.y1+22],state.zoom,state.ground);
+  drawCityParcels(ctx,[b]);
+  drawCityStreets(ctx,roads,state.zoom);
+  ctx.globalAlpha=1-.72*amount;
+  drawCityBuildings(ctx,[b],state.zoom);
   ctx.restore();
  }
  for(const id of roofReveal.keys())if(!visible.has(id))roofReveal.delete(id);
@@ -645,7 +662,7 @@ function draw(dt=0){
  const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
  const halfW=cw/(2*state.zoom),halfH=ch/(2*state.zoom);
  drawStaticTiles([state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH]);
- drawRoofReveal(c,[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],roads,dt);
+ drawRoofReveal(c,[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],roads,dt,[x0,y0,x1,y1]);
  if(state.zoom>1.75){
   c.font='3.6px monospace';c.fillStyle='#e5d9bc';c.textAlign='center';
   const seen=new Set(),placed=[];
