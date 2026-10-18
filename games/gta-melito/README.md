@@ -178,3 +178,12 @@ Aggiunto `assets/vehicles/punto-ypsilon-16colors-atlas.png`: atlante PNG **trasp
 Segnalazione dell'utente confermata: il PNG atlante Punto/Ypsilon da 160×240 era stato appiattito sopra un fondale scuro, quindi `drawImage` riproduceva un rettangolo intorno alle 16 auto. **Non attribuire il problema allo stile o al Canvas di gioco:** la trasparenza RGBA del precedente PNG era errata.
 
 Fix v104: `vehicle-alpha.mjs` contiene i contorni (envelope delle silhouette derivato dai crop RGBA originali) dei modelli Punto/Ypsilon. In `car-sprites.mjs` il PNG viene caricato in un Canvas ausiliario, viene azzerato l'alpha e l'RGB di tutto il fondale esterno alla silhouette e solo il Canvas riparato è messo a disposizione del renderer. Se non è possibile creare il Canvas, si mantiene il fallback con l'auto disegnata proceduralmente: **non si ripristina mai la vecchia immagine col rettangolo**. Le Panda già approvate rimangono inalterate. Lo stamp della pagina sale a v104 per svuotare le cache dei moduli. Questo è un fix dell'immagine renderizzata: l'originale PNG opaco nella repo resta come ingresso legacy al passaggio di ripristino; nuovi atlanti devono invece essere prodotti con canale alpha corretto direttamente nel file.
+
+
+## Radio in auto — prova sperimentale (v136, 19 ottobre 2026)
+
+- Selezione di sei emittenti reali: **Radio Marte, Radio Kiss Kiss Napoli** (non quella nazionale), **Radio CRC, Radio Nuova San Giorgio, Radio Norba e Radio Napoli**.
+- La radio compare **soltanto a bordo delle auto**: pulsanti ◀ / ▶▶ per cambiare stazione, ▶ / ■ per accendere, spegnere o riprovare. Da tastiera: `R` successiva, `Shift+R` precedente, `T` on/off. Su scooter e moto rimane spenta. Entrando in auto tenta di avviarsi, scendendo si interrompe.
+- Un link ↗ apre la pagina della stazione. In caso di errore/autoplay bloccato, il pannello mostra lo stato e permette un nuovo tocco. Le preferenze vengono salvate localmente.
+- **I sei URL HTTPS sono candidati reperiti online, non verificati con una prova di ascolto reale su Android o desktop.** Lo streaming può essere rifiutato, spostato o risultare incompatibile con il browser; l'app non scarica/ritrasmette/archivia alcun brano, apre direttamente il server dell'emittente. Prima di mantenere la funzione in una pubblicazione stabile, chiarire condizioni d'uso e permessi dell'integrazione con ciascuna emittente.
+- Logica e test: `car-radio.mjs`, `car-radio.test.mjs`. Una prova di funzioni in sandbox JavaScript non sostituisce ascolto reale o verifica legale.
