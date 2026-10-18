@@ -605,7 +605,7 @@ function updateHud(){
  const driving=p.car>=0&&!state.bankInterior;
  $('stage')?.classList.toggle('interior',!!state.bankInterior);
  $('stage')?.classList.toggle('driving',driving);
- document.querySelector('.controls')?.classList.toggle('driving',driving);
+ document.querySelector?.('.controls')?.classList.toggle('driving',driving);
  if(state.bankInterior){
   $('vehicle').textContent='ALL’INTERNO DELLA BANCA';$('street').textContent=state.bankInterior.bank.n.toUpperCase();
   $('action').textContent='ESCI DALLA BANCA';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
