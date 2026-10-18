@@ -1,6 +1,41 @@
 # GTA Melito — TODO di sviluppo NPC e vita cittadina
 Aggiornato: 2026-10-19 · Ambito: `games/gta-melito/` · Stato: pianificazione approvata, implementazioni nuove NON ancora iniziate.
 
+## CODA OPERATIVA UNICA — UNA TASK PER OGNI ORA
+
+**Fonte di verità dell'automazione oraria:** questa lista `Q01…` è ordinata e prevale sulle checklist tematiche P0–P7 riportate sotto (che restano come specifiche e backlog di dettaglio). Un'esecuzione prende **solo la prima voce Q non completata**, lavora su quella e scrive il risultato qui prima di chiudere. Le task programmate singolarmente sono sostituite da questa coda unica: non devono essere eseguite parallelamente.
+
+**Regola d'oro:** `[x]` significa funzionalità **integrata nel gioco e verificata** con test realmente eseguiti; per ogni Q completata aggiungere sotto alla voce data, commit, verifica e limite non ancora provato. Se incompleta, lasciare `[ ]`, annotare sotto lo stato (`IN CORSO`/`BLOCCATA`) e riprendere **la stessa Q nell'ora successiva**, senza passare a quella dopo. Anche una task parziale può avere commit di avanzamento, ma non va spuntata. Non spuntare task basandosi solo su intenti, pianificazione, test simulati spacciati per browser o commit altrui non verificati.
+
+- [ ] **Q01 — NPC con routine visibile.** Integrare una prima coorte ridotta e deterministica in Via Roma/Piazza Santo Stefano: casa/zona → cammino verso una meta → sosta/attività → ritorno; niente teletrasporto in camera, collisioni e missioni invariati. **Prova:** ciclo completo con test a seed fisso.
+- [ ] **Q02 — Agenda e orologio degli NPC.** Slot mattina, pranzo, pomeriggio, sera, notte; distribuzione degli orari di uscita, passaggi di stato e ripresa corretta durante pausa/interior. **Prova:** scenari a orari differenti e test di regressione sui timer delle missioni.
+- [ ] **Q03 — NPC che entrano ed escono dagli edifici.** Almeno un ingresso coerente e raggiungibile con permanenza simulata e ritorno; test su porta non valida, nessun attraversamento di muri e nessun NPC duplicato. Distinguere POI OSM da ambientazione inventata.
+- [ ] **Q04 — Giorno/notte e illuminazione.** Alternanza graduale delle fasce orarie nella scena, lampioni/finestre illuminate quando è buio e fari dei veicoli dove sostenibile; controllo prestazioni e regressioni. **Prova:** transizioni ripetibili + almeno uno smoke test rendering se possibile.
+- [ ] **Q05 — Eventi cittadini emergenti.** Almeno un evento spontaneo credibile (incontro sociale, automobilista bloccato, oggetto perduto) con frequenza e durata limitate e interazione contestuale, senza spam. **Prova:** test deterministico dell'evento e del recupero della routine.
+- [ ] **Q06 — Economia locale di base.** Un punto commerciale interagibile e identificato o dichiarato inventato; almeno un acquisto/servizio con denaro guadagnato nelle missioni, feedback saldo e salvataggio persistente. **Prova:** acquisto valido, fondi insufficienti, ricaricamento save.
+- [ ] **Q07 — Ambiente fisicamente interattivo.** Almeno una famiglia di piccoli oggetti cittadini spostabili/urtabili e un tipo di ostacolo fisso (es. cestini/cassonetti e paletti); collisioni plausibili senza rompere traffico/pedoni. **Prova:** impatto auto/pedone e recupero, oggetti non dentro case o carreggiate a spawn.
+- [ ] **Q08 — Meteo.** Sereno/nuvoloso/pioggia con resa visiva leggera (asfalto più scuro, gocce/pozzanghere) e interazione con l'illuminazione. Effetti su NPC/aderenza solo se robusti. **Prova:** cambio condizione senza blocchi, nessun pesante calo FPS.
+- [ ] **Q09 — Audio ambientale dinamico.** Effetti originali o sintetizzati di motori auto/scooter/moto, clacson e fondo urbano con attenuazione spaziale e controllo volume/avvio su gesto dell'utente. **Non rompere le sei radio già integrate;** nessuna registrazione/audio terzi senza diritti. **Prova:** avvio, cambio mezzo, lontananza, mute, stop e focus perso.
+- [ ] **Q10 — Guida arcade 2.0.** Modelli differenti di accelerazione/frenata/sterzata auto, scooter e moto; sbandate/aderenza recuperabili senza introdurre bug di retromarcia, multi-touch volante e pedali invariati. **Prova:** test di handling per veicolo e controllo di regressioni.
+- [ ] **Q11 — Socialità NPC più ricca.** Piccoli gruppi e incontri tra conoscenti con orientamento, pausa, separazione e interruzione per pericolo; numero limitato di fumetti contestuali. **Prova:** socializzazione spontanea senza traffico/marciapiedi bloccati.
+- [ ] **Q12 — Ciclo NPC a piedi ↔ scooter/auto.** Un personaggio sale su mezzo associato, guida, parcheggia, scende, raggiunge la meta e ritorna; nessuna identità/mezzo duplicato. **Prova:** ciclo banca o altra meta, furto/indisponibilità del mezzo e ripresa della routine.
+- [ ] **Q13 — Reazioni avanzate e densità.** Attraversamenti, frenate, clacson e passanti che si scansano con cooldown; distribuzione NPC in base alla zona e fuori-vista simulata senza pop-in. **Prova:** performance e test delle interruzioni.
+- [ ] **Q14 — Collaudo radio e interfaccia mobile.** Eseguire quanto tecnicamente possibile dei test reali degli stream, autoplay, radio OFF, guida con volante/pedali e collisioni HUD; verificare diritti d'uso dei flussi prima di dichiarare la funzione definitiva. **Non dichiarare test Android eseguiti se non disponibili.**
+- [ ] **Q15 — Consolidamento di Via Roma e Piazza Santo Stefano.** Correggere problemi osservati nell'esplorazione e nelle transizioni interne/esterne, testare integrazione complessiva e annotare chiaramente eventuali limiti di verifica.
+
+### Protocollo del lavoratore automatico (eseguire a ogni run)
+
+1. Recuperare **versione attuale**, non una copia in memoria, di `TODO.md`, `WORK_LOG.md`, `AGENTS.md` root/locale, README e handoff. Controllare gli ultimi commit sul branch `main`; fermarsi e segnalare se c'è un altro lavoro attivo sullo stesso file, evitare force-push.
+2. Selezionare **esattamente una** Q aperta in ordine numerico. Non avviare una seconda Q nella stessa esecuzione anche se la prima viene completata. Se la prima risulta già implementata, verificarla con evidenze prima di marcarla; quella verifica costituisce la Q dell'ora.
+3. Implementare una tranche realmente giocabile, con codice, eventuali test e commit. Se non è possibile verificare un requisito, lasciarlo in sospeso; documentare onestamente test disponibili/non disponibili. Non sostituire il lavoro con una nuova lista di idee.
+4. **Prima di terminare**, rileggere la versione più recente della TODO (per evitare conflitti), aggiornare solo la riga Q selezionata con `[x]` se completata e un sottopunto `Esito YYYY-MM-DD: ... commit ... test ...`, oppure mantenere `[ ]` e aggiungere `Avanzamento ...` se incompleta. Scrivere sempre una voce nuova in fondo a `WORK_LOG.md`; aggiornare `VISUAL_PROGRESS.md` se si cambia grafica. In caso di errore di scrittura, riprovare dopo una nuova lettura; non dichiarare completata una task non registrata.
+5. In caso di task bloccata da un servizio esterno irraggiungibile, registrare `BLOCCATA`, motivo e alternativa concreta. Non inventare un successo. Per elementi che richiedono una scelta/autorizzazione umana, annotare la dipendenza e riprendere solo aspetti sicuri della stessa Q; se la Q è impraticabile in modo persistente, esplicitare il blocco all'utente senza segnare fatto.
+6. Quando tutte le Q sono completate, continuare **una singola voce implementabile per ora** dalle sezioni P0–P7 sotto, senza spuntare checkbox permanenti di principio come fossero feature. Se non resta lavoro implementabile, comunicarlo chiaramente e non generare attività fittizie.
+
+**Ultima esecuzione automatica:** nessuna da questa nuova coda (creata il 19-10-2026). L'esecuzione dovrà aggiornare questa riga riportando Q, commit, risultato e primo elemento ancora aperto.
+
+---
+
 ## Obiettivo creativo
 Rendere Melito credibile e interessante anche quando il giocatore resta fermo: abitanti che escono, hanno mete, incontrano persone, entrano nei locali, prendono mezzi e rientrano. Le attività devono dipendere da ora, luogo, situazione e comportamento del giocatore. Non aumentare semplicemente il numero di pedoni.
 
