@@ -93,7 +93,7 @@ test('Punto/Ypsilon remain in AI traffic and starter Panda untouched',async()=>{
  assert.ok(game.includes('drawCar(x,y,a,ai.kind,false,ai.model,ai)'));
  assert.ok(game.includes('drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v)'));
  assert.ok(game.includes("model:'panda-modern-white'"));
- assert.ok(page.includes('game.mjs?v=130'));
+ assert.ok(page.includes('game.mjs?v=135'));
  assert.ok(game.includes('car-sprites.mjs?v=106'));
  assert.doesNotMatch(spriteCode,/restoreVehicleAtlasTransparency/);
 });
