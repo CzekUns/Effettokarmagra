@@ -67,7 +67,7 @@ test('an NPC knocked far away can safely return offscreen to its original routin
  const graph=localMap(),agents=createAgents(graph,3,91,'car');
  const npc=agents[0],home={...npc.home};
  npc.x=900;npc.y=900;npc.needsRoutineRecovery=true;
- const handled=restoreAgentRoutine(graph,npc,.05,{view:[-20,-20,20,20]},makeCollisionIndex([]));
+ const handled=restoreAgentRoutine(graph,npc,.05,{view:[-400,-400,-300,-300]},makeCollisionIndex([]));
  assert.equal(handled,true);
  assert.equal(npc.needsRoutineRecovery,false);
  assert.ok(Math.hypot(npc.x-home.x,npc.y-home.y)<home.radius*.4);
@@ -94,4 +94,17 @@ test('game hooks the knockback into driven car, NPC traffic and player on foot',
  assert.match(game,/stepAgents\(state\.graph,state\.people/);
  assert.match(game,/stepAgents\(state\.graph,state\.traffic/);
  assert.match(game,/impact-physics\.mjs\?v=001/);
+});
+
+test('never teleport a knocked NPC back home if the destination is on camera',()=>{
+ const graph=localMap(),agents=createAgents(graph,4,91,'car');
+ const npc=agents[0],original={...agents[0].home};
+ npc.x=900;npc.y=900;npc.needsRoutineRecovery=true;
+ // Camera focused on the NPC's original neighborhood, far from its
+ // current displaced location: avoid popping directly into view.
+ restoreAgentRoutine(graph,npc,.05,{
+  view:[original.x-40,original.y-40,original.x+40,original.y+40]
+ },makeCollisionIndex([]));
+ assert.ok(Math.hypot(npc.x-original.x,npc.y-original.y)>100,
+  'an offscreen home is required before a teleport-style recovery');
 });
