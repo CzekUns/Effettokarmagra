@@ -1,5 +1,5 @@
-/* Arcade movement: the single stick steers and supplies gentle forward
- * throttle when held sideways. Pulling it down deliberately reverses. */
+/* GTA Melito: independent steering and throttle. Holding the wheel alone
+ * does not accelerate; the right-hand accelerator and brake are separate. */
 export const WALK_SPEED=8.5;
 export const RUN_SPEED=13;
 export const CAR_FORWARD_SPEED=40;
@@ -7,11 +7,12 @@ export const CAR_REVERSE_SPEED=12;
 
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 
-export function stepDriving(speed,angle,axis,braking,dt){
+export function stepDriving(speed,angle,axis,braking,dt,serviceBrake=false){
  const x=clamp(Number(axis.x)||0,-1,1),y=clamp(Number(axis.y)||0,-1,1);
  const elapsed=clamp(Number(dt)||0,0,.05);
- let throttle=y<-.08?-y:y>.18?-y:Math.abs(x)>.14?.62*Math.abs(x):0;
- if(Math.abs(throttle)>.08)speed+=46*elapsed*throttle;
+ const throttle=y<-.08?-y:y>.18?-y:0;
+ if(serviceBrake)speed-=Math.sign(speed)*Math.min(Math.abs(speed),62*elapsed);
+ else if(Math.abs(throttle)>.08)speed+=46*elapsed*throttle;
  else speed-=Math.sign(speed)*Math.min(Math.abs(speed),12*elapsed);
  if(braking)speed*=Math.pow(.025,elapsed);
  speed=clamp(speed,-CAR_REVERSE_SPEED,CAR_FORWARD_SPEED);
