@@ -4,7 +4,9 @@
 > [HANDOFF_WORK_REALISMO.md](./HANDOFF_WORK_REALISMO.md).
 > Obiettivo: migliorare davvero l'estetica del gioco fino a renderla riconoscibile
 > come Melito di Napoli in pixel art 2.5D, con prove visive e fonti attendibili.
-> Traccia ogni intervento in [VISUAL_PROGRESS.md](./VISUAL_PROGRESS.md).
+> **Passaggio di mano obbligatorio:** chiunque tocchi il progetto (persona o AI) deve leggere e aggiornare
+> [WORK_LOG.md](./WORK_LOG.md) alla fine della sessione, indicando cosa ha fatto, come, verifiche e prossime azioni.
+> Per gli interventi grafici aggiorna **anche** [VISUAL_PROGRESS.md](./VISUAL_PROGRESS.md).
 > La modellazione OSM e quella fotografica **non sono equivalenti**.
 
 Piccolo gioco arcade originale ispirato alla visuale dall'alto dei GTA degli anni Novanta, ambientato in **Melito di Napoli**. Accesso diretto dal browser, PC e telefono, sulla stessa GitHub Pages degli altri giochi. **Non contiene codice o asset di Rockstar Games.**
