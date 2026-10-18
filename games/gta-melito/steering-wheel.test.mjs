@@ -65,3 +65,53 @@ test('regression: vehicle state reaches the actual stage element, hiding the stu
  assert.match(html,/\.stage\.driving \.steering-wheel\{display:flex\}/);
  assert.match(html,/\.controls\.driving \.pedals\{display:flex\}/);
 });
+
+test('real HUD switches visible controls between car, walking and interior scenes',async()=>{
+ const [html,game]=await Promise.all([
+  readFile(new URL('./index.html',import.meta.url),'utf8'),
+  readFile(new URL('./game.mjs',import.meta.url),'utf8')
+ ]);
+ const ids=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]));
+ assert.ok(ids.has('stage'),'the stage looked up by game.mjs must exist');
+ const element=()=>({
+  textContent:'',
+  classes:new Set(),
+  classList:{
+   _owner:null,
+   toggle(name,enabled){
+    if(enabled)this._owner.classes.add(name);else this._owner.classes.delete(name);
+   }
+  },
+  setAttribute(){}
+ });
+ const nodes=new Map([...ids].map(id=>{
+  const node=element();node.classList._owner=node;return [id,node];
+ }));
+ const controls=element();controls.classList._owner=controls;
+ const document={
+  getElementById:id=>nodes.get(id)||null,
+  querySelector:selector=>selector==='.controls'?controls:nodes.get('stage')
+ };
+ const state={player:{x:0,y:0,a:0,car:0},cars:[{speed:0,a:0,vehicleType:'car'}],
+  bankInterior:null,roadGrid:null,bankEntrances:[],zoom:6.6};
+ const start=game.indexOf('function updateHud(){');
+ const end=game.indexOf('\nfunction drawLine(',start);
+ assert.ok(start>0&&end>start);
+ const update=new Function('state','document','pressed','nearestBankEntrance',
+  'nearestEnterableVehicle','moveAxes','describeCameraZoom','interiorZoom',
+  'isMotorcycle','nearest',[
+   'const $=id=>document.getElementById(id);',
+   game.slice(start,end),
+   'return updateHud;'
+  ].join('\n'))(state,document,{run:false},()=>null,()=>null,
+  ()=>({x:0,y:0}),()=>'',()=>6.6,()=>false,()=>null);
+ update();
+ assert.ok(nodes.get('stage').classes.has('driving'),'in the car the wheel must appear');
+ assert.ok(controls.classes.has('driving'),'in the car the pedals must appear');
+ state.player.car=-1;update();
+ assert.ok(!nodes.get('stage').classes.has('driving'),'walking joystick returns after dismount');
+ assert.ok(!controls.classes.has('driving'),'gas and brake hide on foot');
+ state.bankInterior={bank:{n:'BANCA'}};update();
+ assert.ok(nodes.get('stage').classes.has('interior'),'interior cutaway mode must be active');
+ assert.ok(!nodes.get('stage').classes.has('driving'),'no wheel inside a bank');
+});
