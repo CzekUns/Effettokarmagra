@@ -264,7 +264,7 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null){
 // Recover from an impact without snapping an on-screen NPC to a random
 // highway. Return to a legal nearby lane/sidewalk; once offscreen, the agent
 // may resume in its own original neighborhood instead.
-function routinePosition(graph,agent,nearHome=false){
+function routinePosition(graph,agent,nearHome=false,index=null){
  let best=null,bestD=Infinity;
  const home=agent.home;
  for(let edgeId=0;edgeId<graph.edges.length;edgeId++){
@@ -280,6 +280,7 @@ function routinePosition(graph,agent,nearHome=false){
   const pose=position(graph,edgeId,t,agent.body,agent.side||1);
   if(nearHome&&home&&Math.hypot(pose.x-home.x,pose.y-home.y)>Math.min(28,home.radius*.4))continue;
   const distance=Math.hypot(pose.x-base.x,pose.y-base.y);
+  if(index&&collidesWithTraffic(pose,agent.body,index,agent))continue;
   if(distance<bestD){best={...pose,edge:edgeId,t};bestD=distance;}
  }
  return best;
@@ -293,15 +294,15 @@ export function restoreAgentRoutine(graph,agent,dt,world={},index=null){
  const home=agent.home;
  const far=home&&Math.hypot(agent.x-home.x,agent.y-home.y)>home.radius*.85;
  if(offscreen&&far){
-  const landing=routinePosition(graph,agent,true);
-  if(landing&&!collidesWithTraffic(landing,agent.body,index,agent)){
+  const landing=routinePosition(graph,agent,true,index);
+  if(landing&&outsideView(landing.x,landing.y,world.view,6)){
    Object.assign(agent,landing,{corner:null,wait:.3,stalled:0,braking:false,
     needsRoutineRecovery:false,prevX:landing.x,prevY:landing.y,prevA:landing.a});
    return true;
   }
  }
  // Prefer local rejoin, including pedestrian sidewalk offset.
- const pose=routinePosition(graph,agent,far&&offscreen);
+ const pose=routinePosition(graph,agent,far&&offscreen,index);
  if(!pose)return true;
  const dx=pose.x-agent.x,dy=pose.y-agent.y,len=Math.hypot(dx,dy);
  if(len<1.2){
@@ -320,8 +321,8 @@ export function restoreAgentRoutine(graph,agent,dt,world={},index=null){
  // If a building blocks a clear return route, defer the final reset until
  // hidden. Do not walk an NPC through an OSM building to reach its path.
  if(offscreen&&agent.recoverySeconds>3){
-  const landing=routinePosition(graph,agent,true);
-  if(landing&&!collidesWithTraffic(landing,agent.body,index,agent)){
+  const landing=routinePosition(graph,agent,true,index);
+  if(landing&&outsideView(landing.x,landing.y,world.view,6)){
    Object.assign(agent,landing,{corner:null,wait:.3,stalled:0,braking:false,
     needsRoutineRecovery:false,prevX:landing.x,prevY:landing.y,prevA:landing.a,
     recoverySeconds:0});
