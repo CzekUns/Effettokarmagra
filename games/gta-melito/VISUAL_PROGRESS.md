@@ -469,3 +469,11 @@ Il poligono OSM è conservato per collisioni, gioco e navigazione. Gli altri edi
 ### 2026-10-19 — Radio in auto: interfaccia di prova, non nuova grafica della città
 
 Aggiunta una barretta compatta nella parte superiore della scena, visibile solo quando il giocatore guida un'automobile, con stazione, stato, comandi ◀/▶/▶▶ e collegamento esterno ↗. CSS mobile landscape coerente con palette e controlli esistenti; nessun cambio a edifici, strada, mappe, veicoli o sprite. Il sintonizzatore `car-radio.mjs` tenta di ricevere sei stream HTTPS reali senza proxy o audio locale. Controlli DOM e parsing JavaScript verificati staticamente; **nessuna cattura browser/Android né ascolto dal vivo compiuti**. Possibili collisioni con altre sovrimpressioni su viewport particolarmente strette ancora da controllare.
+
+### 2026-10-19 — Correzione volante invisibile dopo salita sul veicolo (v137)
+
+**Bug riprodotto via codice:** la logica `updateHud()` modificava le classi `driving` e `interior` usando `$('stage')`, ma il contenitore principale era `<div class="stage">` senza `id="stage"`. Il lookup restituiva `null`, quindi il CSS non nascondeva il joystick né mostrava il volante. La levetta restava disegnata ma non guidava l'auto perché la nuova fisica legge esclusivamente volante e pedali.
+
+**Modifiche:** `index.html` assegna `id="stage"` all'elemento di scena; `game.mjs` usa un fallback a `document.querySelector('.stage')` se necessario, ripristina la levetta al centro quando si passa da camminata a guida e conserva entrambe le classi `driving` / `interior`. La pagina ora carica `game.mjs?v=137` senza rimuovere la radio introdotta nella precedente versione 136.
+
+**Verifiche:** eseguita in JavaScript la funzione reale `updateHud()` prelevata da `game.mjs` con DOM finto costruito dagli ID HTML: salendo in auto, `stage.driving=true` e `controls.driving=true`; scendendo, entrambe false; in banca, `stage.interior=true` e driving false. Aggiunte regressioni `steering-wheel.test.mjs` sulla corrispondenza ID/lookup e transizioni in esecuzione. Allineati i test statici alla pagina v137. **Non eseguiti screenshot reali, prova Android né suite Node completa**.
