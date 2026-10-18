@@ -48,5 +48,5 @@ test('legacy procedural motorcycle removed, and UI shares exact board selection 
  assert.match(game,/isMotorcycle\(vehicle\)/);
  assert.match(game,/drawMotorcycle\(c,x,y,a,model/);
  assert.ok(game.includes('city-art.mjs?v=124'));
- assert.ok(page.includes('game.mjs?v=124'));
+ assert.ok(page.includes('game.mjs?v=125'));
 });
