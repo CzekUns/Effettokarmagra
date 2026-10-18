@@ -69,18 +69,19 @@ test('automatic camera starts at the maximum on foot and progressively pulls bac
  assert.ok(Math.abs(targetCameraZoom({inVehicle:false,moving:true,running:true})-6.105)<1e-9);
  const idle=targetCameraZoom({inVehicle:true,speed:0}),city=targetCameraZoom({inVehicle:true,speed:11});
  const fast=targetCameraZoom({inVehicle:true,speed:40});
- assert.ok(idle<5&&idle>3);
+ assert.ok(idle<5&&idle>4);
  assert.ok(city<idle&&city>fast);
- assert.equal(idle,3.35);
- assert.equal(fast,1.87,'car zoom returns to the previous less magnified curve');
- assert.ok(fast>=CAMERA_ZOOM_MIN&&fast<2.1);
+ assert.ok(Math.abs(idle-3.35*1.4)<1e-9,'stationary car is 40% closer');
+ assert.ok(Math.abs(city-(3.35-1.48*11/40)*1.4)<1e-9,'city-speed car keeps the same 40% increase');
+ assert.ok(Math.abs(fast-1.87*1.4)<1e-9,'fast car is 40% closer without hitting the lower clamp');
+ assert.ok(fast>=CAMERA_ZOOM_MIN&&fast<3);
  assert.ok(targetCameraZoom({inVehicle:true,speed:-28})===idle,
   'the game passes the magnitude of vehicle speed explicitly');
  assert.equal(targetCameraZoom({inVehicle:false},1.35),6.6,'always clamp to maximum');
  assert.ok(targetCameraZoom({inVehicle:false},.7)<6,'manual zoom bias persists');
  assert.match(describeCameraZoom({inVehicle:true,speed:22}),/IN CORSA/);
 });
-test('vehicle stays near trailing third and automatic zoom avoids extra magnification',()=>{
+test('vehicle stays near trailing third while driving',()=>{
  const car={x:100,y:200,a:0};
  const stopped=vehicleCameraTarget({...car,speed:0},1000,500,2);
  const moving=vehicleCameraTarget({...car,speed:24},1000,500,2);
@@ -110,7 +111,7 @@ test('game exposes placeholder count and camera mode to the player',async()=>{
  assert.ok(html.includes('id="inferred-count"'));
  assert.ok(html.includes('id="camera-mode"'));
  assert.ok(html.includes('id="zoom-auto"'));
- assert.ok(html.includes('game.mjs?v=110'));
+ assert.ok(html.includes('game.mjs?v=111'));
  assert.ok(game.includes('urban-infill.mjs?v=091'));
 });
 
