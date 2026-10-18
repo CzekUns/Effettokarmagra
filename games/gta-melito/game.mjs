@@ -28,7 +28,7 @@ import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
-import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior} from './bank-interior.mjs?v=001';
+import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer} from './bank-interior.mjs?v=002';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 const $=id=>document.getElementById(id);
@@ -342,7 +342,7 @@ function toggleVehicle(){
  if(p.car<0){
   const entrance=nearestBankEntrance(state.bankEntrances,p);
   if(entrance){
-   state.bankInterior={bank:entrance.bank,outside:{x:p.x,y:p.y,a:p.a},player:{x:.5,y:.8}};
+   state.bankInterior={bank:entrance.bank,outside:{x:p.x,y:p.y,a:p.a},player:{x:.5,y:.82,a:-Math.PI/2,moving:false}};
    for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
    updateHud();return;
   }
@@ -402,8 +402,8 @@ function tick(dt){
   return;
  }
  if(state.bankInterior){
-  const axes=moveAxes(),len=Math.hypot(axes.x,axes.y),local=state.bankInterior.player;
-  if(len>.08){const speed=(pressed.run?.31:.21)*Math.min(1,len);local.x=clamp(local.x+axes.x/len*speed*dt,.09,.91);local.y=clamp(local.y+axes.y/len*speed*dt,.2,.89);}
+  const axes=moveAxes(),local=state.bankInterior.player;
+  stepBankInteriorPlayer(local,axes,pressed.run,dt);
   state.clock+=dt;state.hud+=dt;
   if(state.hud>.18){state.hud=0;updateHud();}
   return;
@@ -504,7 +504,7 @@ function updateHud(){
  if(state.bankInterior){
   $('vehicle').textContent='ALL’INTERNO DELLA BANCA';$('street').textContent=state.bankInterior.bank.n.toUpperCase();
   $('action').textContent='ESCI DALLA BANCA';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
-  $('camera-mode').textContent='INTERNO · '+state.zoom.toFixed(1)+'×';return;
+  $('camera-mode').textContent='INTERNO · TOP-DOWN';return;
  }
  $('vehicle').textContent=p.car>=0?(isMotorcycle(state.cars[p.car])?'MOTO · ':'AUTO · ')+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H':'A PIEDI';
  const n=state.roadGrid?nearest(p.x,p.y,70):null;
