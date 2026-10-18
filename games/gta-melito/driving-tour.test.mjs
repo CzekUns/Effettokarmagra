@@ -23,15 +23,18 @@ test('automatic car tour audits every drivable OSM way and clears mapped buildin
  assert.ok(report.roadIds.length>500);
 });
 
-test('car road clearance fits narrow roads and the render mask is above buildings',async()=>{
+test('car road clearance fits narrow roads while roofs remain intact over them',async()=>{
  const road=map.roads.find(r=>DRIVE_ROAD_TYPES.has(r.t)&&r.p.length>=4);
  assert.ok(withinDriveSurface(road.p[0],road.p[1],[road]));
  assert.equal(withinDriveSurface(road.p[0]+80,road.p[1]+80,[road]),false);
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  const underlay=game.indexOf('drawCityStreets(ctx,roads,zoom)');
  const buildings=game.indexOf('drawCityBuildings(ctx,[...inferred,...buildings],zoom)');
- const overlay=game.indexOf('drawCityStreets(ctx,roads,zoom,{surfaceOnly:true})',underlay+1);
- assert.ok(underlay<buildings&&buildings<overlay,'street mask must paint over buildings that bleed into lanes');
+ const tiles=game.indexOf('drawStaticTiles([state.camera.x-halfW');
+ const reveal=game.indexOf('drawRoofReveal(c,[...buildings');
+ assert.ok(underlay<buildings&&tiles<reveal,'the static street stays under the roof and the reveal is dynamic');
+ assert.ok(!game.includes('drawCityStreets(ctx,roads,zoom,{surfaceOnly:true})'),
+  'there must be no permanent asphalt cut across the complete roofs');
  assert.match(game,/canDriveProbe\(road\.distance,width/);
  const visuals=await readFile(new URL('./visuals.mjs',import.meta.url),'utf8');
  assert.match(visuals,/visualRoadWidth\(road\)\/2\+9\.2/,'larger tree crowns need clearance beyond the curb');

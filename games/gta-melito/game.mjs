@@ -22,11 +22,13 @@ import {guideCar} from './driving-assist.mjs?v=099';
 import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
-import {SIDEWALK_DRIVE} from './sidewalk.mjs?v=099';
+import {projectedRoofCovers,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=119';
+import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const STATIC_TILE=96,TILE_PIXELS=4,TILE_BLEED=20;
 const staticTiles=new Map();
+const roofReveal=new Map();
 let tileRoadMode=null,pendingTile=null;
 const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false};
@@ -107,7 +109,7 @@ function roadPoint(road,fraction){
 }
 function prepareMap(map,surveyData=[],infillCache=null){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
- staticTiles.clear();tileRoadMode=null;
+ staticTiles.clear();roofReveal.clear();tileRoadMode=null;
  state.map=map;
  state.roads=map.roads;state.buildings=map.buildings||[];
  prepareCityStyles(state.buildings,map.pois||[]);
@@ -422,6 +424,7 @@ function compareRoadWidths(){
  state.shops=prepareStorefronts(state.map.pois||[],state.roads);
  state.shopGrid=makeIndex(state.shops);
  updateRoadWidthLabel();
+ roofReveal.clear();
 }
 
 function updateHud(){
@@ -473,12 +476,30 @@ function paintStaticScene(ctx,bounds,zoom){
  drawCityParcels(ctx,[...inferred,...buildings]);
  drawCityStreets(ctx,roads,zoom);
  drawCityBuildings(ctx,[...inferred,...buildings],zoom);
- // Clear roofs projecting into the lane, while keeping facades visible on the
- // widened sidewalk instead of painting the whole curb over every building.
- drawCityStreets(ctx,roads,zoom,{surfaceOnly:true});
+ // The road remains below the entire roof, including the authored church art.
+ // A small dynamic reveal makes the passage visible while travelling under it.
  drawCrosswalks(ctx,state.graph,bounds,zoom);
  drawStreetProps(ctx,query(state.props,state.propsGrid,x0,y0,x1,y1),zoom);
  drawStorefronts(ctx,query(state.shops,state.shopGrid,x0,y0,x1,y1),zoom);
+}
+function drawRoofReveal(ctx,buildings,roads,dt){
+ const car=state.player.car>=0?state.cars[state.player.car]:null;
+ const actor=car||state.player;
+ const street=nearest(actor.x,actor.y,42);
+ const onStreet=!!street&&street.distance<=visualRoadWidth(street.road)/2+SIDEWALK_OUTER;
+ const visible=new Set();
+ for(const b of buildings){
+  visible.add(b.id);
+  const target=onStreet&&projectedRoofCovers(b,actor.x,actor.y,car?3.4:1.1)?1:0;
+  const amount=easeRoofReveal(roofReveal.get(b.id)||0,target,dt);
+  if(amount<.01){roofReveal.delete(b.id);continue;}
+  roofReveal.set(b.id,amount);
+  ctx.save();traceRoofCover(ctx,b);ctx.clip();
+  ctx.globalAlpha=.78*amount;
+  drawCityStreets(ctx,roads,state.zoom,{surfaceOnly:true});
+  ctx.restore();
+ }
+ for(const id of roofReveal.keys())if(!visible.has(id))roofReveal.delete(id);
 }
 function staticTile(tx,ty){
  const key=tx+','+ty;
@@ -537,7 +558,7 @@ function drawStaticTiles(bounds){
   }
  }
 }
-function draw(){
+function draw(dt=0){
  // Render at a compact palette resolution and let CSS scale nearest-neighbor;
  // the chunky edges read as pixel art and reduce fill/texture work on phones.
  const cw=canvas.clientWidth,ch=canvas.clientHeight,ratio=Math.max(.62,Math.min(window.devicePixelRatio||1,1.5)*.66);
@@ -553,6 +574,7 @@ function draw(){
  const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
  const halfW=cw/(2*state.zoom),halfH=ch/(2*state.zoom);
  drawStaticTiles([state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH]);
+ drawRoofReveal(c,[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],roads,dt);
  if(state.zoom>1.75){
   c.font='3.6px monospace';c.fillStyle='#e5d9bc';c.textAlign='center';
   const seen=new Set(),placed=[];
@@ -625,7 +647,7 @@ function drawMini(){
 }
 function frame(now){
  const dt=state.last?Math.min(.05,(now-state.last)/1000):0;state.last=now;
- tick(dt);draw();drawMini();requestAnimationFrame(frame);
+ tick(dt);draw(dt);drawMini();requestAnimationFrame(frame);
 }
 async function load(){
  if(state.loading)return;
