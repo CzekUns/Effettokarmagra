@@ -93,5 +93,5 @@ test('one coherent painter order merges placeholder and OSM buildings in the gam
  assert.match(js,/drawCityBuildings\(ctx,\[\.\.\.inferred,\.\.\.buildings\],zoom\)/);
  assert.ok(js.includes('city-art.mjs?v=125'));
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
- assert.ok(html.includes('game.mjs?v=136'));
+ assert.ok(html.includes('game.mjs?v=137'));
 });
