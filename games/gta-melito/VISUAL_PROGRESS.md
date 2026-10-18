@@ -285,3 +285,11 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 **Fatto nel codice:** tre impronte OSM residenziali intorno alla piazza (`733703625`, `733703811`, `733703751`) ricevono una prova originale di terrazzo in pixel art: superfici grigio-pietra, parapetti, accessi e piccoli impianti disegnati con la stessa luce da nord-ovest e ombre verso sud-est. La proiezione volumetrica resta quella di tutti i palazzi; i dettagli sono ritagliati dentro il rispettivo poligono. Le tre tinte e i volumi tecnici sono interpretazioni grafiche non verificate edificio per edificio. La chiesa e il Municipio mantengono il loro trattamento distinto. Non cambiano impronte, collisioni o quantità di edifici. Cache pagina `v106` dopo l'aggiornamento auto v105.
 
 **Verifica:** 88/88 test Node, sintassi e diff locali superati. Da controllare la scena pubblicata a Piazza Santo Stefano, il comportamento mobile e gli FPS su telefono fisico.
+
+### Sessione 2026-10-18 — Zoom +10% e inquadratura auto spostata in avanti
+
+**Richiesta:** ingrandire del 10% la visuale; in corsa mantenere la camera utile davanti all'auto, collocando il veicolo circa al 10% dal bordo posteriore della vista e lasciando una porzione di strada anche dietro.
+
+**Modifica:** moltiplicata del 10% la scala automatica a piedi e in auto, mantenendo la stessa curva relativa velocità/zoom e le regolazioni manuali. In auto la camera usa ora viewport e zoom correnti per calcolare l'anticipo: ferma, resta centrata; in movimento passa gradualmente fino al 10% dietro rispetto alla direzione di marcia (90% della proiezione longitudinale davanti). Nessuna modifica a velocità, guida assistita, collisioni o rendering. Cache pagina `v107`, modulo camera `v095`.
+
+**Verifica:** 93/93 test Node, incluso calcolo del framing a riposo, in orizzontale e in verticale. La resa soggettiva in viewport desktop/mobile e su telefono fisico resta da verificare dopo la pubblicazione; i test non misurano gli FPS.

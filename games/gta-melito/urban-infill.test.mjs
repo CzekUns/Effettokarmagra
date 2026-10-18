@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {generateUrbanInfill,roadFootprintDistance,mapFingerprint,footprintsClear} from './urban-infill.mjs';
-import {CAMERA_ZOOM_MAX,CAMERA_ZOOM_MIN,targetCameraZoom,advanceCameraZoom,describeCameraZoom} from './camera-zoom.mjs';
+import {CAMERA_ZOOM_MAX,CAMERA_ZOOM_MIN,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs';
 import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityBuildings} from './city-art.mjs';
 import {resolveLandmarks} from './campaign.mjs';
 const map=JSON.parse(await readFile(new URL('./data/melito-map.json',import.meta.url),'utf8'));
@@ -64,9 +64,9 @@ test('existing urban painting API accepts generated roofs and paved ground',()=>
  assert.doesNotThrow(()=>drawTerrain(ctx,[500,900,850,1200],5,ground));
 });
 test('automatic camera starts at the maximum on foot and progressively pulls back in cars',()=>{
- assert.equal(CAMERA_ZOOM_MAX,6);
- assert.equal(targetCameraZoom({inVehicle:false}),6);
- assert.equal(targetCameraZoom({inVehicle:false,moving:true,running:true}),5.55);
+ assert.equal(CAMERA_ZOOM_MAX,6.6);
+ assert.equal(targetCameraZoom({inVehicle:false}),6.6);
+ assert.ok(Math.abs(targetCameraZoom({inVehicle:false,moving:true,running:true})-6.105)<1e-9);
  const idle=targetCameraZoom({inVehicle:true,speed:0}),city=targetCameraZoom({inVehicle:true,speed:11});
  const fast=targetCameraZoom({inVehicle:true,speed:40});
  assert.ok(idle<5&&idle>3);
@@ -74,9 +74,20 @@ test('automatic camera starts at the maximum on foot and progressively pulls bac
  assert.ok(fast>=CAMERA_ZOOM_MIN&&fast<2.1);
  assert.ok(targetCameraZoom({inVehicle:true,speed:-28})===idle,
   'the game passes the magnitude of vehicle speed explicitly');
- assert.equal(targetCameraZoom({inVehicle:false},1.35),6,'always clamp to maximum');
+ assert.equal(targetCameraZoom({inVehicle:false},1.35),6.6,'always clamp to maximum');
  assert.ok(targetCameraZoom({inVehicle:false},.7)<6,'manual zoom bias persists');
  assert.match(describeCameraZoom({inVehicle:true,speed:22}),/IN CORSA/);
+});
+test('moving vehicle sits 10% behind the direction of travel, centered at rest',()=>{
+ const car={x:100,y:200,a:0};
+ const stopped=vehicleCameraTarget({...car,speed:0},1000,500,2);
+ const moving=vehicleCameraTarget({...car,speed:24},1000,500,2);
+ assert.deepEqual(stopped,{x:car.x,y:car.y});
+ assert.equal(moving.x,300); // 40% of the 500-world-unit horizontal view
+ assert.equal(moving.y,200);
+ const diagonal=vehicleCameraTarget({...car,a:Math.PI/2,speed:24},1000,500,2);
+ assert.equal(diagonal.x,100);
+ assert.equal(diagonal.y,300);
 });
 test('camera interpolation is frame independent and avoids jarring jumps',()=>{
  const old=6,target=2.4;
@@ -96,7 +107,7 @@ test('game exposes placeholder count and camera mode to the player',async()=>{
  assert.ok(html.includes('id="inferred-count"'));
  assert.ok(html.includes('id="camera-mode"'));
  assert.ok(html.includes('id="zoom-auto"'));
- assert.ok(html.includes('game.mjs?v=106'));
+ assert.ok(html.includes('game.mjs?v=107'));
  assert.ok(game.includes('urban-infill.mjs?v=091'));
 });
 
