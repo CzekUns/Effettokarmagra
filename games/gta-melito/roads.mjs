@@ -113,7 +113,7 @@ export function createAgents(graph,count,seed=10,kind='car',avoid=[],settings={}
      Math.hypot(b.x-home.x,b.y-home.y));
     return d<=home.radius*.55;
    });
-   if(!home.returnEdges.length)home.returnEdges=[edgeIndex];
+   if(!home.returnEdges.includes(edgeIndex))home.returnEdges.unshift(edgeIndex);
    agents.push(agent);addToCollisionIndex(occupied,agent);break;
   }
  }
