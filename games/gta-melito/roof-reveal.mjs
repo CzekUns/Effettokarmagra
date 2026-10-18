@@ -15,6 +15,13 @@ export function projectedRoofCovers(building,x,y,radius=0){
   pointInFootprint(x+sx+volume.dx,y+sy+volume.dy,building));
 }
 
+export function roofRevealTarget(building,actors){
+ for(const actor of actors||[]){
+  if(actor.onStreet&&projectedRoofCovers(building,actor.x,actor.y,actor.radius||0))return 1;
+ }
+ return 0;
+}
+
 export function easeRoofReveal(current,target,dt){
  const t=1-Math.exp(-Math.max(0,Math.min(.05,dt))*9);
  return current+(target-current)*t;

@@ -33,8 +33,10 @@ test('car road clearance fits narrow roads while roofs remain intact over them',
  const tiles=game.indexOf('drawStaticTiles([state.camera.x-halfW');
  const reveal=game.indexOf('drawRoofReveal(c,[...buildings');
  assert.ok(underlay<buildings&&tiles<reveal,'the static street stays under the roof and the reveal is dynamic');
- assert.ok(!game.includes('drawCityStreets(ctx,roads,zoom,{surfaceOnly:true})'),
-  'there must be no permanent asphalt cut across the complete roofs');
+ assert.match(game,/globalCompositeOperation='destination-out'/,
+  'the raised roof itself must fade, not only receive an asphalt overlay');
+ assert.match(game,/for\(const person of state\.people\)/,
+  'pedestrians as well as the player trigger the dynamic reveal');
  assert.match(game,/canDriveProbe\(road\.distance,width/);
  const visuals=await readFile(new URL('./visuals.mjs',import.meta.url),'utf8');
  assert.match(visuals,/visualRoadWidth\(road\)\/2\+9\.2/,'larger tree crowns need clearance beyond the curb');

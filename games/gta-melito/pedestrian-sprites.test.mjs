@@ -53,5 +53,5 @@ test('city-art replaces only NPC visuals; hero, collision and navigation remain 
  assert.match(art,/export function drawCityPlayer/);
  assert.ok(game.includes('loadPedestrianSprites()'));
  assert.ok(game.includes('city-art.mjs?v=124'));
- assert.ok(page.includes('game.mjs?v=127'));
+ assert.ok(page.includes('game.mjs?v=128'));
 });
