@@ -64,30 +64,45 @@ export function drawBankEntrance(ctx,bank,clock){
 // player renderer* as the street. All furniture below is illustrated arcade art,
 // not a claim about the actual floor plan of any real bank in Melito.
 
-export const BANK_ROOM=Object.freeze({width:100,height:64});
+export const BANK_ROOM=Object.freeze({width:160,height:120});
+export const BANK_FOOT_ZOOM_MULTIPLIER=1.08;
+const HALL_OFFSET=Object.freeze({x:30,y:14});
 const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
 
-// Scale a small physical room uniformly rather than drawing an unrelated
-// full-screen Zelda-like scene. Preserve the Canvas device scale from game.mjs.
-export function bankInteriorViewport(width,height){
- const scale=Math.max(.1,Math.min((width-20)/(BANK_ROOM.width+16),(height-20)/(BANK_ROOM.height+14)));
- return {x:(width-BANK_ROOM.width*scale)/2,y:(height-BANK_ROOM.height*scale)/2,
-  scale,width:BANK_ROOM.width,height:BANK_ROOM.height};
+// True walking zoom with smooth camera follow and cutaway-edge clamping.
+export function bankInteriorCamera(player,width,height,zoom,previous=null,dt=0){
+ const z=Math.max(.1,Number(zoom)||6.6), w=Math.max(1,width),h=Math.max(1,height);
+ const px=(Number.isFinite(player?.x)?player.x:.5)*BANK_ROOM.width;
+ const py=(Number.isFinite(player?.y)?player.y:.82)*BANK_ROOM.height;
+ const halfX=w/(2*z),halfY=h/(2*z);
+ const targetX=2*halfX>=BANK_ROOM.width?BANK_ROOM.width/2:clamp(px,halfX,BANK_ROOM.width-halfX);
+ const targetY=2*halfY>=BANK_ROOM.height?BANK_ROOM.height/2:clamp(py,halfY,BANK_ROOM.height-halfY);
+ if(!previous||!Number.isFinite(previous.x)||!Number.isFinite(previous.y))return {x:targetX,y:targetY};
+ const a=1-Math.exp(-9*Math.max(0,Math.min(.08,Number(dt)||0)));
+ return {x:previous.x+(targetX-previous.x)*a,y:previous.y+(targetY-previous.y)*a};
 }
-
-function intersectsFurniture(x,y){
- // Character radius of ~1 world unit; counters, ATM and chairs are solid.
- const furniture=[
-  [19,18,81,28],  // three service counters / glazed partition
-  [6,25,22,44],   // ATM enclosure on the left wall
-  [73,41,94,51],  // chairs along the right wall
- ];
- return furniture.some(([x0,y0,x1,y1])=>x+1.1>x0&&x-1.1<x1&&y+1.1>y0&&y-1.1<y1);
+export function bankInteriorViewport(width,height,player={x:.5,y:.82},zoom=6.6,camera=null){
+ const scale=Math.max(.1,Number(zoom)||6.6);
+ const focus=camera||bankInteriorCamera(player,width,height,scale);
+ const hx=width/(2*scale),hy=height/(2*scale);
+ const cx=hx*2>=BANK_ROOM.width?BANK_ROOM.width/2:clamp(focus.x,hx,BANK_ROOM.width-hx);
+ const cy=hy*2>=BANK_ROOM.height?BANK_ROOM.height/2:clamp(focus.y,hy,BANK_ROOM.height-hy);
+ return {x:width/2-cx*scale,y:height/2-cy*scale,
+  scale,width:BANK_ROOM.width,height:BANK_ROOM.height,cameraX:cx,cameraY:cy};
+}
+function boxHit(x,y,boxes){
+ return boxes.some(([x0,y0,x1,y1])=>x+1.1>x0&&x-1.1<x1&&y+1.1>y0&&y-1.1<y1);
 }
 export function bankInteriorWalkable(nx,ny){
  if(!Number.isFinite(nx)||!Number.isFinite(ny))return false;
  const x=nx*BANK_ROOM.width,y=ny*BANK_ROOM.height;
- return x>=5&&x<=95&&y>=28.5&&y<=58&&!intersectsFurniture(x,y);
+ const lx=x-HALL_OFFSET.x,ly=y-HALL_OFFSET.y;
+ const hallFurniture=[[19,18,81,28],[6,25,22,44],[73,41,94,51]];
+ const lobbyFurniture=[[39,88,62,99],[98,88,121,99],[40,79,48,85],[112,79,120,85]];
+ if(x>=35&&x<=125&&y>=42.5&&y<=72&&!boxHit(lx,ly,hallFurniture))return true;
+ if(x>=74.5&&x<=85.5&&y>72&&y<81)return true;
+ if(x>=35&&x<=125&&y>=78&&y<=114&&!boxHit(x,y,lobbyFurniture))return true;
+ return false;
 }
 export function stepBankInteriorPlayer(player,axes,running,dt){
  const ax=Number(axes?.x)||0,ay=Number(axes?.y)||0,mag=Math.hypot(ax,ay);
@@ -143,7 +158,7 @@ function drawFloor(ctx){
  ctx.fillStyle='#b6a47d';ctx.fillRect(4,6,92,.3);
  ctx.fillStyle='#565c52';ctx.fillRect(4,57,92,.65);
 }
-function drawArchitecture(ctx,clock){
+function drawUpperBankHall(ctx,clock){
  drawFloor(ctx);
  // GTA-style cutaway masonry: shallow exterior-style walls with thickness,
  // edges and shadows; the player looks DOWN at the whole room.
@@ -220,15 +235,60 @@ function drawArchitecture(ctx,clock){
  ctx.fillRect(49.3,50,1.4,1.2);
  ctx.fillStyle='#e0c681';ctx.fillRect(44.8,58.5,10.4,.9);
 }
-export function drawBankInterior(ctx,width,height,clock,bank,player){
+
+function drawBankLobby(ctx,clock){
+ ctx.fillStyle='#202a28';ctx.fillRect(25,72,110,48);
+ ctx.fillStyle='#505a53';ctx.fillRect(29,75,102,42);
+ for(let y=76;y<117;y+=4)for(let x=30;x<130;x+=5){
+  const seed=(x*11+y*13)%13;
+  ctx.fillStyle=seed<4?'#898b7e':seed<8?'#80877c':'#8d8e80';
+  ctx.fillRect(x,y,4.7,3.7);
+ }
+ wall(ctx,25,71,5,49);wall(ctx,130,71,5,49);
+ wall(ctx,25,116,47,4);wall(ctx,88,116,47,4);
+ ctx.fillStyle='#394e4c';ctx.fillRect(72,116,16,4);
+ ctx.fillStyle='#c4b28c';ctx.fillRect(72,116,16,.9);
+ for(const xx of [27,131]){
+  ctx.fillStyle='#92aaa3';ctx.fillRect(xx,85,2,16);
+  ctx.fillStyle='#324843';ctx.fillRect(xx,92,2,2);
+ }
+ for(const [x,y] of [[39,88],[98,88]]){
+  block(ctx,x,y,23,11,'#4a625e','#313d3d',1.4);
+  ctx.fillStyle='#b1a07c';ctx.fillRect(x+2,y+1,19,.9);
+  ctx.fillStyle='#253633';ctx.fillRect(x+2,y+8,19,.7);
+ }
+ for(const [x,y] of [[40,79],[112,79]]){
+  block(ctx,x,y,8,6,'#9a8265','#4d5f59',.8);
+  ctx.fillStyle='#c6c4a9';ctx.fillRect(x+2,y+1,4,1);
+ }
+ ctx.fillStyle='#c3bda6';ctx.fillRect(79,85,2,11);ctx.fillRect(76.7,85,6.6,.75);
+ ctx.fillStyle='#d7bb80';ctx.fillRect(74,76.5,12,1.1);
+ block(ctx,56,77,16,5,'#4a5954','#2d3f3a',.9);
+ ctx.fillStyle='#e3cca0';ctx.fillRect(59,78.2,10,.6);
+ ctx.fillStyle='#998f76';ctx.fillRect(78,110,4,.55);
+}
+function drawBankArchitecture(ctx,clock){
+ ctx.fillStyle='#26332d';ctx.fillRect(0,0,BANK_ROOM.width,BANK_ROOM.height);
+ ctx.fillStyle='#474942';ctx.fillRect(22,7,116,113);
+ ctx.fillStyle='#121d1b';ctx.fillRect(23,9,114,110);
+ drawBankLobby(ctx,clock);
+ ctx.save();ctx.translate(HALL_OFFSET.x,HALL_OFFSET.y);
+ drawUpperBankHall(ctx,clock);
+ ctx.restore();
+ ctx.fillStyle='#394943';ctx.fillRect(74,72,12,7);
+ ctx.fillStyle='#7f8475';ctx.fillRect(74,72,12,.7);
+ ctx.fillStyle='#b5c4b2';ctx.fillRect(75,73.1,10,3.1);
+ ctx.fillStyle='#536b65';ctx.fillRect(75,76.2,10,1);
+}
+export function drawBankInterior(ctx,width,height,clock,bank,player,zoom=6.6,camera=null){
  ctx.save();
  // Caller has already set the compact pixel-art device transform.
  ctx.imageSmoothingEnabled=false;
  ctx.fillStyle='#182520';ctx.fillRect(0,0,width,height);
- const layout=bankInteriorViewport(width,height);
+ const layout=bankInteriorViewport(width,height,player,zoom,camera);
  ctx.translate(layout.x,layout.y);ctx.scale(layout.scale,layout.scale);
- drawArchitecture(ctx,clock);
- const local=player||{x:.5,y:.82,a:-Math.PI/2,moving:false};
+ drawBankArchitecture(ctx,clock);
+ const local=player||{x:.5,y:.89,a:-Math.PI/2,moving:false};
  drawCityPlayer(ctx,{x:local.x*BANK_ROOM.width,y:local.y*BANK_ROOM.height,
   a:local.a??-Math.PI/2,car:-1},clock,!!local.moving);
  ctx.restore();
