@@ -454,3 +454,13 @@ Il poligono OSM è conservato per collisioni, gioco e navigazione. Gli altri edi
 **File:** `bank-interior.mjs`, `game.mjs`, `bank-interior.test.mjs`, `index.html`, `church-webp.test.mjs`, `AGENTS.md`; versioni cache aggiornate a `game.mjs?v=132`, `bank-interior.mjs?v=003`.
 
 **Verifica eseguita:** smoke test JavaScript delle funzioni effettive (sintassi del renderer e del motore, rendering con sprite esterno condiviso, viewport 780×340/390×590/1250×750/1920×1100, zoom 7.128× da base 6.6×, tracking con easing, collisioni, ingresso tramite porta e cammino fino allo sportello) superato. Aggiunti test automatici per questi scenari. **Suite Node completa, test di browser e screenshot su Android non eseguiti in questa sessione**; verificare dopo deploy.
+
+### 2026-10-19 — Volante touch reale e tre comandi guida
+
+**UI:** quando il protagonista sale in auto o in moto, sul lato sinistro la levetta a piedi lascia spazio a un volante grafico (cerchio/razze/mozzo) che **ruota realmente seguendo il trascinamento circolare del dito**; il volante ruota in un verso o nell'altro, ha un limite di corsa e torna gradualmente al centro quando viene rilasciato. A destra compare il comando **ACCELERA** sopra **FRENO**: la disposizione verticale permette multitouch contemporaneo con la mano sinistra sul volante. Il pulsante SALI/SCENDI resta disponibile. A piedi (anche negli interni) compaiono di nuovo levetta e CORRI, senza i pedali. Tastiera PC: A/D sterzo, W acceleratore, S retromarcia, Spazio freno a mano.
+
+**Fisica:** eliminate le accelerazioni implicite dalla sterzata su auto e moto: girare da fermo non mette in moto il veicolo. Introdotto freno di servizio separato dall'acceleratore e dal freno a mano, con decelerazione progressiva e arresto senza retromarcia automatica. Restano limiti di velocità, assistenza alla svolta, collisioni, auto/moto e telecamera esistenti.
+
+**File:** `index.html` (volante SVG e pedali CSS), `game.mjs` (pointer capture del volante, multitouch dei pedali, commutazione dei controlli e input separati), nuovo `steering-wheel.mjs`, `driving-controls.mjs`, `motorcycles.mjs`, test dedicati e controlli cache `game.mjs?v=135`, `driving-controls.mjs?v=095`, `motorcycles.mjs?v=003`, `steering-wheel.mjs?v=001`.
+
+**Verifica:** smoke test funzionale su codice GitHub superato per sintassi dei quattro moduli, volante CW/CCW, ritorno al centro, accelerazione indipendente su auto/moto, freno attivo anche tenendo il gas, presenza e ordine dei pulsanti e versioni cache. Aggiunti/aggiornati test automatici Node. **Suite completa GitHub Actions, screenshot in browser e prova touch Android non eseguiti** in questa sessione; restano verifiche necessarie.
