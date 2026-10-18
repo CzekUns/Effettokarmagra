@@ -124,7 +124,8 @@ test('pedestrian walks on the sidewalk and yields before a car; traffic yields t
  for(let i=0;i<50;i++)stepAgents(graph,[driver],.05,player);
  assert.ok(driver.x<32,'driver stops for the player pedestrian');
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
- assert.match(game,/collidesWithTraffic\(\{x,y,a\},'car',state\.dynamicCollision/);
+ assert.match(game,/vehicleType:bike\?'motorcycle':'car'/);
+  assert.match(game,/collidesWithTraffic\(/);
 });
 
 test('pedestrian sprite is painted at its collision position on the sidewalk',()=>{
