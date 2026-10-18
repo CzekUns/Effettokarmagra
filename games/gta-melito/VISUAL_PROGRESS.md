@@ -295,3 +295,5 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 **Verifica:** 93/93 test Node, incluso calcolo del framing a riposo, in orizzontale e in verticale. La resa soggettiva in viewport desktop/mobile e su telefono fisico resta da verificare dopo la pubblicazione; i test non misurano gli FPS.
 
 **Correzione dopo prova in auto:** lo spostamento iniziale al 10% metteva il veicolo troppo vicino al bordo e faceva percepire la camera come distante. Ridotto a circa il 30% della proiezione dal bordo posteriore (camera spostata del 20% verso la direzione di marcia), mantenendo un anticipo chiaro ma meno estremo. Cache pagina `v108`, modulo camera `v096`.
+
+**Seconda regolazione dopo feedback:** a velocità piena il veicolo mostra ora circa il 42% della proiezione in avanti, cioè il 60% dei circa 70% precedenti; rimane una parte visibile dietro. La camera segue l'auto con interpolazione più lenta (3 invece di 6) e anche lo zoom automatico rallenta (2,8 invece di 4,2), per attenuare i cambi di direzione e l'ingresso in auto. Cache pagina `v109`, modulo camera `v097`.

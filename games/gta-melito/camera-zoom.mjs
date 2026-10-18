@@ -21,13 +21,15 @@ export function targetCameraZoom({inVehicle=false,speed=0,running=false,moving=f
 export function vehicleCameraTarget({x=0,y=0,a=0,speed=0}={},width=0,height=0,zoom=1){
  const dx=Math.cos(a),dy=Math.sin(a),span=(Math.abs(dx)*Math.max(0,width)+Math.abs(dy)*Math.max(0,height))/Math.max(.01,zoom);
  const moving=Math.max(0,Math.min(1,Math.abs(Number(speed)||0)/12));
- const trailingFraction=.5-.2*moving;
+ // The earlier framing left 70% of the directional view in front. At full
+ // speed, show 60% of that instead: 42% of the viewport, with some road behind.
+ const trailingFraction=.5+.08*moving;
  const lead=span*(.5-trailingFraction);
  return {x:x+dx*lead,y:y+dy*lead};
 }
 export function advanceCameraZoom(current,target,dt){
  const safeDt=Math.max(0,Math.min(.1,Number(dt)||0));
- return current+(target-current)*(1-Math.exp(-4.2*safeDt));
+ return current+(target-current)*(1-Math.exp(-2.8*safeDt));
 }
 export function describeCameraZoom({inVehicle=false,speed=0,running=false,moving=false}={}){
  return inVehicle?(Math.abs(speed)>3?'AUTO · IN CORSA':'AUTO · FERMA'):running&&moving?'A PIEDI · CORSA':'A PIEDI';
