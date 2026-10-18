@@ -142,6 +142,21 @@ export function drawTerrain(c,bb,zoom,ground=null){
   if(seed%5===0)c.fillRect(x+2,y+2,24,24);
  }
 }
+// A small paved threshold ties each mapped or inferred footprint to its
+// immediate plot. The roads go on top, so thresholds never cover asphalt or
+// create a second, invented street network. This is an illustrative parcel
+// treatment, not surveyed property boundaries.
+export function drawCityParcels(c,buildings){
+ c.save();c.lineJoin='round';
+ for(const b of buildings){
+  const a=b.art;if(!a||a.area<42)continue;
+  poly(c,b.p);
+  c.lineWidth=a.inferred?5:3.2;
+  c.strokeStyle=a.inferred?'#a49277':'#b8a98d';c.stroke();
+  c.lineWidth=.5;c.strokeStyle='#67594886';c.stroke();
+ }
+ c.restore();
+}
 export function drawCityStreets(c,roads,zoom,{surfaceOnly=false}={}){
  c.save();c.lineJoin='round';c.lineCap='round';
  const pedestrian=r=>['footway','pedestrian','path','steps'].includes(r.t);

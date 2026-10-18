@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {generateUrbanInfill,roadFootprintDistance,mapFingerprint,footprintsClear} from './urban-infill.mjs';
 import {CAMERA_ZOOM_MAX,CAMERA_ZOOM_MIN,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs';
-import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityBuildings} from './city-art.mjs';
+import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityBuildings} from './city-art.mjs';
 import {resolveLandmarks} from './campaign.mjs';
 const map=JSON.parse(await readFile(new URL('./data/melito-map.json',import.meta.url),'utf8'));
 let cached;
@@ -61,6 +61,7 @@ test('existing urban painting API accepts generated roofs and paved ground',()=>
  assert.ok(ground.size>1500);
  const ctx=new Proxy({},{get:(t,k)=>k in t?t[k]:(..._args)=>{},set:(t,k,v)=>{t[k]=v;return true}});
  assert.doesNotThrow(()=>drawCityBuildings(ctx,all.slice(-45),5));
+ assert.doesNotThrow(()=>drawCityParcels(ctx,all.slice(-45)));
  assert.doesNotThrow(()=>drawTerrain(ctx,[500,900,850,1200],5,ground));
 });
 test('automatic camera starts at the maximum on foot and progressively pulls back in cars',()=>{
@@ -108,11 +109,12 @@ test('game exposes placeholder count and camera mode to the player',async()=>{
  assert.ok(game.includes('targetCameraZoom(movement,state.zoomBias)'));
  assert.ok(game.includes('advanceCameraZoom'));
  assert.ok(game.includes('drawCityBuildings(ctx,[...inferred,...buildings],zoom)'));
+ assert.ok(game.indexOf('drawCityParcels(ctx,[...inferred,...buildings])')<game.indexOf('drawCityStreets(ctx,roads,zoom)'));
  assert.ok(html.includes('id="inferred-count"'));
  assert.ok(html.includes('id="camera-mode"'));
  assert.ok(html.includes('id="zoom-auto"'));
- assert.ok(html.includes('game.mjs?v=115'));
- assert.ok(game.includes('urban-infill.mjs?v=091'));
+ assert.ok(html.includes('game.mjs?v=116'));
+ assert.ok(game.includes('urban-infill.mjs?v=116'));
 });
 
 test('whole footprint road clearance catches crossings missed by corner sampling',()=>{
@@ -125,7 +127,7 @@ test('every synthetic footprint and its projected walls clear the complete road 
  const {ROAD_WIDTH_MULTIPLIER}=await import('./road-widths.mjs');
  const segments=map.roads.flatMap(r=>r.t==='steps'||r.t==='path'?[]:
   r.p.slice(2).flatMap((_,j)=>j%2?[]:[{ax:r.p[j],ay:r.p[j+1],bx:r.p[j+2],by:r.p[j+3],
-   clearance:(r.w||5)*(ROAD_WIDTH_MULTIPLIER[r.t]||1.6)/2+6}]));
+   clearance:(r.w||5)*(ROAD_WIDTH_MULTIPLIER[r.t]||1.6)/2+9.2}]));
  for(const b of generated().buildings){
   const box=bbox(b.p);
   for(const seg of segments){
