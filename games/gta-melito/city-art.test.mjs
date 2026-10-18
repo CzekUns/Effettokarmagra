@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {prepareCityStyles,prepareUrbanGround,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,drawTerrain} from './city-art.mjs';
+import {prepareCityStyles,applyPiazzaRoofStudies,prepareUrbanGround,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,drawTerrain} from './city-art.mjs';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs';
 const map=JSON.parse(await readFile(new URL('./data/melito-map.json',import.meta.url),'utf8'));
 test('real OSM geometry is preserved and gets appropriate stylistic classifications',()=>{
@@ -26,6 +26,18 @@ test('Piazza Santo Stefano landmark church and nearby town hall are visually dis
  const townpoi=map.pois.find(p=>p.n==='Municipio di Melito di Napoli');
  assert.ok(townpoi);
  assert.ok(Math.hypot(townhall.art.cx-townpoi.p[0],townhall.art.cy-townpoi.p[1])<35);
+});
+test('three Piazza roof studies preserve mapped footprints and photo status',()=>{
+ const ids=[733703625,733703811,733703751];
+ const originals=ids.map(id=>map.buildings.find(b=>b.id===id));
+ const paths=originals.map(b=>b.p.slice());
+ const church=map.buildings.find(b=>b.id===733703815);
+ const beforeChurch={...church.art};
+ assert.equal(applyPiazzaRoofStudies(map.buildings),3);
+ assert.deepEqual(originals.map(b=>b.art.roofStudy),['courtyard','longblock','terrace']);
+ assert.deepEqual(originals.map(b=>b.p),paths);
+ assert.ok(originals.every(b=>b.art.roof===false&&b.art.surveyStatus!=='photo-verified'));
+ assert.deepEqual(church.art,beforeChurch);
 });
 test('storefront designs are tied to named OSM POIs and actual streets',()=>{
  const shops=prepareStorefronts(map.pois,map.roads);
