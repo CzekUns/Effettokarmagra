@@ -92,3 +92,12 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Verifiche:** smoke test JavaScript dei file GitHub superato (sintassi, layout, joystick/volante separati, comandi concorrenti, keyboard S e retro reali: auto -12, moto -4 unità/s). **Node suite completa, screenshot e prova su Android non eseguiti** in questa sessione.
 - **Da fare:** provare su mobile landscape la colonna di tre pedali e il multitouch sterzo+RETRO; assicurarsi che action/RETRO non si sovrappongano a radio/pausa e controllare le dimensioni su schermi piccoli; eseguire suite Node e confermare il deploy.
 - **Riferimenti:** `index.html` (commit `0d639cf`), `game.mjs` (`3dd6c7a`), `steering-wheel.test.mjs` (`d804501`), `VISUAL_PROGRESS.md`; branch `main`.
+
+
+### 2026-10-19 — ChatGPT/GitHub — Unica coda oraria di sviluppo GTA Melito
+- **Fatto:** predisposta nel TODO la nuova coda ordinata Q01–Q15: una sola funzionalità selezionata e lavorata per esecuzione oraria, con completamento aggiornato solo dopo codice + prove e con ripresa della stessa task se incompleta.
+- **Come/dove:** `TODO.md` ora raccoglie in una sola fonte le precedenti richieste NPC, giorno/notte, eventi cittadini, economia, oggetti interattivi, meteo, audio, guida e rifiniture; priorità esplicita rispetto alle vecchie checklist tematiche P0–P7.
+- **Automazioni:** per evitare sovrapposizioni, disabilitate le tre precedenti pianificazioni separate GTA Melito (giorno/notte, eventi/economia, gameplay 04–07); viene riconfigurata la precedente task NPC come unico lavoratore orario. L'automazione di ricerca lavoro dell'utente rimane indipendente e non viene modificata.
+- **Verifiche/stato:** aggiornamento GitHub della sola documentazione confermato; **nessun nuovo codice di gioco, test Node, screenshot, audio stream o deploy eseguito** in questa sessione.
+- **Da fare:** prima esecuzione selezionerà Q01 in `TODO.md`, proverà a implementarla, registrerà esito/commit/test sulla riga Q e appenderà il proprio log; se incompleta la riprenderà nell'ora successiva senza saltare alla Q02.
+- **Riferimenti:** branch `main`; TODO con queue introdotta nel commit `e37bbe5`, priorità corretta nel commit `a153498`. 
