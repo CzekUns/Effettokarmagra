@@ -71,6 +71,8 @@ test('automatic camera starts at the maximum on foot and progressively pulls bac
  const fast=targetCameraZoom({inVehicle:true,speed:40});
  assert.ok(idle<5&&idle>3);
  assert.ok(city<idle&&city>fast);
+ assert.equal(idle,3.35);
+ assert.equal(fast,1.87,'car zoom returns to the previous less magnified curve');
  assert.ok(fast>=CAMERA_ZOOM_MIN&&fast<2.1);
  assert.ok(targetCameraZoom({inVehicle:true,speed:-28})===idle,
   'the game passes the magnitude of vehicle speed explicitly');
@@ -78,16 +80,16 @@ test('automatic camera starts at the maximum on foot and progressively pulls bac
  assert.ok(targetCameraZoom({inVehicle:false},.7)<6,'manual zoom bias persists');
  assert.match(describeCameraZoom({inVehicle:true,speed:22}),/IN CORSA/);
 });
-test('vehicle retains 60% of current forward view and eases its zoom',()=>{
+test('vehicle stays near trailing third and automatic zoom avoids extra magnification',()=>{
  const car={x:100,y:200,a:0};
  const stopped=vehicleCameraTarget({...car,speed:0},1000,500,2);
  const moving=vehicleCameraTarget({...car,speed:24},1000,500,2);
  assert.deepEqual(stopped,{x:car.x,y:car.y});
- assert.ok(Math.abs(moving.x-60)<1e-9); // 8% of the 500-world-unit view behind the car
+ assert.ok(Math.abs(moving.x-200)<1e-9); // 20% camera lead places car 30% from trailing edge
  assert.equal(moving.y,200);
  const diagonal=vehicleCameraTarget({...car,a:Math.PI/2,speed:24},1000,500,2);
  assert.equal(diagonal.x,100);
- assert.ok(Math.abs(diagonal.y-180)<1e-9);
+ assert.ok(Math.abs(diagonal.y-250)<1e-9);
 });
 test('camera interpolation is frame independent and avoids jarring jumps',()=>{
  const old=6,target=2.4;
@@ -108,7 +110,7 @@ test('game exposes placeholder count and camera mode to the player',async()=>{
  assert.ok(html.includes('id="inferred-count"'));
  assert.ok(html.includes('id="camera-mode"'));
  assert.ok(html.includes('id="zoom-auto"'));
- assert.ok(html.includes('game.mjs?v=109'));
+ assert.ok(html.includes('game.mjs?v=110'));
  assert.ok(game.includes('urban-infill.mjs?v=091'));
 });
 
