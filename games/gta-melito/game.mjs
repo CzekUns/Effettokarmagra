@@ -7,7 +7,7 @@
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
 import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=125';
-import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap} from './traffic-collision.mjs?v=125';
+import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=125';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
@@ -29,6 +29,7 @@ import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
 import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=003';
+import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 const $=id=>document.getElementById(id);
@@ -315,17 +316,62 @@ function toggleBigMap(){
    state.progress?activeTarget(state.progress,state.landmarks):null);
 }
 
+function canKnockbackMove(x,y){
+ return validWalk(x,y)&&inside([x,y],toRing(state.map.border));
+}
+function impactTraffic(dt){
+ // The index limits contacts to adjacent street cells; no quadratic scan
+ // over Melito's pedestrians. Include parked cars and player on foot.
+ const p=state.player;
+ const actors=[...state.people,...state.traffic,...state.cars,...(p.car<0?[p]:[])];
+ const nearby=makeCollisionIndex(actors);
+ const active=[...state.traffic,...(p.car>=0?[state.cars[p.car]]:[])];
+ for(const source of active){
+  if(source.impactTime>0)continue;
+  const isPlayerCar=p.car>=0&&source===state.cars[p.car];
+  const from={x:source.prevX??source.x,y:source.prevY??source.y,a:source.prevA??source.a};
+  const attempt=isPlayerCar?source.impactProbe:null;
+  const to=attempt||{x:source.x,y:source.y,a:source.a};
+  const moved=Math.hypot(source.x-from.x,source.y-from.y);
+  const estimated=source.braking?Math.min((source.speed||0)*dt,1.5):0;
+  // A blocked AI car can still make contact with a person standing in its
+  // intended next position; do not require the AI to clip through them.
+  if(!isPlayerCar&&moved<.1&&estimated>.1){
+   to.x=source.x+Math.cos(source.a)*estimated;
+   to.y=source.y+Math.sin(source.a)*estimated;
+  }
+  const projected=Math.hypot(to.x-from.x,to.y-from.y);
+  const speed=isPlayerCar?Math.abs(attempt?.speed??source.speed??0):
+   Math.max(moved/Math.max(.01,dt),source.braking?Math.min(12,source.speed||0):0);
+  if(speed<IMPACT_MIN_SPEED)continue;
+  const cx=(from.x+to.x)/2,cy=(from.y+to.y)/2;
+  let hits=0;
+  for(const target of nearbyColliders(nearby,cx,cy,Math.min(50,11+projected))){
+   if(target===source||target.impactLock>0||
+      (target===p&&p.car>=0)||
+      (isPlayerCar&&target===p))continue;
+   if(!sweptVehicleContact(source,target,from,to))continue;
+   const hit=applyNonlethalImpact({...source,speed},target,speed);
+   if(!hit)continue;
+   if(isPlayerCar)slowImpactSource(source,speed);
+   if(++hits>=3)break;
+  }
+  if(isPlayerCar)source.impactProbe=null;
+ }
+}
 function updateTraffic(dt){
  state.trafficClock+=dt;
  if(state.trafficClock<.05)return;
  const elapsed=.05;state.trafficClock-=elapsed;
  for(const agent of [...state.people,...state.traffic]){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
+  advanceNonlethalImpact(agent,elapsed,canKnockbackMove);
  }
  const halfW=canvas.clientWidth/(2*state.zoom),halfH=canvas.clientHeight/(2*state.zoom);
  const view=[state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH];
- stepAgents(state.graph,state.people,elapsed,state.player,{parked:state.cars,traffic:state.traffic,view});
- stepAgents(state.graph,state.traffic,elapsed,state.player,{parked:state.cars,people:state.people,view});
+ stepAgents(state.graph,state.people,elapsed,state.player,{parked:state.cars,traffic:state.traffic,view,validRecovery:canKnockbackMove});
+ stepAgents(state.graph,state.traffic,elapsed,state.player,{parked:state.cars,people:state.people,view,validRecovery:canKnockbackMove});
+ impactTraffic(elapsed);
  for(const agent of [...state.people,...state.traffic])if(Math.hypot(agent.x-agent.prevX,agent.y-agent.prevY)>15){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
  }
@@ -419,6 +465,13 @@ function tick(dt){
  if(p.car>=0){
   const car=state.cars[p.car];
   const axes=moveAxes();
+  car.prevX=car.x;car.prevY=car.y;car.prevA=car.a;
+  if(car.impactTime>0){
+   advanceNonlethalImpact(car,dt,canKnockbackMove);
+   car.speed=0;car.recoil=0;
+   car.impactProbe=null;
+   p.x=car.x;p.y=car.y;p.a=car.a;
+  }else{
   const previousAngle=car.a;
   let speed,angle;
   if(car.recoil>0){
@@ -439,6 +492,16 @@ function tick(dt){
   }
   car.a=angle;
   const nx=car.x+Math.cos(car.a)*speed*dt,ny=car.y+Math.sin(car.a)*speed*dt;
+  car.impactProbe={x:nx,y:ny,a:car.a,speed};
+  // Trigger the shunt BEFORE the usual safe-street bounce stops the car.
+  // This also catches high-speed approaches where the NPC never occupies
+  // the player's vehicle centre because the collision guard intervenes.
+  const touched=state.dynamicCollision&&collidesWithTraffic(
+   {x:nx,y:ny,a:car.a,vehicleType:isMotorcycle(car)?'motorcycle':'car'},
+   'car',state.dynamicCollision,car);
+  if(touched&&Math.abs(speed)>=IMPACT_MIN_SPEED)
+   if(applyNonlethalImpact({...car,speed},touched,Math.abs(speed)))
+    speed*=.65;
   if(!carBlocked(nx,ny,car.a,p.car)){
    car.x=nx;car.y=ny;state.distance+=Math.abs(speed*dt);
   }else if(car.recoil>0){speed=0;car.recoil=0;car.turnGuide=null;}
@@ -448,15 +511,21 @@ function tick(dt){
    speed=bounce.speed;car.recoil=bounce.recoil;car.turnGuide=null;car.assistRelease=.25;
   }
   car.speed=speed;p.x=car.x;p.y=car.y;p.a=car.a;
+  }
  }else{
   const axis=moveAxes(),dx=axis.x,dy=axis.y;
-  if(Math.hypot(dx,dy)>.08){
+  if(p.impactTime>0){
+   advanceNonlethalImpact(p,dt,canKnockbackMove);
+  }else if(Math.hypot(dx,dy)>.08){
    const len=Math.hypot(dx,dy),v=(pressed.run?RUN_SPEED:WALK_SPEED)*Math.min(1,len),nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
    if(validWalk(nx,p.y)&&inside([nx,p.y],toRing(state.map.border)))p.x=nx;
    if(validWalk(p.x,ny)&&inside([p.x,ny],toRing(state.map.border)))p.y=ny;
    p.a=Math.atan2(dy,dx);state.distance+=v*dt;
   }
  }
+ // Parked vehicles can be shoved by faster vehicles but cannot disappear.
+ for(const car of state.cars)if(car!==state.cars[p.car])
+  advanceNonlethalImpact(car,dt,canKnockbackMove);
  updateTraffic(dt);
  if(state.progress){
   const result=updateTimer(state.progress,dt);
