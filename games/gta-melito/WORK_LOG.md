@@ -57,3 +57,10 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Verifiche/stato:** smoke test JavaScript eseguito con i moduli reali: sintassi, severità urti, carica di impulso, generazione 12 auto + 12 pedoni, conservazione zona, recupero in zona fuori vista, recupero graduale in vista e step di AI; tutti superati. Creato `impact-physics.test.mjs` con copertura delle stesse regole. **Suite completa Node e verifica grafica del browser non effettuate**; lasciare come primo controllo al subentrante.
 - **Da fare:** verificare su mobile/desktop urti con Panda/scooter, corpo a corpo con NPC e player, spostamento delle auto parcheggiate e rientro nella zona di routine; eseguire `node --test games/gta-melito/*.test.mjs games/gta-melito/survey/*.test.mjs`, controllare CI e impostare eventuali calibrazioni della forza di spinta.
 - **Riferimenti:** `impact-physics.mjs`, `impact-physics.test.mjs`, `game.mjs`, `roads.mjs`, `index.html`, `AGENTS.md`. Main: `7d905de` (fisica), `938faaa` (routine), `fde73ac` (integrazione), `1d3a309` (test), `fb00873` (recupero sicuro), `cf29f98` (reset al cambio veicolo).
+
+### 2026-10-19 — ChatGPT/GitHub — TODO completa della simulazione NPC
+- **Fatto:** compilato il precedente `TODO.md` vuoto con roadmap NPC completa, milestone P0–P7, vertical slice prioritaria, criteri di completamento, vincoli grafici/funzionali, test e modalità di avanzamento.
+- **Come/dove:** aggiornato soltanto `games/gta-melito/TODO.md`; la pianificazione copre destinazioni, routine, tempo, porte, socialità, NPC a bordo scooter/auto, reazioni, prestazioni e missioni.
+- **Verifiche/stato:** scrittura GitHub confermata; nessun codice, test Node, browser smoke o deploy eseguito in questa sessione.
+- **Da fare:** partire da P0 leggendo la TODO aggiornata; verificare la baseline e implementare la prima coorte NPC su Via Roma/Piazza Santo Stefano con test e commit. Una singola automazione di sviluppo è stata programmata per un'ora dopo la richiesta.
+- **Riferimenti:** branch `main`, commit TODO `f85d783bc26a0c41c9d8aeb1e1b064c4a7815fa1`; `games/gta-melito/TODO.md`.
