@@ -16,7 +16,7 @@ import {loadCarSprites,drawCarSprite,CAR_ATLAS_VARIANT_IDS} from './car-sprites.
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=091';
-import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=096';
+import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=097';
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=094';
 import {guideCar} from './driving-assist.mjs?v=099';
 import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
@@ -378,7 +378,7 @@ function tick(dt){
   ?vehicleCameraTarget(state.cars[p.car],$('world').clientWidth,$('world').clientHeight,state.zoom)
   :{x:p.x,y:p.y};
  const targetX=target.x,targetY=target.y;
- const follow=1-Math.exp(-6*dt);
+ const follow=1-Math.exp(-(p.car>=0?3:6)*dt);
  state.camera.x+=(targetX-state.camera.x)*follow;
  state.camera.y+=(targetY-state.camera.y)*follow;
  state.clock+=dt;state.hud+=dt;if(state.hud>.18){state.hud=0;updateHud();refreshCampaign();}

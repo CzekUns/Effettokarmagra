@@ -78,22 +78,23 @@ test('automatic camera starts at the maximum on foot and progressively pulls bac
  assert.ok(targetCameraZoom({inVehicle:false},.7)<6,'manual zoom bias persists');
  assert.match(describeCameraZoom({inVehicle:true,speed:22}),/IN CORSA/);
 });
-test('moving vehicle shifts modestly toward the trailing side, centered at rest',()=>{
+test('vehicle retains 60% of current forward view and eases its zoom',()=>{
  const car={x:100,y:200,a:0};
  const stopped=vehicleCameraTarget({...car,speed:0},1000,500,2);
  const moving=vehicleCameraTarget({...car,speed:24},1000,500,2);
  assert.deepEqual(stopped,{x:car.x,y:car.y});
- assert.equal(moving.x,200); // 20% of the 500-world-unit horizontal view
+ assert.ok(Math.abs(moving.x-60)<1e-9); // 8% of the 500-world-unit view behind the car
  assert.equal(moving.y,200);
  const diagonal=vehicleCameraTarget({...car,a:Math.PI/2,speed:24},1000,500,2);
  assert.equal(diagonal.x,100);
- assert.equal(diagonal.y,250);
+ assert.ok(Math.abs(diagonal.y-180)<1e-9);
 });
 test('camera interpolation is frame independent and avoids jarring jumps',()=>{
  const old=6,target=2.4;
  const single=advanceCameraZoom(old,target,.05);
  const double=advanceCameraZoom(advanceCameraZoom(old,target,.025),target,.025);
  assert.ok(single<old&&single>target);
+ assert.ok(single>old+(target-old)*(1-Math.exp(-4.2*.05)),'zoom eases more gently than before');
  assert.ok(Math.abs(double-single)<1e-9);
  assert.equal(advanceCameraZoom(old,target,0),old);
 });
@@ -107,7 +108,7 @@ test('game exposes placeholder count and camera mode to the player',async()=>{
  assert.ok(html.includes('id="inferred-count"'));
  assert.ok(html.includes('id="camera-mode"'));
  assert.ok(html.includes('id="zoom-auto"'));
- assert.ok(html.includes('game.mjs?v=108'));
+ assert.ok(html.includes('game.mjs?v=109'));
  assert.ok(game.includes('urban-infill.mjs?v=091'));
 });
 
