@@ -16,6 +16,10 @@ Il log può essere breve (5–10 righe), ma deve dire chiaramente **cosa è stat
 
 **PRIMA DI MODIFICARE:** leggi [HANDOFF_WORK_REALISMO.md](./HANDOFF_WORK_REALISMO.md) e le ultime voci di [WORK_LOG.md](./WORK_LOG.md). L'handoff contiene stato verificato, file chiave, fonti, priorità, metodo di lavoro, test e criteri di accettazione. Dopo ogni sessione aggiorna il registro operativo e, se hai lavorato sulla grafica, anche [VISUAL_PROGRESS.md](./VISUAL_PROGRESS.md).
 
+## Coerenza grafica fra strada e interni — regola permanente
+
+**Un solo gioco, un solo stile visivo.** Ogni interno accessibile (banche e futuri negozi, case, uffici) mantiene la stessa **pixel art 2.5D dall'alto, scala del personaggio, orientamento, palette urbana, ombre e materiali** della mappa esterna. Usare il **medesimo sprite/renderer e le stesse animazioni del protagonista**, senza ridisegnarlo in uno stile distinto quando attraversa una porta. Gli interni possono usare una telecamera separata e stanze in sezione con muri bassi, ma non devono diventare schermate frontali, ambienti fantasy/Zelda o mini-giochi visivamente estranei. Conservare movimento touch/PC, collisioni con arredi e uscita verso il mondo originale. Prima di consegnare testare proporzioni e leggibilità su telefono e desktop. Documentare nel WORK_LOG.
+
 ## Modus operandi veicoli — confermato e permanente
 
 Per ogni nuovo veicolo segui rigorosamente [VEHICLE_ART_GUIDE.md](./VEHICLE_ART_GUIDE.md): automobili reali come riferimento, **solo vista dall'alto**, un sheet per modello con colori d'epoca verificabili, ritagli PNG individuali **trasparenti**, scala corretta e introduzione effettiva nel gioco. Lo standard è approvato sulla Panda moderna e Panda Fire già integrate: non tornare ad auto SVG generiche e non generare viste prospettiche per gli sprite definitivi.
