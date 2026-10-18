@@ -55,6 +55,6 @@ test('hero gets the new red hoodie; NPCs include three more identities without a
  assert.match(road,/kind:i%7/,'seven NPC identities without changing car kinds');
  assert.ok(game.includes('loadExtraPedestrianSprites()'));
  assert.ok(game.includes('roads.mjs?v=116'));
- assert.ok(game.includes('city-art.mjs?v=120'));
- assert.ok(page.includes('game.mjs?v=122'));
+ assert.ok(game.includes('city-art.mjs?v=123'));
+ assert.ok(page.includes('game.mjs?v=123'));
 });

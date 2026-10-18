@@ -35,7 +35,7 @@ let nextFrame=null;
 globalThis.requestAnimationFrame=callback=>{nextFrame=callback;};
 globalThis.fetch=async url=>{
  const path=String(url).replace(/^[.][\\/]/,'');
- const local=path==='data/boundary.json'?'./data/boundary.json':path==='data/melito-map.json'?'./data/melito-map.json':path==='survey/sector-001-002.json'?'./survey/sector-001-002.json':path==='survey/piazza-santo-stefano.json'?'./survey/piazza-santo-stefano.json':path==='survey/town-visuals.json'?'./survey/town-visuals.json':path==='data/urban-infill.json'?'./data/urban-infill.json':null;
+ const local=path==='data/boundary.json'?'./data/boundary.json':path==='data/melito-map.json'?'./data/melito-map.json':path==='survey/sector-001-002.json'?'./survey/sector-001-002.json':path==='survey/piazza-santo-stefano.json'?'./survey/piazza-santo-stefano.json':path==='survey/town-visuals.json'?'./survey/town-visuals.json':path==='data/urban-infill.json'?'./data/urban-infill.json':path==='data/building-placement.json'?'./data/building-placement.json':null;
  if(!local)throw Error('Unexpected external fetch: '+url);
  const data=JSON.parse(await readFile(new URL(local,import.meta.url),'utf8'));
  return {ok:true,json:async()=>data};

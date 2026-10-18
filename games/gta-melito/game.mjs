@@ -11,7 +11,7 @@ import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap} from './traffic-
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp} from './city-art.mjs?v=120';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp} from './city-art.mjs?v=123';
 import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS} from './car-sprites.mjs?v=106';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
@@ -27,6 +27,7 @@ import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {projectedRoofCovers,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=119';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
+import {placeBuildings} from './building-placement.mjs?v=123';
 const $=id=>document.getElementById(id);
 const canvas=$('world'),c=canvas.getContext('2d',{alpha:false});
 const STATIC_TILE=96,TILE_PIXELS=4,TILE_BLEED=20;
@@ -110,11 +111,11 @@ function roadPoint(road,fraction){
  }
  return {x:p[0],y:p[1],a:0};
 }
-function prepareMap(map,surveyData=[],infillCache=null){
+function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
  staticTiles.clear();roofReveal.clear();tileRoadMode=null;
  state.map=map;
- state.roads=map.roads;state.buildings=map.buildings||[];
+ state.roads=map.roads;state.buildings=placeBuildings(map,placement);
  prepareCityStyles(state.buildings,map.pois||[]);
  const survey=applySurveyDrafts(state.buildings,surveyData);
  const terracotta=applyApprovedArcadeRoofStyle(state.buildings);
@@ -711,7 +712,12 @@ async function load(){
    const req=await fetch('./data/urban-infill.json',{cache:'no-cache'});
    if(req.ok)infillCache=await req.json();
   }catch(error){console.warn('Optional synthetic art cache unavailable',error);}
-  prepareMap(map,surveyData,infillCache);
+  let placement=null;
+  try{
+   const req=await fetch('./data/building-placement.json',{cache:'no-cache'});
+   if(req.ok)placement=await req.json();
+  }catch(error){console.warn('Optional building placement unavailable',error);}
+  prepareMap(map,surveyData,infillCache,placement);
  }catch(e){console.error('GTA Melito map load',e);loading('MAPPA NON DISPONIBILE','Non posso mostrare una Melito inventata: '+e.message+'. Riprova quando la cartografia è disponibile.',true);}
  finally{state.loading=false;}
 }
