@@ -1,7 +1,7 @@
 /* GTA Melito urban fabric fill. Synthetic buildings are NOT geographic facts.
  * Keep real OSM footprints and centerlines untouched. These visual stand-ins
  * occupy plausible uncharted urban gaps and retain explicit synthetic provenance. Collision policy belongs to game.mjs. */
-export const INFILL_VERSION='091';
+export const INFILL_VERSION='116';
 export function mapFingerprint(map){
  let h=2166136261;
  const add=value=>{h=Math.imul(h^(Number(value)||0),16777619)>>>0;};
@@ -116,8 +116,9 @@ export function generateUrbanInfill(map,{pitch=15.5,max=2600}={}){
   candidates.push({gx,gy,seed,x:(gx+.5)*pitch+(random(seed+8)-.5)*5,
    y:(gy+.5)*pitch+(random(seed+17)-.5)*5});
  }
- // A second, street-aligned pass fills frontage missed by the world grid.
- // Two rows give depth to blocks; the same footprint/road checks still apply.
+ // Lay out frontage first, then use the world grid only for gaps behind it.
+ // The centre of each candidate is resolved after its depth is known so the
+ // actual facade clears the whole painted sidewalk, not just the asphalt.
  let serial=10000000; // disjoint from every grid-derived synthetic ID
  for(const seg of sources){
   if(['motorway','trunk','track','footway','pedestrian'].includes(seg.t))continue;
@@ -125,13 +126,23 @@ export function generateUrbanInfill(map,{pitch=15.5,max=2600}={}){
   for(let along=10;along<length;along+=20)for(const side of [-1,1])for(let row=0;row<2;row++){
    const gx=serial++,gy=0,seed=hash(gx),offset=side*(seg.w/2+16+row*21);
    candidates.push({gx,gy,seed,x:seg.ax+Math.cos(seg.a)*along+nx*offset,
-    y:seg.ay+Math.sin(seg.a)*along+ny*offset});
+    y:seg.ay+Math.sin(seg.a)*along+ny*offset,frontage:{seg,along,side,row}});
   }
  }
  // Try apartment-sized masses before annex-sized fallback footprints. The
  // previous fixed tiny rectangles made broad unmapped blocks look like sheds.
- const large=candidates.map(c=>({...c,large:true}));
- for(const {gx,gy,seed,x,y,large:isLarge} of [...large,...candidates]){
+ const street=candidates.filter(c=>c.frontage),grid=candidates.filter(c=>!c.frontage);
+ for(const candidate of [...street.map(c=>({...c,large:true})),
+  ...grid.map(c=>({...c,large:true})),...street,...grid]){
+  const {gx,gy,seed,large:isLarge,frontage}=candidate;
+  const w=(isLarge?27:11)+Math.floor(random(seed+3)*(isLarge?17:8)),
+   d=(isLarge?20:10)+Math.floor(random(seed+5)*(isLarge?14:9));
+  let {x,y}=candidate;
+  if(frontage){
+   const {seg,along,side,row}=frontage,offset=side*(seg.w/2+9.5+d/2+row*(d+3));
+   x=seg.ax+Math.cos(seg.a)*along-Math.sin(seg.a)*offset;
+   y=seg.ay+Math.sin(seg.a)*along+Math.cos(seg.a)*offset;
+  }
   if(buildings.length>=max)break;
   stats.tested++;
   if(!pointIn(map.border,x,y)){stats.excludedBorder++;continue;}
@@ -160,10 +171,9 @@ export function generateUrbanInfill(map,{pitch=15.5,max=2600}={}){
   const cluster=hash(Math.floor(gx/2)*73856093^Math.floor(gy/2)*19349663);
   const fillRate=nearCount>=3?1:.85;
   if(random(cluster)>fillRate){stats.excludedOpen++;continue;}
-  const w=(isLarge?27:11)+Math.floor(random(seed+3)*(isLarge?17:8)),
-   d=(isLarge?20:10)+Math.floor(random(seed+5)*(isLarge?14:9));
-  // Orient with the nearest actual street segment; no fabricated street grid.
-  const p=footprint(x,y,road.a,w,d),box=toBox(p);
+  // Keep the first row parallel to the segment that placed it. Grid infill
+  // follows its closest street, with no fabricated road or OSM footprint.
+  const p=footprint(x,y,frontage?.seg.a??road.a,w,d),box=toBox(p);
   const corners=[x,y,...p.slice(0,-2)].reduce((out,v,i,arr)=>{if(i%2===0)out.push([v,arr[i+1]]);return out;},[]);
   if(corners.some(([px,py])=>!pointIn(map.border,px,py))){stats.excludedBorder++;continue;}
   // Reject occupied parcels before the more expensive polygon/road test.
@@ -173,7 +183,7 @@ export function generateUrbanInfill(map,{pitch=15.5,max=2600}={}){
   }
   const nearSegments=new Set();for(const [px,py] of corners)for(const seg of nearby(roads,px,py,1))nearSegments.add(seg);
   if([...nearSegments].some(seg=>{
-   const clearance=seg.w/2+6;
+   const clearance=seg.w/2+9.2;
    const dx=Math.max(0,Math.min(seg.ax,seg.bx)-box.x1,box.x0-Math.max(seg.ax,seg.bx));
    const dy=Math.max(0,Math.min(seg.ay,seg.by)-box.y1,box.y0-Math.max(seg.ay,seg.by));
    return Math.hypot(dx,dy)<clearance&&roadFootprintDistance(p,seg)<clearance;
