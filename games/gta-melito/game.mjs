@@ -51,6 +51,7 @@ function driveAxes(){
 }
 function resetDrivingControls(){
  pressed.accelerate=false;pressed.brake=false;
+ for(const id of ['accelerator','brake'])$(id)?.classList.remove('pressed');
  wheel.angle=0;wheel.held=false;wheel.pointerId=null;
  const face=$('steering-face');if(face)face.style.transform='rotate(0rad)';
 }
