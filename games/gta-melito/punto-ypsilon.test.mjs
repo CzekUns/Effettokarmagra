@@ -89,11 +89,11 @@ test('Punto/Ypsilon remain in AI traffic and starter Panda untouched',async()=>{
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  const page=await readFile(new URL('./index.html',import.meta.url),'utf8');
  const spriteCode=await readFile(new URL('./car-sprites.mjs',import.meta.url),'utf8');
- assert.match(game,/CAR_ATLAS_VARIANT_IDS/);
+ assert.match(game,/CAR_TRAFFIC_SPRITE_IDS/);
  assert.ok(game.includes('drawCar(x,y,a,ai.kind,false,ai.model)'));
  assert.ok(game.includes('drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model)'));
  assert.ok(game.includes("model:'panda-modern-white'"));
- assert.ok(page.includes('game.mjs?v=114'));
- assert.ok(game.includes('car-sprites.mjs?v=105'));
+ assert.ok(page.includes('game.mjs?v=115'));
+ assert.ok(game.includes('car-sprites.mjs?v=106'));
  assert.doesNotMatch(spriteCode,/restoreVehicleAtlasTransparency/);
 });

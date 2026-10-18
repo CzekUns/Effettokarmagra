@@ -52,3 +52,11 @@ Per ogni modello consegna: sheet bianco con sole viste top-down e colori, PNG si
 ## Bug da non ripetere — trasparenza dell'atlante
 
 Il primo atlante Punto/Ypsilon caricato aveva un rettangolo scuro opaco sullo sfondo. **La sola presenza di un chunk PNG `tRNS` non prova la trasparenza corretta**: bisogna verificare realmente che ciascuno dei 16 angoli di ogni cella dell'atlante abbia **alpha=0** e che un pixel al centro dell'auto abbia alpha>0. Provare il rendering su asfalto e su fondo chiaro. **Risolto il 17 ottobre 2026:** il nuovo atlante `punto-ypsilon-16colors-rgba.png` ha 16 sprite compatti da 40×60 pixel su 4×4 celle, trasparenza reale con `tRNS` (alpha 0 negli angoli di ogni cella) e colori distinti per modello. Il caricamento usa direttamente il PNG, senza alcuna maschera di riparazione in JavaScript. Il vecchio atlante resta solo come archivio per evitare regressioni; `vehicle-alpha.mjs` è rimosso. Le 16 verniciature sono variazioni grafiche indicative, non documentate come codici di fabbrica.
+
+
+## Nuovi modelli — 18 ottobre 2026
+
+- `seicento-500-16colors-rgba.png`: Fiat Seicento 1998 e Fiat 500 2007, otto colori ciascuna.
+- `uno-smart-16colors-rgba.png`: Fiat Uno 1983 e Smart Fortwo 2007, otto colori ciascuna.
+
+Sprite individuali di 40×60 pixel ritagliati da due tavole 4×4: in gioco vengono conservati come due atlanti compressi 160×240, con sfondo **realmente trasparente** e alfa corretto, per ridurre richieste HTTP. 32 nuove varianti sommate alle 16 Punto/Ypsilon già integrate (48 totali più le due Panda). Colori come interpretazione, non tutti verificati nei cataloghi fabbrica. Dimensioni visive per modello differenziate senza cambiare le collisioni. La Smart è una rappresentazione approssimativa, candidata a una successiva rifinitura sulla Fortwo reale.
