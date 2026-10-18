@@ -462,6 +462,9 @@ function toggleVehicle(){
    else carRadio.leaveVehicle();
   }else{$('street').textContent='AVVICINATI A UN VEICOLO PER SALIRE';}
  }
+ // Touch stick belongs only to walking; never carry an offset into driving.
+ stick.x=0;stick.y=0;
+ $('stick-knob').style.transform='translate(0,0)';
  resetDrivingControls();updateHud();
 }
 function carBlocked(x,y,a,which,vehicle=state.cars[which]){
@@ -621,8 +624,11 @@ function compareRoadWidths(){
 function updateHud(){
  const p=state.player;
  const driving=p.car>=0&&!state.bankInterior;
- $('stage')?.classList.toggle('interior',!!state.bankInterior);
- $('stage')?.classList.toggle('driving',driving);
+ // The map container must receive the mode class: otherwise CSS keeps the
+ // walking joystick visible even though driveAxes no longer reads it.
+ const stage=$('stage')||document.querySelector?.('.stage');
+ stage?.classList.toggle('interior',!!state.bankInterior);
+ stage?.classList.toggle('driving',driving);
  document.querySelector?.('.controls')?.classList.toggle('driving',driving);
  if(state.bankInterior){
   $('vehicle').textContent='ALL’INTERNO DELLA BANCA';$('street').textContent=state.bankInterior.bank.n.toUpperCase();
