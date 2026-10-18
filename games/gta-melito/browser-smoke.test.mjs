@@ -12,7 +12,7 @@ function element(id=''){
  const listeners=new Map();
  return {
   id,hidden:id==='dialog'||id==='fullmap'||id==='waypoint'||id==='mission-panel',textContent:'',style:{},clientWidth:630,clientHeight:470,
-  width:168,height:142,dataset:{},classList:{add(){},remove(){}},
+  width:168,height:142,dataset:{},classList:{add(){},remove(){},toggle(){}},
   addEventListener(type,callback){listeners.set(type,callback);},
   fire(type,args={}){listeners.get(type)?.({preventDefault(){},pointerId:1,...args});},
   getContext(){return ctx;},focus(){},setPointerCapture(){},setAttribute(k,v){this[k]=v}
