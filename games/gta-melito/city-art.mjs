@@ -6,6 +6,7 @@ import {visualRoadWidth} from './road-widths.mjs?v=043';
 import {SIDEWALK_OUTER,SIDEWALK_SHADOW,SIDEWALK_KERB} from './sidewalk.mjs?v=099';
 import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-volume.mjs?v=088';
 import {material} from './arcade-materials.mjs?v=095';
+import {drawPedestrianSprite} from './pedestrian-sprites.mjs?v=001';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
  * are original artistic interpretations: they do not claim photographic fidelity.
@@ -675,6 +676,10 @@ export function drawCityPeople(c,people,graph,clock,bounds,alpha=1){
   const x=p.prevX===undefined?p.x:p.prevX+(p.x-p.prevX)*alpha;
   const y=p.prevY===undefined?p.y:p.prevY+(p.y-p.prevY)*alpha;
   const angle=p.prevA===undefined?p.a:p.prevA+Math.atan2(Math.sin(p.a-p.prevA),Math.cos(p.a-p.prevA))*alpha;
+  // Native NPC sprites turn with actual heading, and freeze while blocked.
+  // Keep the previous procedural art if the optional sheet is not ready.
+  const moving=!p.braking&&(p.prevX===undefined||Math.hypot(p.x-p.prevX,p.y-p.prevY)>.002);
+  if(drawPedestrianSprite(c,x,y,angle,p.kind,clock,moving,p.speed,p.seed))continue;
   const walk=p.braking?0:Math.sin(clock*p.speed*9+p.seed),palette=[
    ['#ae8669','#302c2a','#4b6b67','#273a40','#e3c59a'],
    ['#dfa97a','#44322e','#a65c5e','#41414d','#efd0ad'],

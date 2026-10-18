@@ -355,3 +355,10 @@ Due nuovi atlas PNG indicizzati da 160×240 (4×4, cella 40×60) con alfa corret
 **Fatto nel codice:** il tassello statico disegna la strada prima dell'intero edificio e non ripassa più l'asfalto sui tetti. Il passaggio del giocatore a piedi o in auto sotto una copertura proiettata attiva una rivelazione graduale: la strada viene ridisegnata solo nell'unione della sagoma OSM e del tetto sollevato, con opacità massima del 78%, conservando visibile un residuo del tetto. La verifica di copertura usa la proiezione già esistente del volume; le sagome e collisioni originali, AI e zoom non cambiano. Un controllo preliminare sul rettangolo dell'edificio e il disegno dinamico solo per coperture attive limitano il lavoro per fotogramma. Cache pagina e modulo `roof-reveal.mjs` `v119`.
 
 **Verifica locale:** 108 test Node, inclusi geometria del tetto integro, interpolazione dell'opacità, ingresso del browser simulato e controllo della carreggiata; sintassi e diff superati. L'effetto visivo pubblicato e gli FPS su telefono fisico restano da controllare.
+
+
+### Sessione 2026-10-18 — NPC animati da spritesheet PNG, quattro modelli
+
+Ritagliati 64 fotogrammi dalla tavola generata: quattro personaggi (uomo con polo blu, donna con top rosso, anziano beige, rider giallo), quattro direzioni e quattro pose a testa. PNG individuali e tavola originale restano negli artefatti della lavorazione; per Android il gioco carica **un solo atlante 384×160**, celle 24×40, sfondo trasparente e palette ottimizzata (~12,9 KB), in `assets/people/pedoni-4x4frames-24x40-rgba.png`.
+
+In `pedestrian-sprites.mjs` frame e orientamento sono scelti da angolo di marcia e tempo/velocità. In `city-art.mjs` gli NPC adottano gli sprite caricati una sola volta, con fallback al disegno Canvas originale durante il caricamento o in caso di errore. Il protagonista rimane invariato. Percorsi, velocità fisiche, marciapiedi, collisioni e generazione non sono modificati. Grafica 2.5D illustrativa da valutare in partita su smartphone: alcuni fotogrammi sono molto simili e i personaggi sono meno zenitali delle vetture. Aggiornati `city-art.mjs?v=119` e `game.mjs?v=120` per cache.
