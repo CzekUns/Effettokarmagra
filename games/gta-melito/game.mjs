@@ -478,6 +478,7 @@ function tick(dt){
    const rebound=advanceRecoil(car.speed,car.recoil,dt);
    speed=rebound.speed;car.recoil=rebound.recoil;angle=car.a;
   }else{
+   advanceNonlethalImpact(car,dt,canKnockbackMove);
    ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt));
    const road=nearest(car.x,car.y,25,state.roads,true);
    const turn=guideIntersection({x:car.x,y:car.y,angle,speed},axes.x,road,
@@ -514,6 +515,7 @@ function tick(dt){
   }
  }else{
   const axis=moveAxes(),dx=axis.x,dy=axis.y;
+  if(!(p.impactTime>0))advanceNonlethalImpact(p,dt,canKnockbackMove);
   if(p.impactTime>0){
    advanceNonlethalImpact(p,dt,canKnockbackMove);
   }else if(Math.hypot(dx,dy)>.08){
@@ -629,7 +631,7 @@ function drawParkedMotorcycleHints(){
 }
 function drawPlayer(){
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
- drawCityPlayer(c,state.player,state.clock,moving);
+ drawCityPlayer(c,state.player,state.clock,moving||state.player.impactTime>0);
 }
 function visibleBounds(){
  // Reserve space for sprites and road labels just outside the screen. A large
