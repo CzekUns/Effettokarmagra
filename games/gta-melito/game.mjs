@@ -54,18 +54,22 @@ const staticTiles=new Map();
 const roofReveal=new Map();
 let tileRoadMode=null,pendingTile=null;
 const radar=$('radar'),r=radar.getContext('2d');
-const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false,accelerate:false,brake:false};
+const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false,accelerate:false,brake:false,reverse:false};
 const stick={x:0,y:0};
 function moveAxes(){return {x:Math.abs(stick.x)>.08?stick.x:Number(pressed.right)-Number(pressed.left),y:Math.abs(stick.y)>.08?stick.y:Number(pressed.down)-Number(pressed.up)};}
 const wheel={angle:0,held:false,pointerId:null,pointerAngle:0};
 function driveAxes(){
  const keys=Number(pressed.right)-Number(pressed.left);
+ const forward=pressed.accelerate||pressed.up;
+ const reverse=pressed.reverse||pressed.down;
+ // Opposing pedals neutralize one another. The physical service brake
+ // overrides either direction in stepDriving/stepMotorcycle.
  return {x:keys||steeringInput(wheel.angle),
-  y:pressed.accelerate||pressed.up?-1:pressed.down?1:0};
+  y:forward===reverse?0:reverse?1:-1};
 }
 function resetDrivingControls(){
- pressed.accelerate=false;pressed.brake=false;
- for(const id of ['accelerator','brake'])$(id)?.classList.remove('pressed');
+ pressed.accelerate=false;pressed.brake=false;pressed.reverse=false;
+ for(const id of ['accelerator','brake','reverse'])$(id)?.classList.remove('pressed');
  wheel.angle=0;wheel.held=false;wheel.pointerId=null;
  const face=$('steering-face');if(face)face.style.transform='rotate(0rad)';
 }
@@ -1016,7 +1020,7 @@ function bind(){
  const orient=()=>{const rotate=$('rotate-screen');rotate.hidden=typeof matchMedia!=='function'||matchMedia('(orientation: landscape)').matches;};
  orient();window.addEventListener('orientationchange',orient);window.addEventListener('resize',orient);
  const lockLandscape=()=>{try{if(typeof screen!=='undefined'&&screen.orientation?.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(_){}};
- for(const id of ['touch-stick','steering-wheel','action','sprint','accelerator','brake'])$(id).addEventListener('pointerdown',lockLandscape,{once:true});
+ for(const id of ['touch-stick','steering-wheel','action','sprint','accelerator','brake','reverse'])$(id).addEventListener('pointerdown',lockLandscape,{once:true});
  document.querySelectorAll('[data-dir]').forEach(btn=>{
   const key=btn.dataset.dir;
   btn.addEventListener('pointerdown',e=>{e.preventDefault();pressed[key]=true;btn.classList.add('pressed');try{btn.setPointerCapture(e.pointerId);}catch(_){}});
@@ -1059,7 +1063,7 @@ function bind(){
    message('Nuova partita iniziata!','NUOVA PARTITA');refreshCampaign();
   }
  });
- for(const [id,key] of [['accelerator','accelerate'],['brake','brake'],['sprint','run']]){
+ for(const [id,key] of [['accelerator','accelerate'],['brake','brake'],['reverse','reverse'],['sprint','run']]){
   const btn=$(id);
   btn.addEventListener('pointerdown',e=>{
    e.preventDefault();pressed[key]=true;btn.classList.add('pressed');
