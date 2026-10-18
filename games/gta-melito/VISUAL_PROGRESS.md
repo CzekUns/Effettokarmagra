@@ -423,3 +423,10 @@ Le moto hanno sprite leggermente più grandi (3,15×6,45 unità, sempre più pic
 La rivelazione esistente ridisegnava la carreggiata sopra il tetto, ma lasciava opaco il disegno dell'edificio; inoltre considerava solo il personaggio del giocatore. Ora giocatore a piedi e pedoni NPC attivano la stessa attenuazione quando la loro posizione è su una strada o un marciapiede sotto la proiezione del tetto. La maschera agisce sul solo edificio interessato, ripristina terreno, soglia e superfici stradali/marciapiedi, quindi ridisegna il volume attenuato: l'attore resta visibile davanti al tetto. La transizione resta interpolata e il reveal auto conserva il raggio maggiore.
 
 Test dedicati verificano target pedonali, maschera compositing e ordine del recupero della scena. Cache aggiornata a `roof-reveal.mjs?v=120` e `game.mjs?v=128`; test completi 134/134. Da verificare visivamente nella build pubblicata e su telefono.
+
+
+### 2026-10-18 — Santa Maria delle Grazie: rimosso DEFINITIVAMENTE il vecchio disegno sotto il WebP
+
+Chiesa OSM way 733703815: ora in `drawCityBuildings` si usa un **renderer esclusivo** che disegna soltanto il nuovo WebP trasparente (più la targhetta), PRIMA di qualsiasi estrusione o ombra. Il vecchio ramo procedurale della chiesa con cupola, campanile, cornici e tetto è stato **eliminato dal codice**, non semplicemente coperto. Nessuna parete 2.5D, ombra della sagoma di base, bordo di tetto o contorno di lotto generato può più comparire sotto l'immagine. Durante il caricamento non appare nemmeno un vecchio fallback Canvas; l'evento di caricamento dell'immagine invalida le tile statiche.
+
+Il poligono OSM è conservato per collisioni, gioco e navigazione. Gli altri edifici, inclusa la Chiesa Maria SS. di Piedigrotta, mantengono il loro renderer precedente. Cache moduli `city-art.mjs?v=125` e pagina `game.mjs?v=130`. Controlli automatici e riscontro visivo mobile ancora da eseguire.

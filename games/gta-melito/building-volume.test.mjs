@@ -74,7 +74,7 @@ test('renderer actually emits multiple opaque extruded side polygons before the 
  for(const kind of names){
   // Some legitimate categories have no mapped example in this OSM snapshot.
   // Exercise their renderer branch with a derived synthetic fixture as well.
-  const mapped=source.find(e=>e.art.type===kind)||placeholders.find(e=>e.art.type===kind);
+  const mapped=source.find(e=>e.art.type===kind&&e.id!==733703815)||placeholders.find(e=>e.art.type===kind);
   const b=mapped||{...source[0],id:-99215,art:{...source[0].art,type:kind}};
   assert.ok(b,'category '+kind+' needs coverage');
   const {ctx,stats}=mock();
@@ -91,7 +91,7 @@ test('renderer actually emits multiple opaque extruded side polygons before the 
 test('one coherent painter order merges placeholder and OSM buildings in the game',async()=>{
  const js=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  assert.match(js,/drawCityBuildings\(ctx,\[\.\.\.inferred,\.\.\.buildings\],zoom\)/);
- assert.ok(js.includes('city-art.mjs?v=124'));
+ assert.ok(js.includes('city-art.mjs?v=125'));
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
- assert.ok(html.includes('game.mjs?v=129'));
+ assert.ok(html.includes('game.mjs?v=130'));
 });

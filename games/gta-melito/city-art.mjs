@@ -16,6 +16,7 @@ import {drawExtraPedestrianSprite,EXTRA_PEDESTRIAN_NPC_START_KIND} from './extra
  * WebP based on an original illustration, NOT a Google Maps screenshot.
  * The OSM polygon controls shape/location/collision. Canvas is the fallback.
  */
+export const SANTA_MARIA_OSM_ID=733703815;
 export const CHURCH_WEBP_PATH='./assets/buildings/chiesa-santa-maria-delle-grazie-game.webp';
 let churchWebp=null;
 export function loadChurchWebp(onReady=()=>{}){
@@ -169,6 +170,7 @@ export function drawTerrain(c,bb,zoom,ground=null){
 export function drawCityParcels(c,buildings){
  c.save();c.lineJoin='round';
  for(const b of buildings){
+  if(b.id===SANTA_MARIA_OSM_ID)continue; // No old generated lot outline under church.
   const a=b.art;if(!a||a.area<42)continue;
   poly(c,b.p);
   c.lineWidth=a.inferred?5:3.2;
@@ -355,93 +357,10 @@ function studyRoofHardware(c,a){
 function specialized(c,b,art){
  const {cx,cy,w,h:bh,seed}=art;
  if(art.type==='church'){
-  // The authored sprite owns the complete silhouette, including its outline.
-  // Do not paint the old procedural roof below its transparent pixels.
-  if(b.id===733703815&&churchWebpReady()){
-   c.save();c.imageSmoothingEnabled=false;
-   c.drawImage(churchWebp,art.x0,art.y0,art.w,art.h);
-   c.restore();
-   return true;
-  }
-  // Actual OSM church footprint; rooftop is an interpretation of the
-  // central dome of Santa Maria delle Grazie, not a measured 3D survey.
+  // Other churches only. Santa Maria's original dome/tower are REMOVED.
   roofOutline(c,b.p,'#e2d1af',.9);
-  // Texture the ORIGINAL raised OSM roof only. Generated picture details
-  // outside this church's mapped polygon are intentionally discarded:
-  // northern nave and surrounding annexes have their own OSM footprints.
-  if(!/Santa Maria delle Grazie/i.test(b.n||'')){
-   // The other historic church has a different roof silhouette in OSM.
-   c.strokeStyle='#bfa886';c.lineWidth=.7;c.beginPath();c.moveTo(art.x0+1,cy);c.lineTo(art.x1-1,cy);c.stroke();
-   return true;
-  }
-  // Santa Maria delle Grazie: architectural silhouette from named historic
-  // building photos (municipal site, FAI, ICCD heritage catalogue).
-  // The tower is schematically placed beside the true OSM church footprint;
-  // its exact roof-level survey coordinates are not established.
-  c.save();poly(c,b.p);c.clip();
-  c.fillStyle='#e7ddc1';c.fillRect(art.x0,art.y0,w,bh);
-  c.strokeStyle='#bbaa8a';c.lineWidth=1.1;
-  c.strokeRect(art.x0+1.6,art.y0+1.6,Math.max(0,w-3.2),Math.max(0,bh-3.2));
-  // Baroque front cornice and paired stone ribs.
-  c.strokeStyle='#d4c2a1';c.lineWidth=.9;
-  for(const dx of [-.26,.26]){c.beginPath();c.moveTo(cx+w*dx,art.y0+2);
-   c.lineTo(cx+w*dx,art.y1-2);c.stroke();}
-  c.restore();
-  // Concave entrance, paired pilasters and oculus: original roof-level glyph
-  // of the documented facade. Placement/proportions are symbolic, not a survey.
-  c.save();poly(c,b.p);c.clip();
-  const frontY=art.y1-3.8,frontX=1092.2;
-  c.strokeStyle='#796f5c';c.lineWidth=1.15;
-  c.beginPath();c.moveTo(frontX-12,frontY-2);c.quadraticCurveTo(frontX,frontY-7,frontX+12,frontY-2);c.stroke();
-  c.strokeStyle='#f8edd3';c.lineWidth=1.5;
-  for(const dx of [-10,-6,6,10]){c.beginPath();c.moveTo(frontX+dx,frontY-5);c.lineTo(frontX+dx,frontY+1);c.stroke();}
-  c.fillStyle='#554c40';c.fillRect(frontX-2,frontY-3.5,4,4);
-  c.fillStyle='#e9d5ac';c.fillRect(frontX-3,frontY-4.4,6,.8);
-  c.fillStyle='#615f54';c.beginPath();c.arc(frontX,frontY-7,1.45,0,TAU);c.fill();
-  c.strokeStyle='#eee3c6';c.lineWidth=.65;c.stroke();c.restore();
-  const radius=clamp(Math.min(w,bh)*.24,4,12);
-  c.save();c.translate(cx,cy);
-  c.fillStyle='#b09f82';c.beginPath();c.arc(1.2,1.6,radius+1.8,0,TAU);c.fill();
-  // Stepped silhouette, shaded courses and ribs keep the dome legible as
-  // pixel art at walking zoom, with a single light direction.
-  c.fillStyle='#607176';c.beginPath();
-  const rr=radius+1.2,step=rr/5;
-  for(let row=-5;row<=5;row++){
-   const yy=row*step,half=Math.round(Math.sqrt(Math.max(0,rr*rr-yy*yy))/step)*step;
-   c.rect(-half,yy,half*2,step);
-  }
-  c.fill();
-  // No stroke on individual pixel courses: that would stripe the dome.
-  for(let j=0;j<10;j++){const a=j*TAU/10;c.strokeStyle='#aab2a9';c.lineWidth=.35;
-   c.beginPath();c.moveTo(0,0);c.lineTo(Math.cos(a)*radius,Math.sin(a)*radius);c.stroke();}
-  c.fillStyle='#ded2ae';c.beginPath();c.arc(0,0,radius*.28,0,TAU);c.fill();
-  c.strokeStyle='#463e34';c.lineWidth=.8;c.beginPath();c.moveTo(0,-radius*.38);c.lineTo(0,radius*.38);
-  c.moveTo(-radius*.25,-radius*.08);c.lineTo(radius*.25,-radius*.08);c.stroke();
-  c.restore();
-  // Octagonal pale lantern above the slate dome.
-  c.save();c.translate(cx,cy);
-  c.fillStyle='#d7d1ba';c.beginPath();
-  for(let j=0;j<8;j++){const a=Math.PI/8+j*Math.PI/4;
-   const x=Math.cos(a)*radius*.38,y=Math.sin(a)*radius*.38;
-   if(j===0)c.moveTo(x,y);else c.lineTo(x,y);}
-  c.closePath();c.fill();c.lineWidth=.45;c.strokeStyle='#65685d';c.stroke();
-  c.fillStyle='#566774';c.fillRect(-1,-1,2,2);
-  c.restore();
-  // Distinctive brick bell tower and white clock, both seen in photos.
-  // Draw slightly offset from the OSM church roof: an illustrative rooftop
-  // landmark, NOT a measured building extension.
-  const bx=art.x1-5,by=art.y1-9;
-  c.fillStyle='#262f31a0';c.fillRect(bx-3.7,by-2.1,11,11);
-  c.fillStyle='#a05f46';c.fillRect(bx-5,by-5,10,10);
-  c.strokeStyle='#e2bb88';c.lineWidth=.7;c.strokeRect(bx-5,by-5,10,10);
-  for(let q=-3;q<5;q+=2){
-   c.strokeStyle='#be9474';c.lineWidth=.3;c.beginPath();
-   c.moveTo(bx-4.8,by+q);c.lineTo(bx+4.8,by+q);c.stroke();
-  }
-  c.fillStyle='#333b38';c.fillRect(bx-2.3,by-4,4.6,2.1);
-  c.fillStyle='#ede6d6';c.beginPath();c.arc(bx,by+1.15,2.25,0,TAU);c.fill();
-  c.strokeStyle='#595b55';c.lineWidth=.38;c.stroke();
-  c.beginPath();c.moveTo(bx,by+1.15);c.lineTo(bx,by-.1);c.lineTo(bx+1.1,by+1.5);c.stroke();
+  c.strokeStyle='#bfa886';c.lineWidth=.7;c.beginPath();
+  c.moveTo(art.x0+1,cy);c.lineTo(art.x1-1,cy);c.stroke();
   return true;
  }
  if(art.type==='civic'){
@@ -585,7 +504,25 @@ export function drawCityBuildings(c,buildings,zoom){
   return bottomA-bottomB||a.id-b.id;
  });
  for(const b of sorted){
-  const a=b.art,v=buildingVolume(b);
+  const a=b.art;
+  if(b.id===SANTA_MARIA_OSM_ID){
+   // Only the authored transparent image; never render the former shadow,
+   // projected walls, historic dome, bell tower, roof or parapet below it.
+   // No Canvas church fallback: the old model is removed permanently.
+   if(churchWebpReady()){
+    c.save();c.imageSmoothingEnabled=false;
+    c.drawImage(churchWebp,a.x0,a.y0,a.w,a.h);
+    if(zoom>=1.45){
+     const width=54;
+     c.fillStyle='#162821e0';c.fillRect(a.cx-width/2,a.y0-8,width,5.7);
+     c.fillStyle='#ffe3a9';c.font='bold 2.9px monospace';c.textAlign='center';
+     c.fillText('S. MARIA DELLE GRAZIE',a.cx,a.y0-4,width-2);
+    }
+    c.restore();
+   }
+   continue;
+  }
+  const v=buildingVolume(b);
   if(!v)continue;
   const seed=a.seed;
   c.save();
@@ -602,14 +539,13 @@ export function drawCityBuildings(c,buildings,zoom){
   }
   // High-contrast raised parapet defines the roof above the façades,
   // including tiny annexes, historic churches and one-floor workshops.
-  if(!(b.id===733703815&&churchWebpReady())){
-   poly(c,b.p);c.strokeStyle='#643c29';c.lineWidth=.65;c.stroke();
-   c.save();c.translate(-.55,-.55);poly(c,b.p);
-   c.strokeStyle='#f1d9ac88';c.lineWidth=.48;c.stroke();c.restore();
-  }
-  if(zoom>=1.45&&(b.id===733703600||/Chiesa di Santa Maria delle Grazie/i.test(b.n||''))){
-   const label=b.id===733703600?'MUNICIPIO':'S. MARIA DELLE GRAZIE';
-   const width=b.id===733703600?28:54;
+  // Only ordinary buildings reach this branch; Santa Maria has been
+  // fully rendered in its exclusive sprite branch and cannot reach here.
+  poly(c,b.p);c.strokeStyle='#643c29';c.lineWidth=.65;c.stroke();
+  c.save();c.translate(-.55,-.55);poly(c,b.p);
+  c.strokeStyle='#f1d9ac88';c.lineWidth=.48;c.stroke();c.restore();
+  if(zoom>=1.45&&b.id===733703600){
+   const label='MUNICIPIO',width=28;
    c.fillStyle='#162821e0';c.fillRect(a.cx-width/2,a.y0-8,width,5.7);
    c.fillStyle='#ffe3a9';c.font='bold 2.9px monospace';c.textAlign='center';
    c.fillText(label,a.cx,a.y0-4,width-2);

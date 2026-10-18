@@ -47,6 +47,6 @@ test('legacy procedural motorcycle removed, and UI shares exact board selection 
  assert.ok(!art.includes('if(type===5)'), 'old procedural scooter no longer appears among normal car variants');
  assert.match(game,/isMotorcycle\(vehicle\)/);
  assert.match(game,/drawMotorcycle\(c,x,y,a,model/);
- assert.ok(game.includes('city-art.mjs?v=124'));
- assert.ok(page.includes('game.mjs?v=129'));
+ assert.ok(game.includes('city-art.mjs?v=125'));
+ assert.ok(page.includes('game.mjs?v=130'));
 });

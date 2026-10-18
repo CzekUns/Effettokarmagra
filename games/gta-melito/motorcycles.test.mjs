@@ -99,5 +99,5 @@ test('the user can ride motorcycles, NPCs ride too, and auto logic remains',asyn
  assert.match(road,/vehicleType:player.vehicleType/);
  assert.ok(game.includes("traffic-collision.mjs?v=125"));
  assert.ok(game.includes("roads.mjs?v=125"));
- assert.ok(page.includes('game.mjs?v=129'));
+ assert.ok(page.includes('game.mjs?v=130'));
 });
