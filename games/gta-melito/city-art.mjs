@@ -10,6 +10,24 @@ import {material} from './arcade-materials.mjs?v=095';
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
  * are original artistic interpretations: they do not claim photographic fidelity.
  */
+/* Santa Maria delle Grazie, OSM way 733703815 — optional generated roof
+ * WebP based on an original illustration, NOT a Google Maps screenshot.
+ * The OSM polygon controls shape/location/collision. Canvas is the fallback.
+ */
+export const CHURCH_WEBP_PATH='./assets/buildings/chiesa-santa-maria-delle-grazie-game.webp';
+let churchWebp=null;
+export function loadChurchWebp(onReady=()=>{}){
+ if(churchWebp||typeof Image==='undefined')return;
+ const img=new Image();
+ churchWebp=img;
+ img.onload=()=>{if(img.naturalWidth>0)onReady();};
+ img.onerror=()=>console.warn('GTA Melito: optional Santa Maria delle Grazie WebP unavailable, using Canvas');
+ img.src=new URL(CHURCH_WEBP_PATH,import.meta.url).href;
+}
+export function churchWebpReady(){
+ return !!(churchWebp?.complete&&churchWebp.naturalWidth===160&&churchWebp.naturalHeight===136);
+}
+
 const PI=Math.PI,TAU=2*PI;
 const asphalt={motorway:'#292f31',trunk:'#303638',primary:'#333a3b',secondary:'#38403f',
  tertiary:'#3c4341',residential:'#3d4442',unclassified:'#414846',service:'#4a4a43',
@@ -338,6 +356,15 @@ function specialized(c,b,art){
   // Actual OSM church footprint; rooftop is an interpretation of the
   // central dome of Santa Maria delle Grazie, not a measured 3D survey.
   roofOutline(c,b.p,'#e2d1af',.9);
+  // Texture the ORIGINAL raised OSM roof only. Generated picture details
+  // outside this church's mapped polygon are intentionally discarded:
+  // northern nave and surrounding annexes have their own OSM footprints.
+  if(b.id===733703815&&/Santa Maria delle Grazie/i.test(b.n||'')&&churchWebpReady()){
+   c.save();poly(c,b.p);c.clip();c.imageSmoothingEnabled=true;
+   c.drawImage(churchWebp,art.x0,art.y0,art.w,art.h);
+   c.restore();
+   return true;
+  }
   if(!/Santa Maria delle Grazie/i.test(b.n||'')){
    // The other historic church has a different roof silhouette in OSM.
    c.strokeStyle='#bfa886';c.lineWidth=.7;c.beginPath();c.moveTo(art.x0+1,cy);c.lineTo(art.x1-1,cy);c.stroke();

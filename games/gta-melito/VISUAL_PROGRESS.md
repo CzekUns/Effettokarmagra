@@ -340,3 +340,10 @@ Due nuovi atlas PNG indicizzati da 160×240 (4×4, cella 40×60) con alfa corret
 **Modifica:** un'unica silhouette procedurale vista dall'alto disegna testa ovale incorniciata dai capelli, collo, spalle larghe, vita stretta, due braccia separate, due gambe e scarpe che si alternano con il passo. Sei palette e piccoli dettagli (zainetto, collo, cappello) differenziano i pedoni; il giocatore conserva giacca rossa e un segno dorato sulla spalla. La direzione segue l'angolo fisico già interpolato degli NPC. Nessuna immagine esterna, download o modifica a collisioni, velocità e dimensioni delle auto. Cache modulo arte e pagina `v117`.
 
 **Verifica:** 103 test Node e sintassi superati localmente. Resa pubblicata da osservare dopo il deploy; gli FPS su telefono fisico non sono stati misurati.
+
+
+### Sessione 2026-10-18 — Chiesa di Santa Maria delle Grazie, WebP generato e inserito
+
+**Riscontro usato:** screenshot satellitare fornito dall'utente solo come riferimento morfologico (non copiato né caricato nel repository). La tavola generata è stata ritagliata e ridotta a WebP trasparente (160×136 px, circa 5,7 KB), per arricchire cupola scura, lanternino, tetti delle cappelle e campanile. La texture resta artistica: il satellite suggerisce che la navata a nord occupa anche altri poligoni OSM e non deve essere inglobata nel solo way 733703815; posizione del campanile e decorazioni non rilevate con precisione metrica.
+
+**In gioco:** `assets/buildings/chiesa-santa-maria-delle-grazie-game.webp` riveste **esclusivamente il tetto** del way 733703815; `city-art.mjs` continua a gestire impronta originale OSM, volume/pareti, ombre, strade, etichette e collisioni. Clip al poligono per evitare sovrapposizioni ai vicini; fallback disegno procedurale quando manca il WebP. Caricamento non bloccante e cache tile invalidata all'`onload`. Cache modulo `city-art.mjs?v=118`, pagina `game.mjs?v=118`. Verificare CI e resa mobile effettiva dopo deploy.
