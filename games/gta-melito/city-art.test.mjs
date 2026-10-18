@@ -94,7 +94,7 @@ test('terrain derives urban versus open land from real OSM building and road geo
 });
 
 
-test('mobile play is landscape-only with analog movement, two action buttons and pause drawer',async()=>{
+test('mobile play swaps foot movement for steering and pedals inside vehicles',async()=>{
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  assert.match(html,/id="rotate-screen"/);
@@ -110,7 +110,11 @@ test('mobile play is landscape-only with analog movement, two action buttons and
  assert.match(game,/setPointerCapture\(e\.pointerId\)/);
  assert.match(game,/screen\.orientation\?\.lock/);
  assert.match(game,/function moveAxes\(/);
- assert.match(game,/activeKey=\(\)=>id==='sprint'&&state\.player\.car>=0\?'handbrake':key/);
+ assert.match(html,/id="steering-wheel"/);
+ assert.match(html,/id="accelerator"/);
+ assert.match(html,/id="brake"/);
+ assert.match(game,/function driveAxes\(/);
+ assert.match(game,/pressed\.handbrake,dt,pressed\.brake/);
 });
 test('browser page zoom is locked without disabling in-game camera zoom',async()=>{
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
