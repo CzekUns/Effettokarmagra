@@ -54,10 +54,19 @@ export function collidesWithTraffic(pose,body,index,self=null){
  return null;
 }
 export function trafficMoveBlocked(current,next,body,index,self){
- for(const other of nearbyColliders(index,next.x,next.y,8)){
-  if(other===self||!touches(next,body,other))continue;
-  if(!touches(current,body,other)||
-   Math.hypot(next.x-other.x,next.y-other.y)<=Math.hypot(current.x-other.x,current.y-other.y)+.001)return true;
+ // A route change can shift the lane several metres in a single simulation
+ // tick. Check the swept pose so an NPC cannot jump across the player or a
+ // car even when its final position would be clear.
+ const dx=next.x-current.x,dy=next.y-current.y;
+ const steps=Math.max(1,Math.min(24,Math.ceil(Math.hypot(dx,dy)/1.5)));
+ const turn=Math.atan2(Math.sin(next.a-current.a),Math.cos(next.a-current.a));
+ for(let i=1;i<=steps;i++){
+  const t=i/steps,pose={x:current.x+dx*t,y:current.y+dy*t,a:current.a+turn*t};
+  for(const other of nearbyColliders(index,pose.x,pose.y,8)){
+   if(other===self||!touches(pose,body,other))continue;
+   if(!touches(current,body,other)||
+    Math.hypot(pose.x-other.x,pose.y-other.y)<=Math.hypot(current.x-other.x,current.y-other.y)+.001)return true;
+  }
  }
  return false;
 }

@@ -6,8 +6,8 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=100';
-import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap} from './traffic-collision.mjs?v=100';
+import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=114';
+import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap} from './traffic-collision.mjs?v=114';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
@@ -158,15 +158,29 @@ function prepareMap(map,surveyData=[],infillCache=null){
  state.shops=prepareStorefronts(map.pois||[],state.roads);
  state.shopGrid=makeIndex(state.shops);
  initCampaign(map);
- const nearCar={x:point.x+Math.cos(point.a)*9,y:point.y+Math.sin(point.a)*9,a:point.a,speed:0,type:0,model:'panda-modern-white'};
+ state.dynamicCollision=null;
+ const starterShoulder=Math.max(4.1,visualRoadWidth(chosen.q)/2+2.2);
+ const nearCar=[1,-1].map(side=>({
+  x:point.x+Math.cos(point.a)*3-Math.sin(point.a)*starterShoulder*side,
+  y:point.y+Math.sin(point.a)*3+Math.cos(point.a)*starterShoulder*side,
+  a:point.a,speed:0,type:0,model:'panda-modern-white'
+ })).find(car=>Math.hypot(car.x-point.x,car.y-point.y)<10.8&&!carBlocked(car.x,car.y,car.a,-1))||
+  {x:point.x+Math.cos(point.a)*9,y:point.y+Math.sin(point.a)*9,a:point.a,speed:0,type:0,model:'panda-modern-white'};
  state.cars=[nearCar];
  let k=0;
  for(const road of possible){
   if(arcLength(road.p)<25||rnd(road.id)%1>.33)continue;
   const pt=roadPoint(road,.2+rnd(road.id+11)*.6);
   if(Math.hypot(pt.x-point.x,pt.y-point.y)<19)continue;
-  const parked={x:pt.x,y:pt.y,a:pt.a,speed:0,type:k%5,model:k%8===1?'panda-fire-red':k%3===0?CAR_ATLAS_VARIANT_IDS[(k*7)%CAR_ATLAS_VARIANT_IDS.length]:null};
-  if(state.cars.some(car=>vehiclesOverlap(parked,car)))continue;
+  // The old parked cars occupied the road centreline and blocked the AI lane.
+  // Try either curb, then keep only poses that are drivable and clear of walls.
+  const shoulder=Math.max(4.1,visualRoadWidth(road)/2+2.2);
+  const first=rnd(road.id+29)<.5?1:-1;
+  const parked=[first,-first].map(side=>({
+   x:pt.x-Math.sin(pt.a)*shoulder*side,y:pt.y+Math.cos(pt.a)*shoulder*side,
+   a:pt.a,speed:0,type:k%5,model:k%8===1?'panda-fire-red':k%3===0?CAR_ATLAS_VARIANT_IDS[(k*7)%CAR_ATLAS_VARIANT_IDS.length]:null
+  })).find(car=>!carBlocked(car.x,car.y,car.a,-1)&&!state.cars.some(other=>vehiclesOverlap(car,other)));
+  if(!parked)continue;
   state.cars.push(parked);k++;
   if(state.cars.length>=105)break;
  }
@@ -271,7 +285,9 @@ function updateTraffic(dt){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
  }
  stepAgents(state.graph,state.people,elapsed,state.player,{parked:state.cars,traffic:state.traffic});
- stepAgents(state.graph,state.traffic,elapsed,state.player,{parked:state.cars,people:state.people});
+ const halfW=canvas.clientWidth/(2*state.zoom),halfH=canvas.clientHeight/(2*state.zoom);
+ const view=[state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH];
+ stepAgents(state.graph,state.traffic,elapsed,state.player,{parked:state.cars,people:state.people,view});
  for(const agent of [...state.people,...state.traffic])if(Math.hypot(agent.x-agent.prevX,agent.y-agent.prevY)>15){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
  }
