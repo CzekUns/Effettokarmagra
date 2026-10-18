@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior} from './bank-interior.mjs';
+import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,bankInteriorViewport,bankInteriorWalkable,stepBankInteriorPlayer} from './bank-interior.mjs';
 import {inside} from './osm.mjs';
 import {visualRoadWidth} from './road-widths.mjs';
 
@@ -60,6 +60,42 @@ test('exterior marker and interior-only scene draw without touching street state
 test('public game page loads the bank-scene build',()=>{
  const page=fs.readFileSync(new URL('./index.html',import.meta.url),'utf8');
  const game=fs.readFileSync(new URL('./game.mjs',import.meta.url),'utf8');
- assert.match(page,/game\.mjs\?v=130/);
- assert.match(game,/bank-interior\.mjs\?v=001/);
+ assert.match(page,/game\.mjs\?v=131/);
+ assert.match(game,/bank-interior\.mjs\?v=002/);
+});
+
+test('bank room keeps the street sprite scale and preserves compact device transform',()=>{
+ const view=bankInteriorViewport(800,450);
+ assert.ok(view.scale>=5&&view.scale<=7);
+ assert.ok(view.x>=0&&view.y>=0);
+ const mock=new Proxy({calls:[]}, {get(obj,k){return k in obj?obj[k]:(...args)=>{obj.calls.push([k,...args]);};},
+  set(obj,k,v){obj[k]=v;return true;}});
+ drawBankInterior(mock,800,450,1,{n:'BANCA'}, {x:.5,y:.82,a:-Math.PI/2,moving:false});
+ assert.ok(mock.calls.some(c=>c[0]==='scale'&&c[1]===view.scale),
+  'furniture and protagonist should share world scale');
+ assert.ok(mock.calls.some(c=>c[0]==='rotate'),
+  'when sprite is unavailable, exactly the same red-hoodie outdoor fallback is used');
+ assert.equal(mock.calls.some(c=>c[0]==='setTransform'),false,
+  'do not lose game.mjs compact devicePixelRatio transform');
+});
+
+test('bank player turns and cannot cross counters, ATM, chairs or walls',()=>{
+ const p={x:.5,y:.82,a:0,moving:false};
+ for(let i=0;i<110;i++)stepBankInteriorPlayer(p,{x:0,y:-1},false,.05);
+ assert.ok(p.y>=28.5/64&&p.y<.82,'player should approach counter and stop');
+ assert.equal(bankInteriorWalkable(.5,.3),false);
+ assert.equal(bankInteriorWalkable(.12,.52),false);
+ assert.equal(bankInteriorWalkable(.83,.70),false);
+ const wasY=p.y;
+ stepBankInteriorPlayer(p,{x:1,y:0},true,.05);
+ assert.ok(p.x>.5);
+ assert.equal(p.a,0);
+ assert.equal(p.y,wasY);
+ stepBankInteriorPlayer(p,{x:0,y:0},false,.05);
+ assert.equal(p.moving,false);
+ const game=fs.readFileSync(new URL('./game.mjs',import.meta.url),'utf8');
+ assert.match(game,/stepBankInteriorPlayer\(local,axes,pressed\.run,dt\)/);
+ assert.match(game,/player:\{x:\.5,y:\.82,a:-Math\.PI\/2,moving:false\}/);
+ const bank=fs.readFileSync(new URL('./bank-interior.mjs',import.meta.url),'utf8');
+ assert.match(bank,/drawCityPlayer\(ctx/);
 });
