@@ -25,7 +25,7 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 
 ### 2026-10-18 — ChatGPT/GitHub — Regola di handoff permanente
 - **Fatto:** introdotto un obbligo di log per ogni sessione e un registro operativo separato da quello grafico.
-- **Come/dove:** nuove istruzioni generali in `/AGENTS.md`; questo registro in `games/gta-melito/WORK_LOG.md`. Allineamento delle istruzioni locali e del README previsto nella stessa sessione.
+- **Come/dove:** nuove istruzioni generali in `/AGENTS.md`; questo registro in `games/gta-melito/WORK_LOG.md`. Aggiornati anche `games/gta-melito/AGENTS.md` e `games/gta-melito/README.md`, che puntano al registro.
 - **Verifiche/stato:** sola documentazione; test di gioco e screenshot non eseguiti; nessuna logica o asset modificato.
 - **Da fare:** per il prossimo intervento leggere le istruzioni e gli ultimi aggiornamenti, lavorare sul compito richiesto, quindi aggiungere qui il riepilogo di consegna con i file e i test realmente toccati.
-- **Riferimenti:** branch `main`, repository `CzekUns/Effettokarmagra`; commit iniziale `ba8660fcdb09a79b7ae3a81a3b1c5128fd22ad17`.
+- **Riferimenti:** branch `main`, repository `CzekUns/Effettokarmagra`; commit generali `ba8660f`, creazione registro `5359afd`, istruzioni locali `b745fce`, README `082dec6`.
