@@ -5,13 +5,13 @@
 export const CAMERA_ZOOM_MAX=6.6;
 export const CAMERA_ZOOM_MIN=1.815;
 export const CAMERA_DEFAULT_FOOT=6.6;
-export const CAMERA_DEFAULT_CAR=4.69;
+export const CAMERA_DEFAULT_CAR=6.566;
 export function targetCameraZoom({inVehicle=false,speed=0,running=false,moving=false}={},bias=1){
  const v=Math.max(0,Number(speed)||0);
  let desired;
  if(inVehicle){
   const t=Math.min(1,v/40);
-  desired=CAMERA_DEFAULT_CAR-(2.072*t);
+  desired=CAMERA_DEFAULT_CAR-(2.9008*t);
  }else desired=CAMERA_DEFAULT_FOOT-(running&&moving?0.495:0);
  const b=Math.max(.62,Math.min(1.35,Number(bias)||1));
  return Math.max(CAMERA_ZOOM_MIN,Math.min(CAMERA_ZOOM_MAX,desired*b));

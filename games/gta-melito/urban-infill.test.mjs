@@ -69,12 +69,12 @@ test('automatic camera starts at the maximum on foot and progressively pulls bac
  assert.ok(Math.abs(targetCameraZoom({inVehicle:false,moving:true,running:true})-6.105)<1e-9);
  const idle=targetCameraZoom({inVehicle:true,speed:0}),city=targetCameraZoom({inVehicle:true,speed:11});
  const fast=targetCameraZoom({inVehicle:true,speed:40});
- assert.ok(idle<5&&idle>4);
+ assert.ok(idle<CAMERA_ZOOM_MAX&&idle>6);
  assert.ok(city<idle&&city>fast);
- assert.ok(Math.abs(idle-3.35*1.4)<1e-9,'stationary car is 40% closer');
- assert.ok(Math.abs(city-(3.35-1.48*11/40)*1.4)<1e-9,'city-speed car keeps the same 40% increase');
- assert.ok(Math.abs(fast-1.87*1.4)<1e-9,'fast car is 40% closer without hitting the lower clamp');
- assert.ok(fast>=CAMERA_ZOOM_MIN&&fast<3);
+ assert.ok(Math.abs(idle-4.69*1.4)<1e-9,'stationary car gains another 40% without hitting the maximum clamp');
+ assert.ok(Math.abs(city-(4.69-2.072*11/40)*1.4)<1e-9,'city-speed car gains another 40%');
+ assert.ok(Math.abs(fast-2.618*1.4)<1e-9,'fast car gains another 40%');
+ assert.ok(fast>=CAMERA_ZOOM_MIN&&fast<4);
  assert.ok(targetCameraZoom({inVehicle:true,speed:-28})===idle,
   'the game passes the magnitude of vehicle speed explicitly');
  assert.equal(targetCameraZoom({inVehicle:false},1.35),6.6,'always clamp to maximum');
@@ -111,7 +111,7 @@ test('game exposes placeholder count and camera mode to the player',async()=>{
  assert.ok(html.includes('id="inferred-count"'));
  assert.ok(html.includes('id="camera-mode"'));
  assert.ok(html.includes('id="zoom-auto"'));
- assert.ok(html.includes('game.mjs?v=111'));
+ assert.ok(html.includes('game.mjs?v=112'));
  assert.ok(game.includes('urban-infill.mjs?v=091'));
 });
 
