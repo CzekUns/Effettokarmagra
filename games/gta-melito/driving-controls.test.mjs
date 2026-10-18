@@ -14,13 +14,13 @@ test('walking and running are faster and the car reaches a useful city speed',()
  assert.ok(drive({x:0,y:1}).speed>=-CAR_REVERSE_SPEED);
 });
 
-test('sideways stick both moves and steers, diagonal steering remains controllable',()=>{
+test('turning the steering wheel alone does NOT press the accelerator',()=>{
  const turn=drive({x:1,y:0},.8);
- assert.ok(turn.speed>10,'sideways input should move the car forward');
- assert.ok(turn.angle>.3,'sideways input should turn the car');
- const diagonal=drive({x:.7,y:-.7},1);
- assert.ok(diagonal.speed>20&&diagonal.angle>.4);
- assert.ok(diagonal.speed<CAR_FORWARD_SPEED);
+ assert.equal(turn.speed,0,'steering alone must not make the car move');
+ assert.equal(turn.angle,0,'a stationary car does not pivot in place');
+ const driven=drive({x:.7,y:-1},1);
+ assert.ok(driven.speed>20&&driven.angle>.4);
+ assert.ok(driven.speed<CAR_FORWARD_SPEED);
 });
 
 test('letting go slows down and the brake stops a moving car promptly',()=>{
@@ -30,4 +30,14 @@ test('letting go slows down and the brake stops a moving car promptly',()=>{
  let speed=20;
  for(let i=0;i<30;i++)speed=stepDriving(speed,0,{x:0,y:0},true,1/60).speed;
  assert.ok(speed<5);
+});
+
+test('service brake is separate from accelerator, does not engage reverse, and works while steering',()=>{
+ let speed=28;
+ const brake=stepDriving(speed,0,{x:.8,y:-1},false,.05,true);
+ assert.ok(brake.speed<speed);
+ for(let i=0;i<20;i++)speed=stepDriving(speed,0,{x:.5,y:-1},false,.05,true).speed;
+ assert.equal(speed,0,'the brake stops the car, even with accelerator still held');
+ assert.equal(stepDriving(0,0,{x:0,y:0},false,.05,true).speed,0,
+  'brake does not automatically reverse the car');
 });
