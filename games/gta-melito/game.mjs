@@ -28,6 +28,7 @@ import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
+import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior} from './bank-interior.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 const $=id=>document.getElementById(id);
@@ -40,7 +41,7 @@ const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false};
 const stick={x:0,y:0};
 function moveAxes(){return {x:Math.abs(stick.x)>.08?stick.x:Number(pressed.right)-Number(pressed.left),y:Math.abs(stick.y)>.08?stick.y:Number(pressed.down)-Number(pressed.up)};}
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const WALK=new Set([...DRIVE,'pedestrian','footway','path','steps']);
 const colors=['#8f8271','#a29076','#797970','#ae947b','#938c7b','#7b8581','#a58c85'];
@@ -149,6 +150,8 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  state.ground=prepareUrbanGround([...state.buildings,...state.inferredBuildings],state.roads);
  state.roadGrid=makeIndex(state.roads);state.buildingGrid=makeIndex(state.buildings);
  state.inferredGrid=makeIndex(state.inferredBuildings);
+ state.bankEntrances=resolveBankEntrances(map.pois||[],state.roads,
+  (x,y)=>validWalk(x,y)&&inside([x,y],toRing(state.map.border)),visualRoadWidth);
  const possible=state.roads.filter(q=>DRIVE.has(q.t)&&q.p.length>=4);
  if(!possible.length)throw Error('Non risultano strade percorribili in auto');
  const center=[map.projection.width/2,map.projection.height/2];
@@ -331,6 +334,19 @@ function updateTraffic(dt){
 function toggleVehicle(){
  if(!state.ready)return;
  const p=state.player;
+ if(state.bankInterior){
+  const interior=state.bankInterior;state.bankInterior=null;
+  p.x=interior.outside.x;p.y=interior.outside.y;p.a=interior.outside.a;
+  state.camera.x=p.x;state.camera.y=p.y;updateHud();return;
+ }
+ if(p.car<0){
+  const entrance=nearestBankEntrance(state.bankEntrances,p);
+  if(entrance){
+   state.bankInterior={bank:entrance.bank,outside:{x:p.x,y:p.y,a:p.a},player:{x:.5,y:.8}};
+   for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
+   updateHud();return;
+  }
+ }
  if(p.car>=0){
   const vehicle=state.cars[p.car],bike=isMotorcycle(vehicle);
   if(bike&&Math.abs(vehicle.speed||0)>2.3){
@@ -383,6 +399,13 @@ function tick(dt){
  if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden){
   for(const key of Object.keys(pressed))pressed[key]=false;
   stick.x=0;stick.y=0;
+  return;
+ }
+ if(state.bankInterior){
+  const axes=moveAxes(),len=Math.hypot(axes.x,axes.y),local=state.bankInterior.player;
+  if(len>.08){const speed=(pressed.run?.31:.21)*Math.min(1,len);local.x=clamp(local.x+axes.x/len*speed*dt,.09,.91);local.y=clamp(local.y+axes.y/len*speed*dt,.2,.89);}
+  state.clock+=dt;state.hud+=dt;
+  if(state.hud>.18){state.hud=0;updateHud();}
   return;
  }
  const p=state.player;
@@ -477,11 +500,18 @@ function compareRoadWidths(){
 
 function updateHud(){
  const p=state.player;
+ $('stage')?.classList.toggle('interior',!!state.bankInterior);
+ if(state.bankInterior){
+  $('vehicle').textContent='ALL’INTERNO DELLA BANCA';$('street').textContent=state.bankInterior.bank.n.toUpperCase();
+  $('action').textContent='ESCI DALLA BANCA';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
+  $('camera-mode').textContent='INTERNO · '+state.zoom.toFixed(1)+'×';return;
+ }
  $('vehicle').textContent=p.car>=0?(isMotorcycle(state.cars[p.car])?'MOTO · ':'AUTO · ')+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H':'A PIEDI';
  const n=state.roadGrid?nearest(p.x,p.y,70):null;
  if(n&&n.road.n)$('street').textContent=n.road.n.toUpperCase();
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
- $('action').textContent=p.car>=0?'SCENDI':nearestEnterableVehicle(state.cars,p)?.bike?'SALTA IN SELLA':'ENTRA IN AUTO';
+ const bank= p.car<0?nearestBankEntrance(state.bankEntrances,p):null;
+ $('action').textContent=bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':nearestEnterableVehicle(state.cars,p)?.bike?'SALTA IN SELLA':'ENTRA IN AUTO';
  $('sprint').textContent=p.car>=0?'FRENO':'CORRI';
  $('sprint').setAttribute('aria-label',p.car>=0?'Freno a mano':'Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
@@ -655,6 +685,7 @@ function draw(dt=0){
  c.imageSmoothingEnabled=false;
  c.fillStyle='#15221e';c.fillRect(0,0,cw,ch);
  if(!state.ready)return;
+ if(state.bankInterior){drawBankInterior(c,cw,ch,state.clock,state.bankInterior.bank,state.bankInterior.player);return;}
  const p=state.player;
  c.translate(cw/2,ch/2);c.scale(state.zoom,state.zoom);c.translate(-state.camera.x,-state.camera.y);
  const [x0,y0,x1,y1]=visibleBounds();
@@ -713,6 +744,7 @@ function draw(dt=0){
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);});
  drawParkedMotorcycleHints();
  drawPlayer();
+ for(const bank of state.bankEntrances)if(bank.x>=x0&&bank.x<=x1&&bank.y>=y0&&bank.y<=y1)drawBankEntrance(c,bank,state.clock);
 }
 function prepareMini(){
  const p=state.map.projection,off=document.createElement('canvas');off.width=168;off.height=142;
@@ -726,7 +758,7 @@ function prepareMini(){
  b.restore();state.mapCanvas=off;state.mini={k,ox,oy};
 }
 function drawMini(){
- if(!state.mapCanvas)return;
+ if(!state.mapCanvas||state.bankInterior)return;
  r.clearRect(0,0,168,142);r.drawImage(state.mapCanvas,0,0);
  if(state.progress)drawMinimapLandmarks(r,state.landmarks,activeTarget(state.progress,state.landmarks),state.mini);
  const {k,ox,oy}=state.mini,p=state.player,x=ox+p.x*k,y=oy+p.y*k;
@@ -795,7 +827,7 @@ function bind(){
   if(e.key.toLowerCase()==='e'&&!e.repeat){e.preventDefault();toggleVehicle();}
   if(e.key.toLowerCase()==='f'&&!e.repeat){e.preventDefault();interactMission();}
   if(e.key.toLowerCase()==='m'&&!e.repeat){e.preventDefault();toggleBigMap();}
-  if(e.key==='Escape'){$('fullmap').hidden=true;state.mapOpen=false;$('dialog').hidden=true;if(!pause.hidden)closePause();else openPause();}
+  if(e.key==='Escape'){if(state.bankInterior){toggleVehicle();return;}$('fullmap').hidden=true;state.mapOpen=false;$('dialog').hidden=true;if(!pause.hidden)closePause();else openPause();}
  });
  window.addEventListener('keyup',e=>{
   const dir={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];
