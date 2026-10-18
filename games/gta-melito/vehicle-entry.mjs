@@ -13,7 +13,9 @@ export function nearestEnterableVehicle(vehicles,player){
   if(!v||!Number.isFinite(v.x)||!Number.isFinite(v.y))continue;
   const bike=v.vehicleType==='motorcycle',d=Math.hypot(v.x-player.x,v.y-player.y);
   if(d>(bike?MOTORCYCLE_ENTRY_RADIUS:CAR_ENTRY_RADIUS))continue;
-  const score=d-(bike?1.75:0);
+  // Small mounting bonus only beyond arm's reach: standing directly at
+  // a car door must still select the car instead of a nearby scooter.
+  const score=d-(bike?1.75*Math.min(1,d/3):0);
   if(!chosen||score<chosen.score-1e-6||(Math.abs(score-chosen.score)<1e-6&&d<chosen.distance))
    chosen={index:i,vehicle:v,bike,distance:d,score};
  }
