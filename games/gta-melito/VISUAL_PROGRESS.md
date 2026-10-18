@@ -290,6 +290,8 @@ In `urban-infill.mjs` i vuoti del nucleo centrale sono trattati con soglie più 
 
 **Richiesta:** ingrandire del 10% la visuale; in corsa mantenere la camera utile davanti all'auto, collocando il veicolo circa al 10% dal bordo posteriore della vista e lasciando una porzione di strada anche dietro.
 
-**Modifica:** moltiplicata del 10% la scala automatica a piedi e in auto, mantenendo la stessa curva relativa velocità/zoom e le regolazioni manuali. In auto la camera usa ora viewport e zoom correnti per calcolare l'anticipo: ferma, resta centrata; in movimento passa gradualmente fino al 10% dietro rispetto alla direzione di marcia (90% della proiezione longitudinale davanti). Nessuna modifica a velocità, guida assistita, collisioni o rendering. Cache pagina `v107`, modulo camera `v095`.
+**Modifica:** moltiplicata del 10% la scala automatica a piedi e in auto, mantenendo la stessa curva relativa velocità/zoom e le regolazioni manuali. In auto la camera usa viewport e zoom correnti per calcolare l'anticipo: ferma, resta centrata; in movimento sposta gradualmente il veicolo verso il lato posteriore fino a circa il 30% della proiezione longitudinale. Nessuna modifica a velocità, guida assistita, collisioni o rendering. Cache pagina `v107`, modulo camera `v095`.
 
 **Verifica:** 93/93 test Node, incluso calcolo del framing a riposo, in orizzontale e in verticale. La resa soggettiva in viewport desktop/mobile e su telefono fisico resta da verificare dopo la pubblicazione; i test non misurano gli FPS.
+
+**Correzione dopo prova in auto:** lo spostamento iniziale al 10% metteva il veicolo troppo vicino al bordo e faceva percepire la camera come distante. Ridotto a circa il 30% della proiezione dal bordo posteriore (camera spostata del 20% verso la direzione di marcia), mantenendo un anticipo chiaro ma meno estremo. Cache pagina `v108`, modulo camera `v096`.

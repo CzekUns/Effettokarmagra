@@ -16,7 +16,7 @@ import {loadCarSprites,drawCarSprite,CAR_ATLAS_VARIANT_IDS} from './car-sprites.
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=091';
-import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=095';
+import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=096';
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=094';
 import {guideCar} from './driving-assist.mjs?v=099';
 import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
