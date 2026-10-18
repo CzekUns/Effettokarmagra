@@ -104,6 +104,16 @@ export function createAgents(graph,count,seed=10,kind='car',avoid=[],settings={}
     home:{x:at.x,y:at.y,edge:edgeIndex,side,radius:kind==='walk'?
      (role==='stroller'?58:role==='errand'?85:125):
      (role==='local'?185:role==='courier'?250:360)}};
+   // Re-entry lanes are local to THIS agent's original neighborhood.
+   // Cache once at spawn instead of sampling all of Melito on a recovery.
+   const home=agent.home;
+   home.returnEdges=options.filter(id=>{
+    const e=graph.edges[id],a=graph.nodes[e.from],b=graph.nodes[e.to];
+    const d=Math.min(Math.hypot(a.x-home.x,a.y-home.y),
+     Math.hypot(b.x-home.x,b.y-home.y));
+    return d<=home.radius*.55;
+   });
+   if(!home.returnEdges.length)home.returnEdges=[edgeIndex];
    agents.push(agent);addToCollisionIndex(occupied,agent);break;
   }
  }
@@ -339,7 +349,8 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
    const view=world.view;
    if(agent.stalled>8&&view&&
       (x<view[0]-15||x>view[2]+15||y<view[1]-15||y>view[3]+15)){
-    const options=graph.throughStarts?.length?graph.throughStarts:graph.trafficStarts;
+    const options=agent.home?.returnEdges?.length?agent.home.returnEdges:
+     (graph.throughStarts?.length?graph.throughStarts:graph.trafficStarts);
     for(let attempt=0;attempt<32;attempt++){
      const edgeId=options[hash(agent.seed+attempt*3253)%options.length];
      const t=.15+rand(agent.seed+attempt*1459)*.7;
@@ -359,7 +370,8 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
    // Unconnected OSM sidewalk ends cannot hold a walker forever. Re-enter
    // on another pavement only when the whole move is outside the camera.
    for(let attempt=0;attempt<24;attempt++){
-    const edgeId=graph.walkStarts[hash(agent.seed+attempt*3253)%graph.walkStarts.length];
+    const options=agent.home?.returnEdges?.length?agent.home.returnEdges:graph.walkStarts;
+    const edgeId=options[hash(agent.seed+attempt*3253)%options.length];
     const t=.2+rand(agent.seed+attempt*1459)*.6;
     const at=position(graph,edgeId,t,'walk',agent.side);
     if(agent.home&&Math.hypot(at.x-agent.home.x,at.y-agent.home.y)>agent.home.radius*.65)continue;
