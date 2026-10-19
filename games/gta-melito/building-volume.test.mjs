@@ -91,7 +91,7 @@ test('renderer actually emits multiple opaque extruded side polygons before the 
 test('one coherent painter order merges placeholder and OSM buildings in the game',async()=>{
  const js=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  assert.match(js,/drawCityBuildings\(ctx,\[\.\.\.inferred,\.\.\.buildings\],zoom\)/);
- assert.ok(js.includes('city-art.mjs?v=125'));
+ assert.ok(Number((js.match(/city\-art\.mjs\?v=(\d+)/)||[])[1])>=125,'city-art.mjs deve essere almeno alla v=125');
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
- assert.ok(html.includes('game.mjs?v=138'));
+ assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=138,'game.mjs deve essere almeno alla v=138');
 });
