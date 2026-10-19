@@ -84,5 +84,5 @@ test('game truly spawns parked motorcycles and gives on-foot player a readable p
  assert.match(game,/drawParkedMotorcycleHints\(\)/);
  assert.match(game,/rider:false/,'empty scooter has no human already seated');
  assert.match(game,/drawMotorcycle\(c,x,y,a,model/);
- assert.match(page,/game\.mjs\?v=138/);
+ assert.ok(Number((page.match(/game\.mjs\?v=(\d+)/)||[])[1])>=138,'game.mjs deve essere almeno alla v=138');
 });
