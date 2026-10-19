@@ -54,7 +54,7 @@ test('hero gets the new red hoodie; NPCs include three more identities without a
  assert.match(art,/drawPedestrianSprite\(c,x,y,angle,p\.kind,clock,moving,p\.speed,p\.seed\)/,'previous four NPCs retained');
  assert.match(road,/kind:i%7/,'seven NPC identities without changing car kinds');
  assert.ok(game.includes('loadExtraPedestrianSprites()'));
- assert.ok(game.includes('roads.mjs?v=127'));
- assert.ok(game.includes('city-art.mjs?v=125'));
- assert.ok(page.includes('game.mjs?v=138'));
+ assert.ok(Number((game.match(/roads\.mjs\?v=(\d+)/)||[])[1])>=127,'roads.mjs deve essere almeno alla v=127');
+ assert.ok(Number((game.match(/city\-art\.mjs\?v=(\d+)/)||[])[1])>=125,'city-art.mjs deve essere almeno alla v=125');
+ assert.ok(Number((page.match(/game\.mjs\?v=(\d+)/)||[])[1])>=138,'game.mjs deve essere almeno alla v=138');
 });

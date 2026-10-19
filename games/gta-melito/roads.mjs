@@ -1,5 +1,5 @@
 import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
-import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=002';
+import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=003';
 import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked} from './traffic-collision.mjs?v=125';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
@@ -217,10 +217,10 @@ function nextPose(graph,agent,distance){
  }
  return {...route,...position(graph,route.edge,route.t,agent.body,route.side),vehicleType:agent.vehicleType};
 }
-export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockMinutes=null){
+export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockMinutes=null,valid=null){
  if(!Number.isFinite(dt)||dt<=0||agent.impactTime>0||agent.needsRoutineRecovery)return;
  const elapsed=Math.min(dt,.1);
- if(agent.residentRoutine){stepResidentRoutine(graph,agent,elapsed,index,clockMinutes);return;}
+ if(agent.residentRoutine){stepResidentRoutine(graph,agent,elapsed,index,clockMinutes,valid);return;}
  if(agent.wait>0){agent.wait=Math.max(0,agent.wait-elapsed);return;}
  const edge=graph.edges[agent.edge];if(!edge||!(agent.body==='car'?edge.car:edge.walk))return;
  let speed=agent.speed;
@@ -344,7 +344,7 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
    if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);
    continue;
   }
-  stepAgent(graph,agent,dt,agents,player,index,world.npcClockMinutes);
+  stepAgent(graph,agent,dt,agents,player,index,world.npcClockMinutes,world.validRecovery);
   agent.stalled=Math.hypot(agent.x-x,agent.y-y)<.02?
    (agent.stalled||0)+dt:0;
   if(agent.body==='car'){

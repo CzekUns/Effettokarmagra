@@ -6,8 +6,8 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=140';
-import {createRoutineResidents} from './resident-routines.mjs?v=002';
+import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=141';
+import {createRoutineResidents} from './resident-routines.mjs?v=003';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=125';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
@@ -511,7 +511,8 @@ function tick(dt){
   stick.x=0;stick.y=0;
   return;
  }
- state.npcClockMinutes=advanceNpcClock(state.npcClockMinutes,dt);
+ // Q02: in banca gli NPC non vengono simulati, quindi anche il loro orologio resta fermo.
+ state.npcClockMinutes=advanceNpcClock(state.npcClockMinutes,dt,{interior:!!state.bankInterior});
  animateSteeringWheel(dt);
  if(state.bankInterior){
   const axes=moveAxes(),local=state.bankInterior.player;

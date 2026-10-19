@@ -57,7 +57,7 @@ export function createRoutineResidents(graph,count=10,seed=405,center={x:0,y:0},
  }
  return residents;
 }
-export function stepResidentRoutine(graph,agent,dt,index=null,clockMinutes=null){
+export function stepResidentRoutine(graph,agent,dt,index=null,clockMinutes=null,valid=null){
  const plan=agent.residentRoutine,e=graph.edges[plan.edge];
  if(!e||!e.walk)return;
  const elapsed=Math.min(Math.max(dt,0),.1);
@@ -75,15 +75,36 @@ export function stepResidentRoutine(graph,agent,dt,index=null,clockMinutes=null)
   return;
  }
  const destination=plan.phase==='OUTBOUND'?plan.targetT:plan.homeT;
+ const stride=agent.speed*elapsed;
+ // Q02: un ostacolo fermo sul marciapiede (es. scooter parcheggiato) si aggira di lato,
+ // a passo d'uomo: prima lo spostamento laterale, poi avanti, poi il rientro sulla linea.
+ const lat0=plan.lateral||0,goal=plan.lateralGoal||0;
+ const settled=Math.abs(goal-lat0)<.001,lat=settled?lat0:lat0+clamp(goal-lat0,-stride,stride);
  const delta=destination-agent.t,remaining=Math.abs(delta)*e.len;
- const advance=Math.min(remaining,agent.speed*elapsed);
+ const advance=settled?Math.min(remaining,stride):0;
  const nextT=remaining<.00001?destination:agent.t+Math.sign(delta)*advance/e.len;
- const next=pose(graph,plan.edge,nextT,plan.side);
- next.a=delta<0?e.angle+Math.PI:e.angle;
- if(index&&trafficMoveBlocked(agent,next,'walk',index,agent)){
-  agent.braking=true;return;
+ const heading=delta<0?e.angle+Math.PI:e.angle;
+ const at=(tt,l)=>{const q=pose(graph,plan.edge,clamp(tt,0,1),plan.side);return{x:q.x-Math.sin(e.angle)*l,y:q.y+Math.cos(e.angle)*l,a:heading};};
+ const free=(q,l)=>(!index||!trafficMoveBlocked(agent,q,'walk',index,agent))&&(!l||!valid||valid(q.x,q.y,agent));
+ const spot=(tt,l)=>{const q=at(tt,l);return(!index||!collidesWithTraffic(q,'walk',index,agent))&&(!l||!valid||valid(q.x,q.y,agent));};
+ const lane=(l,metres)=>{for(let k=0;k<=Math.ceil(metres/.6);k++)if(!spot(agent.t+Math.sign(delta)*Math.min(k*.6,metres)/e.len,l))return false;return true;};
+ const next=at(nextT,lat);
+ if(!free(next,lat)){
+  agent.braking=true;plan.blocked=(plan.blocked||0)+elapsed;
+  if(!settled)plan.lateralGoal=lat0;
+  else if(plan.blocked>1){
+   for(const off of [.9,-.9,1.6,-1.6,2.1,-2.1,2.6,-2.6]){
+    if(Math.abs(off-lat)<.05)continue;
+    if(lane(off,Math.min(remaining,4.8))){plan.lateralGoal=off;plan.blocked=0;break;}
+   }
+  }
+  return;
  }
+ plan.blocked=0;plan.lateral=lat;
  Object.assign(agent,next,{edge:plan.edge,t:nextT,braking:false});
+ if(settled&&goal!==0){
+  if(lane(0,Math.min(remaining,1.2)))plan.lateralGoal=0;
+ }
  if(remaining<=advance+.00001){
   agent.t=destination;agent.braking=true;
   if(plan.phase==='OUTBOUND'){

@@ -52,5 +52,5 @@ test('starter vehicle uses the new Panda asset but all traffic retains collision
  assert.match(game,/k%8===1\?'panda-fire-red'/);
  assert.match(game,/if\(!drawCarSprite\(c,x,y,a,model,drive\)\)drawCityCar/);
  assert.match(game,/drawCar\(v\.x,v\.y,v\.a,v\.type,i===p\.car,v\.model,v\)/);
- assert.ok(html.includes('game.mjs?v=138'));
+ assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=138,'game.mjs deve essere almeno alla v=138');
 });

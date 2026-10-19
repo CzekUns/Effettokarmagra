@@ -97,7 +97,7 @@ test('the user can ride motorcycles, NPCs ride too, and auto logic remains',asyn
  assert.match(game,/motorcycleEvery:4/);
  assert.match(game,/MOTO · /);
  assert.match(road,/vehicleType:player.vehicleType/);
- assert.ok(game.includes("traffic-collision.mjs?v=125"));
- assert.ok(game.includes("roads.mjs?v=139"));
- assert.ok(page.includes('game.mjs?v=139'));
+ assert.ok(Number((game.match(/traffic\-collision\.mjs\?v=(\d+)/)||[])[1])>=125,'traffic-collision.mjs deve essere almeno alla v=125');
+ assert.ok(Number((game.match(/roads\.mjs\?v=(\d+)/)||[])[1])>=139,'roads.mjs deve essere almeno alla v=139');
+ assert.ok(Number((page.match(/game\.mjs\?v=(\d+)/)||[])[1])>=139,'game.mjs deve essere almeno alla v=139');
 });

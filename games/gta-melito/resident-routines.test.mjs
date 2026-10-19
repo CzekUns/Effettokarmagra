@@ -38,6 +38,38 @@ test('Q01 resident completes home -> target -> activity -> return without positi
  assert.ok(Math.hypot(npc.x-initial.x,npc.y-initial.y)<.01,'returns to the same starting point');
 });
 
+test('Q02 resident walks around a scooter parked on its pavement instead of waiting forever',()=>{
+ const [npc]=spawn(1),plan=npc.residentRoutine,e=graph.edges[plan.edge];
+ const mid=plan.homeT+(plan.targetT-plan.homeT)*.5;
+ const a=graph.nodes[e.from],b=graph.nodes[e.to],off=plan.side*(e.streetWidth/2+1.7);
+ const scooter={x:a.x+(b.x-a.x)*mid-Math.sin(e.angle)*off,y:a.y+(b.y-a.y)*mid+Math.cos(e.angle)*off,a:e.angle,body:'car',vehicleType:'motorcycle',speed:0};
+ const start={x:npc.x,y:npc.y},seen=new Set();
+ let previous={x:npc.x,y:npc.y},sidestep=0,finished=false;
+ for(let i=0;i<6000;i++){
+  stepAgents(graph,[npc],.05,null,{view:[0,-100,600,100],parked:[scooter],validRecovery:()=>true});
+  seen.add(plan.phase);sidestep=Math.max(sidestep,Math.abs(plan.lateral||0));
+  assert.ok(Math.hypot(npc.x-previous.x,npc.y-previous.y)<=npc.speed*.05+.00001,'no jump while stepping around');
+  assert.ok(Math.hypot(npc.x-scooter.x,npc.y-scooter.y)>.6,'never walks through the scooter');
+  previous={x:npc.x,y:npc.y};
+  if(plan.cycles){finished=true;break;}
+ }
+ assert.equal(finished,true,'the full outing completes despite the obstacle');
+ assert.ok(seen.has('ACTING')&&seen.has('RETURNING'));
+ assert.ok(sidestep>=1.8,'it really stepped aside, clear of the scooter footprint');
+ assert.ok(Math.abs(plan.lateral||0)<.01,'and returned to its usual line');
+ assert.ok(Math.hypot(npc.x-start.x,npc.y-start.y)<.01,'back home on the same spot');
+});
+
+test('Q02 sidestep never enters an unwalkable spot: if both sides are invalid it waits',()=>{
+ const [npc]=spawn(1),plan=npc.residentRoutine,e=graph.edges[plan.edge];
+ const mid=plan.homeT+(plan.targetT-plan.homeT)*.5;
+ const a=graph.nodes[e.from],b=graph.nodes[e.to],off=plan.side*(e.streetWidth/2+1.7);
+ const scooter={x:a.x+(b.x-a.x)*mid-Math.sin(e.angle)*off,y:a.y+(b.y-a.y)*mid+Math.cos(e.angle)*off,a:e.angle,body:'car',vehicleType:'motorcycle',speed:0};
+ for(let i=0;i<1500;i++)stepAgents(graph,[npc],.05,null,{view:[0,-100,600,100],parked:[scooter],validRecovery:()=>false});
+ assert.equal(plan.lateral||0,0,'no sidestep onto invalid ground');
+ assert.ok(Math.hypot(npc.x-scooter.x,npc.y-scooter.y)>.6);
+});
+
 test('Q01 does not spawn residents on invalid pavements or on top of cars',()=>{
  assert.deepEqual(createRoutineResidents(graph,8,405,{x:300,y:0},[],()=>false),[]);
  const blocked=createRoutineResidents(graph,8,405,{x:300,y:0},
@@ -60,8 +92,8 @@ test('Q01 visible knocked resident recovers gradually to its original pavement',
 test('Q01 game integrates residents into both initial and road-width reset populations',async()=>{
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  const roads=await readFile(new URL('./roads.mjs',import.meta.url),'utf8');
- assert.match(game,/import \{createRoutineResidents\} from '.\/resident-routines\.mjs\?v=002'/);
+ assert.ok(Number((game.match(/import \{createRoutineResidents\} from '.\/resident-routines\.mjs\?v=(\d+)'/)||[])[1])>=2,'resident-routines.mjs almeno alla v=002');
  assert.equal((game.match(/state\.people=createCityPedestrians\(\);/g)||[]).length,2);
- assert.match(roads,/stepResidentRoutine\(graph,agent,elapsed,index,clockMinutes\)/);
+ assert.match(roads,/stepResidentRoutine\(graph,agent,elapsed,index,clockMinutes(,valid)?\)/);
  assert.match(roads,/restoreResidentRoutine\(graph,agent,dt,world,index\)/);
 });

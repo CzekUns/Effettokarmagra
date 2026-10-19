@@ -190,3 +190,14 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Non eseguiti:** test Node/browser/deploy e nuove implementazioni gameplay; l'assegnazione GitHub non avvia automaticamente l'AI esterna.
 - **Da fare:** l'AI del collaboratore, una volta avviata sul proprio account, prende Q02 e apre una PR; il revisore valuta merge o richiesta correzioni, senza sovrapposizioni.
 - **Riferimenti:** issue https://github.com/CzekUns/Effettokarmagra/issues/28; branch main; aggiornamenti `AGENTS.md` commit `3c1f800`, `TODO.md` commit `ba7c48d`.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
+- **Fatto:** primo collaudo reale della Q02 con Node 22 e browser; corretti 2 difetti di gioco e 15 test fragili; Q02 spuntata `[x]` in `TODO.md` con esito.
+- **Difetto 1 (banca):** `game.mjs` faceva avanzare l'orologio NPC anche dentro la banca, dove gli NPC non vengono simulati; ora `advanceNpcClock(...,{interior:!!state.bankInterior})`.
+- **Difetto 2 (blocco permanente):** un residente restava fermo per sempre dietro uno scooter parcheggiato sul marciapiede (frenato il 95% del tempo). `resident-routines.mjs` ora fa un passo laterale (0,9–2,6 m) solo su corsie libere e camminabili, avanza e rientra sulla linea, mai più di un passo d'uomo per tick. `roads.mjs` passa `validRecovery` alla routine.
+- **Test:** 14 asserzioni con versioni cache fisse (`game.mjs?v=138` ecc.) rese "almeno la versione N"; test HUD del volante riceve `formatNpcClock`; nuovi test scooter (aggiramento e attesa se i lati non sono camminabili) e controllo del flag banca. Suite: 160/175 → **177/177**.
+- **Cache:** `game.mjs?v=141`, `roads.mjs?v=141`, `resident-routines.mjs?v=003`.
+- **Browser (Chrome headless, desktop e telefono orizzontale):** orologio avanza all'aperto e si ferma in pausa e in banca; 5 fasce verificate; ciclo completo di un residente in 140 s senza salti; nessun errore JS (solo favicon 404 del sito, preesistente).
+- **Non eseguiti:** Android reale; HUD ora NPC non visibile sul telefono in orizzontale (barra nascosta).
+- **Da fare:** Q03 (ingressi negli edifici) sullo stesso ramo `collab/gta-melito-coda`, come concordato: una Q dopo l'altra e merge unico alla fine.
+
