@@ -6,8 +6,9 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=139';
-import {createRoutineResidents} from './resident-routines.mjs?v=001';
+import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=140';
+import {createRoutineResidents} from './resident-routines.mjs?v=002';
+import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=125';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
@@ -83,7 +84,7 @@ function animateSteeringWheel(dt){
  const face=$('steering-face');
  if(face)face.style.transform='rotate('+wheel.angle+'rad)';
 }
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,npcClockMinutes:NPC_START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const WALK=new Set([...DRIVE,'pedestrian','footway','path','steps']);
 const colors=['#8f8271','#a29076','#797970','#ae947b','#938c7b','#7b8581','#a58c85'];
@@ -276,7 +277,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
  state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
  state.people=createCityPedestrians();
- state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
+ state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=NPC_START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
  $('inferred-count').textContent=String(state.inferredBuildings.length);
@@ -419,8 +420,8 @@ function updateTraffic(dt){
  }
  const halfW=canvas.clientWidth/(2*state.zoom),halfH=canvas.clientHeight/(2*state.zoom);
  const view=[state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH];
- stepAgents(state.graph,state.people,elapsed,state.player,{parked:state.cars,traffic:state.traffic,view,validRecovery:canKnockbackMove});
- stepAgents(state.graph,state.traffic,elapsed,state.player,{parked:state.cars,people:state.people,view,validRecovery:canKnockbackMove});
+ stepAgents(state.graph,state.people,elapsed,state.player,{parked:state.cars,traffic:state.traffic,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes});
+ stepAgents(state.graph,state.traffic,elapsed,state.player,{parked:state.cars,people:state.people,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes});
  impactTraffic(elapsed);
  for(const agent of [...state.people,...state.traffic])if(Math.hypot(agent.x-agent.prevX,agent.y-agent.prevY)>15){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
@@ -510,6 +511,7 @@ function tick(dt){
   stick.x=0;stick.y=0;
   return;
  }
+ state.npcClockMinutes=advanceNpcClock(state.npcClockMinutes,dt);
  animateSteeringWheel(dt);
  if(state.bankInterior){
   const axes=moveAxes(),local=state.bankInterior.player;
@@ -636,6 +638,7 @@ function compareRoadWidths(){
 }
 
 function updateHud(){
+ const npcClockLabel=$('npc-clock');if(npcClockLabel)npcClockLabel.textContent=formatNpcClock(state.npcClockMinutes);
  const p=state.player;
  const driving=p.car>=0&&!state.bankInterior;
  // The map container must receive the mode class: otherwise CSS keeps the
