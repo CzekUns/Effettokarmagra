@@ -73,3 +73,18 @@ Registro operativo del gioco `games/pesca-grossa/` (regole in [`AGENTS.md`](../.
 
 **Riferimenti**
 - Branch `pesca-grossa-skin`.
+
+## 2026-10-19 — Skin rifatte in due stili: vettoriale deluxe e pixel art (Claude, Claude Code)
+
+**Fatto**
+- Su richiesta, ognuno dei tre personaggi (Biagio Gelo tatuato, il giovane Biagio, «Pescato!» con la cernia gigante) ora esiste in **due stili**, per sei skin in tutto:
+  - **vettoriale deluxe:** contorni marcati, ombre a due toni stile cartone animato, braccia modellate come muscoli (bicipite, avambraccio, polso), mani con pollice e dita, tatuaggi pieni e colorati (fiamme tribali, anello al gomito, rosa con foglie, ancora con cima, puntini al polso), cuore «MAMMA», cornetto rosso portafortuna, cuciture e fibbie, mulinello con bobina e archetto; cappellino con logo «B»; cernia con pinna dorsale, opercoli, squame, macchie e cappello cucito;
+  - **pixel art:** sprite a bassa risoluzione (48×84 pixel ingranditi ×3) con palette limitata e contorno scuro automatico, ridisegnato a ogni fotogramma: braccia, canna, mulinello, espressioni, trofeo e cernia sono tutti in pixel.
+- Guardaroba con le schede «Vettoriale» e «Pixel art»; la scelta (personaggio e stile) resta in `biagio-pesca-prefs`.
+
+**Verifiche e stato**
+- `node games/pesca-grossa/rules.test.js`: ok. Prova in Chrome headless: le sei skin in attesa, combattimento e trofeo; guardaroba con le due schede su telefono e desktop; giro completo carriera e sfida. Nessun errore JavaScript.
+- **Non eseguito:** prova su telefono vero.
+
+**Riferimenti**
+- Branch `pesca-grossa-skin`, PR #27.

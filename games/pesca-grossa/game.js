@@ -29,15 +29,15 @@ const G={mode:"menu",phase:"menu",career:null,arcade:null,spot:"lago",weather:"s
  fish:[],hook:{mode:"idle"},fight:null,input:{key:0,btn:0,drag:0},hold:{key:false,btn:false,canvas:false},
  aim:{x:400,y:440},aimVisible:false,frenzy:null,gulls:[],ripples:[],splashes:[],texts:[],drops:[],castAnim:0,
  elapsed:0,last:0,mute:false,actx:null,lastHour:-1,ageAcc:0,spawnAcc:0,sfxDrag:0,reelClick:0,lastMusic:-1,
- today:null,modalOpen:false,modalOnClose:null,pendingDayEnd:false,best:0,shopTab:"esche",skin:"base",trophy:null,mood:null};
+ today:null,modalOpen:false,modalOnClose:null,pendingDayEnd:false,best:0,shopTab:"esche",skin:"base",style:"vettoriale",trophy:null,mood:null};
 
 /* ---------- salvataggi ---------- */
 function loadCareer(){try{const raw=localStorage.getItem(SAVE_KEY);return raw?R.migrateSave(JSON.parse(raw)):null;}catch(e){return null;}}
 function saveCareer(){if(!G.career)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify(G.career));}catch(e){}}
 function loadBest(){try{G.best=Math.max(0,Number(localStorage.getItem(RECORD_KEY)||0)||0);}catch(e){}}
 function saveBest(){try{localStorage.setItem(RECORD_KEY,String(G.best));}catch(e){}}
-function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}");G.mute=!!p.mute;if(ART.SKINS[p.skin])G.skin=p.skin;}catch(e){}}
-function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify({mute:G.mute,skin:G.skin}));}catch(e){}}
+function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}");G.mute=!!p.mute;if(ART.SKINS[p.skin])G.skin=p.skin;if(ART.STYLES[p.style])G.style=p.style;}catch(e){}}
+function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify({mute:G.mute,skin:G.skin,style:G.style}));}catch(e){}}
 
 /* ---------- contesto della partita ---------- */
 function career(){return G.mode==="career"?G.career:null;}
@@ -63,7 +63,7 @@ function tipPos(){
  if(f){const r=Math.min(1.2,f.tension/f.line.limit),a=Math.atan2(f.screenY-TIP0.y,f.screenX-TIP0.x);x+=Math.cos(a)*r*12;y+=Math.sin(a)*r*12;}
  return{x,y};
 }
-const VIEW={hour:hourNow,tip:tipPos,rangePx:rodRangePx,hand:HAND,get skin(){return G.skin;},get trophy(){return G.trophy;},get mood(){return G.mood;},get reeling(){return reelHeld()&&(!!G.fight||G.hook.mode==="waiting"&&!!G.hook.artificial);},get night(){return isNight()?1:0;},get lantern(){return hasExtra("lanterna");},get sonar(){return hasExtra("ecoscandaglio");}};
+const VIEW={hour:hourNow,tip:tipPos,rangePx:rodRangePx,hand:HAND,get skin(){return G.skin;},get style(){return G.style;},get trophy(){return G.trophy;},get mood(){return G.mood;},get reeling(){return reelHeld()&&(!!G.fight||G.hook.mode==="waiting"&&!!G.hook.artificial);},get night(){return isNight()?1:0;},get lantern(){return hasExtra("lanterna");},get sonar(){return hasExtra("ecoscandaglio");}};
 
 /* ---------- audio ---------- */
 function audio(){if(G.mute)return null;try{if(!G.actx){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;G.actx=new A();}if(G.actx.state==="suspended"&&G.actx.resume)G.actx.resume().catch(()=>{});return G.actx;}catch(e){return null;}}
@@ -655,19 +655,25 @@ function openBaits(){
 }
 
 function openWardrobe(){
- const body=document.createElement("div");body.className="skins";
- const cards=[];
- for(const id of Object.keys(ART.SKINS)){
-  const s=ART.SKINS[id],card=document.createElement("div");card.className="skin-card"+(G.skin===id?" on":"");
-  const cv=document.createElement("canvas");cv.width=380;cv.height=420;card.appendChild(cv);
-  const info=document.createElement("div");info.innerHTML="<strong>"+esc(s.name)+"</strong><p>"+esc(s.desc)+"</p>";
-  const b=document.createElement("button");b.type="button";b.className="btn small"+(G.skin===id?" alt":"");b.dataset.skin=id;b.innerHTML=G.skin===id?ic("check")+"INDOSSATA":"INDOSSA";
-  info.appendChild(b);card.appendChild(info);body.appendChild(card);cards.push({id,cv});
- }
- let live=true;const t0=performance.now();
- const loop=now=>{if(!live||ui.modal.hidden)return;for(const k of cards)ART.drawSkinPreview(k.cv,k.id,(now-t0)/1000);requestAnimationFrame(loop);};
+ let tab=G.style,live=true;const t0=performance.now();let cards=[];
+ const body=document.createElement("div");
+ const render=()=>{
+  body.innerHTML='<div class="tabs">'+Object.keys(ART.STYLES).map(s=>'<button type="button" data-style="'+s+'" class="'+(tab===s?"on":"")+'">'+ic(s==="pixel"?"sparkle":"shirt")+ART.STYLES[s]+"</button>").join("")+'</div><div class="skins"></div>';
+  const wrap=body.querySelector(".skins");cards=[];
+  for(const id of Object.keys(ART.SKINS)){
+   const s=ART.SKINS[id],on=G.skin===id&&G.style===tab,card=document.createElement("div");card.className="skin-card"+(on?" on":"")+(tab==="pixel"?" px":"");
+   const cv=document.createElement("canvas");cv.width=380;cv.height=420;card.appendChild(cv);
+   const info=document.createElement("div");info.innerHTML="<strong>"+esc(s.name)+"</strong><p>"+esc(s.desc)+"</p>";
+   const b=document.createElement("button");b.type="button";b.className="btn small"+(on?" alt":"");b.dataset.skin=id;b.innerHTML=on?ic("check")+"INDOSSATA":"INDOSSA";
+   info.appendChild(b);card.appendChild(info);wrap.appendChild(card);cards.push({id,cv});
+  }
+ };
+ const loop=now=>{if(!live||ui.modal.hidden)return;for(const k of cards)ART.drawSkinPreview(k.cv,k.id,(now-t0)/1000,tab);requestAnimationFrame(loop);};
+ render();
  openModal({icon:"shirt",kicker:"SCEGLI COME PESCA BIAGIO",title:"Guardaroba",body,onClose:()=>{live=false;},
-  onBodyClick:ev=>{const t=ev.target.closest("button[data-skin]");if(!t)return;G.skin=t.dataset.skin;savePrefs();live=false;closeModal(true);shout("Skin: "+ART.SKINS[G.skin].name,1.4,"shirt","good");}});
+  onBodyClick:ev=>{
+   const st=ev.target.closest("button[data-style]");if(st){tab=st.dataset.style;render();return;}
+   const t=ev.target.closest("button[data-skin]");if(!t)return;G.skin=t.dataset.skin;G.style=tab;savePrefs();live=false;closeModal(true);shout("Skin: "+ART.SKINS[G.skin].name+" · "+ART.STYLES[G.style],1.4,"shirt","good");}});
  requestAnimationFrame(loop);
 }
 
