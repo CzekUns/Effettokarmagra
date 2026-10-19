@@ -28,7 +28,8 @@ GitHub Pages: `Settings → Pages → Deploy from a branch → main → /(root)`
 │   └── pesca-grossa/
 │       ├── index.html             # Pagina, stile e pannelli (touch + tastiera)
 │       ├── rules.js               # Regole: pesci, combattimento, economia, giornate
-│       ├── game.js                # Canvas, input, ciclo di gioco
+│       ├── game.js                # Input, pannelli, ciclo di gioco
+│       ├── art.js                 # Motore grafico: acqua, luoghi, pesci, luce e meteo
 │       ├── rules.test.js          # Test delle regole (node)
 │       ├── WORK_LOG.md            # Registro degli interventi
 │       └── fish.svg               # Icona vettoriale del gioco
@@ -92,6 +93,7 @@ Secondo arcade giocabile, con lo **stesso SVG di Biagio calvo e vestito di nero*
 - **Karma e varianti Karmagra:** liberare pesci e togliere rifiuti dall'acqua aumenta il karma; più karma = più pesci rari e più varianti Karmagra viola (valore ×3).
 - **Meteo e luce:** sereno, nuvoloso, vento (sposta il lancio), pioggia, nebbia, burrasca; alba, tramonto e notte; mangianze con i gabbiani.
 - **Pescepedia** con record, orari ed esche scoperte, collezione di oggetti e statistiche.
+- **Grafica:** canvas alla risoluzione reale dello schermo con caustiche, raggi di sole, riflessi, schiuma, alba/tramonto/notte con luna e lucciole, nebbia e pioggia; luoghi illustrati (pontile e canneto, Rione Terra, tufo di Posillipo, Faraglioni); interfaccia con icone SVG, pannelli in vetro e carte delle catture per rarità. Su dispositivi lenti la qualità si abbassa da sola.
 - Condivisione del punteggio della sfida su WhatsApp. Nessuna risorsa esterna o backend.
 - **Test:** `node games/pesca-grossa/rules.test.js` (dati coerenti, ogni specie pescabile, bilanciamento dei combattimenti, economia, commissioni, salvataggi).
 
