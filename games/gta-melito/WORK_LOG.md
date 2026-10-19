@@ -119,3 +119,12 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Da fare:** registrare Q01 nella TODO se la scrittura remota torna disponibile, poi Q02 (agenda/orologio) e smoke test reale; evitare di presentare le soste come ingressi negli edifici.
 - **Riferimenti:** `main`, commit `ebcf34a` (modulo), `f1a456c` (test), `f1a3f4c` (integrazione).
 - **Registro TODO:** tentati aggiornamento checkbox Q01 ed esito nel `TODO.md`, ma le scritture sono state bloccate dai controlli del connettore. La checkbox resta `[ ]`; riprovare prima di avviare Q02, senza perdere i commit già pubblicati.
+
+### 2026-10-19 — ChatGPT/GitHub — Ripristino scrittura TODO e verifica documentata Q01
+- **Fatto:** ripristinata la scrittura GitHub del registro di avanzamento e spuntata **soltanto Q01** in `TODO.md`; Q02–Q17 rimangono aperte.
+- **Come/dove:** riletti AGENTS root/locale, README, handoff e ultimi log; controllati via GitHub `resident-routines.mjs`, `resident-routines.test.mjs`, agganci in `roads.mjs` e `game.mjs`.
+- **Codice:** la coorte di 10 residenti e il percorso partenza→sosta→ritorno erano già pubblicati nei commit `ebcf34a`, `f1a456c` e `f1a3f4c`; nessun gameplay modificato in questa sessione.
+- **Verifiche:** confermata lettura del codice integrato e dei test; ripresi i risultati registrati di 5 scenari V8 superati nella sessione precedente, senza attribuire nuovi test non eseguiti.
+- **Non verificati:** Node 22 completo, browser PC/Android, screenshot e deploy GitHub Pages: ancora pendenti.
+- **Da fare:** eseguire Q02 come prossima singola task oraria; completare il collaudo generale più avanti, senza assumere che il comportamento osservato sia perfetto su device.
+- **Riferimenti:** main, aggiornamento TODO commit `2db6b28`; `TODO.md` Q01 [x], prossimo Q02 [ ].
