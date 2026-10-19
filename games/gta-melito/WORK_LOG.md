@@ -254,3 +254,13 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Browser (Chrome headless):** 442 bidoni e 144 paletti, tutti in posizioni valide sulla mappa reale; urto d'auto, spinta a piedi, paletti e recupero verificati; traffico e pedoni invariati rispetto alla Q06; 0,26 ms per fotogramma; nessun errore JS.
 - **Non eseguiti / limiti:** Android reale; paletti piccoli allo zoom a piedi.
 - **Da fare:** Q08 (meteo) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q08 meteo
+- **Fatto:** sereno, nuvoloso e pioggia graduali legati all'orologio NPC, con asfalto bagnato, pozzanghere, gocce, ombrelli e interazione con la luce della Q04. Q08 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `weather.mjs` (calendario a blocchi di 3 ore, bagnato/asciutto, unione con la luce del giorno, gocce, nuvole, pozzanghere, ombrelli); `game.mjs`: `state.weather` a ogni passo, maschere `wetTile` (strade meno edifici e tetti proiettati) sotto la rivelazione dei tetti, pozzanghere posizionate con `coveredByBuilding`, ombrelli sopra i pedoni, nuvole prima della notte, gocce sopra la notte e sotto i fumetti, riflessi dei lampioni sul bagnato, etichetta meteo nell'HUD, parametro `?meteo=`.
+- **Scelte:** nessun cambio di aderenza (Q10); effetto sugli NPC solo visivo (ombrello).
+- **Cache:** `game.mjs?v=147`, nuovo `weather.mjs?v=001`.
+- **Test:** nuovo `weather.test.mjs` (7 test); suite Node 22 **223/223**.
+- **Browser (Chrome headless, PC e telefono):** foto di sereno, nuvoloso, pioggia di giorno e di notte dallo stesso punto; passaggio naturale al primo temporale senza blocchi; nessun errore JS; con la pioggia di giorno 48 fps contro 55 senza GPU.
+- **Non eseguiti / limiti:** Android reale e GPU vere.
+- **Da fare:** Q09 (audio ambientale dinamico) sullo stesso ramo.

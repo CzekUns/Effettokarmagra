@@ -511,3 +511,9 @@ Aggiunta una barretta compatta nella parte superiore della scena, visibile solo 
 **Grafica:** bidoni carrellati visti dall'alto (coperchio colorato blu, giallo, verde o grigio, maniglia scura, ombra), in gruppi sul marciapiede; ribaltati diventano più lunghi, col coperchio aperto e un po' di carta per terra. Paletti in ghisa scura con testa chiara a cupola e ombra, sul bordo del marciapiede vicino agli incroci.
 
 **Verifiche:** foto Chrome headless di un gruppo di bidoni su Via Roma, di un bidone ribaltato e dei paletti a un angolo; i paletti sono piccoli (circa 4 px allo zoom a piedi) ma leggibili. Non provato su un telefono reale.
+
+### 2026-10-19 — Nuvole, pioggia, asfalto bagnato e ombrelli (Q08)
+
+**Grafica:** cielo coperto con un velo grigio-azzurro e grandi ombre di nuvole che scorrono; pioggia con gocce oblique sottili; asfalto più scuro e bluastro solo sulle carreggiate, ritagliato attorno a muri e tetti sollevati; pozzanghere ellittiche che riflettono il cielo (bordo scuro, specchio grigio-azzurro, riflesso chiaro) con cerchi delle gocce animati; ombrelli colorati dall'alto sopra la maggior parte dei pedoni; di notte i lampioni lasciano una striscia calda riflessa sul bagnato.
+
+**Verifiche:** foto Chrome headless dallo stesso punto di Via Roma con sereno, nuvoloso e pioggia alle 11:00 e pioggia alle 22:00, su PC e telefono; primo piano di una pozzanghera; confronto ravvicinato sereno/pioggia con i tetti non toccati dal bagnato. Non provato su un telefono reale.

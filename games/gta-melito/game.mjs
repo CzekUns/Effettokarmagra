@@ -12,6 +12,8 @@ import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
 import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=001';
 import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote} from './local-shops.mjs?v=001';
+import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
+import {buildingVolume} from './building-volume.mjs?v=088';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape} from './traffic-collision.mjs?v=126';
 import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
@@ -95,6 +97,8 @@ function startMinuteFromUrl(){
  return match&&Number(match[1])<24&&Number(match[2])<60?Number(match[1])*60+Number(match[2]):NPC_START_MINUTE;
 }
 const START_MINUTE=startMinuteFromUrl();
+// Q08: ?meteo=pioggia|nuvoloso|sereno fixes the weather for checks; otherwise it follows the clock.
+const FORCED_WEATHER=(()=>{const w=new URLSearchParams(globalThis.location?.search||'').get('meteo');return ['pioggia','nuvoloso','sereno'].includes(w)?w:null;})();
 const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const WALK=new Set([...DRIVE,'pedestrian','footway','path','steps']);
@@ -157,6 +161,24 @@ function buildingAt(x,y){
  if(real)return real;
  return state.inferredGrid?
   hit(query(state.inferredBuildings,state.inferredGrid,x-5,y-5,x+5,y+5))||false:false;
+}
+// Q08: ground hidden by a building: its footprint, its walls or its lifted roof (2.5D projection).
+function coveredByBuilding(x,y){
+ if(buildingAt(x,y))return true;
+ const hit=list=>list.some(b=>{
+  const v=buildingVolume(b);if(!v)return false;
+  for(const s of [.34,.67,1]){
+   const px=x+v.dx*s,py=y+v.dy*s,bd=b.bounds;
+   if(!bd||px<bd[0]||px>bd[2]||py<bd[1]||py>bd[3])continue;
+   let found=false;const p=b.p;
+   for(let i=0,j=p.length-2;i<p.length;j=i,i+=2){const ax=p[i],ay=p[i+1],bx=p[j],by=p[j+1];
+    if(((ay>py)!==(by>py))&&(px<(bx-ax)*(py-ay)/(by-ay)+ax))found=!found;}
+   if(found)return true;
+  }
+  return false;
+ });
+ return hit(query(state.buildings,state.buildingGrid,x-2,y-2,x+22,y+22))||
+  (!!state.inferredGrid&&hit(query(state.inferredBuildings,state.inferredGrid,x-2,y-2,x+22,y+22)));
 }
 function validWalk(x,y){
  return x>=0&&y>=0&&x<state.map.projection.width&&y<state.map.projection.height&&!buildingAt(x,y);
@@ -282,6 +304,8 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
  state.propsGrid=makeIndex(state.props);
  state.shops=prepareStorefronts(map.pois||[],state.roads);
+ state.puddles=placePuddles(state.roads,{drivable:r=>DRIVE.has(r.t),roadWidth:visualRoadWidth,covered:coveredByBuilding});
+ state.weather=weatherAt(state.npcClockMinutes,{forced:FORCED_WEATHER});wetTiles.clear();
  state.shopGrid=makeIndex(state.shops);
  initCampaign(map);
  state.dynamicCollision=null;
@@ -623,6 +647,7 @@ function tick(dt){
  }
  // Q02: in banca gli NPC non vengono simulati, quindi anche il loro orologio resta fermo.
  state.npcClockMinutes=advanceNpcClock(state.npcClockMinutes,dt,{interior:!!state.bankInterior});
+ state.weather=weatherAt(state.npcClockMinutes,{forced:FORCED_WEATHER});
  animateSteeringWheel(dt);
  if(state.bankInterior){
   const axes=moveAxes(),local=state.bankInterior.player;
@@ -756,7 +781,7 @@ function compareRoadWidths(){
 }
 
 function updateHud(){
- const npcClockLabel=$('npc-clock');if(npcClockLabel)npcClockLabel.textContent=formatNpcClock(state.npcClockMinutes);
+ const npcClockLabel=$('npc-clock');if(npcClockLabel)npcClockLabel.textContent=formatNpcClock(state.npcClockMinutes)+(state.weather?' · '+state.weather.label:'');
  const p=state.player;
  const driving=p.car>=0&&!state.bankInterior;
  // The map container must receive the mode class: otherwise CSS keeps the
@@ -904,6 +929,41 @@ function staticTile(tx,ty){
  const tile={canvas:layer,x,y};staticTiles.set(key,tile);
  return tile;
 }
+// Q08: wet asphalt as a cached mask per tile: roads minus everything a building covers,
+// so the darker wet tone never paints over a roof lifted above the street.
+const wetTiles=new Map(),WET_PIXELS=2;
+function wetTile(tx,ty){
+ const key=tx+','+ty;
+ if(wetTiles.has(key)){const tile=wetTiles.get(key);wetTiles.delete(key);wetTiles.set(key,tile);return tile;}
+ const x=tx*STATIC_TILE,y=ty*STATIC_TILE,layer=document.createElement('canvas');
+ layer.width=layer.height=STATIC_TILE*WET_PIXELS;
+ const g=layer.getContext('2d');g.setTransform(WET_PIXELS,0,0,WET_PIXELS,-x*WET_PIXELS,-y*WET_PIXELS);
+ const x0=x-TILE_BLEED,y0=y-TILE_BLEED,x1=x+STATIC_TILE+TILE_BLEED,y1=y+STATIC_TILE+TILE_BLEED;
+ g.lineCap='round';g.lineJoin='round';g.strokeStyle='#0a1a28';
+ for(const road of query(state.roads,state.roadGrid,x0,y0,x1,y1)){
+  if(!DRIVE.has(road.t))continue;
+  g.beginPath();g.moveTo(road.p[0],road.p[1]);for(let i=2;i<road.p.length;i+=2)g.lineTo(road.p[i],road.p[i+1]);
+  g.lineWidth=Math.max(1,visualRoadWidth(road)-.5);g.stroke();
+ }
+ g.globalCompositeOperation='destination-out';g.fillStyle='#000';
+ for(const b of [...query(state.buildings,state.buildingGrid,x0,y0,x1+20,y1+20),...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1+20,y1+20)]){
+  const p=b.p,v=buildingVolume(b),shift=v?[[0,0],[v.dx,v.dy]]:[[0,0]];
+  for(const [sx,sy] of shift){g.beginPath();g.moveTo(p[0]-sx,p[1]-sy);for(let i=2;i<p.length;i+=2)g.lineTo(p[i]-sx,p[i+1]-sy);g.closePath();g.fill();}
+  if(v)for(let i=2;i<p.length;i+=2){g.beginPath();g.moveTo(p[i-2],p[i-1]);g.lineTo(p[i],p[i+1]);g.lineTo(p[i]-v.dx,p[i+1]-v.dy);g.lineTo(p[i-2]-v.dx,p[i-1]-v.dy);g.closePath();g.fill();}
+ }
+ const tile={canvas:layer,x,y};wetTiles.set(key,tile);
+ while(wetTiles.size>48)wetTiles.delete(wetTiles.keys().next().value);
+ return tile;
+}
+function drawWetTiles(bounds,wetness){
+ const [x0,y0,x1,y1]=bounds;
+ c.save();c.globalAlpha=.5*wetness;c.imageSmoothingEnabled=true;
+ for(let ty=Math.floor(y0/STATIC_TILE);ty<=Math.floor(y1/STATIC_TILE);ty++)
+  for(let tx=Math.floor(x0/STATIC_TILE);tx<=Math.floor(x1/STATIC_TILE);tx++){
+   const tile=wetTile(tx,ty);c.drawImage(tile.canvas,tile.x,tile.y,STATIC_TILE,STATIC_TILE);
+  }
+ c.restore();
+}
 function drawStaticTiles(bounds){
  const mode=getRoadWidthMode();
  if(mode!==tileRoadMode){staticTiles.clear();tileRoadMode=mode;pendingTile=null;}
@@ -960,6 +1020,11 @@ function draw(dt=0){
  const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
  const halfW=cw/(2*state.zoom),halfH=ch/(2*state.zoom);
  drawStaticTiles([state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH]);
+ const weather=state.weather;
+ if(weather&&weather.wetness>.01){
+  drawWetTiles([state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH],weather.wetness);
+  drawPuddles(c,state.puddles||[],[x0,y0,x1,y1],weather.wetness,weather.rain,state.clock);
+ }
  drawRoofReveal(c,[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],roads,dt,[x0,y0,x1,y1]);
  if(state.zoom>1.75){
   c.font='3.6px monospace';c.fillStyle='#e5d9bc';c.textAlign='center';
@@ -1008,6 +1073,11 @@ function draw(dt=0){
  drawStreetObjects(c,state.streetObjects,[x0,y0,x1,y1],state.zoom);
  drawLostItem(c,state.events,state.player.car<0?state.player:null,state.clock);
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
+ if(weather&&weather.rain>.3)for(const person of state.people){
+  if(person.indoors||person.x<x0||person.x>x1||person.y<y0||person.y>y1)continue;
+  drawUmbrella(c,person.prevX===undefined?person.x:person.prevX+(person.x-person.prevX)*alpha,
+   person.prevY===undefined?person.y:person.prevY+(person.y-person.prevY)*alpha,person,weather.rain);
+ }
  for(const ai of state.traffic)if(ai.x>=x0&&ai.x<=x1&&ai.y>=y0&&ai.y<=y1){
   const x=ai.prevX===undefined?ai.x:ai.prevX+(ai.x-ai.prevX)*alpha;
   const y=ai.prevY===undefined?ai.y:ai.prevY+(ai.y-ai.prevY)*alpha;
@@ -1016,8 +1086,10 @@ function draw(dt=0){
  }
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);});
  drawPlayer();
+ if(weather&&weather.cloud>.02)drawCloudShadows(c,[x0,y0,x1,y1],weather.cloud,state.clock);
  // Q04: night falls on the world, while hints and the bank marker stay readable above it.
  drawNightLighting([x0,y0,x1,y1],[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],ratio,cw,ch,dt);
+ if(weather&&weather.rain>.02)drawRain(c,state.clock,canvas.width,canvas.height,weather.rain);
  drawCityEventOverlay(c,state.events,state.player.car<0?state.player:null,state.zoom);
  drawParkedMotorcycleHints();
  for(const bank of state.bankEntrances)if(bank.x>=x0&&bank.x<=x1&&bank.y>=y0&&bank.y<=y1)drawBankEntrance(c,bank,state.clock);
@@ -1025,7 +1097,7 @@ function draw(dt=0){
 const lightMap=document.createElement('canvas');
 const LAMP_KINDS=new Set([5,6,13]);
 function drawNightLighting([x0,y0,x1,y1],buildings,ratio,cw,ch,dt){
- const light=daylightAt(state.npcClockMinutes);state.light=light;
+ const light=combineWeather(daylightAt(state.npcClockMinutes),state.weather);state.light=light;
  if(light.darkness<.004)return;
  if(dt>0){state.nightFrame=(state.nightFrame||1/60)*.95+dt*.05;state.nightQuality=nightQuality(state.nightQuality,state.nightFrame);}
  const lights=[],glows=[],pad=14,p=state.player;
@@ -1035,6 +1107,8 @@ function drawNightLighting([x0,y0,x1,y1],buildings,ratio,cw,ch,dt){
    // Pool of light on the pavement under the lamp head, plus the warm bulb itself.
    lights.push({x:prop.x+.4,y:prop.y+.8,r:10,strength:light.lamps});
    glows.push({x:prop.x,y:prop.y-5.9,r:2.4,strength:light.lamps,alpha:.8},{x:prop.x+.4,y:prop.y+.8,r:7.5,strength:light.lamps,alpha:.1});
+   // Q08: on wet ground the lamp is mirrored as a warm smear below it.
+   if(state.weather?.wetness>.2)glows.push({x:prop.x+.4,y:prop.y+2.2,r:3.2,strength:light.lamps*state.weather.wetness,alpha:.22},{x:prop.x+.4,y:prop.y+4.2,r:2.2,strength:light.lamps*state.weather.wetness,alpha:.14});
   }
   for(const door of state.doorGrid?query(state.doors,state.doorGrid,x0,y0,x1,y1):[])
    if(door.open>0)lights.push({x:door.x+door.nx*.6,y:door.y+door.ny*.6,r:3.4,strength:light.lamps});
