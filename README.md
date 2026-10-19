@@ -26,7 +26,11 @@ GitHub Pages: `Settings → Pages → Deploy from a branch → main → /(root)`
 │   ├── effetto-karmagra/
 │   │   └── index.html             # Primo gioco completo
 │   └── pesca-grossa/
-│       ├── index.html             # Pesca touch + tastiera
+│       ├── index.html             # Pagina, stile e pannelli (touch + tastiera)
+│       ├── rules.js               # Regole: pesci, combattimento, economia, giornate
+│       ├── game.js                # Canvas, input, ciclo di gioco
+│       ├── rules.test.js          # Test delle regole (node)
+│       ├── WORK_LOG.md            # Registro degli interventi
 │       └── fish.svg               # Icona vettoriale del gioco
 │   └── scootercross/
 │       ├── index.html             # Terzo gioco con fisica arcade
@@ -75,17 +79,21 @@ Arcade top-down con labirinto 15×15, palline bianche, potenziamento Karmagra, s
 - **Colonna sonora:** musica 8-bit originale sintetizzata con Web Audio, con tasto ON/OFF.
 - **Grafica:** 10 asset personaggio SVG nativi + capsula SVG. Asset condivisi in `assets/`; il gioco li richiama tramite `../../assets/`.
 
-## Biagio Gelo — Pesca Grossa
+## Biagio Gelo — Pesca Grossa 2.0
 
-Secondo arcade giocabile, con lo **stesso SVG di Biagio calvo e vestito di nero** usato nel potenziamento di Effetto Karmagra (`assets/biaggio-power.svg`), caricato tramite percorso relativo `../../assets/biaggio-power.svg`.
+Secondo arcade giocabile, con lo **stesso SVG di Biagio calvo e vestito di nero** usato nel potenziamento di Effetto Karmagra (`assets/biaggio-power.svg`). Dall'ottobre 2026 è un gioco di pesca con **carriera**, ispirato alle meccaniche dei migliori giochi del genere (ombre e abboccate alla Animal Crossing, tensione/frizione/energia del pesce dei simulatori, giornate e ghiacciaia alla Dredge, pesci leggendari alla Stardew Valley).
 
-- Visuale dall'alto: Biagio pesca da un pontile.
-- Tocca il lago per lanciare o usa il pulsante **LANCIA** per mirare automaticamente a un pesce.
-- Aspetta l'abboccata, poi tieni premuto **RECUPERA** e rilascialo quando cresce la tensione, altrimenti la lenza si spezza.
-- Quattro pesci con punteggi e resistenze diversi: sardina, orata, spigola, pesce d'oro.
-- Sfida a tempo da 90 secondi, bonus per catture consecutive, record salvato nel browser.
-- Supporto mobile, mouse, frecce + spazio; piccoli effetti e accompagnamento audio sintetizzato.
-- Nessuna risorsa esterna o backend.
+- **Due modalità:** *Carriera* (giornate dalle 5:00 alle 21:00, fino a mezzanotte con la lanterna; salvataggio automatico) e *Sfida 90 secondi* (la modalità classica; il record resta in `biagio-pesca-record` e compare nella home).
+- **Quattro luoghi:** Lago Patria, Porto di Pozzuoli (Abbonamento Cumana), Scogli di Posillipo (lo scooter di Scootercross riparato) e Golfo al largo (gozzo a motore). Fondali diversi, profondità visibile sul mirino, rocce e tane.
+- **31 specie** con orari, meteo, profondità ed esche preferite, misura minima reale e taglia variabile (lunghezza e peso). **Cinque leggendari** con condizioni speciali, svelate dalle bottiglie con messaggio. Specie protette (anguilla, tonno rosso) solo da fotografare e liberare.
+- **Abboccata:** le ombre si avvicinano all'esca, assaggiano (il galleggiante trema) e poi abboccano: si ferra solo quando va sotto. Ferrata perfetta = pesce più stanco e qualità migliore. Le esche artificiali vanno recuperate lentamente.
+- **Combattimento:** tensione, filo ceduto ed energia del pesce. Il pesce tira, fugge, salta, si riposa o punta alla tana; si piega la canna dal lato opposto (◀ ▶, scorrendo il dito sul pulsante o con ←/→) e si regola la **frizione** (morbida/media/dura). Si perde per lenza spezzata, bobina vuota, lenza lasca o pesce intanato.
+- **Economia:** ghiacciaia con capienza e freschezza, pescheria, bottega (13 esche, 4 canne, 3 mulinelli, 4 lenze, 4 ghiacciaie, guadino, lanterna, ecoscandaglio), commissioni giornaliere dei personaggi (fama che sblocca l'attrezzatura), controlli della Guardia Costiera sul pescato sotto misura.
+- **Karma e varianti Karmagra:** liberare pesci e togliere rifiuti dall'acqua aumenta il karma; più karma = più pesci rari e più varianti Karmagra viola (valore ×3).
+- **Meteo e luce:** sereno, nuvoloso, vento (sposta il lancio), pioggia, nebbia, burrasca; alba, tramonto e notte; mangianze con i gabbiani.
+- **Pescepedia** con record, orari ed esche scoperte, collezione di oggetti e statistiche.
+- Condivisione del punteggio della sfida su WhatsApp. Nessuna risorsa esterna o backend.
+- **Test:** `node games/pesca-grossa/rules.test.js` (dati coerenti, ogni specie pescabile, bilanciamento dei combattimenti, economia, commissioni, salvataggi).
 
 ## Biagio Gelo: Scootercross — Via Roma, Melito
 
