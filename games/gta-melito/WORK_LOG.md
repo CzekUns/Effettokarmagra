@@ -294,3 +294,13 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Browser (Chrome headless):** 9 gruppi in 170 s in città, nessuno su carreggiata, nessun pedone incastrato, traffico e pedoni in movimento; nessun errore JS.
 - **Limite:** pedoni pochi e sparsi, quindi incontri rari vicino al giocatore (da migliorare con la densità per zona della Q13).
 - **Da fare:** Q12 (ciclo NPC a piedi ↔ scooter/auto) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q12 ciclo NPC a piedi ↔ scooter
+- **Fatto:** un residente esce di casa, prende il suo scooter (mezzo parcheggiato vero), guida lungo un percorso pianificato fino a una meta OSM, parcheggia, entra, esce e torna; se lo scooter è sparito torna a piedi e riprende la routine. Q12 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `npc-commute.mjs` (percorsi con unione degli incroci vicini, parcheggio, guida con raccordi dritti, camminata a punti, fasi del ciclo, furto); `roads.mjs` (`path` opzionale agli incroci, `lanePosition`/`sidewalkTurn` esportati, pendolari esclusi dal passo generico); `vehicle-entry.mjs` (scooter guidato da un NPC non prendibile); `npc-social.mjs` (il pendolare non si ferma a chiacchierare); `game.mjs` (`createCommuters` sceglie casa vicina e meta col giro più corto, `stepCommuters` nel `tick`, luci e suono).
+- **Scoperto e risolto:** la rete stradale del gioco è spezzata (le vie OSM si toccano senza punti in comune): per i percorsi si uniscono i nodi entro 6 m. Le svolte dei pedoni non permettono di girare dal lato interno: la camminata di ripiego usa punti sul marciapiede e attraversa agli incroci.
+- **Cache:** `game.mjs?v=151`, `roads.mjs?v=145`, `vehicle-entry.mjs?v=002`, `npc-social.mjs?v=002`, nuovo `npc-commute.mjs?v=001`.
+- **Test:** nuovo `npc-commute.test.mjs` (6 test); suite Node 22 **251/251**.
+- **Browser (Chrome headless):** ciclo completo in 469 s sulla mappa reale, scooter non prendibile mentre guidato, furto vero col tasto E e partenza a piedi; nessun errore JS.
+- **Non eseguiti / limiti:** arrivo a casa a piedi nel browser (mezz'ora di gioco, provato nel mondo di prova); un solo pendolare, niente auto guidate da NPC; Android reale.
+- **Da fare:** Q13 (reazioni avanzate e densità) sullo stesso ramo; la densità per zona aiuterà anche gli incontri della Q11.

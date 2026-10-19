@@ -6,7 +6,8 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=144';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=145';
+import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=001';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=005';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
@@ -15,7 +16,7 @@ import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,pur
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
 import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=002';
-import {createSocial,stepSocial} from './npc-social.mjs?v=001';
+import {createSocial,stepSocial} from './npc-social.mjs?v=002';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape} from './traffic-collision.mjs?v=126';
 import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
@@ -33,7 +34,7 @@ import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,ve
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=096';
 import {handlingProfile,applyGrip} from './vehicle-handling.mjs?v=001';
 import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=004';
-import {nearestEnterableVehicle,starterMotorcycleCandidates} from './vehicle-entry.mjs?v=001';
+import {nearestEnterableVehicle,starterMotorcycleCandidates} from './vehicle-entry.mjs?v=002';
 import {PARKED_BIKE_TARGET,PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP,motorcycleParkingRoadOrder,motorcycleParkingCandidates,parkedBikeLabel} from './motorcycle-parking.mjs?v=001';
 import {guideCar} from './driving-assist.mjs?v=099';
 import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
@@ -225,6 +226,67 @@ function stepStreetPhysics(dt){
  // A wheelie bin is light: the player's car loses only a little speed.
  if(p.car>=0&&hits.length)state.cars[p.car].speed*=.96;
 }
+// Q12: home door near the start, a free kerb spot for the scooter in front of it, and a named OSM
+// shop 300-900 m away by road. The scooter is a real parked vehicle (the player can take it).
+function createCommuters(doorAt,walkOK,shops,taken){
+ const old=state.cars.find(v=>v.commuterBike);
+ if(old&&state.player.car===state.cars.indexOf(old))return [];
+ const used=new Set(taken.flatMap(p=>[p.residentRoutine?.homeDoor,p.residentRoutine?.targetDoor]).filter(Boolean));
+ const freeSpot=s=>walkOK(s.x,s.y)&&!state.cars.some(v=>v!==old&&vehiclesOverlap({...s,vehicleType:'motorcycle'},v,.4))&&
+  ![...used].some(d=>Math.hypot(d.x-s.x,d.y-s.y)<2.5);
+ const homes=[];
+ for(const id of state.graph.walkStarts){
+  const e=state.graph.edges[id],a=state.graph.nodes[e.from],b=state.graph.nodes[e.to];
+  if(!(e.len>=30)||Math.hypot((a.x+b.x)/2-state.spawn[0],(a.y+b.y)/2-state.spawn[1])>220)continue;
+  for(let m=8;m<e.len-8&&homes.length<40;m+=7)for(const side of [1,-1]){
+   const o=lanePosition(state.graph,id,m/e.len,'walk',side);
+   const door=doorAt(o,{x:-Math.sin(e.angle)*side,y:Math.cos(e.angle)*side});
+   if(!door)continue;
+   Object.assign(door,{edge:id,side,t:m/e.len,lateral:(door.x-o.x)*-Math.sin(e.angle)+(door.y-o.y)*Math.cos(e.angle)});
+   if([...used].some(d=>Math.hypot(d.x-door.x,d.y-door.y)<2.5))continue;
+   const spot=kerbSpot(state.graph,door);
+   if(freeSpot(spot))homes.push({door,d:Math.hypot(door.x-state.spawn[0],door.y-state.spawn[1])});
+  }
+ }
+ homes.sort((p,q)=>p.d-q.d);
+ // Any named OSM shop 300-900 m away with a valid door on a visible facade (not only the visitors' ones).
+ const destinations=[...(shops||[])];
+ for(const shop of state.shops||[]){
+  const dist=Math.hypot(shop.x-state.spawn[0],shop.y-state.spawn[1]);
+  if(dist<250||dist>1000||destinations.length>=16)continue;
+  const door=doorAt({x:shop.x,y:shop.y},{x:-Math.sin(shop.a)*shop.side,y:Math.cos(shop.a)*shop.side},{source:DOOR_SOURCE.OSM_POI,label:shop.name,kind:shop.kind});
+  const placed=door&&attachDoorToPavement(state.graph,door,doorAt);
+  if(placed&&!destinations.some(d=>Math.hypot(d.x-placed.x,d.y-placed.y)<3))destinations.push(placed);
+ }
+ for(let i=destinations.length-1;i>=0;i--)if(used.has(destinations[i])||!freeSpot(kerbSpot(state.graph,destinations[i])))destinations.splice(i,1);
+ // The pair with the shortest round trip by road (one-way streets can make the way out long).
+ let best=null;
+ for(const {door:home} of homes.slice(0,5)){
+  const from=carEdgeFor(state.graph,home.edge,home.t);if(!from)continue;
+  for(const shop of destinations){
+   const far=Math.hypot(shop.x-home.x,shop.y-home.y),to=carEdgeFor(state.graph,shop.edge,shop.t);
+   if(far<300||far>900||!to)continue;
+   const out=planRoute(state.graph,from.edge,to.edge,'car'),back=out&&planRoute(state.graph,to.edge,from.edge,'car');
+   const length=out&&back?routeLength(state.graph,out)+routeLength(state.graph,back):Infinity;
+   // Melito has many one-way streets: a round trip of a few kilometres is normal.
+   if(length<4200&&(!best||length<best.length))best={home,shop,length};
+  }
+ }
+ if(best){
+  const bike=old||{x:0,y:0,a:0,speed:0,type:0,model:'moto-scooter-retro-blue',vehicleType:'motorcycle',rider:false};
+  const commuter=createCommuter({graph:state.graph,homeDoor:best.home,shopDoor:best.shop,bike,seed:1201,index:0});
+  if(commuter){if(!old)state.cars.push(bike);return [commuter];}
+ }
+ return [];
+}
+function stepCommuters(dt){
+ const p=state.player;
+ for(const c of state.commuters||[]){
+  c.npc.prevX=c.npc.x;c.npc.prevY=c.npc.y;c.npc.prevA=c.npc.a;
+  stepCommuter(c,dt,{graph:state.graph,index:state.dynamicCollision,valid:canKnockbackMove,clockMinutes:state.npcClockMinutes,
+   playerVehicle:p.car>=0?state.cars[p.car]:null,say:(agent,text)=>cityEventBubble(state.events,agent,text),wet:(state.weather?.wetness||0)>.5});
+ }
+}
 // Q03: errands of named OSM shops worth a short visit on foot.
 const VISIT_KINDS=new Set(['bakery','pastry','bar','cafe','supermarket','pharmacy','hairdresser','stationery','hardware','clothes','butcher','houseware']);
 function createCityPedestrians(){
@@ -251,11 +313,15 @@ function createCityPedestrians(){
  const visitors=createDoorVisitors(state.graph,shops,3,811,
   [...state.cars,...state.traffic,...residents],walkOK,doorAt);
  const routine=[...residents,...visitors];
+ // Q12: one resident who goes to a named OSM shop on its own scooter (and walks if it is gone).
+ state.commuters=createCommuters(doorAt,walkOK,shops,routine);
+ routine.push(...state.commuters.map(c=>c.npc));
  // Q05: city events belong to this cohort; a new cohort starts a fresh, deterministic sequence.
  state.events=createCityEvents(505);
  // Q11: acquaintances who meet on the pavement; a new cohort starts a fresh sequence too.
  state.social=createSocial(909);
- state.doors=[...new Set(routine.flatMap(p=>[p.residentRoutine.homeDoor,p.residentRoutine.targetDoor]).filter(Boolean))];
+ state.doors=[...new Set([...routine.flatMap(p=>[p.residentRoutine?.homeDoor,p.residentRoutine?.targetDoor]),
+  ...state.commuters.flatMap(c=>[c.plan.homeDoor,c.plan.shopDoor])].filter(Boolean))];
  state.doorGrid=makeIndex(state.doors.map(d=>Object.assign(d,{p:[d.wallX-3,d.wallY-4,d.wallX+3,d.wallY+2]})));
  const walkers=createAgents(state.graph,170-routine.length,310,'walk',
   [...state.cars,...state.traffic,...routine]);
@@ -766,6 +832,7 @@ function tick(dt){
  for(const car of state.cars)if(car!==state.cars[p.car])
   advanceNonlethalImpact(car,dt,canKnockbackMove);
  updateTraffic(dt);
+ stepCommuters(dt);
  stepStreetPhysics(dt);
  const screen=visibleBounds(),inset=18+4;
  const signal=stepCityEvents(state.events,dt,{people:state.people,graph:state.graph,
@@ -1163,6 +1230,7 @@ function drawNightLighting([x0,y0,x1,y1],buildings,ratio,cw,ch,dt){
  if(light.headlights>0){
   const driven=state.traffic.filter(v=>v.body==='car');
   if(p.car>=0&&state.cars[p.car])driven.push(state.cars[p.car]);
+  for(const c of state.commuters||[])if(c.bike.rider)driven.push(c.bike);
   for(const v of driven){
    if(v.x<x0-pad||v.x>x1+pad||v.y<y0-pad||v.y>y1+pad)continue;
    const kind={x:v.x,y:v.y,a:v.a,vehicleType:isMotorcycle(v)?'motorcycle':'car'};
@@ -1214,7 +1282,7 @@ function updateCityAudio(){
  if(!cityAudio.started||!state.ready)return;
  const p=state.player,car=p.car>=0?state.cars[p.car]:null;
  const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen;
- const traffic=state.traffic.filter(v=>v.body==='car');
+ const traffic=[...state.traffic.filter(v=>v.body==='car'),...(state.commuters||[]).filter(c=>c.bike.rider).map(c=>c.bike)];
  cityAudio.update({paused,interior:!!state.bankInterior,radioLive:radioStatus==='live',
   player:{x:p.x,y:p.y,inVehicle:!!car,vehicleType:car&&isMotorcycle(car)?'motorcycle':'car',speed:car?car.speed:0,throttle:pressed.up||pressed.accelerate?1:0},
   traffic:traffic.map(v=>({x:v.x,y:v.y,vehicleType:v.vehicleType,speed:v.braking?0:v.speed})),

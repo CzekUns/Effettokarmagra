@@ -18,7 +18,7 @@ export function knows(a,b){
  return hash(lo*31+hi*17)%100<(a.residentRoutine&&b.residentRoutine?60:32);
 }
 export function canSocialize(agent,graph,clock){
- if(!agent||agent.body!=='walk'||agent.indoors||agent.impactTime>0||agent.needsRoutineRecovery||agent.corner)return false;
+ if(!agent||agent.body!=='walk'||agent.indoors||agent.commuter||agent.impactTime>0||agent.needsRoutineRecovery||agent.corner)return false;
  // Fermo da tempo in fondo a un marciapiede senza uscita: aspetta di essere ricollocato fuori vista.
  if(agent.stalled>4&&!(agent.wait>0))return false;
  if(agent.social&&(agent.social.hold||clock<agent.social.until))return false;

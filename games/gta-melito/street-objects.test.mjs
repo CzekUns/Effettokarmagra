@@ -100,7 +100,8 @@ test('Q07 game wiring: placed after doors and NPCs, bollards in car and walking 
  assert.match(game,/\.\.\.state\.cars\.map\(v=>\(\{x:v\.x,y:v\.y,r:3\.6\}\)\)/,'parked cars kept clear');
  assert.match(game,/if\(state\.streetObjects&&bollardBlocksVehicle\(state\.streetObjects,\{x,y,a\},bodyShape\(vehicle\)\)\)return true;/);
  assert.match(game,/&&!post\(nx,p\.y\)\)p\.x=nx;/);
- assert.ok(game.indexOf('updateTraffic(dt);\n stepStreetPhysics(dt);')>0,'objects move after traffic, in the same tick');
+ const tick=game.indexOf('function tick(dt)'),traffic=game.indexOf('updateTraffic(dt);',tick),physics=game.indexOf('stepStreetPhysics(dt);',tick);
+ assert.ok(tick>0&&traffic>tick&&physics>traffic&&physics-traffic<80,'objects move after traffic, in the same tick');
  assert.ok(game.indexOf('drawStreetObjects(c,')<game.indexOf('drawCityPeople(c,state.people'),'under the people');
  assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=146);
 });
