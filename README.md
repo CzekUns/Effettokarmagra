@@ -93,6 +93,7 @@ Secondo arcade giocabile, con lo **stesso SVG di Biagio calvo e vestito di nero*
 - **Karma e varianti Karmagra:** liberare pesci e togliere rifiuti dall'acqua aumenta il karma; più karma = più pesci rari e più varianti Karmagra viola (valore ×3).
 - **Meteo e luce:** sereno, nuvoloso, vento (sposta il lancio), pioggia, nebbia, burrasca; alba, tramonto e notte; mangianze con i gabbiani.
 - **Pescepedia** con record, orari ed esche scoperte, collezione di oggetti e statistiche.
+- **Biagio animato e skin:** Biagio è disegnato e animato (lancio, combattimento, espressioni, trofeo col pesce sopra la testa). Dal Guardaroba si sceglie tra tre personaggi, ognuno in due stili (vettoriale deluxe e pixel art): Biagio Gelo tatuato, il giovane Biagio col cappellino rosso, e «Pescato!», una cernia gigante che tiene Biagio in braccio.
 - **Grafica:** canvas alla risoluzione reale dello schermo con caustiche, raggi di sole, riflessi, schiuma, alba/tramonto/notte con luna e lucciole, nebbia e pioggia; luoghi illustrati (pontile e canneto, Rione Terra, tufo di Posillipo, Faraglioni); interfaccia con icone SVG, pannelli in vetro e carte delle catture per rarità. Su dispositivi lenti la qualità si abbassa da sola.
 - Condivisione del punteggio della sfida su WhatsApp. Nessuna risorsa esterna o backend.
 - **Test:** `node games/pesca-grossa/rules.test.js` (dati coerenti, ogni specie pescabile, bilanciamento dei combattimenti, economia, commissioni, salvataggi).

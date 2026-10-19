@@ -3,7 +3,7 @@
 (function(){
 "use strict";
 const R=window.PESCA_RULES,ART=window.PESCA_ART;
-const W=800,H=760,WATER_TOP=214,TIP0={x:421,y:183};
+const W=800,H=760,WATER_TOP=214,TIP0={x:446,y:228},HAND={x:432,y:152};
 const SAVE_KEY="biagio-pesca-carriera-v1",RECORD_KEY="biagio-pesca-record",PREFS_KEY="biagio-pesca-prefs";
 const ARCADE_SECONDS=90,ARCADE_HOUR=7.2;
 const ARCADE_GEAR={rod:"bolognese",reel:"frontale",line:"nylon20"};
@@ -19,7 +19,6 @@ const ui={hudLI:$("hud-l-icon"),hudLL:$("hud-l-label"),hudL:$("hud-l"),hudMI:$("
  baitBtn:$("bait-btn"),baitName:$("bait-name"),baitCount:$("bait-count"),dragSeg:$("drag-seg"),toolbar:$("toolbar"),
  tbMap:$("tb-map"),spotName:$("spot-name"),tbCooler:$("tb-cooler"),coolerLoad:$("cooler-load"),tbShop:$("tb-shop"),tbOrders:$("tb-orders"),ordersCount:$("orders-count"),tbDex:$("tb-dex"),dexCount:$("dex-count"),tbKarma:$("tb-karma"),karmaNum:$("karma-num"),
  modal:$("modal"),modalIcon:$("modal-icon"),modalKicker:$("modal-kicker"),modalTitle:$("modal-title"),modalBody:$("modal-body"),modalFoot:$("modal-foot"),modalClose:$("modal-close")};
-const biagio=new Image();biagio.src="../../assets/biaggio-power.svg";
 const clamp=R.clamp,rnd=(a,b)=>a+Math.random()*(b-a),dist=(x,y,a,b)=>Math.hypot(x-a,y-b);
 const euro=v=>(Math.round(v*100)/100).toLocaleString("it-IT",{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2})+" €";
 const num=v=>String(v).replace(".",",");
@@ -30,15 +29,15 @@ const G={mode:"menu",phase:"menu",career:null,arcade:null,spot:"lago",weather:"s
  fish:[],hook:{mode:"idle"},fight:null,input:{key:0,btn:0,drag:0},hold:{key:false,btn:false,canvas:false},
  aim:{x:400,y:440},aimVisible:false,frenzy:null,gulls:[],ripples:[],splashes:[],texts:[],drops:[],castAnim:0,
  elapsed:0,last:0,mute:false,actx:null,lastHour:-1,ageAcc:0,spawnAcc:0,sfxDrag:0,reelClick:0,lastMusic:-1,
- today:null,modalOpen:false,modalOnClose:null,pendingDayEnd:false,best:0,shopTab:"esche"};
+ today:null,modalOpen:false,modalOnClose:null,pendingDayEnd:false,best:0,shopTab:"esche",skin:"base",style:"vettoriale",trophy:null,mood:null};
 
 /* ---------- salvataggi ---------- */
 function loadCareer(){try{const raw=localStorage.getItem(SAVE_KEY);return raw?R.migrateSave(JSON.parse(raw)):null;}catch(e){return null;}}
 function saveCareer(){if(!G.career)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify(G.career));}catch(e){}}
 function loadBest(){try{G.best=Math.max(0,Number(localStorage.getItem(RECORD_KEY)||0)||0);}catch(e){}}
 function saveBest(){try{localStorage.setItem(RECORD_KEY,String(G.best));}catch(e){}}
-function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}");G.mute=!!p.mute;}catch(e){}}
-function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify({mute:G.mute}));}catch(e){}}
+function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}");G.mute=!!p.mute;if(ART.SKINS[p.skin])G.skin=p.skin;if(ART.STYLES[p.style])G.style=p.style;}catch(e){}}
+function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify({mute:G.mute,skin:G.skin,style:G.style}));}catch(e){}}
 
 /* ---------- contesto della partita ---------- */
 function career(){return G.mode==="career"?G.career:null;}
@@ -60,11 +59,11 @@ function reelHeld(){return G.hold.key||G.hold.btn||G.hold.canvas;}
 function weatherIcon(w){return w==="sereno"&&isNight()?"moon":WICON[w];}
 function tipPos(){
  let x=TIP0.x+sideInput()*16,y=TIP0.y;const f=G.fight;
- if(G.castAnim>0){const k=Math.sin((1-G.castAnim)*Math.PI);x-=10*k;y-=48*k;}
+ if(G.castAnim>0){const k=Math.sin((1-G.castAnim)*Math.PI);x-=8*k;y-=100*k;}
  if(f){const r=Math.min(1.2,f.tension/f.line.limit),a=Math.atan2(f.screenY-TIP0.y,f.screenX-TIP0.x);x+=Math.cos(a)*r*12;y+=Math.sin(a)*r*12;}
  return{x,y};
 }
-const VIEW={hour:hourNow,tip:tipPos,rangePx:rodRangePx,biagio,get night(){return isNight()?1:0;},get lantern(){return hasExtra("lanterna");},get sonar(){return hasExtra("ecoscandaglio");}};
+const VIEW={hour:hourNow,tip:tipPos,rangePx:rodRangePx,hand:HAND,get skin(){return G.skin;},get style(){return G.style;},get trophy(){return G.trophy;},get mood(){return G.mood;},get reeling(){return reelHeld()&&(!!G.fight||G.hook.mode==="waiting"&&!!G.hook.artificial);},get night(){return isNight()?1:0;},get lantern(){return hasExtra("lanterna");},get sonar(){return hasExtra("ecoscandaglio");}};
 
 /* ---------- audio ---------- */
 function audio(){if(G.mute)return null;try{if(!G.actx){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;G.actx=new A();}if(G.actx.state==="suspended"&&G.actx.resume)G.actx.resume().catch(()=>{});return G.actx;}catch(e){return null;}}
@@ -188,6 +187,7 @@ function updateFish(dt){
 /* ---------- lancio, attesa, abboccata ---------- */
 function cast(x,y){
  if(G.phase!=="playing"||G.modalOpen)return;
+ if(G.trophy){if(G.mode==="career")return;G.trophy=null;}
  const h=G.hook;if(h.mode==="fight"||h.mode==="casting")return;
  if(h.mode==="nibble"||h.mode==="bite"){strike();return;}
  const bait=baitNow();
@@ -313,10 +313,11 @@ function onCaught(){
  if(sp)useBait(f.bait);
  G.fight=null;G.hook={mode:"idle"};
  sfx.caught(!!sp&&(sp.rarity==="epico"||sp.rarity==="leggendario"));ripple(TIP0.x,TIP0.y+30,"#ffec96");splash(TIP0.x,TIP0.y+30,.7);
+ if(sp)G.trophy={sp,size:f.size||14,karmagra:item.karmagra,life:G.mode==="career"?1.1:.8,max:G.mode==="career"?1.1:.8,item};
  if(G.mode==="arcade"){arcadeCatch(item);return;}
  c.stats.catches++;G.today.catches++;
  if(sp)c.pity=item.karmagra?0:Math.min(.25,(c.pity||0)+.004);
- showCatch(item);
+ if(!sp)showCatch(item);// il pesce lo mostra Biagio, poi si apre la scheda
 }
 function onLost(reason,msg){
  const f=G.fight,c=career();
@@ -324,7 +325,7 @@ function onLost(reason,msg){
  if(R.BAITS[f.bait]&&R.BAITS[f.bait].kind==="artificiale"){if(reason==="snap"||reason==="den"||reason==="spool")loseLure(f.bait);}
  else if(!f.junk)useBait(f.bait);
  if(f.shadow){const s=f.shadow;s.x=clamp(f.screenX,50,750);s.y=clamp(f.screenY,WATER_TOP+30,735);s.state="wander";s.scared=4;s.wary=true;s.fade=1;G.fish.push(s);}
- G.fight=null;G.hook={mode:"idle"};
+ G.fight=null;G.hook={mode:"idle"};G.mood={type:"sad",life:1.6};
  if(G.mode==="arcade")G.arcade.combo=0;
  if(c){c.stats.lost++;G.today.lost++;saveCareer();}
 }
@@ -378,7 +379,7 @@ function updateClock(dt){
  const c=G.career,before=c.minute;
  c.minute=Math.min(R.NIGHT_END,c.minute+dt*R.GAME_MIN_PER_SEC);afterTime(c.minute-before);
  if(c.minute>=R.dayEnd(c))G.pendingDayEnd=true;
- if(G.pendingDayEnd&&!G.fight)endOfDay();
+ if(G.pendingDayEnd&&!G.fight&&!G.trophy)endOfDay();
 }
 function endOfDay(){
  const c=G.career;G.pendingDayEnd=false;releaseInterest();G.hook={mode:"idle"};resetHolds();
@@ -653,6 +654,29 @@ function openBaits(){
  render();
 }
 
+function openWardrobe(){
+ let tab=G.style,live=true;const t0=performance.now();let cards=[];
+ const body=document.createElement("div");
+ const render=()=>{
+  body.innerHTML='<div class="tabs">'+Object.keys(ART.STYLES).map(s=>'<button type="button" data-style="'+s+'" class="'+(tab===s?"on":"")+'">'+ic(s==="pixel"?"sparkle":"shirt")+ART.STYLES[s]+"</button>").join("")+'</div><div class="skins"></div>';
+  const wrap=body.querySelector(".skins");cards=[];
+  for(const id of Object.keys(ART.SKINS)){
+   const s=ART.SKINS[id],on=G.skin===id&&G.style===tab,card=document.createElement("div");card.className="skin-card"+(on?" on":"")+(tab==="pixel"?" px":"");
+   const cv=document.createElement("canvas");cv.width=380;cv.height=420;card.appendChild(cv);
+   const info=document.createElement("div");info.innerHTML="<strong>"+esc(s.name)+"</strong><p>"+esc(s.desc)+"</p>";
+   const b=document.createElement("button");b.type="button";b.className="btn small"+(on?" alt":"");b.dataset.skin=id;b.innerHTML=on?ic("check")+"INDOSSATA":"INDOSSA";
+   info.appendChild(b);card.appendChild(info);wrap.appendChild(card);cards.push({id,cv});
+  }
+ };
+ const loop=now=>{if(!live||ui.modal.hidden)return;for(const k of cards)ART.drawSkinPreview(k.cv,k.id,(now-t0)/1000,tab);requestAnimationFrame(loop);};
+ render();
+ openModal({icon:"shirt",kicker:"SCEGLI COME PESCA BIAGIO",title:"Guardaroba",body,onClose:()=>{live=false;},
+  onBodyClick:ev=>{
+   const st=ev.target.closest("button[data-style]");if(st){tab=st.dataset.style;render();return;}
+   const t=ev.target.closest("button[data-skin]");if(!t)return;G.skin=t.dataset.skin;G.style=tab;savePrefs();live=false;closeModal(true);shout("Skin: "+ART.SKINS[G.skin].name+" · "+ART.STYLES[G.style],1.4,"shirt","good");}});
+ requestAnimationFrame(loop);
+}
+
 /* ---------- comandi rapidi ---------- */
 function setBait(id){
  if(G.mode==="career")G.career.bait=id;else if(G.arcade)G.arcade.bait=id;
@@ -686,6 +710,7 @@ function showMenu(){
  G.spot="lago";G.weather="sereno";populate();
  const save=loadCareer();
  const actions=[{label:save?"CONTINUA · GIORNO "+save.day:"INIZIA LA CARRIERA",icon:"play",onClick:()=>startCareer(false)},{label:"SFIDA 90 SECONDI",icon:"timer",alt:true,onClick:startArcade}];
+ actions.push({label:"GUARDAROBA",icon:"shirt",ghost:true,onClick:openWardrobe});
  if(save)actions.push({label:"Ricomincia da zero",ghost:true,onClick:()=>{if(window.confirm("Cancellare la carriera salvata e ricominciare dal giorno 1?"))startCareer(true);}});
  showShade("ARCADE CLUB · PESCA GROSSA 2.0","Pesca Grossa","Biagio Gelo vuole diventare il Re del Golfo. Meteo, orari, esche, attrezzatura, commissioni e pesci leggendari. Oppure la sfida classica da 90 secondi.",actions,null,
   [["fish",R.SPECIES.length+" specie"],["pin","4 luoghi"],["trophy","5 leggende"]]);
@@ -833,6 +858,7 @@ window.addEventListener("keyup",ev=>{const k=(ev.key||"").toLowerCase();if(ev.co
 window.addEventListener("blur",resetHolds);
 document.addEventListener("visibilitychange",()=>{if(document.hidden){resetHolds();saveCareer();if(G.phase==="playing"&&!G.modalOpen)pauseGame();}});
 function syncSound(){ui.soundIcon.setAttribute("href",G.mute?"#i-mute":"#i-sound");ui.sound.setAttribute("aria-pressed",String(!G.mute));}
+$("skin-btn").addEventListener("click",()=>{if(G.hook.mode==="fight"||G.modalOpen)return;openWardrobe();});
 ui.sound.addEventListener("click",()=>{G.mute=!G.mute;syncSound();savePrefs();if(!G.mute)note(620,.09,"triangle",.03);});
 ui.baitBtn.addEventListener("click",()=>{if(G.hook.mode==="fight")return;if(G.mode==="career")openBaits();else cycleBait();});
 ui.dragSeg.addEventListener("click",ev=>{const b=ev.target.closest("button[data-drag]");if(b)setDrag(b.dataset.drag);});
@@ -854,6 +880,8 @@ function update(dt){
   if(a.seconds<=0){finishArcade();return;}
  }
  if(G.phase!=="playing"||G.modalOpen)return;
+ if(G.mood){G.mood.life-=dt;if(G.mood.life<=0)G.mood=null;}
+ if(G.trophy){G.trophy.life-=dt;if(G.trophy.life<=0){const tr=G.trophy;G.trophy=null;if(G.mode==="career")showCatch(tr.item);}}
  updateFish(dt);updateHook(dt);if(G.fight)updateFight(dt);
  G.spawnAcc+=dt;if(G.spawnAcc>5){G.spawnAcc=0;topUpPopulation();}
  melody();
@@ -872,5 +900,5 @@ ART.init(canvas);
 loadBest();loadPrefs();syncSound();
 showMenu();requestAnimationFrame(frame);
 // per i test automatici in un browser vero
-window.PESCA_GAME={state:G,startCareer,startArcade,showMenu,cast,strike,openShop,openMap,openCooler,openOrders,openDex,openBaits,travel,spendTime};
+window.PESCA_GAME={state:G,startCareer,startArcade,showMenu,cast,strike,openShop,openMap,openCooler,openOrders,openDex,openBaits,openWardrobe,travel,spendTime};
 })();
