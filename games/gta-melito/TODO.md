@@ -1,9 +1,11 @@
 # GTA Melito — TODO di sviluppo NPC e vita cittadina
 Aggiornato: 2026-10-19 · Ambito: `games/gta-melito/` · Stato: coda attiva, Q01 completata; Q02 e successive aperte.
 
-## CODA OPERATIVA UNICA — UNA TASK PER OGNI ORA
+## CODA OPERATIVA UNICA — UNA TASK ALLA VOLTA, CON PR
 
-**Fonte di verità dell'automazione oraria:** questa lista `Q01…Q24` (ed eventuali successive voci Q aggiunte) è ordinata e prevale sulle checklist tematiche P0–P7 riportate sotto (che restano come specifiche e backlog di dettaglio). Un'esecuzione prende **solo la prima voce Q non completata**, lavora su quella e scrive il risultato qui prima di chiudere. Le task programmate singolarmente sono sostituite da questa coda unica: non devono essere eseguite parallelamente.
+**Fonte di verità dello sviluppatore incaricato:** questa lista `Q01…Q24` (ed eventuali successive voci Q aggiunte) è ordinata e prevale sulle checklist tematiche P0–P7 riportate sotto (che restano come specifiche e backlog di dettaglio). Il collaboratore prende **solo la prima Q non completata**, lavora su quella in un branch separato e presenta una PR; non passa alla successiva finché quella corrente non è integrata. Il revisore controlla e unisce le PR sicure. Le task programmate singolarmente sono sostituite da questa coda unica: non devono essere eseguite parallelamente.
+
+**Ruoli dal 19 ottobre 2026:** lo sviluppo delle Q è affidato all'account GitHub `ilconsulentelogistico-hue` tramite [issue #28](https://github.com/CzekUns/Effettokarmagra/issues/28) e **PR una per Q**. ChatGPT principale segue revisione, eventuale merge e miglioramenti indipendenti dalle Q correnti. Nessun push diretto sul `main` per le Q da parte del collaboratore. L'assegnazione su GitHub non avvia l'agente esterno: deve essere eseguito sul suo account.
 
 **Regola d'oro:** `[x]` significa funzionalità **integrata nel gioco e verificata** con test realmente eseguiti; per ogni Q completata aggiungere sotto alla voce data, commit, verifica e limite non ancora provato. Se incompleta, lasciare `[ ]`, annotare sotto lo stato (`IN CORSO`/`BLOCCATA`) e riprendere **la stessa Q nell'ora successiva**, senza passare a quella dopo. Anche una task parziale può avere commit di avanzamento, ma non va spuntata. Non spuntare task basandosi solo su intenti, pianificazione, test simulati spacciati per browser o commit altrui non verificati.
 
@@ -41,14 +43,14 @@ Aggiornato: 2026-10-19 · Ambito: `games/gta-melito/` · Stato: coda attiva, Q01
 
 
 
-### Protocollo del lavoratore automatico (eseguire a ogni run)
+### Protocollo del collaboratore TODO (applicare per ogni Q/PR)
 
 1. Recuperare **versione attuale**, non una copia in memoria, di `TODO.md`, `WORK_LOG.md`, `AGENTS.md` root/locale, README e handoff. Controllare gli ultimi commit sul branch `main`; fermarsi e segnalare se c'è un altro lavoro attivo sullo stesso file, evitare force-push.
-2. Selezionare **esattamente una** Q aperta in ordine numerico. Non avviare una seconda Q nella stessa esecuzione anche se la prima viene completata. Se la prima risulta già implementata, verificarla con evidenze prima di marcarla; quella verifica costituisce la Q dell'ora.
-3. Implementare una tranche realmente giocabile, con codice, eventuali test e commit. Se non è possibile verificare un requisito, lasciarlo in sospeso; documentare onestamente test disponibili/non disponibili. Non sostituire il lavoro con una nuova lista di idee.
-4. **Prima di terminare**, rileggere la versione più recente della TODO (per evitare conflitti), aggiornare solo la riga Q selezionata con `[x]` se completata e un sottopunto `Esito YYYY-MM-DD: ... commit ... test ...`, oppure mantenere `[ ]` e aggiungere `Avanzamento ...` se incompleta. Scrivere sempre una voce nuova in fondo a `WORK_LOG.md`; aggiornare `VISUAL_PROGRESS.md` se si cambia grafica. In caso di errore di scrittura, riprovare dopo una nuova lettura; non dichiarare completata una task non registrata.
+2. Selezionare **esattamente una** Q aperta in ordine numerico, svolgerla su branch dedicato e aprire una PR. Non avviare una seconda Q prima del merge della precedente. Se la Q risulta già implementata, provarla realmente prima di proporre la checkbox completa.
+3. Implementare una tranche realmente giocabile su branch separato, con codice, test e commit; sottoporre una PR per revisione. Se non è possibile verificare un requisito, lasciarlo in sospeso; documentare onestamente test disponibili/non disponibili. Non sostituire il lavoro con una nuova lista di idee.
+4. **Prima di aprire la PR**, rileggere la versione più recente della TODO (per evitare conflitti), aggiornare nel proprio branch solo la riga Q selezionata con `[x]` se completata e un sottopunto `Esito YYYY-MM-DD: ... commit ... test ...`, oppure mantenere `[ ]` e aggiungere `Avanzamento ...` se incompleta. Scrivere sempre una voce nuova in fondo a `WORK_LOG.md`; aggiornare `VISUAL_PROGRESS.md` se si cambia grafica. In caso di errore di scrittura, riprovare dopo una nuova lettura; non dichiarare completata una task non registrata.
 5. In caso di task bloccata da un servizio esterno irraggiungibile, registrare `BLOCCATA`, motivo e alternativa concreta. Non inventare un successo. Per elementi che richiedono una scelta/autorizzazione umana, annotare la dipendenza e riprendere solo aspetti sicuri della stessa Q; se la Q è impraticabile in modo persistente, esplicitare il blocco all'utente senza segnare fatto.
-6. Quando tutte le Q sono completate, continuare **una singola voce implementabile per ora** dalle sezioni P0–P7 sotto, senza spuntare checkbox permanenti di principio come fossero feature. Se non resta lavoro implementabile, comunicarlo chiaramente e non generare attività fittizie.
+6. Quando tutte le Q sono completate, concordare con il revisore una nuova singola voce implementabile dalle sezioni P0–P7 sotto, senza spuntare checkbox permanenti di principio come fossero feature. Se non resta lavoro implementabile, comunicarlo chiaramente e non generare attività fittizie.
 
 **Ultima esecuzione automatica:** 2026-10-19 — Q02; corretti i due test falliti, commit `25db9b1`/`2afdfd2`; test Node e browser non eseguiti per DNS del checkout; prima Q aperta Q02 [ ] IN CORSO.
 
