@@ -5,6 +5,8 @@
 export const CAR_SPRITES=Object.freeze({
  'panda-modern-white':'./assets/vehicles/panda-modern-white.png',
  'panda-fire-red':'./assets/vehicles/panda-fire-red.png',
+ 'ape-car-azzurra':'./assets/vehicles/ape-car-top.png',
+ 'furgone-fritti':'./assets/vehicles/furgone-fritti-top.png',
 });
 export const CAR_ATLAS_PATH='./assets/vehicles/punto-ypsilon-16colors-rgba.png';
 export const CAR_ATLAS_CELL=Object.freeze({width:40,height:60,columns:4,rows:4});
@@ -31,11 +33,13 @@ export const EXTRA_CAR_VARIANTS=Object.freeze(Object.fromEntries(
  EXTRA_MODELS.flatMap(({model,atlas,offset,colors})=>
   colors.map((color,i)=>[model+'-'+color,{index:offset+i,model,color,atlas}]))
 ));
-export const CAR_TRAFFIC_SPRITE_IDS=Object.freeze([...CAR_ATLAS_VARIANT_IDS,...Object.keys(EXTRA_CAR_VARIANTS)]);
+export const STREET_VENDOR_VEHICLES=Object.freeze(['ape-car-azzurra','furgone-fritti']);
+export const CAR_TRAFFIC_SPRITE_IDS=Object.freeze([...CAR_ATLAS_VARIANT_IDS,...Object.keys(EXTRA_CAR_VARIANTS),...STREET_VENDOR_VEHICLES]);
 const MODEL_DRAW_SIZE=Object.freeze({
  'punto-188':[5.45,8.75],'ypsilon-2003':[5.25,8.55],
  'seicento-1998':[4.9,7.6],'fiat-500-2007':[5.15,8],
  'fiat-uno-1983':[5.1,8.15],'smart-fortwo-2007':[4.7,6.45],
+ 'ape-car-azzurra':[4.1,6.25],'furgone-fritti':[5.65,8.65],
 });
 
 const cache=new Map();
@@ -66,7 +70,7 @@ export function drawCarSprite(ctx,x,y,angle,model,focused=false){
  const img=loadedImage(model);
  if(!carSpriteReady(model))return false;
  const variant=CAR_ATLAS_VARIANTS[model]||EXTRA_CAR_VARIANTS[model];
- const [width,length]=variant?MODEL_DRAW_SIZE[variant.model]:(model==='panda-modern-white'?[5.5,8.75]:[5.1,8.55]);
+ const [width,length]=MODEL_DRAW_SIZE[variant?.model||model]||(model==='panda-modern-white'?[5.5,8.75]:[5.1,8.55]);
  ctx.save();ctx.translate(x,y);ctx.rotate(angle+Math.PI/2);ctx.imageSmoothingEnabled=false;
  if(variant){
   const {width:sw,height:sh,columns}=CAR_ATLAS_CELL;
