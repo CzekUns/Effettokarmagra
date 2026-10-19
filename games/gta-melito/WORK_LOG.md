@@ -148,3 +148,14 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Da fare:** completare SOLO Q02 per la prossima esecuzione; avviare correttamente clock/agenda nel gioco e verificare che le missioni restino a timer in secondi reali.
 - **Resilienza:** riattivare l'unica automazione, evitando che un blocco temporaneo dei tool o task incompleta provochino una nuova disattivazione; registrare sempre Q02 [ ] con avanzamento e riprovare l'ora successiva.
 - **Riferimenti:** branch `main`, TODO Q02; nessun file di gameplay modificato durante la diagnosi.
+
+### 2026-10-19 — ChatGPT/GitHub — Q02 integrazione agenda NPC e orologio
+- **Fatto:** collegata l'agenda giornaliera dei residenti Q01 ai cinque slot del modulo Q02, senza avviare Q03.
+- **Come:** `resident-routines.mjs` assegna un'agenda per NPC, apre una sola uscita per finestra giornaliera, tiene lo stato AT_HOME/OUTBOUND/ACTING/RETURNING.
+- **Roads:** `roads.mjs` propaga `world.npcClockMinutes` al passo delle routine; normale traffico auto e pedoni resta invariato.
+- **Loop:** `game.mjs` fa avanzare il clock solo nel mondo esterno, esclude menu/pausa/dialoghi e banca; `index.html` visualizza ora e fascia NPC.
+- **Missioni:** `updateTimer(state.progress,dt)` rimane separato e usa secondi reali; nessuna sostituzione dei timer campagna.
+- **Test:** aggiornate asserzioni Q01 e aggiunti test Q02 su avvio all'ora, ritorno, un'uscita al giorno, successivo giorno e collegamenti del loop.
+- **Verifiche realmente fatte:** rilettura file e SHA remoti; commit delle modifiche confermati da GitHub. Node 22 disponibile nel container ma repository non scaricabile per DNS GitHub: test Node/browser **non eseguiti**.
+- **Limiti/da fare:** eseguire Node 22 e smoke browser PC/mobile su checkout completo, verificare comportamento visivo e potenziali conflitti orari; mantenere Q02 [ ] sino al collaudo.
+- **Riferimenti:** branch main, commit `a10dd7b`, `649e41f`, `ff13b83`, `5e5f2e1`, `50bbee8`, `54a219b`, `033c7c7`.
