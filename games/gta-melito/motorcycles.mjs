@@ -7,6 +7,7 @@ export const MOTORCYCLE_MODELS=Object.freeze(['scooter-sh','scooter-retro','moto
 export const MOTORCYCLE_COLORS=Object.freeze(['white','red','black','blue']);
 export const MOTORCYCLE_IDS=Object.freeze(MOTORCYCLE_MODELS.flatMap(m=>MOTORCYCLE_COLORS.map(c=>`moto-${m}-${c}`)));
 export const MOTORCYCLE_CELL=Object.freeze({width:40,height:68,columns:4,rows:4});
+import {stepVehicle,MOTORCYCLE_HANDLING} from './vehicle-handling.mjs?v=001';
 export const isMotorcycle=v=>v?.vehicleType==='motorcycle';
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 let atlas=null;
@@ -22,22 +23,11 @@ export function motorcycleVariant(model){
  const index=MOTORCYCLE_IDS.indexOf(model);
  return index>=0?{index,column:index%4,row:Math.floor(index/4)}:null;
 }
-export function stepMotorcycle(speed,angle,axis,braking,dt,serviceBrake=false){
- const x=clamp(Number(axis?.x)||0,-1,1),y=clamp(Number(axis?.y)||0,-1,1);
- const elapsed=clamp(Number(dt)||0,0,.05);
- const throttle=y<-.08?-y:y>.18?-y:0;
- if(serviceBrake)speed-=Math.sign(speed)*Math.min(Math.abs(speed),65*elapsed);
- else if(Math.abs(throttle)>.08)speed+=39*elapsed*throttle;
- else speed-=Math.sign(speed)*Math.min(Math.abs(speed),16*elapsed);
- if(braking)speed*=Math.pow(.011,elapsed);
- speed=clamp(speed,-4,33);
- if(speed>33-12*x*x)speed=Math.max(33-12*x*x,speed-34*elapsed);
- if(Math.abs(x)>.08&&Math.abs(speed)>.28){
-  const steering=clamp(2.9-Math.abs(speed)*.042,1.05,2.9)*clamp(Math.abs(speed)/5,.35,1);
-  angle+=x*steering*elapsed*(speed<0?-1:1);
- }
- return {speed,angle};
+// Q10: same physics, numbers from a handling profile (default = the historical motorcycle values).
+export function stepMotorcycle(speed,angle,axis,braking,dt,serviceBrake=false,profile=MOTORCYCLE_HANDLING,wet=0){
+ return stepVehicle(speed,angle,axis,braking,dt,serviceBrake,profile,wet);
 }
+
 export function chooseMotorcycleDismount(vehicle,valid,blocked=()=>false){
  if(!vehicle||Math.abs(vehicle.speed||0)>2.3)return null;
  const a=vehicle.a,sideX=-Math.sin(a),sideY=Math.cos(a),fx=Math.cos(a),fy=Math.sin(a);
