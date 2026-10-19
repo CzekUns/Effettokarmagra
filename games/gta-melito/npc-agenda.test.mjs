@@ -40,3 +40,44 @@ test('Q02 mission countdown stays in real seconds rather than NPC minutes',()=>{
  assert.equal(updateTimer(p,.05),null);
  assert.equal(p.remaining,99.95);
 });
+
+import {readFile} from 'node:fs/promises';
+import {buildRoadGraph,stepAgents} from './roads.mjs';
+import {createRoutineResidents} from './resident-routines.mjs';
+
+test('Q02 integrated residents depart at agenda time, return home, and remain home outside the next slot',()=>{
+ const graph=buildRoadGraph([{id:1,n:'Via Roma',t:'primary',w:13,p:[0,0,600,0]}]);
+ const [npc]=createRoutineResidents(graph,1,405,{x:300,y:0},[],()=>true);
+ assert.ok(npc,'a resident must spawn on the OSM-style test road');
+ const agenda=npc.residentRoutine.agenda;
+ const view=[0,-100,600,100];
+ stepAgents(graph,[npc],.05,null,{view,npcClockMinutes:agenda.startMinute-30});
+ assert.equal(npc.residentRoutine.phase,'AT_HOME');
+ stepAgents(graph,[npc],.05,null,{view,npcClockMinutes:agenda.startMinute+1});
+ assert.equal(npc.residentRoutine.phase,'OUTBOUND');
+ let complete=false;
+ for(let i=0;i<5000;i++){
+  stepAgents(graph,[npc],.05,null,{view,npcClockMinutes:agenda.startMinute+1+i*.05});
+  if(npc.residentRoutine.cycles){complete=true;break;}
+ }
+ assert.equal(complete,true,'resident completes the trip');
+ assert.equal(npc.residentRoutine.phase,'AT_HOME');
+ assert.equal(agenda.status,'AT_HOME');
+ stepAgents(graph,[npc],.05,null,{view,npcClockMinutes:agenda.startMinute+15});
+ assert.equal(npc.residentRoutine.phase,'AT_HOME','same-day departures run only once');
+ stepAgents(graph,[npc],.05,null,{view,npcClockMinutes:agenda.startMinute+1441});
+ assert.equal(npc.residentRoutine.phase,'OUTBOUND','next day can depart again');
+});
+
+test('Q02 live game wires clock, road stepping, pause/interior guards and independent mission timer',async()=>{
+ const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
+ const roads=await readFile(new URL('./roads.mjs',import.meta.url),'utf8');
+ const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
+ assert.match(game,/state\.npcClockMinutes=advanceNpcClock\(state\.npcClockMinutes,dt\)/);
+ assert.match(game,/if\(state\.mapOpen\|\|!\$\('dialog'\)\.hidden\|\|!\$\('pause-menu'\)\.hidden\)/);
+ assert.ok(game.indexOf('state.npcClockMinutes=advanceNpcClock')<game.indexOf('if(state.bankInterior){\n   const axes='));
+ assert.match(game,/updateTimer\(state\.progress,dt\)/);
+ assert.match(game,/npcClockMinutes:state\.npcClockMinutes/);
+ assert.match(roads,/world\.npcClockMinutes/);
+ assert.match(html,/id="npc-clock"/);
+});
