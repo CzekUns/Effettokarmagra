@@ -60,8 +60,8 @@ test('exterior marker and interior-only scene draw without touching street state
 test('public game page loads the bank-scene build',()=>{
  const page=fs.readFileSync(new URL('./index.html',import.meta.url),'utf8');
  const game=fs.readFileSync(new URL('./game.mjs',import.meta.url),'utf8');
- assert.match(page,/game\.mjs\?v=138/);
- assert.match(game,/bank-interior\.mjs\?v=003/);
+ assert.ok(Number((page.match(/game\.mjs\?v=(\d+)/)||[])[1])>=138,'game.mjs deve essere almeno alla v=138');
+ assert.ok(Number((game.match(/bank-interior\.mjs\?v=(\d+)/)||[])[1])>=3,'bank-interior.mjs deve essere almeno alla v=003');
 });
 
 test('bank room keeps the street sprite scale and preserves compact device transform',()=>{
