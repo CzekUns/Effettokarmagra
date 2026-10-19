@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {inflateSync} from 'node:zlib';
 import {
  EXTRA_CAR_ATLASES,EXTRA_CAR_VARIANTS,CAR_ATLAS_VARIANT_IDS,CAR_TRAFFIC_SPRITE_IDS,
- CAR_ATLAS_CELL,drawCarSprite,loadCarSprites,carSpriteReady
+ CAR_ATLAS_CELL,CAR_PARKED_SPRITE_IDS,MARKET_VARIANT_IDS,drawCarSprite,loadCarSprites,carSpriteReady
 } from './car-sprites.mjs';
 
 function decodePNGAlpha(bytes){
@@ -48,6 +48,8 @@ test('four extra car families have eight distinct color variants each',()=>{
  // Original 48 palette variants remain intact; two standalone shop/work vehicles
  // can join the traffic without pretending to be factory color variants.
  assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,50);
+ assert.equal(CAR_PARKED_SPRITE_IDS.length,66);
+ assert.deepEqual(CAR_PARKED_SPRITE_IDS.slice(50),MARKET_VARIANT_IDS);
  assert.equal(new Set(CAR_TRAFFIC_SPRITE_IDS).size,50);
  assert.deepEqual(CAR_TRAFFIC_SPRITE_IDS.slice(0,48),
   [...CAR_ATLAS_VARIANT_IDS,...Object.keys(EXTRA_CAR_VARIANTS)]);
@@ -106,7 +108,7 @@ test('new atlases draw right cells with model-specific dimensions',()=>{
 test('AI and parked traffic use new variants without replacing starter Panda',async()=>{
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  const page=await readFile(new URL('./index.html',import.meta.url),'utf8');
- assert.ok(game.includes('CAR_TRAFFIC_SPRITE_IDS[(k*7)%CAR_TRAFFIC_SPRITE_IDS.length]'));
+ assert.ok(game.includes('CAR_PARKED_SPRITE_IDS[(k*7)%CAR_PARKED_SPRITE_IDS.length]'));
  assert.ok(game.includes('CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length]'));
  assert.ok(game.includes("model:'panda-modern-white'"));
  assert.ok(Number((game.match(/car\-sprites\.mjs\?v=(\d+)/)||[])[1])>=106,'car-sprites.mjs deve essere almeno alla v=106');

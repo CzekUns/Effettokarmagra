@@ -70,7 +70,7 @@ test('city runtime places specialty cars and one cook among routine-driven local
  assert.match(game,/const fryer=people\.filter\(p=>!p\.commuter&&!p\.indoors\)/);
  assert.match(game,/fryer\.isFryer=true/);
  assert.match(art,/if\(p\.isFryer&&drawFryerSprite\(c,x,y,angle,clock,moving,p\.speed,p\.seed\)\)continue/);
- assert.match(game,/car-sprites\.mjs\?v=107/);
+ assert.match(game,/car-sprites\.mjs\?v=108/);
  assert.match(game,/city-art\.mjs\?v=128/);
- assert.match(html,/game\.mjs\?v=152/);
+ assert.match(html,/game\.mjs\?v=153/);
 });

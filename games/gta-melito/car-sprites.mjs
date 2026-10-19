@@ -33,13 +33,29 @@ export const EXTRA_CAR_VARIANTS=Object.freeze(Object.fromEntries(
  EXTRA_MODELS.flatMap(({model,atlas,offset,colors})=>
   colors.map((color,i)=>[model+'-'+color,{index:offset+i,model,color,atlas}]))
 ));
+/* 4x4 atlas: 8 Ape market bodies + 8 food vendor stalls.
+ * Open awnings belong to stationary vehicles, not AI traffic.
+ */
+export const MARKET_ATLAS_PATH='./assets/vehicles/ape-food-16-rgba.png';
+export const MARKET_ATLAS_CELL=Object.freeze({width:56,height:64,columns:4,rows:4});
+const MARKET_GROUPS=Object.freeze([
+ {model:'ape-mercato',ids:['ape-azzurra-vuota','ape-azzurra-ferro','ape-azzurra-ortofrutta','ape-azzurra-pesce',
+   'ape-verde-vuota','ape-verde-ferro','ape-verde-ortofrutta','ape-verde-pesce']},
+ {model:'furgone-ambulante',ids:['food-zeppole-panzerotti','food-pere-e-musso','food-panini','food-hot-dog',
+   'food-cornetti','food-pizza-portafoglio','food-pizzette-fritte','food-misto']}
+]);
+export const MARKET_VARIANTS=Object.freeze(Object.fromEntries(MARKET_GROUPS.flatMap((group,g)=>
+ group.ids.map((id,i)=>[id,{index:g*8+i,model:group.model,atlas:'@market-atlas'}]))));
+export const MARKET_VARIANT_IDS=Object.freeze(Object.keys(MARKET_VARIANTS));
 export const STREET_VENDOR_VEHICLES=Object.freeze(['ape-car-azzurra','furgone-fritti']);
 export const CAR_TRAFFIC_SPRITE_IDS=Object.freeze([...CAR_ATLAS_VARIANT_IDS,...Object.keys(EXTRA_CAR_VARIANTS),...STREET_VENDOR_VEHICLES]);
+export const CAR_PARKED_SPRITE_IDS=Object.freeze([...CAR_TRAFFIC_SPRITE_IDS,...MARKET_VARIANT_IDS]);
 const MODEL_DRAW_SIZE=Object.freeze({
  'punto-188':[5.45,8.75],'ypsilon-2003':[5.25,8.55],
  'seicento-1998':[4.9,7.6],'fiat-500-2007':[5.15,8],
  'fiat-uno-1983':[5.1,8.15],'smart-fortwo-2007':[4.7,6.45],
  'ape-car-azzurra':[4.1,6.25],'furgone-fritti':[5.65,8.65],
+ 'ape-mercato':[5.7,6.9],'furgone-ambulante':[7.9,9.3],
 });
 
 const cache=new Map();
@@ -47,7 +63,7 @@ let attempted=false;
 export function loadCarSprites(){
  if(attempted||typeof Image==='undefined')return;
  attempted=true;
- for(const [model,path] of Object.entries({...CAR_SPRITES,'@punto-ypsilon-atlas':CAR_ATLAS_PATH,...EXTRA_CAR_ATLASES})){
+ for(const [model,path] of Object.entries({...CAR_SPRITES,'@punto-ypsilon-atlas':CAR_ATLAS_PATH,...EXTRA_CAR_ATLASES,'@market-atlas':MARKET_ATLAS_PATH})){
   const img=new Image();
   // New atlas is natively transparent: never matte-key or mask at runtime.
   cache.set(model,img);
@@ -56,11 +72,12 @@ export function loadCarSprites(){
  }
 }
 function loadedImage(model){
- const key=CAR_ATLAS_VARIANTS[model]?'@punto-ypsilon-atlas':(EXTRA_CAR_VARIANTS[model]?.atlas||model);
+ const key=CAR_ATLAS_VARIANTS[model]?'@punto-ypsilon-atlas':(EXTRA_CAR_VARIANTS[model]?.atlas||MARKET_VARIANTS[model]?.atlas||model);
  return cache.get(key);
 }
 export function carSpriteReady(model){
  const img=loadedImage(model);
+ if(MARKET_VARIANTS[model])return !!(img?.complete&&img.naturalWidth===224&&img.naturalHeight===256);
  if(CAR_ATLAS_VARIANTS[model]||EXTRA_CAR_VARIANTS[model])return !!(img?.complete&&img.naturalWidth===160&&img.naturalHeight===240);
  return !!(img?.complete&&img.naturalWidth>0&&img.naturalHeight>0);
 }
@@ -69,11 +86,11 @@ export function drawCarSprite(ctx,x,y,angle,model,focused=false){
  if(!attempted)loadCarSprites();
  const img=loadedImage(model);
  if(!carSpriteReady(model))return false;
- const variant=CAR_ATLAS_VARIANTS[model]||EXTRA_CAR_VARIANTS[model];
+ const variant=CAR_ATLAS_VARIANTS[model]||EXTRA_CAR_VARIANTS[model]||MARKET_VARIANTS[model];
  const [width,length]=MODEL_DRAW_SIZE[variant?.model||model]||(model==='panda-modern-white'?[5.5,8.75]:[5.1,8.55]);
  ctx.save();ctx.translate(x,y);ctx.rotate(angle+Math.PI/2);ctx.imageSmoothingEnabled=false;
  if(variant){
-  const {width:sw,height:sh,columns}=CAR_ATLAS_CELL;
+  const {width:sw,height:sh,columns}=MARKET_VARIANTS[model]?MARKET_ATLAS_CELL:CAR_ATLAS_CELL;
   const sx=(variant.index%columns)*sw,sy=Math.floor(variant.index/columns)*sh;
   ctx.drawImage(img,sx,sy,sw,sh,-width/2,-length/2,width,length);
  }else ctx.drawImage(img,-width/2,-length/2,width,length);

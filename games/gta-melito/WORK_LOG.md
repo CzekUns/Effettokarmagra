@@ -349,3 +349,12 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Verifiche:** controllata tramite l'albero GitHub l'esistenza di tutti i file grafici elencati. La versione WebP della chiesa è marcata come esempio **ancora da correggere** per il corpo posteriore; il master ImageGen non è nella repo, dunque non è stato creato un link fittizio.
 - **File:** aggiornati solo `PIXEL_ART_MODUS.md` e questo `WORK_LOG.md`. Nessun PNG, modello, logica o cache alterati; nessun test browser o Android eseguito.
 - **Da fare:** quando si correggerà il WebP della chiesa, archiviare anche la sorgente master verificata e aggiornare il collegamento a quell'originale.
+
+### 2026-10-19 — ChatGPT/GitHub — Foglio 4×4 di 16 veicoli: Ape Car e ambulanti
+- **Asset:** tavola ImageGen originale archiviata come `assets/vehicles/sources/ape-food-16-master.png` (1244×1265, RGBA); sedici ritagli con crop e alpha controllati, impaginati in un atlante indicizzato PNG 224×256 (celle 56×64, 96 colori, 19.999 byte) in `assets/vehicles/ape-food-16-rgba.png`.
+- **Varianti:** prime 8 Ape (azzurro e verde rugginoso; vuoto, ferro, ortofrutta, pesce), ultime 8 furgoncini ambulanti (zeppole/panzerotti, pere/musso, panini, hot dog, cornetti, pizza a portafoglio, pizzette fritte, misto).
+- **Integrazione:** `car-sprites.mjs` registra 16 ID e un atlas condiviso, `game.mjs` li usa nel repertorio dei parcheggi (apertura tende visibile solo in sosta); **traffico in marcia invariato**, fisica, numero NPC e campagne invariati. `index.html` game v153, import car-sprites v108; aggiunto `market-vehicles.test.mjs`, aggiornate asserzioni in due test esistenti.
+- **Istruzioni:** PIXEL_ART_MODUS.md e VEHICLE_ART_GUIDE.md ora prescrivono come default uno sheet 4×4 da 16 (8+8), con esempi cliccabili.
+- **Controlli locali effettivi:** verificata con PIL la presenza dell'alpha nei 16 ritagli e l'anteprima pixel a zoom; non risultano clip evidenti nello sheet compresso. **Suite Node completa, visita al browser e test su Android non eseguiti in questa sessione:** verificare CI/deploy successivi.
+- **Limite artistico:** il banco grafico 'o pere e 'o musso ricorda ancora frutti di mare/fritti e non riproduce in modo convincente la specialità tradizionale; sostituire la variante mantenendo indice 9 quando possibile.
+- **TODO:** Q16/Q17 non sono completate; restano fisica triciclo, soste commerciali/routine, vera modalità di marcia con tende chiuse e collaudo mobile.

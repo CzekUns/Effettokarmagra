@@ -2,6 +2,12 @@
 
 **Approvato dall'utente il 17 ottobre 2026.** Questo documento è la procedura predefinita per ogni nuova automobile del gioco. Non reinventare il processo a ogni richiesta.
 
+## Regola fissa per gli spritesheet (19 ottobre 2026)
+
+**Formato normale: foglio da 16 sprite in griglia 4×4, 8 varianti del primo modello (righe 1–2) e 8 del secondo (righe 3–4).** È lo standard produttivo permanente per i nuovi lotti; le vecchie Panda PNG individuali restano eccezioni. Le otto varianti possono rappresentare colori, generazioni del modello specificate, usura o tipo di carico/allestimento commerciale. Dopo ImageGen si fanno veri crop, allineamento e atlas PNG trasparente a 16 celle, con controllo alpha dei bordi.
+
+**Esempio già pronto:** [Ape Car + street food 16 celle](./assets/vehicles/ape-food-16-rgba.png), [master 1244×1265 px](./assets/vehicles/sources/ape-food-16-master.png). Questa tavola ha **celle 56×64 px, 4×4 = 224×256 px**, con otto Ape (azzurra pulita e verde bottiglia arrugginita, ciascuna vuota / con ferro / ortofrutta / pesce) e otto banchi street food (zeppole/panzerotti, pere/musso, panini, hot dog, cornetti, pizza a portafoglio, pizzette fritte, assortito). I furgoni con tendalino aperto sono sprite da **sosta**; servono versioni con sportelli chiusi per usarli in movimento. L'interpretazione grafica pere/musso è ancora provvisoria.
+
 ## Stile approvato
 
 Riferimenti visivi iniziali già approvati: **Panda moderna bianca** e **Panda Fire anni '90 rossa**, presenti nel gioco. L'utente ha confermato che risultano bene su strada; fare le auto successive con **la medesima tecnica**, mantenendo coerenza di scala e livello di dettaglio.

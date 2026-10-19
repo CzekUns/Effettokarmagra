@@ -31,6 +31,7 @@ Questi sono **file realmente presenti in questa repository**. I link relativi so
 | **Atlante auto** | [Punto / Ypsilon — colori, PNG con alpha](./assets/vehicles/punto-ypsilon-16colors-rgba.png) | [car-sprites.mjs](./car-sprites.mjs) |
 | **Moto e scooter** | [16 varianti — atlante PNG](./assets/vehicles/moto-16-40x68-256.png) | [motorcycles.mjs](./motorcycles.mjs) |
 | **Mezzi speciali** | [Ape Car](./assets/vehicles/ape-car-top.png) e [furgone dei fritti](./assets/vehicles/furgone-fritti-top.png) | [car-sprites.mjs](./car-sprites.mjs) |
+| **Foglio da 16 veicoli** | [Ape e furgoni ambulanti, PNG 4×4](./assets/vehicles/ape-food-16-rgba.png) · [sorgente master](./assets/vehicles/sources/ape-food-16-master.png) | [car-sprites.mjs](./car-sprites.mjs) · [test](./market-vehicles.test.mjs) |
 
 **ATTENZIONE — CHIESA:** il WebP linkato documenta la versione **attualmente presente nel progetto**, ma il suo *retro appare troncato*. Non copiarne il taglio come esempio corretto: usare la tavola ImageGen originale completa quando disponibile, recuperare l'estensione posteriore e ricontrollare il posizionamento nel gioco. **La tavola originale ImageGen non è attualmente archiviata nella repository**: non inventare un link GitHub al master; va prima trasferito lì con una verifica del contenuto.
 
@@ -95,6 +96,16 @@ Se un'immagine è troppo stretta si **espande il crop**, non si ridisegna obblig
 8. Veicolo a due ruote: il guidatore **sale visivamente in sella**, cambia stato dal corpo a piedi a quello seduto, non deve comparire doppio (uno a piedi + uno sopra la moto). L'eventuale casco è nello stato di guida.
 
 ## 4. VEICOLI — automobili, moto, Ape, furgoni
+
+### Standard predefinito sheet veicoli: 16 sprite, 8 per modello
+
+**Ogni nuovo foglio di veicoli deve normalmente contenere 16 varianti su griglia 4×4: 8 di un modello (prime 2 righe) + 8 di un secondo modello (ultime 2 righe).** Il riferimento è la struttura degli atlanti auto Punto/Ypsilon, Seicento/500, Uno/Smart. Le Panda singole già presenti sono eccezioni storiche, non un precedente per nuovi lotti da due modelli.
+
+**Una variante non è necessariamente un colore:** si possono differenziare gli otto sprite anche per usura, merci trasportate, accessori o allestimento commerciale. Es.: questo [foglio Ape Car + furgoni ambulanti](./assets/vehicles/ape-food-16-rgba.png) contiene 8 Ape (due colori azzurro / verde bottiglia arrugginito × quattro carichi: vuoto, ferro, ortofrutta e pesce) e 8 furgoni ambulanti (zeppole e panzerotti, 'o pere e 'o musso, panini, hot dog, cornetti, pizza a portafoglio, pizzette fritte, misto). La variante pere/musso è **illustrativa ancora da rifinire** rispetto alla fotografia di riferimento.
+
+**Procedura obbligatoria:** conservare il master completo; ritagliare davvero tutti e 16 i soggetti; non amputare retrovisori, ruote, cassoni o tende laterali; centrare nella rispettiva cella con margine e pivot costanti; creare un unico PNG compatto con alpha **effettivo in ciascuna cella**. Annotare in codice l'ordine delle 16 celle, dimensioni, scala e cache. Con tendalini aperti, preferire la comparsa **da parcheggiati**; in marcia dovranno avere una posa chiusa oppure restare esclusi dal traffico. Effettuare prove Node e screenshot alla scala della mappa, oltre all'ispezione dei PNG.
+
+
 
 **Fonte di dettaglio vincolante:** [VEHICLE_ART_GUIDE.md](./VEHICLE_ART_GUIDE.md). Questo documento non la sostituisce.
 
