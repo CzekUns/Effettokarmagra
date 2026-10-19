@@ -23,10 +23,11 @@ import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehi
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=127';
-import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS} from './car-sprites.mjs?v=106';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=128';
+import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS} from './car-sprites.mjs?v=107';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
+import {loadFryerSprite} from './friggitore-sprites.mjs?v=001';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
@@ -325,7 +326,15 @@ function createCityPedestrians(){
  state.doorGrid=makeIndex(state.doors.map(d=>Object.assign(d,{p:[d.wallX-3,d.wallY-4,d.wallX+3,d.wallY+2]})));
  const walkers=createAgents(state.graph,170-routine.length,310,'walk',
   [...state.cars,...state.traffic,...routine]);
- return [...routine,...walkers];
+ const people=[...routine,...walkers];
+ // One already-simulated citizen acts as the fryer. No duplicate NPC,
+ // new pathfinding or synthetic OSM shop/mission; normal routine remains.
+ const van=state.cars.find(v=>v.model==='furgone-fritti');
+ const target=van||{x:state.spawn[0],y:state.spawn[1]};
+ const fryer=people.filter(p=>!p.commuter&&!p.indoors).sort((a,b)=>
+  Math.hypot(a.x-target.x,a.y-target.y)-Math.hypot(b.x-target.x,b.y-target.y))[0];
+ if(fryer)fryer.isFryer=true;
+ return people;
 }
 function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
@@ -430,7 +439,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
   const first=rnd(road.id+29)<.5?1:-1;
   const parked=[first,-first].map(side=>({
    x:pt.x-Math.sin(pt.a)*shoulder*side,y:pt.y+Math.cos(pt.a)*shoulder*side,
-   a:pt.a,speed:0,type:k%5,vehicleType:k%3===1?'motorcycle':'car',model:k%3===1?MOTORCYCLE_IDS[(k+Math.floor(k/3)*5)%MOTORCYCLE_IDS.length]:k%8===1?'panda-fire-red':CAR_TRAFFIC_SPRITE_IDS[(k*7)%CAR_TRAFFIC_SPRITE_IDS.length]
+   a:pt.a,speed:0,type:k%5,vehicleType:k%3===1?'motorcycle':'car',model:k%3===1?MOTORCYCLE_IDS[(k+Math.floor(k/3)*5)%MOTORCYCLE_IDS.length]:k===2?'ape-car-azzurra':k===5?'furgone-fritti':k%8===1?'panda-fire-red':CAR_TRAFFIC_SPRITE_IDS[(k*7)%CAR_TRAFFIC_SPRITE_IDS.length]
   })).find(car=>!carBlocked(car.x,car.y,car.a,-1)&&!state.cars.some(other=>vehiclesOverlap(car,other)));
   if(!parked)continue;
   state.cars.push(parked);k++;
@@ -1512,4 +1521,4 @@ function bind(){
  },{passive:false});
 }
 loadChurchWebp(()=>{staticTiles.clear();pendingTile=null;});
-loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();
+loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSprites();loadFryerSprite();loadCarSprites();bind();requestAnimationFrame(frame);load();
