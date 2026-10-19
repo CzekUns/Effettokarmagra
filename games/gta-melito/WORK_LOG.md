@@ -169,3 +169,13 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Node 22:** disponibile (`v22.16.0`), ma `git ls-remote` fallisce per `Could not resolve host: github.com`; suite Node non eseguita.
 - **Browser/Android:** non eseguiti, nessuna conferma del deploy; Q02 resta aperta per collaudo.
 - **Prossimo passo:** testare suite e gioco su checkout raggiungibile, registrare esiti e correggere problemi prima di marcare Q02 [x].
+
+### 2026-10-19 — ChatGPT/GitHub — Affiancamento account collaboratore
+- **Fatto:** verificato che il collaboratore GitHub `ilconsulentelogistico-hue` dispone di autorizzazione `write` nella repository.
+- **Coordinamento:** creata e assegnata l'issue #28 di supporto QA alla Q02 ancora aperta, senza iniziare una seconda Q.
+- **Ambito del collaboratore:** test Node 22 e, se accessibili, browser/mobile per agenda NPC, timer missioni, pause e banca; riportare risultati reali.
+- **Regola anti-conflitti:** modifiche del collaboratore su branch separato e PR; niente push diretto su main e niente checkbox Q spuntate senza verifica del lavoratore orario.
+- **Verifiche fatte:** controllati livello autorizzativo e assegnatario dell'issue; letta TODO con Q02 [ ] e il registro corrente.
+- **Test non eseguiti:** nessun nuovo test Node, browser o deploy in questo turno, nessun codice gameplay modificato.
+- **Da fare:** il collaboratore esegue/verifica Q02 e propone eventuale PR; il lavoratore orario continua in ordine sulla TODO, integrando i risultati quando disponibili.
+- **Riferimenti:** issue https://github.com/CzekUns/Effettokarmagra/issues/28; branch main.
