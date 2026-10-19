@@ -26,7 +26,7 @@ test('Q09 nothing is created before a user gesture; the first gesture builds and
  assert.equal(made,0,'no AudioContext without a gesture');assert.equal(audio.started,false);assert.equal(audio.contextState,'none');
  assert.equal(audio.start(),true);assert.equal(made,1);assert.equal(ctx.state,'running');
  assert.ok(ctx.log.filter(x=>x==='osc-start').length>=2+TRAFFIC_VOICES*2,'engine and traffic voices running');
- assert.equal(ctx.log.filter(x=>x==='noise-start').length,2,'city background and rain loops');
+ assert.equal(ctx.log.filter(x=>x==='noise-start').length,3,'city background, rain and tyre-squeal loops');
  audio.start();assert.equal(made,1,'one context only');
  const broken=createCityAudio({contextFactory:()=>{throw Error('no audio');}});
  assert.equal(broken.start(),false,'a browser without Web Audio simply stays silent');

@@ -15,7 +15,7 @@ export function engineTone(vehicleType,speed,throttle=0){
 }
 /* Livelli voluti per questo istante (funzione pura, testabile senza Web Audio). */
 export function audioMix(input){
- const {muted=false,volume=.7,focused=true,paused=false,interior=false,radioLive=false,player={},traffic=[],night=0,rain=0}=input;
+ const {muted=false,volume=.7,focused=true,paused=false,interior=false,radioLive=false,player={},traffic=[],night=0,rain=0,skid=0}=input;
  const silent=muted||!focused||paused;
  const master=silent?0:clamp(volume,0,1);
  const duck=radioLive?.55:1;
@@ -32,7 +32,9 @@ export function audioMix(input){
    return {...tone,gain:.07*(1-d/HEAR_RANGE)**2*.85*(radioLive?.7:1),pan:clamp((v.x-player.x)/40,-1,1),distance:d};});
  return {master,engine,voices,
   ambient:{gain:interior?.008:(.05-.025*clamp(night,0,1))},
-  rain:{gain:interior?0:.07*clamp(rain,0,1)}};
+  rain:{gain:interior?0:.07*clamp(rain,0,1)},
+  // Q10: stridio delle gomme in sbandata, solo dal mezzo del giocatore.
+  skid:{gain:interior||!player.inVehicle?0:.09*clamp(skid,0,1)}};
 }
 /* Clacson degli NPC: auto ferma da più di 2,5 s vicino al giocatore; al massimo uno ogni 5 s
  * in tutta la città e uno ogni 15 s per la stessa auto. */
@@ -88,7 +90,7 @@ export function createCityAudio({contextFactory=()=>new (globalThis.AudioContext
    return {src,filter,gain};
   };
   nodes={master,engine:voice('sawtooth',900,false),voices:[...Array(TRAFFIC_VOICES)].map(()=>voice('sawtooth',700,true)),
-   ambient:loop(true,'lowpass',380),rain:loop(false,'bandpass',2600,.6)};
+   ambient:loop(true,'lowpass',380),rain:loop(false,'bandpass',2600,.6),skid:loop(false,'bandpass',1700,4)};
  }
  const api={
   // Da chiamare dentro un gesto dell'utente (tocco, clic, tasto): prima nessun contesto audio.
@@ -113,7 +115,7 @@ export function createCityAudio({contextFactory=()=>new (globalThis.AudioContext
    const e=nodes.engine;set(e.gain.gain,mix.engine.gain);set(e.osc.frequency,mix.engine.freq);set(e.sub.frequency,mix.engine.freq/2);set(e.filter.frequency,mix.engine.cutoff);
    nodes.voices.forEach((n,i)=>{const v=mix.voices[i];
     set(n.gain.gain,v?v.gain:0);if(v){set(n.osc.frequency,v.freq);set(n.sub.frequency,v.freq/2);set(n.filter.frequency,v.cutoff*.8);if(n.pan)set(n.pan.pan,v.pan);}});
-   set(nodes.ambient.gain.gain,mix.ambient.gain);set(nodes.rain.gain.gain,mix.rain.gain);
+   set(nodes.ambient.gain.gain,mix.ambient.gain);set(nodes.rain.gain.gain,mix.rain.gain);set(nodes.skid.gain.gain,mix.skid.gain);
    return mix;
   },
   // Clacson a due toni (auto) o a un tono più acuto (scooter); pan e volume dalla posizione.

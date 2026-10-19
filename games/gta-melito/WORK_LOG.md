@@ -274,3 +274,13 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Browser (Chrome headless):** avvio solo dopo il clic, motore che sale in accelerazione, muto e volume dal menu, sospensione con la scheda nascosta, radio visibile; resa offline con segnale reale e senza saturazione; nessun errore JS.
 - **Non eseguiti / limiti:** ascolto reale (altoparlanti, Android): i volumi vanno regolati a orecchio.
 - **Da fare:** Q10 (guida arcade 2.0) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q10 guida arcade 2.0
+- **Fatto:** profili di guida diversi per auto (e modello), scooter e moto; sbandate col freno a mano o in curva veloce che si recuperano da sole; segni delle gomme e stridio. Q10 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `vehicle-handling.mjs` (`stepVehicle`, `applyGrip`, `handlingProfile`); `driving-controls.mjs` e `motorcycles.mjs` delegano a `stepVehicle` con i valori storici come predefiniti; `game.mjs` passa profilo e bagnato, muove l'auto lungo `car.travel`, segni `addSkidMarks`/`drawSkidMarks`; `city-audio.mjs`: rumore di stridio.
+- **Regressioni:** equivalenza esatta con la fisica precedente senza profilo; test esistenti di volante, pedali, freno, RETRO, scooter e tour di guida tutti verdi.
+- **Cache:** `game.mjs?v=149`, `driving-controls.mjs?v=096`, `motorcycles.mjs?v=004`, `city-audio.mjs?v=002`, `bank-interior.mjs?v=006`, nuovo `vehicle-handling.mjs?v=001`.
+- **Test:** nuovo `vehicle-handling.test.mjs` (7 test); suite Node 22 **238/238**.
+- **Browser (Chrome headless):** sbandata col freno a mano con segni e stridio, ritorno in linea, mai dentro i muri, RETRO senza scivolate; nessun errore JS.
+- **Non eseguiti / limiti:** prova di guida su telefono reale; profili da rifinire a sensazione.
+- **Da fare:** Q11 (socialità NPC più ricca) sullo stesso ramo.

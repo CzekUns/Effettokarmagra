@@ -14,7 +14,7 @@ import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEv
 import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote} from './local-shops.mjs?v=001';
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
 import {buildingVolume} from './building-volume.mjs?v=088';
-import {createCityAudio} from './city-audio.mjs?v=001';
+import {createCityAudio} from './city-audio.mjs?v=002';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape} from './traffic-collision.mjs?v=126';
 import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
@@ -29,8 +29,9 @@ import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=100';
-import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=095';
-import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=003';
+import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=096';
+import {handlingProfile,applyGrip} from './vehicle-handling.mjs?v=001';
+import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=004';
 import {nearestEnterableVehicle,starterMotorcycleCandidates} from './vehicle-entry.mjs?v=001';
 import {PARKED_BIKE_TARGET,PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP,motorcycleParkingRoadOrder,motorcycleParkingCandidates,parkedBikeLabel} from './motorcycle-parking.mjs?v=001';
 import {guideCar} from './driving-assist.mjs?v=099';
@@ -38,7 +39,7 @@ import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
-import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=005';
+import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=006';
 import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=002';
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
@@ -644,6 +645,29 @@ function toRing(border){
  for(let i=0;i<border.length;i+=2)state.borderRing.push([border[i],border[i+1]]);
  return state.borderRing;
 }
+// Q10: tyre marks of a slide, two rear wheels (one for a bike), fading in 8 s.
+const SKID_LIFE=8,SKID_MAX=180;
+function addSkidMarks(car){
+ const bike=isMotorcycle(car),back=bike?2.1:2.3,side=bike?[0]:[-1.2,1.2],ca=Math.cos(car.a),sa=Math.sin(car.a);
+ state.skids||=[];
+ for(const k of side){
+  const x=car.x-ca*back-sa*k,y=car.y-sa*back+ca*k,last=car.lastSkid?.[k];
+  if(last&&Math.hypot(x-last.x,y-last.y)<6)state.skids.push({x0:last.x,y0:last.y,x1:x,y1:y,t:state.clock,w:bike?.32:.42});
+  (car.lastSkid||={})[k]={x,y,t:state.clock};
+ }
+ if(state.skids.length>SKID_MAX)state.skids.splice(0,state.skids.length-SKID_MAX);
+}
+function drawSkidMarks([x0,y0,x1,y1]){
+ if(!state.skids?.length)return;
+ state.skids=state.skids.filter(s=>state.clock-s.t<SKID_LIFE);
+ c.save();c.lineCap='round';c.strokeStyle='#121616';
+ for(const s of state.skids){
+  if(Math.max(s.x0,s.x1)<x0||Math.min(s.x0,s.x1)>x1||Math.max(s.y0,s.y1)<y0||Math.min(s.y0,s.y1)>y1)continue;
+  c.globalAlpha=.5*(1-(state.clock-s.t)/SKID_LIFE);c.lineWidth=s.w;
+  c.beginPath();c.moveTo(s.x0,s.y0);c.lineTo(s.x1,s.y1);c.stroke();
+ }
+ c.restore();
+}
 function tick(dt){
  if(!state.ready)return;
  if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||state.shopOpen){
@@ -682,7 +706,8 @@ function tick(dt){
    speed=rebound.speed;car.recoil=rebound.recoil;angle=car.a;
   }else{
    advanceNonlethalImpact(car,dt,canKnockbackMove);
-   ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt,pressed.brake));
+   // Q10: each model has its own handling; wet roads (Q08) brake a little longer.
+   ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt,pressed.brake,handlingProfile(car),state.weather?.wetness||0));
    const road=nearest(car.x,car.y,25,state.roads,true);
    const turn=guideIntersection({x:car.x,y:car.y,angle,speed},axes.x,road,
     state.graph,state.turnGuides,car.turnGuide||null,dt);
@@ -695,7 +720,12 @@ function tick(dt){
    }
   }
   car.a=angle;
-  const nx=car.x+Math.cos(car.a)*speed*dt,ny=car.y+Math.sin(car.a)*speed*dt;
+  // Q10: the body points where the wheel says, but it travels where grip allows (recoverable slides).
+  const grip=car.recoil>0?{travel:car.a,slip:0,speed,sliding:false}:
+   applyGrip(car,{angle:car.a,speed,dt,handbrake:pressed.handbrake,profile:handlingProfile(car),wet:state.weather?.wetness||0,steer:axes.x});
+  car.travel=grip.travel;car.slip=grip.slip;speed=grip.speed;
+  if(grip.sliding&&speed>8)addSkidMarks(car);
+  const nx=car.x+Math.cos(car.travel)*speed*dt,ny=car.y+Math.sin(car.travel)*speed*dt;
   car.impactProbe={x:nx,y:ny,a:car.a,speed};
   // Trigger the shunt BEFORE the usual safe-street bounce stops the car.
   // This also catches high-speed approaches where the NPC never occupies
@@ -711,7 +741,7 @@ function tick(dt){
   }else if(car.recoil>0){speed=0;car.recoil=0;car.turnGuide=null;}
   else{
    const bounce=reboundCar(car,speed,previousAngle,(x,y,a)=>carBlocked(x,y,a,p.car));
-   car.x=bounce.x;car.y=bounce.y;car.a=bounce.angle;
+   car.x=bounce.x;car.y=bounce.y;car.a=bounce.angle;car.travel=bounce.angle;car.slip=0;
    speed=bounce.speed;car.recoil=bounce.recoil;car.turnGuide=null;car.assistRelease=.25;
   }
   car.speed=speed;p.x=car.x;p.y=car.y;p.a=car.a;
@@ -1076,6 +1106,7 @@ function draw(dt=0){
   const doors=query(state.doors,state.doorGrid,x0,y0,x1,y1);
   drawDoorSteps(c,doors,state.zoom);drawDoorFronts(c,doors,state.zoom);
  }
+ drawSkidMarks([x0,y0,x1,y1]);
  drawStreetObjects(c,state.streetObjects,[x0,y0,x1,y1],state.zoom);
  drawLostItem(c,state.events,state.player.car<0?state.player:null,state.clock);
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
@@ -1177,7 +1208,8 @@ function updateCityAudio(){
  cityAudio.update({paused,interior:!!state.bankInterior,radioLive:radioStatus==='live',
   player:{x:p.x,y:p.y,inVehicle:!!car,vehicleType:car&&isMotorcycle(car)?'motorcycle':'car',speed:car?car.speed:0,throttle:pressed.up||pressed.accelerate?1:0},
   traffic:traffic.map(v=>({x:v.x,y:v.y,vehicleType:v.vehicleType,speed:v.braking?0:v.speed})),
-  night:(state.light?.darkness||0)/NIGHT_DARKNESS,rain:state.weather?.rain||0});
+  night:(state.light?.darkness||0)/NIGHT_DARKNESS,rain:state.weather?.rain||0,
+  skid:car&&car.speed>8?Math.min(1,Math.abs(car.slip||0)/.45):0});
  if(!paused&&!state.bankInterior)cityAudio.npcHorns(traffic,p,state.clock);
 }
 function soundLabel(){$('pause-sound').textContent='SUONI: '+(cityAudio.muted?'OFF':'ON')+' · '+Math.round(cityAudio.volume*100)+'%';}
