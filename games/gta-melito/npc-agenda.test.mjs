@@ -1,0 +1,33 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {NPC_START_MINUTE,advanceNpcClock,npcDaypart,formatNpcClock,makeResidentAgenda,residentDepartureWindow} from './npc-agenda.mjs';
+
+test('Q02 NPC clock covers five dayparts and rolls over midnight',()=>{
+ assert.equal(formatNpcClock(NPC_START_MINUTE),'07:30 · MATTINA');
+ for(const [minutes,part] of [[8*60,'MATTINA'],[12*60,'PRANZO'],[16*60,'POMERIGGIO'],[20*60,'SERA'],[23*60+30,'NOTTE'],[24*60+30,'NOTTE']])
+  assert.equal(npcDaypart(minutes),part);
+ assert.equal(formatNpcClock(24*60+15),'00:15 · NOTTE');
+});
+
+test('Q02 clock freezes during pause and bank interiors without affecting independent timers',()=>{
+ const t=NPC_START_MINUTE;
+ assert.equal(advanceNpcClock(t,.05,{paused:true}),t);
+ assert.equal(advanceNpcClock(t,.05,{interior:true}),t);
+ assert.equal(advanceNpcClock(t,.05),t+.05);
+ assert.equal(advanceNpcClock(t,10),t+.05,'large frame gaps are clamped');
+});
+
+test('Q02 staggered residents occupy every slot and have reproducible daily departures',()=>{
+ const a=Array.from({length:10},(_,i)=>makeResidentAgenda(405+i*17,i));
+ const b=Array.from({length:10},(_,i)=>makeResidentAgenda(405+i*17,i));
+ assert.deepEqual(a,b);
+ assert.deepEqual(new Set(a.map(x=>x.slot)),new Set(['mattina','pranzo','pomeriggio','sera','notte']));
+ assert.equal(new Set(a.map(x=>x.startMinute)).size,10);
+ for(const x of a){
+  assert.equal(residentDepartureWindow(x,x.startMinute+2),0);
+  assert.equal(residentDepartureWindow(x,x.startMinute+x.duration+1),null);
+  assert.equal(residentDepartureWindow(x,x.startMinute+24*60+2),1);
+ }
+ const night=a.find(x=>x.slot==='notte');
+ assert.equal(residentDepartureWindow(night,night.startMinute+75),0);
+});
