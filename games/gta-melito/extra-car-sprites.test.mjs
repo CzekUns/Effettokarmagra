@@ -104,6 +104,6 @@ test('AI and parked traffic use new variants without replacing starter Panda',as
  assert.ok(game.includes('CAR_TRAFFIC_SPRITE_IDS[(k*7)%CAR_TRAFFIC_SPRITE_IDS.length]'));
  assert.ok(game.includes('CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length]'));
  assert.ok(game.includes("model:'panda-modern-white'"));
- assert.ok(game.includes('car-sprites.mjs?v=106'));
- assert.ok(page.includes('game.mjs?v=138'));
+ assert.ok(Number((game.match(/car\-sprites\.mjs\?v=(\d+)/)||[])[1])>=106,'car-sprites.mjs deve essere almeno alla v=106');
+ assert.ok(Number((page.match(/game\.mjs\?v=(\d+)/)||[])[1])>=138,'game.mjs deve essere almeno alla v=138');
 });

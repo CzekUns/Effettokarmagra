@@ -485,3 +485,35 @@ Aggiunta una barretta compatta nella parte superiore della scena, visibile solo 
 **Funzionamento:** nuovo stato `pressed.reverse` e relativo binding pointer/touch con cattura puntatore in `game.mjs`, azzerato quando si scende, si entra in pausa o si perde il focus. `driveAxes()` trasmette velocità richiesta negativa con RETRO tenuto premuto; i comandi ACCELERA e RETRO contemporanei si annullano senza azionare il freno. Le funzioni di guida esistenti `stepDriving()` e `stepMotorcycle()` gestiscono già accelerazione inversa, limite di retromarcia e frenata prima di invertire il moto.
 
 **Verifiche:** eseguito smoke test JavaScript su moduli reali: sintassi, input e funzionamento da fermo; tenendo RETRO l'auto raggiunge -12 unità/s e la moto -4; gestione tasti opposti, tasto S su tastiera, freno e lettura layout/cache `game.mjs?v=138` superati. Aggiunti test automatici in `steering-wheel.test.mjs` e aggiornati i controlli versione delle altre suite. **Suite Node completa, browser reale e test multitouch Android non eseguiti**.
+
+### 2026-10-19 — Portoni e porte dei negozi per gli NPC (Q03)
+
+**Grafica:** nuovi portoni disegnati sul filo del muro, leggibili dall'alto con qualsiasi orientamento della facciata: gradino in piperno grigio scuro sul marciapiede, vano del portone in legno marrone (vetro azzurro per i negozi OSM) e stipiti in pietra chiara. Quando qualcuno entra o esce il portone resta aperto 1,4 s: vano scuro e luce calda sul gradino. Sulle facciate ben esposte (`facadeExposure ≥ 0,45`) c'è anche il portone in alzato. Disegno in `building-doors.mjs`, dopo gli edifici e prima delle persone.
+
+**Fatti e ipotesi:** i portoni di casa sono inventati; per 3 negozi con nome OSM (Le fantasie di Andrea, I Grimaldi's BARBER, L'Angolo Dei Colori) la porta è stimata sulla facciata dietro l'insegna, non rilevata.
+
+**Verifiche:** screenshot Chrome headless su desktop 1280×720 e telefono 844×390 in orizzontale: porte visibili lungo Via Roma, residente che esce dalla porta aperta, porte a vetro nel gruppo di negozi a sud. Allo zoom a piedi una porta è larga circa 10 px: si vede ma è discreta. Non provato su un telefono reale.
+
+### 2026-10-19 — Giorno, tramonto, notte e alba (Q04)
+
+**Grafica:** sopra la città, a partire dalle 17:10, scende un velo graduale: dorato verso le 18:30, viola al crepuscolo, blu notte traslucido dalle 21:00 (opacità massima 0,58, la città resta leggibile), viola-arancio all'alba. Di notte compaiono pozze di luce calda sotto i lampioni già disegnati e le loro lampadine. Le finestre accese sono le stesse vetrate delle facciate, colorate giallo caldo e accese una alla volta. Le auto e le moto in movimento hanno fari bianchi con cono sulla strada e fanali rossi; le porte aperte della Q03 proiettano luce sul gradino. Il velo passa sotto i suggerimenti e sopra tutto il resto, minimappa esclusa.
+
+**Verifiche:** foto Chrome headless dallo stesso punto di Via Roma alle 12:00, 18:40, 19:30, 21:30, 23:30 e 05:50, su PC e telefono in orizzontale; foto dei fari su un'auto del traffico alle 22:00. Di giorno l'immagine resta identica a prima (confronto pixel). Non provato su un telefono reale.
+
+### 2026-10-19 — Oggetti perduti e fumetti (Q05)
+
+**Grafica:** quattro piccole icone in pixel art per gli oggetti a terra (chiavi dorate, portafoglio marrone, busta bianca con manici verdi, cellulare con schermo azzurro), con un cerchio giallo pulsante quando il giocatore è vicino; l'oggetto raccolto si vede accanto al protagonista. Fumetti chiari col bordo scuro e la punta sopra la testa del personaggio, testo monospace come le altre etichette, visibili 3,5 s e leggibili anche di notte.
+
+**Verifiche:** foto Chrome headless dell'oggetto a terra, di «La spesa?!», di «Preso!» e di «Grazie assai!» con «+5 €»; foto sul telefono in orizzontale. Non provato su un telefono reale.
+
+### 2026-10-19 — Bidoni della differenziata e paletti (Q07)
+
+**Grafica:** bidoni carrellati visti dall'alto (coperchio colorato blu, giallo, verde o grigio, maniglia scura, ombra), in gruppi sul marciapiede; ribaltati diventano più lunghi, col coperchio aperto e un po' di carta per terra. Paletti in ghisa scura con testa chiara a cupola e ombra, sul bordo del marciapiede vicino agli incroci.
+
+**Verifiche:** foto Chrome headless di un gruppo di bidoni su Via Roma, di un bidone ribaltato e dei paletti a un angolo; i paletti sono piccoli (circa 4 px allo zoom a piedi) ma leggibili. Non provato su un telefono reale.
+
+### 2026-10-19 — Nuvole, pioggia, asfalto bagnato e ombrelli (Q08)
+
+**Grafica:** cielo coperto con un velo grigio-azzurro e grandi ombre di nuvole che scorrono; pioggia con gocce oblique sottili; asfalto più scuro e bluastro solo sulle carreggiate, ritagliato attorno a muri e tetti sollevati; pozzanghere ellittiche che riflettono il cielo (bordo scuro, specchio grigio-azzurro, riflesso chiaro) con cerchi delle gocce animati; ombrelli colorati dall'alto sopra la maggior parte dei pedoni; di notte i lampioni lasciano una striscia calda riflessa sul bagnato.
+
+**Verifiche:** foto Chrome headless dallo stesso punto di Via Roma con sereno, nuvoloso e pioggia alle 11:00 e pioggia alle 22:00, su PC e telefono; primo piano di una pozzanghera; confronto ravvicinato sereno/pioggia con i tetti non toccati dal bagnato. Non provato su un telefono reale.

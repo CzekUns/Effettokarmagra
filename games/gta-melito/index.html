@@ -76,6 +76,14 @@ html,body{touch-action:none;overscroll-behavior:none}
 .dialog h2{font-size:20px;color:#ffde9b;margin:8px 0 12px}
 .dialog p{white-space:pre-line;font-size:13px;line-height:1.6;min-height:45px;color:#f6f2e5}
 .dialog button{display:block;margin:16px 0 0 auto;background:#f2d28a;color:#152a21;padding:9px 23px;border:2px solid #ffe7b2;font-weight:900}
+/* Q06: negozio, stesso riquadro dei dialoghi. */
+.shop .shop-balance{min-height:0;margin:0 0 8px;font-weight:900;color:#ffe4a7;letter-spacing:.06em}
+.shop .shop-offers button{display:flex;justify-content:space-between;gap:12px;width:100%;margin:6px 0 0;padding:9px 12px;text-align:left;background:#1d3a30;color:#f6e9cb;border:2px solid #6f8f74;font-weight:900}
+.shop .shop-offers button.poor{opacity:.62;border-style:dashed}
+.shop .shop-offers button:focus-visible,.shop .shop-offers button:hover{border-color:#f4d797}
+.shop .shop-feedback{min-height:20px;margin:8px 0 0;font-size:12px;color:#c9e7c1}
+.shop .shop-feedback.err{color:#ffb39a}
+.shop .shop-note{min-height:0;margin:6px 0 0;font-size:10px;color:#a9b8a2}
 .fullmap{position:absolute;inset:0;z-index:7;background:#0e1d19ed;padding:14px;
  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px}
 .fullmap h2{color:#f5d68e;font-size:16px;letter-spacing:.1em;margin:0}
@@ -323,6 +331,14 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
   <div id="mission-hint" class="m-hint" aria-live="polite"></div>
   <div class="m-actions"><button id="mission-interact" aria-label="Interagisci con l'obiettivo">F · INTERAGISCI</button><button id="mission-reset">RICOMINCIA ↻</button></div>
  </aside>
+ <section class="dialog shop" id="shop-panel" hidden role="dialog" aria-labelledby="shop-name">
+  <div class="name" id="shop-kind">NEGOZIO</div><h2 id="shop-name">NEGOZIO</h2>
+  <p class="shop-balance" id="shop-balance">SALDO: € 0</p>
+  <div class="shop-offers" id="shop-offers"></div>
+  <p class="shop-feedback" id="shop-feedback" aria-live="polite"></p>
+  <p class="shop-note" id="shop-note"></p>
+  <button id="shop-close" aria-label="Esci dal negozio">ESCI ✕</button>
+ </section>
  <section class="dialog" id="dialog" hidden role="dialog" aria-labelledby="dialog-head" aria-live="polite">
   <div class="name" id="dialog-speaker">NICO</div><h2 id="dialog-head">NUOVO MESSAGGIO</h2><p id="dialog-text"></p>
   <button id="dialog-close" aria-label="Chiudi messaggio">CONTINUA →</button>
@@ -333,11 +349,11 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
   <button id="map-close">CHIUDI MAPPA · M</button>
  </section>
  <section class="loading" id="loading"><h2 id="loading-title">CARICO MELITO…</h2><p id="loading-text">Preparo strade ed edifici reali da OpenStreetMap.</p><button id="retry" hidden>RIPROVA ↻</button></section>
- <div class="pause-menu" id="pause-menu" hidden><div class="pause-card"><div class="pause-head"><h2>PAUSA · MELITO</h2><button id="pause-close" class="pause-close">RIPRENDI</button></div><p class="pause-info">Stato · zoom · mappa · missioni · controlli secondari</p><div class="pause-shortcuts"><button id="pause-missions">MISSIONI</button><button id="pause-map">MAPPA COMPLETA</button><button id="pause-zoom-auto">ZOOM AUTO</button><button id="pause-zoom-in">＋ ZOOM</button><button id="pause-zoom-out">－ ZOOM</button><button id="pause-reset">TORNA ALL’INIZIO</button><button id="pause-road-compare">CONFRONTA STRADE</button></div><div class="pause-details" id="pause-details">Carico i dati del gioco…</div><p class="pause-info">Su PC restano disponibili tastiera e tasti WASD/frecce; missioni e mappa completa sono qui.</p></div></div>
+ <div class="pause-menu" id="pause-menu" hidden><div class="pause-card"><div class="pause-head"><h2>PAUSA · MELITO</h2><button id="pause-close" class="pause-close">RIPRENDI</button></div><p class="pause-info">Stato · zoom · mappa · missioni · controlli secondari</p><div class="pause-shortcuts"><button id="pause-missions">MISSIONI</button><button id="pause-map">MAPPA COMPLETA</button><button id="pause-zoom-auto">ZOOM AUTO</button><button id="pause-zoom-in">＋ ZOOM</button><button id="pause-zoom-out">－ ZOOM</button><button id="pause-reset">TORNA ALL’INIZIO</button><button id="pause-road-compare">CONFRONTA STRADE</button><button id="pause-sound" aria-label="Attiva o disattiva gli effetti sonori">SUONI: ON · 70%</button><button id="pause-volume-down" aria-label="Abbassa il volume degli effetti">VOLUME −</button><button id="pause-volume-up" aria-label="Alza il volume degli effetti">VOLUME ＋</button></div><div class="pause-details" id="pause-details">Carico i dati del gioco…</div><p class="pause-info">Su PC restano disponibili tastiera e tasti WASD/frecce; missioni e mappa completa sono qui.</p></div></div>
  <div class="rotate-screen" id="rotate-screen" hidden><div class="rotate-card"><span class="rotate-icon" aria-hidden="true">▰</span><h2>RUOTA LO SCHERMO</h2><p>GTA Melito si gioca in orizzontale. Ruota il telefono per continuare.</p></div></div>
 </div>
 <div class="controls" aria-label="Comandi"><div class="touch-actions" aria-label="Azioni"><button class="control-action" id="action">ENTRA IN VEICOLO</button><button id="sprint" aria-label="Corri a piedi">CORRI</button><div class="pedals" aria-label="Pedali di guida"><button id="accelerator" aria-label="Tieni premuto per accelerare">ACCELERA</button><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="reverse" aria-label="Tieni premuto per andare in retromarcia">RETRO</button></div></div><div class="dpad" aria-hidden="true"></div><div class="buttons"><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-auto" aria-label="Ripristina zoom automatico">AUTO</button><button class="mini" id="zoom-in" aria-label="Regola zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div></div>
 <p class="instructions">PC: WASD/frecce a piedi; in auto A/D sterzo, W acceleratore, S retromarcia, SPAZIO freno a mano · E sali/scendi · SHIFT corri · R cambia radio, SHIFT+R precedente, T accendi/spegni. Telefono: a piedi levetta e CORRI, alla guida volante vero a sinistra, ACCELERA, FRENO e RETRO in colonna a destra; START apre pausa, missioni e impostazioni. In macchina la radio di prova permette di scegliere sei emittenti in diretta; l’audio richiede una connessione e può richiedere un tocco iniziale. Telecamera automatica: massimo zoom a piedi; su veicoli arretra progressivamente con la velocità. ＋/－ personalizzano, AUTO ripristina. Missioni nel pannello dedicato; F per interagire, M per la mappa. Traffico che svolta sulle vere strade, marciapiedi, attraversamenti, tetti tridimensionali e dettagli urbani immaginari in stile pixel art. Strade, incroci e sagome dei palazzi si basano su OpenStreetMap.</p>
 <p class="instructions"><a href="./survey/index.html" target="_blank" rel="noopener noreferrer">🗺 TUTTA MELITO · 2.056 EDIFICI MODELLATI →</a> · 2.056 sagome OSM censite · 2.056 edifici con profilo grafico individuale e palazzi segnaposto aggiuntivi (NON rilievi OSM). Piazza Santo Stefano dettagliata: una facciata verificata fotograficamente, le altre ancora stimate.</p>
 <footer class="credits"><span>© OpenStreetMap contributors — ODbL · Confini: ISTAT 2026 — CC BY · MIT: ispirazione motore <a href="https://github.com/harmanhanjra/punjab-stories" target="_blank" rel="noreferrer">Punjab Stories</a></span><span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Crediti cartografia</a> · <a href="./README.md">Informazioni sul progetto</a></span></footer>
-</main><script type="module" src="./game.mjs?v=140"></script></body></html>
+</main><script type="module" src="./game.mjs?v=151"></script></body></html>

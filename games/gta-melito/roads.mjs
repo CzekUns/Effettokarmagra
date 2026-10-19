@@ -1,6 +1,6 @@
 import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
-import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=002';
-import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked} from './traffic-collision.mjs?v=125';
+import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=005';
+import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked} from './traffic-collision.mjs?v=126';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
  * Simulates moving traffic through intersections with legal one-way exits. */
@@ -128,6 +128,8 @@ export function chooseTurn(graph,nodeId,oldEdge,agent,allowed){
  const node=graph.nodes[nodeId],incoming=graph.edges[oldEdge];
  const exits=node.out.filter(id=>allowed(graph.edges[id],id));
  if(!exits.length)return null;
+ // Q12: an agent with a planned path follows it; everyone else keeps the usual wandering.
+ if(agent.path){const k=agent.path.indexOf(oldEdge),want=k>=0?agent.path[k+1]:undefined;if(want!==undefined&&exits.includes(want))return want;}
  let pool=exits.filter(id=>graph.edges[id].to!==incoming.from);
  if(!pool.length)pool=exits;
  if(agent.body==='car'){
@@ -200,7 +202,7 @@ function stepSidewalkCorner(agent,distance,index){
  agent.braking=false;
 }
 function nextPose(graph,agent,distance){
- const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1,body:agent.body,routine:agent.routine,home:agent.home};
+ const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1,body:agent.body,routine:agent.routine,home:agent.home,path:agent.path};
  let hops=0;
  while(distance>.00001&&hops++<8){
   const edge=graph.edges[route.edge];if(!edge)break;
@@ -217,10 +219,11 @@ function nextPose(graph,agent,distance){
  }
  return {...route,...position(graph,route.edge,route.t,agent.body,route.side),vehicleType:agent.vehicleType};
 }
-export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockMinutes=null){
+export {position as lanePosition,sidewalkTurn};
+export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockMinutes=null,valid=null){
  if(!Number.isFinite(dt)||dt<=0||agent.impactTime>0||agent.needsRoutineRecovery)return;
  const elapsed=Math.min(dt,.1);
- if(agent.residentRoutine){stepResidentRoutine(graph,agent,elapsed,index,clockMinutes);return;}
+ if(agent.residentRoutine){stepResidentRoutine(graph,agent,elapsed,index,clockMinutes,valid);return;}
  if(agent.wait>0){agent.wait=Math.max(0,agent.wait-elapsed);return;}
  const edge=graph.edges[agent.edge];if(!edge||!(agent.body==='car'?edge.car:edge.walk))return;
  let speed=agent.speed;
@@ -233,7 +236,7 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
     const plan=sidewalkTurn(graph,agent.edge,id,agent.side||1);
     if(plan)plans.set(id,plan);
    }
-   const route={seed:agent.seed,body:'walk',routine:agent.routine,home:agent.home};
+   const route={seed:agent.seed,body:'walk',routine:agent.routine,home:agent.home,path:agent.path};
    const chosen=chooseTurn(graph,edge.to,agent.edge,route,(_,id)=>plans.has(id));
    if(chosen!=null){
     const at=position(graph,agent.edge,1,'walk',agent.side);
@@ -340,11 +343,15 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
  for(const agent of agents){
   const x=agent.x,y=agent.y;
   if(agent.impactTime>0){agent.braking=true;continue;}
+  // Q12: commuters (walk ↔ scooter) are moved and recovered by npc-commute.mjs, not by the wanderer.
+  if(agent.commuter)continue;
+  // Q11: chatting with an acquaintance; npc-social.mjs turns them face to face and lets go.
+  if(agent.social?.hold){agent.braking=true;agent.stalled=0;continue;}
   if(restoreAgentRoutine(graph,agent,dt,world,index)){
    if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);
    continue;
   }
-  stepAgent(graph,agent,dt,agents,player,index,world.npcClockMinutes);
+  stepAgent(graph,agent,dt,agents,player,index,world.npcClockMinutes,world.validRecovery);
   agent.stalled=Math.hypot(agent.x-x,agent.y-y)<.02?
    (agent.stalled||0)+dt:0;
   if(agent.body==='car'){

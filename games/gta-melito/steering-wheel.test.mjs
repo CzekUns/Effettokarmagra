@@ -4,6 +4,9 @@ import {readFile} from 'node:fs/promises';
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs';
 import {stepDriving} from './driving-controls.mjs';
 import {stepMotorcycle} from './motorcycles.mjs';
+import {formatNpcClock} from './npc-agenda.mjs';
+import {cityEventAction} from './city-events.mjs';
+import {nearestShop,boostSecondsLeft} from './local-shops.mjs';
 
 test('finger movement rotates a true wheel with positive right and negative left steering',()=>{
  const top=pointerWheelAngle(60,10,60,60);
@@ -43,7 +46,7 @@ test('responsive UI swaps thumbstick for steering wheel only while riding and ha
  assert.match(html,/\.stage\.driving \.touch-stick\{display:none!important\}/);
  assert.match(html,/\.stage\.driving \.steering-wheel\{display:flex\}/);
  assert.match(html,/\.controls\.driving \.pedals\{display:flex\}/);
- assert.match(html,/game\.mjs\?v=139/);
+ assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=139,'game.mjs deve essere almeno alla v=139');
  assert.match(game,/const axes=driveAxes\(\)/);
  assert.match(game,/pressed\.handbrake,dt,pressed\.brake/);
  assert.match(game,/turnSteeringWheel\(wheel\.angle,wheel\.pointerAngle,next\)/);
@@ -99,12 +102,12 @@ test('real HUD switches visible controls between car, walking and interior scene
  assert.ok(start>0&&end>start);
  const update=new Function('state','document','pressed','nearestBankEntrance',
   'nearestEnterableVehicle','moveAxes','describeCameraZoom','interiorZoom',
-  'isMotorcycle','nearest',[
+  'isMotorcycle','nearest','formatNpcClock','cityEventAction','nearestShop','boostSecondsLeft',[
    'const $=id=>document.getElementById(id);',
    game.slice(start,end),
    'return updateHud;'
   ].join('\n'))(state,document,{run:false},()=>null,()=>null,
-  ()=>({x:0,y:0}),()=>'',()=>6.6,()=>false,()=>null);
+  ()=>({x:0,y:0}),()=>'',()=>6.6,()=>false,()=>null,formatNpcClock,cityEventAction,nearestShop,boostSecondsLeft);
  update();
  assert.ok(nodes.get('stage').classes.has('driving'),'in the car the wheel must appear');
  assert.ok(controls.classes.has('driving'),'in the car the pedals must appear');

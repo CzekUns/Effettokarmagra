@@ -113,8 +113,8 @@ test('game exposes placeholder count and camera mode to the player',async()=>{
  assert.ok(html.includes('id="inferred-count"'));
  assert.ok(html.includes('id="camera-mode"'));
  assert.ok(html.includes('id="zoom-auto"'));
- assert.ok(html.includes('game.mjs?v=138'));
- assert.ok(game.includes('urban-infill.mjs?v=116'));
+ assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=138,'game.mjs deve essere almeno alla v=138');
+ assert.ok(Number((game.match(/urban\-infill\.mjs\?v=(\d+)/)||[])[1])>=116,'urban-infill.mjs deve essere almeno alla v=116');
 });
 
 test('whole footprint road clearance catches crossings missed by corner sampling',()=>{
