@@ -1,0 +1,57 @@
+name: Publish Uns Arcade with GTA Melito stable and beta
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout arcade main
+        uses: actions/checkout@v4
+        with:
+          path: site
+          persist-credentials: false
+      - name: Checkout frozen stable GTA Melito
+        uses: actions/checkout@v4
+        with:
+          ref: backup/gta-melito-stable-2026-10-19
+          path: stable-source
+          persist-credentials: false
+      - name: Checkout collaborator beta snapshot (PR 29)
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/29/head
+          path: beta-source
+          persist-credentials: false
+      - name: Build independent playable snapshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f stable-source/games/gta-melito/index.html
+          test -f beta-source/games/gta-melito/index.html
+          mkdir -p site/games/gta-melito-stable site/games/gta-melito-beta
+          cp -a stable-source/games/gta-melito/. site/games/gta-melito-stable/
+          cp -a beta-source/games/gta-melito/. site/games/gta-melito-beta/
+          test -f site/games/gta-melito-stable/game.mjs
+          test -f site/games/gta-melito-beta/game.mjs
+          printf '%s\n' "Stable snapshot: backup/gta-melito-stable-2026-10-19" > site/games/gta-melito-stable/BUILD_SOURCE.txt
+          printf '%s\n' "Beta snapshot: PR 29 head at deployment" > site/games/gta-melito-beta/BUILD_SOURCE.txt
+          rm -rf stable-source beta-source
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
