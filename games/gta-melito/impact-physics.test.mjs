@@ -93,7 +93,7 @@ test('game hooks the knockback into driven car, NPC traffic and player on foot',
  assert.match(game,/sweptVehicleContact\(source,target,from,to\)/);
  assert.match(game,/stepAgents\(state\.graph,state\.people/);
  assert.match(game,/stepAgents\(state\.graph,state\.traffic/);
- assert.match(game,/impact-physics\.mjs\?v=001/);
+ assert.ok(Number((game.match(/impact-physics\.mjs\?v=(\d+)/)||[])[1])>=1,'impact-physics.mjs deve essere almeno alla v=001');
 });
 
 test('never teleport a knocked NPC back home if the destination is on camera',()=>{
