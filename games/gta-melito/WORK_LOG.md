@@ -128,3 +128,13 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Non verificati:** Node 22 completo, browser PC/Android, screenshot e deploy GitHub Pages: ancora pendenti.
 - **Da fare:** eseguire Q02 come prossima singola task oraria; completare il collaudo generale più avanti, senza assumere che il comportamento osservato sia perfetto su device.
 - **Riferimenti:** main, aggiornamento TODO commit `2db6b28`; `TODO.md` Q01 [x], prossimo Q02 [ ].
+
+### 2026-10-19 — ChatGPT/GitHub — Estensione backlog gameplay Q18–Q24
+- **Fatto:** aggiunte 7 nuove task non completate alla coda unica `TODO.md`, senza cambiare ordine o stato di Q01–Q17.
+- **Veicoli di servizio:** Q18 introduce soltanto due modelli (furgone corriere, camion rifiuti); Q19 introduce altri due (carro attrezzi, autobus); Q20 implementa separatamente le routine di lavoro di tutti e quattro.
+- **Altre proposte approvate:** Q21 passeggeri su auto/scooter; Q22 semafori/precedenze/attraversamenti/frecce; Q23 danni visivi ai mezzi; Q24 buche, dossi e superfici con effetti arcade.
+- **Vincoli:** asset PNG RGBA top-down coerenti con `VEHICLE_ART_GUIDE.md`, integrazione in gioco verificabile, nessuna falsa rappresentazione di linee autobus/semafori/buche reali, test e compatibilità con mobile e sistemi esistenti.
+- **Cosa non è stato aggiunto:** animali, animazioni contestuali extra, balconi/cortili, NPC da accompagnare, minigiochi (proposte 6–10 escluse su indicazione dell'utente).
+- **Verifiche/stato:** scrittura della TODO sul branch main riuscita; si tratta esclusivamente di pianificazione, senza creazione di sprite, nuove funzioni, test Node/browser o deploy.
+- **Da fare:** il lavoratore orario deve continuare con la prima Q aperta (Q02 alla lettura odierna), una sola Q per esecuzione; arriverà successivamente a Q18–Q24 senza saltare elementi.
+- **Riferimenti:** `games/gta-melito/TODO.md`, commit `525e338`; nessuna nuova automazione creata.
