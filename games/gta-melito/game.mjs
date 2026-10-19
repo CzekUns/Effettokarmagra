@@ -6,14 +6,24 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=140';
-import {createRoutineResidents} from './resident-routines.mjs?v=002';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=145';
+import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=001';
+import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=005';
+import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
-import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=125';
+import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=002';
+import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote} from './local-shops.mjs?v=001';
+import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
+import {buildingVolume} from './building-volume.mjs?v=088';
+import {createCityAudio} from './city-audio.mjs?v=002';
+import {createSocial,stepSocial} from './npc-social.mjs?v=002';
+import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
+import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape} from './traffic-collision.mjs?v=126';
+import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
-import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
+import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp} from './city-art.mjs?v=125';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=127';
 import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS} from './car-sprites.mjs?v=106';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
@@ -21,23 +31,27 @@ import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=100';
-import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=095';
-import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=003';
-import {nearestEnterableVehicle,starterMotorcycleCandidates} from './vehicle-entry.mjs?v=001';
+import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=096';
+import {handlingProfile,applyGrip} from './vehicle-handling.mjs?v=001';
+import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=004';
+import {nearestEnterableVehicle,starterMotorcycleCandidates} from './vehicle-entry.mjs?v=002';
 import {PARKED_BIKE_TARGET,PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP,motorcycleParkingRoadOrder,motorcycleParkingCandidates,parkedBikeLabel} from './motorcycle-parking.mjs?v=001';
 import {guideCar} from './driving-assist.mjs?v=099';
 import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
-import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=003';
-import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=001';
+import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=006';
+import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=002';
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 import {createCarRadio} from './car-radio.mjs?v=001';
 const $=id=>document.getElementById(id);
+// Q09: last radio status, read by the city sound to duck engines while a station plays.
+let radioStatus='off';
 function updateCarRadioUi({inVehicle,status,station,enabled}){
+ radioStatus=status;
  const panel=$('car-radio');
  panel.hidden=!inVehicle;
  $('radio-name').textContent=station.name;
@@ -84,7 +98,17 @@ function animateSteeringWheel(dt){
  const face=$('steering-face');
  if(face)face.style.transform='rotate('+wheel.angle+'rad)';
 }
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,npcClockMinutes:NPC_START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+// Q04: ?ora=21:30 starts the simulated clock at that time (testing day/night); default 07:30.
+function startMinuteFromUrl(){
+ const match=/^(\d{1,2})[:.](\d{2})$/.exec(new URLSearchParams(globalThis.location?.search||'').get('ora')||'');
+ return match&&Number(match[1])<24&&Number(match[2])<60?Number(match[1])*60+Number(match[2]):NPC_START_MINUTE;
+}
+const START_MINUTE=startMinuteFromUrl();
+// Q09: synthesized city sound; created only on the first user gesture.
+const cityAudio=createCityAudio({storage:globalThis.localStorage});
+// Q08: ?meteo=pioggia|nuvoloso|sereno fixes the weather for checks; otherwise it follows the clock.
+const FORCED_WEATHER=(()=>{const w=new URLSearchParams(globalThis.location?.search||'').get('meteo');return ['pioggia','nuvoloso','sereno'].includes(w)?w:null;})();
+const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const WALK=new Set([...DRIVE,'pedestrian','footway','path','steps']);
 const colors=['#8f8271','#a29076','#797970','#ae947b','#938c7b','#7b8581','#a58c85'];
@@ -132,8 +156,9 @@ function nearest(x,y,max=24,roads=state.roads,driveOnly=false,walkOnly=false){
   }
  }return best;
 }
+// Q03: returns the building found (still truthy), so doors know which footprint they belong to.
 function buildingAt(x,y){
- const hit=buildings=>buildings.some(b=>{
+ const hit=buildings=>buildings.find(b=>{
   const bd=b.bounds;if(!bd||x<bd[0]||x>bd[2]||y<bd[1]||y>bd[3])return false;
   let found=false,p=b.p;
   for(let i=0,j=p.length-2;i<p.length;j=i,i+=2){
@@ -141,9 +166,28 @@ function buildingAt(x,y){
    if(((ay>y)!==(by>y))&&(x<(bx-ax)*(y-ay)/(by-ay)+ax))found=!found;
   }return found;
  });
- if(hit(query(state.buildings,state.buildingGrid,x-5,y-5,x+5,y+5)))return true;
+ const real=hit(query(state.buildings,state.buildingGrid,x-5,y-5,x+5,y+5));
+ if(real)return real;
  return state.inferredGrid?
-  hit(query(state.inferredBuildings,state.inferredGrid,x-5,y-5,x+5,y+5)):false;
+  hit(query(state.inferredBuildings,state.inferredGrid,x-5,y-5,x+5,y+5))||false:false;
+}
+// Q08: ground hidden by a building: its footprint, its walls or its lifted roof (2.5D projection).
+function coveredByBuilding(x,y){
+ if(buildingAt(x,y))return true;
+ const hit=list=>list.some(b=>{
+  const v=buildingVolume(b);if(!v)return false;
+  for(const s of [.34,.67,1]){
+   const px=x+v.dx*s,py=y+v.dy*s,bd=b.bounds;
+   if(!bd||px<bd[0]||px>bd[2]||py<bd[1]||py>bd[3])continue;
+   let found=false;const p=b.p;
+   for(let i=0,j=p.length-2;i<p.length;j=i,i+=2){const ax=p[i],ay=p[i+1],bx=p[j],by=p[j+1];
+    if(((ay>py)!==(by>py))&&(px<(bx-ax)*(py-ay)/(by-ay)+ax))found=!found;}
+   if(found)return true;
+  }
+  return false;
+ });
+ return hit(query(state.buildings,state.buildingGrid,x-2,y-2,x+22,y+22))||
+  (!!state.inferredGrid&&hit(query(state.inferredBuildings,state.inferredGrid,x-2,y-2,x+22,y+22)));
 }
 function validWalk(x,y){
  return x>=0&&y>=0&&x<state.map.projection.width&&y<state.map.projection.height&&!buildingAt(x,y);
@@ -158,14 +202,130 @@ function roadPoint(road,fraction){
  }
  return {x:p[0],y:p[1],a:0};
 }
+// Q07: wheelie bins (movable) and cast-iron bollards (fixed), clear of houses, roads, doors and parked cars.
+function createStreetObjects(){
+ const border=toRing(state.map.border);
+ const avoid=[...state.props.map(q=>({x:q.x,y:q.y,r:1.8})),...(state.doors||[]).map(d=>({x:d.x,y:d.y,r:2.6})),
+  ...state.cars.map(v=>({x:v.x,y:v.y,r:3.6})),...state.bankEntrances.map(b=>({x:b.x,y:b.y,r:3})),
+  ...(state.shops||[]).map(s=>({x:s.x,y:s.y,r:3.2}))];
+ return placeStreetObjects(state.roads,{roadWidth:visualRoadWidth,avoid,
+  walkable:(x,y)=>validWalk(x,y)&&inside([x,y],border),
+  carriageway:(x,y,margin)=>{const r=nearest(x,y,30,state.roads,true);return !!r&&r.distance<visualRoadWidth(r.road)/2+margin;}});
+}
+const bodyShape=v=>vehicleShape(isMotorcycle(v)?{vehicleType:'motorcycle'}:{vehicleType:'car'});
+function stepStreetPhysics(dt){
+ const objects=state.streetObjects,p=state.player;if(!objects)return;
+ const vehicles=[];
+ if(p.car>=0){const car=state.cars[p.car];vehicles.push({x:car.x,y:car.y,a:car.a,vx:Math.cos(car.a)*car.speed,vy:Math.sin(car.a)*car.speed,shape:bodyShape(car)});}
+ for(const v of state.traffic)if(v.body==='car'){
+  const speed=v.braking?0:v.speed||0;vehicles.push({x:v.x,y:v.y,a:v.a,vx:Math.cos(v.a)*speed,vy:Math.sin(v.a)*speed,shape:bodyShape(v)});
+ }
+ const walkers=p.car<0?[{x:p.x,y:p.y}]:[];
+ for(const person of state.people)if(!person.indoors)walkers.push(person);
+ const hits=stepStreetObjects(objects,dt,{vehicles,walkers,canMove:canKnockbackMove,view:visibleBounds()});
+ // A wheelie bin is light: the player's car loses only a little speed.
+ if(p.car>=0&&hits.length)state.cars[p.car].speed*=.96;
+}
+// Q12: home door near the start, a free kerb spot for the scooter in front of it, and a named OSM
+// shop 300-900 m away by road. The scooter is a real parked vehicle (the player can take it).
+function createCommuters(doorAt,walkOK,shops,taken){
+ const old=state.cars.find(v=>v.commuterBike);
+ if(old&&state.player.car===state.cars.indexOf(old))return [];
+ const used=new Set(taken.flatMap(p=>[p.residentRoutine?.homeDoor,p.residentRoutine?.targetDoor]).filter(Boolean));
+ const freeSpot=s=>walkOK(s.x,s.y)&&!state.cars.some(v=>v!==old&&vehiclesOverlap({...s,vehicleType:'motorcycle'},v,.4))&&
+  ![...used].some(d=>Math.hypot(d.x-s.x,d.y-s.y)<2.5);
+ const homes=[];
+ for(const id of state.graph.walkStarts){
+  const e=state.graph.edges[id],a=state.graph.nodes[e.from],b=state.graph.nodes[e.to];
+  if(!(e.len>=30)||Math.hypot((a.x+b.x)/2-state.spawn[0],(a.y+b.y)/2-state.spawn[1])>220)continue;
+  for(let m=8;m<e.len-8&&homes.length<40;m+=7)for(const side of [1,-1]){
+   const o=lanePosition(state.graph,id,m/e.len,'walk',side);
+   const door=doorAt(o,{x:-Math.sin(e.angle)*side,y:Math.cos(e.angle)*side});
+   if(!door)continue;
+   Object.assign(door,{edge:id,side,t:m/e.len,lateral:(door.x-o.x)*-Math.sin(e.angle)+(door.y-o.y)*Math.cos(e.angle)});
+   if([...used].some(d=>Math.hypot(d.x-door.x,d.y-door.y)<2.5))continue;
+   const spot=kerbSpot(state.graph,door);
+   if(freeSpot(spot))homes.push({door,d:Math.hypot(door.x-state.spawn[0],door.y-state.spawn[1])});
+  }
+ }
+ homes.sort((p,q)=>p.d-q.d);
+ // Any named OSM shop 300-900 m away with a valid door on a visible facade (not only the visitors' ones).
+ const destinations=[...(shops||[])];
+ for(const shop of state.shops||[]){
+  const dist=Math.hypot(shop.x-state.spawn[0],shop.y-state.spawn[1]);
+  if(dist<250||dist>1000||destinations.length>=16)continue;
+  const door=doorAt({x:shop.x,y:shop.y},{x:-Math.sin(shop.a)*shop.side,y:Math.cos(shop.a)*shop.side},{source:DOOR_SOURCE.OSM_POI,label:shop.name,kind:shop.kind});
+  const placed=door&&attachDoorToPavement(state.graph,door,doorAt);
+  if(placed&&!destinations.some(d=>Math.hypot(d.x-placed.x,d.y-placed.y)<3))destinations.push(placed);
+ }
+ for(let i=destinations.length-1;i>=0;i--)if(used.has(destinations[i])||!freeSpot(kerbSpot(state.graph,destinations[i])))destinations.splice(i,1);
+ // The pair with the shortest round trip by road (one-way streets can make the way out long).
+ let best=null;
+ for(const {door:home} of homes.slice(0,5)){
+  const from=carEdgeFor(state.graph,home.edge,home.t);if(!from)continue;
+  for(const shop of destinations){
+   const far=Math.hypot(shop.x-home.x,shop.y-home.y),to=carEdgeFor(state.graph,shop.edge,shop.t);
+   if(far<300||far>900||!to)continue;
+   const out=planRoute(state.graph,from.edge,to.edge,'car'),back=out&&planRoute(state.graph,to.edge,from.edge,'car');
+   const length=out&&back?routeLength(state.graph,out)+routeLength(state.graph,back):Infinity;
+   // Melito has many one-way streets: a round trip of a few kilometres is normal.
+   if(length<4200&&(!best||length<best.length))best={home,shop,length};
+  }
+ }
+ if(best){
+  const bike=old||{x:0,y:0,a:0,speed:0,type:0,model:'moto-scooter-retro-blue',vehicleType:'motorcycle',rider:false};
+  const commuter=createCommuter({graph:state.graph,homeDoor:best.home,shopDoor:best.shop,bike,seed:1201,index:0});
+  if(commuter){if(!old)state.cars.push(bike);return [commuter];}
+ }
+ return [];
+}
+function stepCommuters(dt){
+ const p=state.player;
+ for(const c of state.commuters||[]){
+  c.npc.prevX=c.npc.x;c.npc.prevY=c.npc.y;c.npc.prevA=c.npc.a;
+  stepCommuter(c,dt,{graph:state.graph,index:state.dynamicCollision,valid:canKnockbackMove,clockMinutes:state.npcClockMinutes,
+   playerVehicle:p.car>=0?state.cars[p.car]:null,say:(agent,text)=>cityEventBubble(state.events,agent,text),wet:(state.weather?.wetness||0)>.5});
+ }
+}
+// Q03: errands of named OSM shops worth a short visit on foot.
+const VISIT_KINDS=new Set(['bakery','pastry','bar','cafe','supermarket','pharmacy','hairdresser','stationery','hardware','clothes','butcher','houseware']);
 function createCityPedestrians(){
  const border=toRing(state.map.border);
+ const walkOK=(x,y)=>validWalk(x,y)&&inside([x,y],border);
+ // Doors only on facades facing the viewer: the NPC visibly reaches the threshold.
+ const doorAt=(origin,normal,extra)=>{
+  const door=probeDoor(origin,normal,buildingAt,walkOK,{viewerOnly:true,...extra});
+  return door.valid&&doorFacesViewer(door)?door:null;
+ };
  const residents=createRoutineResidents(state.graph,10,405,
-  {x:state.spawn[0],y:state.spawn[1]},[...state.cars,...state.traffic],
-  (x,y)=>validWalk(x,y)&&inside([x,y],border));
- const walkers=createAgents(state.graph,170-residents.length,310,'walk',
-  [...state.cars,...state.traffic,...residents]);
- return [...residents,...walkers];
+  {x:state.spawn[0],y:state.spawn[1]},[...state.cars,...state.traffic],walkOK,{doorAt});
+ // Nearest named shops first; a few spare ones in case a home door is not found.
+ const shops=[],closest=(state.shops||[]).filter(shop=>VISIT_KINDS.has(shop.kind))
+  .map(shop=>({shop,distance:Math.hypot(shop.x-state.spawn[0],shop.y-state.spawn[1])}))
+  .sort((a,b)=>a.distance-b.distance);
+ for(const {shop} of closest){
+  if(shops.length>=6)break;
+  const door=doorAt({x:shop.x,y:shop.y},{x:-Math.sin(shop.a)*shop.side,y:Math.cos(shop.a)*shop.side},
+   {source:DOOR_SOURCE.OSM_POI,label:shop.name,kind:shop.kind});
+  const placed=door&&attachDoorToPavement(state.graph,door,doorAt);
+  if(placed)shops.push(placed);
+ }
+ const visitors=createDoorVisitors(state.graph,shops,3,811,
+  [...state.cars,...state.traffic,...residents],walkOK,doorAt);
+ const routine=[...residents,...visitors];
+ // Q12: one resident who goes to a named OSM shop on its own scooter (and walks if it is gone).
+ state.commuters=createCommuters(doorAt,walkOK,shops,routine);
+ routine.push(...state.commuters.map(c=>c.npc));
+ // Q05: city events belong to this cohort; a new cohort starts a fresh, deterministic sequence.
+ state.events=createCityEvents(505);
+ // Q11: acquaintances who meet on the pavement; a new cohort starts a fresh sequence too.
+ state.social=createSocial(909);
+ state.doors=[...new Set([...routine.flatMap(p=>[p.residentRoutine?.homeDoor,p.residentRoutine?.targetDoor]),
+  ...state.commuters.flatMap(c=>[c.plan.homeDoor,c.plan.shopDoor])].filter(Boolean))];
+ state.doorGrid=makeIndex(state.doors.map(d=>Object.assign(d,{p:[d.wallX-3,d.wallY-4,d.wallX+3,d.wallY+2]})));
+ const walkers=createAgents(state.graph,170-routine.length,310,'walk',
+  [...state.cars,...state.traffic,...routine]);
+ return [...routine,...walkers];
 }
 function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
@@ -220,6 +380,8 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
  state.propsGrid=makeIndex(state.props);
  state.shops=prepareStorefronts(map.pois||[],state.roads);
+ state.puddles=placePuddles(state.roads,{drivable:r=>DRIVE.has(r.t),roadWidth:visualRoadWidth,covered:coveredByBuilding});
+ state.weather=weatherAt(state.npcClockMinutes,{forced:FORCED_WEATHER});wetTiles.clear();
  state.shopGrid=makeIndex(state.shops);
  initCampaign(map);
  state.dynamicCollision=null;
@@ -276,8 +438,8 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  }
  state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
  state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
- state.people=createCityPedestrians();
- state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=NPC_START_MINUTE;
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
+ state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
  $('inferred-count').textContent=String(state.inferredBuildings.length);
@@ -414,6 +576,7 @@ function updateTraffic(dt){
  state.trafficClock+=dt;
  if(state.trafficClock<.05)return;
  const elapsed=.05;state.trafficClock-=elapsed;
+ for(const door of state.doors||[])if(door.open>0)door.open=Math.max(0,door.open-elapsed);
  for(const agent of [...state.people,...state.traffic]){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
   advanceNonlethalImpact(agent,elapsed,canKnockbackMove);
@@ -431,8 +594,41 @@ function updateTraffic(dt){
 function interiorZoom(){
  return targetCameraZoom({inVehicle:false,moving:false},state.zoomBias)*BANK_FOOT_ZOOM_MULTIPLIER;
 }
+const SHOP_KINDS={bar:'BAR',cafe:'CAFFETTERIA',pastry:'PASTICCERIA',bakery:'PANIFICIO',supermarket:'SUPERMERCATO',convenience:'ALIMENTARI',stationery:'CARTOLERIA',hairdresser:'PARRUCCHIERE'};
+function openShop(shop){
+ state.shopOpen=shop;
+ for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
+ $('shop-kind').textContent=(SHOP_KINDS[shop.kind]||'NEGOZIO')+' · MELITO';
+ $('shop-name').textContent=shop.name.toUpperCase();$('shop-note').textContent=shopNote();
+ $('shop-feedback').textContent='';$('shop-feedback').classList.remove('err');
+ renderShop();$('shop-panel').hidden=false;
+}
+function renderShop(){
+ const shop=state.shopOpen,money=state.progress?.money??0;if(!shop)return;
+ $('shop-balance').textContent='SALDO: € '+money;
+ const list=$('shop-offers');list.textContent='';
+ offersFor(shop.kind).forEach((offer,i)=>{
+  const button=document.createElement('button');button.type='button';button.dataset.offer=offer.id;
+  button.className=money>=offer.price?'':'poor';
+  const label=document.createElement('span');label.textContent=(i+1)+' · '+offer.name;
+  const price=document.createElement('span');price.textContent='€ '+offer.price;
+  button.append(label,price);button.addEventListener('click',()=>buyFromShop(offer.id));list.append(button);
+ });
+}
+function buyFromShop(offerId){
+ const shop=state.shopOpen;if(!shop||!state.progress)return;
+ const result=buyOffer(state.progress,offerId,shop);
+ if(result.ok){
+  saveProgress(localStorage,state.progress);refreshCampaign();
+  state.boost=addBoost(state.boost,result.offer,state.clock);
+ }
+ $('shop-feedback').textContent=purchaseMessage(result);$('shop-feedback').classList.toggle('err',!result.ok);
+ renderShop();updateHud();
+}
+function closeShop(){state.shopOpen=null;$('shop-panel').hidden=true;canvas.focus?.({preventScroll:true});updateHud();}
 function toggleVehicle(){
  if(!state.ready)return;
+ if(state.shopOpen){closeShop();return;}
  const p=state.player;
  if(state.bankInterior){
   const interior=state.bankInterior;state.bankInterior=null;
@@ -440,6 +636,18 @@ function toggleVehicle(){
   state.camera.x=p.x;state.camera.y=p.y;updateHud();return;
  }
  if(p.car<0){
+  // Q05: picking up or giving back a lost item comes before doors and vehicles.
+  const event=interactCityEvent(state.events,p);
+  if(event){
+   if(event.type==='returned'&&state.progress){
+    state.progress.money+=event.reward;saveProgress(localStorage,state.progress);refreshCampaign();
+    cityEventBubble(state.events,p,'+'+event.reward+' €');
+   }else cityEventBubble(state.events,p,'Preso!');
+   updateHud();return;
+  }
+  // Q06: next to the awning of a named OSM shop the action opens its counter.
+  const shop=nearestShop(state.shops,p);
+  if(shop){openShop(shop);return;}
   const entrance=nearestBankEntrance(state.bankEntrances,p);
   if(entrance){
    const local={x:.5,y:.89,a:-Math.PI/2,moving:false};
@@ -495,6 +703,8 @@ function carBlocked(x,y,a,which,vehicle=state.cars[which]){
   if(!road||road.distance>width/2+SIDEWALK_DRIVE||!canDriveProbe(road.distance,width,
    road.distance>width/2-.55&&buildingAt(px,py)))return true;
  }
+ // Q07: cast-iron bollards stop the car like a wall.
+ if(state.streetObjects&&bollardBlocksVehicle(state.streetObjects,{x,y,a},bodyShape(vehicle)))return true;
  return !!(state.dynamicCollision&&collidesWithTraffic(
   {x,y,a,vehicleType:bike?'motorcycle':'car'},'car',state.dynamicCollision,vehicle));
 }
@@ -504,14 +714,39 @@ function toRing(border){
  for(let i=0;i<border.length;i+=2)state.borderRing.push([border[i],border[i+1]]);
  return state.borderRing;
 }
+// Q10: tyre marks of a slide, two rear wheels (one for a bike), fading in 8 s.
+const SKID_LIFE=8,SKID_MAX=180;
+function addSkidMarks(car){
+ const bike=isMotorcycle(car),back=bike?2.1:2.3,side=bike?[0]:[-1.2,1.2],ca=Math.cos(car.a),sa=Math.sin(car.a);
+ state.skids||=[];
+ for(const k of side){
+  const x=car.x-ca*back-sa*k,y=car.y-sa*back+ca*k,last=car.lastSkid?.[k];
+  if(last&&Math.hypot(x-last.x,y-last.y)<6)state.skids.push({x0:last.x,y0:last.y,x1:x,y1:y,t:state.clock,w:bike?.32:.42});
+  (car.lastSkid||={})[k]={x,y,t:state.clock};
+ }
+ if(state.skids.length>SKID_MAX)state.skids.splice(0,state.skids.length-SKID_MAX);
+}
+function drawSkidMarks([x0,y0,x1,y1]){
+ if(!state.skids?.length)return;
+ state.skids=state.skids.filter(s=>state.clock-s.t<SKID_LIFE);
+ c.save();c.lineCap='round';c.strokeStyle='#121616';
+ for(const s of state.skids){
+  if(Math.max(s.x0,s.x1)<x0||Math.min(s.x0,s.x1)>x1||Math.max(s.y0,s.y1)<y0||Math.min(s.y0,s.y1)>y1)continue;
+  c.globalAlpha=.5*(1-(state.clock-s.t)/SKID_LIFE);c.lineWidth=s.w;
+  c.beginPath();c.moveTo(s.x0,s.y0);c.lineTo(s.x1,s.y1);c.stroke();
+ }
+ c.restore();
+}
 function tick(dt){
  if(!state.ready)return;
- if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden){
+ if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||state.shopOpen){
   for(const key of Object.keys(pressed))pressed[key]=false;
   stick.x=0;stick.y=0;
   return;
  }
- state.npcClockMinutes=advanceNpcClock(state.npcClockMinutes,dt);
+ // Q02: in banca gli NPC non vengono simulati, quindi anche il loro orologio resta fermo.
+ state.npcClockMinutes=advanceNpcClock(state.npcClockMinutes,dt,{interior:!!state.bankInterior});
+ state.weather=weatherAt(state.npcClockMinutes,{forced:FORCED_WEATHER});
  animateSteeringWheel(dt);
  if(state.bankInterior){
   const axes=moveAxes(),local=state.bankInterior.player;
@@ -540,7 +775,8 @@ function tick(dt){
    speed=rebound.speed;car.recoil=rebound.recoil;angle=car.a;
   }else{
    advanceNonlethalImpact(car,dt,canKnockbackMove);
-   ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt,pressed.brake));
+   // Q10: each model has its own handling; wet roads (Q08) brake a little longer.
+   ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt,pressed.brake,handlingProfile(car),state.weather?.wetness||0));
    const road=nearest(car.x,car.y,25,state.roads,true);
    const turn=guideIntersection({x:car.x,y:car.y,angle,speed},axes.x,road,
     state.graph,state.turnGuides,car.turnGuide||null,dt);
@@ -553,7 +789,12 @@ function tick(dt){
    }
   }
   car.a=angle;
-  const nx=car.x+Math.cos(car.a)*speed*dt,ny=car.y+Math.sin(car.a)*speed*dt;
+  // Q10: the body points where the wheel says, but it travels where grip allows (recoverable slides).
+  const grip=car.recoil>0?{travel:car.a,slip:0,speed,sliding:false}:
+   applyGrip(car,{angle:car.a,speed,dt,handbrake:pressed.handbrake,profile:handlingProfile(car),wet:state.weather?.wetness||0,steer:axes.x});
+  car.travel=grip.travel;car.slip=grip.slip;speed=grip.speed;
+  if(grip.sliding&&speed>8)addSkidMarks(car);
+  const nx=car.x+Math.cos(car.travel)*speed*dt,ny=car.y+Math.sin(car.travel)*speed*dt;
   car.impactProbe={x:nx,y:ny,a:car.a,speed};
   // Trigger the shunt BEFORE the usual safe-street bounce stops the car.
   // This also catches high-speed approaches where the NPC never occupies
@@ -569,7 +810,7 @@ function tick(dt){
   }else if(car.recoil>0){speed=0;car.recoil=0;car.turnGuide=null;}
   else{
    const bounce=reboundCar(car,speed,previousAngle,(x,y,a)=>carBlocked(x,y,a,p.car));
-   car.x=bounce.x;car.y=bounce.y;car.a=bounce.angle;
+   car.x=bounce.x;car.y=bounce.y;car.a=bounce.angle;car.travel=bounce.angle;car.slip=0;
    speed=bounce.speed;car.recoil=bounce.recoil;car.turnGuide=null;car.assistRelease=.25;
   }
   car.speed=speed;p.x=car.x;p.y=car.y;p.a=car.a;
@@ -580,9 +821,10 @@ function tick(dt){
   if(p.impactTime>0){
    advanceNonlethalImpact(p,dt,canKnockbackMove);
   }else if(Math.hypot(dx,dy)>.08){
-   const len=Math.hypot(dx,dy),v=(pressed.run?RUN_SPEED:WALK_SPEED)*Math.min(1,len),nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
-   if(validWalk(nx,p.y)&&inside([nx,p.y],toRing(state.map.border)))p.x=nx;
-   if(validWalk(p.x,ny)&&inside([p.x,ny],toRing(state.map.border)))p.y=ny;
+   const len=Math.hypot(dx,dy),v=(pressed.run?RUN_SPEED:WALK_SPEED)*Math.min(1,len)*boostFactor(state.boost,state.clock),nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
+   const post=(x,y)=>state.streetObjects&&bollardBlocksWalker(state.streetObjects,x,y);
+   if(validWalk(nx,p.y)&&inside([nx,p.y],toRing(state.map.border))&&!post(nx,p.y))p.x=nx;
+   if(validWalk(p.x,ny)&&inside([p.x,ny],toRing(state.map.border))&&!post(p.x,ny))p.y=ny;
    p.a=Math.atan2(dy,dx);state.distance+=v*dt;
   }
  }
@@ -590,6 +832,20 @@ function tick(dt){
  for(const car of state.cars)if(car!==state.cars[p.car])
   advanceNonlethalImpact(car,dt,canKnockbackMove);
  updateTraffic(dt);
+ stepCommuters(dt);
+ stepStreetPhysics(dt);
+ const screen=visibleBounds(),inset=18+4;
+ const signal=stepCityEvents(state.events,dt,{people:state.people,graph:state.graph,
+  player:{x:p.x,y:p.y,onFoot:p.car<0},view:[screen[0]+inset,screen[1]+inset,screen[2]-inset,screen[3]-inset],
+  allowed:!state.progress||state.progress.remaining===null});
+ if(signal)updateHud();
+ if(state.social){
+  const view=visibleBounds(),vehicles=state.traffic.filter(v=>v.body==='car').map(v=>({x:v.x,y:v.y,speed:v.braking?0:v.speed}));
+  if(p.car>=0)vehicles.push({x:state.cars[p.car].x,y:state.cars[p.car].y,speed:state.cars[p.car].speed});
+  stepSocial(state.social,dt,{people:state.people,graph:state.graph,view,vehicles,alarm:state.hornAlarm,
+   rain:state.weather?.rain||0,night:(state.light?.darkness||0)/NIGHT_DARKNESS,say:(agent,text)=>cityEventBubble(state.events,agent,text),
+   onRoad:(x,y)=>{const r=nearest(x,y,30,state.roads,true);return !!r&&r.distance<visualRoadWidth(r.road)/2+.3;}});
+ }
  if(state.progress){
   const result=updateTimer(state.progress,dt);
   if(result){message(result.message,'TEMPO SCADUTO');saveProgress(localStorage,state.progress);refreshCampaign();}
@@ -627,7 +883,7 @@ function compareRoadWidths(){
  state.graph=buildRoadGraph(state.roads);
  state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
  state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
- state.people=createCityPedestrians();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
  state.propsGrid=makeIndex(state.props);
@@ -638,7 +894,7 @@ function compareRoadWidths(){
 }
 
 function updateHud(){
- const npcClockLabel=$('npc-clock');if(npcClockLabel)npcClockLabel.textContent=formatNpcClock(state.npcClockMinutes);
+ const npcClockLabel=$('npc-clock');if(npcClockLabel)npcClockLabel.textContent=formatNpcClock(state.npcClockMinutes)+(state.weather?' · '+state.weather.label:'');
  const p=state.player;
  const driving=p.car>=0&&!state.bankInterior;
  // The map container must receive the mode class: otherwise CSS keeps the
@@ -652,12 +908,15 @@ function updateHud(){
   $('action').textContent='ESCI DALLA BANCA';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
   $('camera-mode').textContent='INTERNO · '+interiorZoom().toFixed(1)+'×';return;
  }
- $('vehicle').textContent=p.car>=0?(isMotorcycle(state.cars[p.car])?'MOTO · ':'AUTO · ')+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H':'A PIEDI';
+ const boostLeft=boostSecondsLeft(state.boost,state.clock);
+ $('vehicle').textContent=p.car>=0?(isMotorcycle(state.cars[p.car])?'MOTO · ':'AUTO · ')+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H':'A PIEDI'+(boostLeft?' · CARICO '+boostLeft+' S':'');
  const n=state.roadGrid?nearest(p.x,p.y,70):null;
  if(n&&n.road.n)$('street').textContent=n.road.n.toUpperCase();
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
  const bank= p.car<0?nearestBankEntrance(state.bankEntrances,p):null;
- $('action').textContent=bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':nearestEnterableVehicle(state.cars,p)?.bike?'SALTA IN SELLA':'ENTRA IN AUTO';
+ const eventAction=p.car<0?cityEventAction(state.events,p):null;
+ const shopNear=p.car<0&&!eventAction?nearestShop(state.shops,p):null;
+ $('action').textContent=eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':nearestEnterableVehicle(state.cars,p)?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
@@ -735,7 +994,7 @@ function drawRoofReveal(ctx,buildings,roads,dt,bounds){
  const [x0,y0,x1,y1]=bounds;
  const actors=[car||{...state.player,body:'walk'}];
  for(const person of state.people){
-  if(person.x<x0-12||person.x>x1+12||person.y<y0-12||person.y>y1+12)continue;
+  if(person.indoors||person.x<x0-12||person.x>x1+12||person.y<y0-12||person.y>y1+12)continue;
   actors.push(person);
  }
  const revealActors=actors.map(actor=>{
@@ -782,6 +1041,41 @@ function staticTile(tx,ty){
  paintStaticScene(ctx,[x-TILE_BLEED,y-TILE_BLEED,x+STATIC_TILE+TILE_BLEED,y+STATIC_TILE+TILE_BLEED],3);
  const tile={canvas:layer,x,y};staticTiles.set(key,tile);
  return tile;
+}
+// Q08: wet asphalt as a cached mask per tile: roads minus everything a building covers,
+// so the darker wet tone never paints over a roof lifted above the street.
+const wetTiles=new Map(),WET_PIXELS=2;
+function wetTile(tx,ty){
+ const key=tx+','+ty;
+ if(wetTiles.has(key)){const tile=wetTiles.get(key);wetTiles.delete(key);wetTiles.set(key,tile);return tile;}
+ const x=tx*STATIC_TILE,y=ty*STATIC_TILE,layer=document.createElement('canvas');
+ layer.width=layer.height=STATIC_TILE*WET_PIXELS;
+ const g=layer.getContext('2d');g.setTransform(WET_PIXELS,0,0,WET_PIXELS,-x*WET_PIXELS,-y*WET_PIXELS);
+ const x0=x-TILE_BLEED,y0=y-TILE_BLEED,x1=x+STATIC_TILE+TILE_BLEED,y1=y+STATIC_TILE+TILE_BLEED;
+ g.lineCap='round';g.lineJoin='round';g.strokeStyle='#0a1a28';
+ for(const road of query(state.roads,state.roadGrid,x0,y0,x1,y1)){
+  if(!DRIVE.has(road.t))continue;
+  g.beginPath();g.moveTo(road.p[0],road.p[1]);for(let i=2;i<road.p.length;i+=2)g.lineTo(road.p[i],road.p[i+1]);
+  g.lineWidth=Math.max(1,visualRoadWidth(road)-.5);g.stroke();
+ }
+ g.globalCompositeOperation='destination-out';g.fillStyle='#000';
+ for(const b of [...query(state.buildings,state.buildingGrid,x0,y0,x1+20,y1+20),...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1+20,y1+20)]){
+  const p=b.p,v=buildingVolume(b),shift=v?[[0,0],[v.dx,v.dy]]:[[0,0]];
+  for(const [sx,sy] of shift){g.beginPath();g.moveTo(p[0]-sx,p[1]-sy);for(let i=2;i<p.length;i+=2)g.lineTo(p[i]-sx,p[i+1]-sy);g.closePath();g.fill();}
+  if(v)for(let i=2;i<p.length;i+=2){g.beginPath();g.moveTo(p[i-2],p[i-1]);g.lineTo(p[i],p[i+1]);g.lineTo(p[i]-v.dx,p[i+1]-v.dy);g.lineTo(p[i-2]-v.dx,p[i-1]-v.dy);g.closePath();g.fill();}
+ }
+ const tile={canvas:layer,x,y};wetTiles.set(key,tile);
+ while(wetTiles.size>48)wetTiles.delete(wetTiles.keys().next().value);
+ return tile;
+}
+function drawWetTiles(bounds,wetness){
+ const [x0,y0,x1,y1]=bounds;
+ c.save();c.globalAlpha=.5*wetness;c.imageSmoothingEnabled=true;
+ for(let ty=Math.floor(y0/STATIC_TILE);ty<=Math.floor(y1/STATIC_TILE);ty++)
+  for(let tx=Math.floor(x0/STATIC_TILE);tx<=Math.floor(x1/STATIC_TILE);tx++){
+   const tile=wetTile(tx,ty);c.drawImage(tile.canvas,tile.x,tile.y,STATIC_TILE,STATIC_TILE);
+  }
+ c.restore();
 }
 function drawStaticTiles(bounds){
  const mode=getRoadWidthMode();
@@ -839,6 +1133,11 @@ function draw(dt=0){
  const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
  const halfW=cw/(2*state.zoom),halfH=ch/(2*state.zoom);
  drawStaticTiles([state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH]);
+ const weather=state.weather;
+ if(weather&&weather.wetness>.01){
+  drawWetTiles([state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH],weather.wetness);
+  drawPuddles(c,state.puddles||[],[x0,y0,x1,y1],weather.wetness,weather.rain,state.clock);
+ }
  drawRoofReveal(c,[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],roads,dt,[x0,y0,x1,y1]);
  if(state.zoom>1.75){
   c.font='3.6px monospace';c.fillStyle='#e5d9bc';c.textAlign='center';
@@ -880,7 +1179,19 @@ function draw(dt=0){
  // Storefront labels are tied to nearby real POIs, not floating over every roof.
  if(state.progress)drawWorldLandmarks(c,state.landmarks,activeTarget(state.progress,state.landmarks),[x0,y0,x1,y1],state.clock,state.zoom,currentStep(state.progress)?.step.speaker);
  const alpha=Math.min(1,state.trafficClock/.05);
+ if(state.doorGrid){
+  const doors=query(state.doors,state.doorGrid,x0,y0,x1,y1);
+  drawDoorSteps(c,doors,state.zoom);drawDoorFronts(c,doors,state.zoom);
+ }
+ drawSkidMarks([x0,y0,x1,y1]);
+ drawStreetObjects(c,state.streetObjects,[x0,y0,x1,y1],state.zoom);
+ drawLostItem(c,state.events,state.player.car<0?state.player:null,state.clock);
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
+ if(weather&&weather.rain>.3)for(const person of state.people){
+  if(person.indoors||person.x<x0||person.x>x1||person.y<y0||person.y>y1)continue;
+  drawUmbrella(c,person.prevX===undefined?person.x:person.prevX+(person.x-person.prevX)*alpha,
+   person.prevY===undefined?person.y:person.prevY+(person.y-person.prevY)*alpha,person,weather.rain);
+ }
  for(const ai of state.traffic)if(ai.x>=x0&&ai.x<=x1&&ai.y>=y0&&ai.y<=y1){
   const x=ai.prevX===undefined?ai.x:ai.prevX+(ai.x-ai.prevX)*alpha;
   const y=ai.prevY===undefined?ai.y:ai.prevY+(ai.y-ai.prevY)*alpha;
@@ -888,9 +1199,64 @@ function draw(dt=0){
   drawCar(x,y,a,ai.kind,false,ai.model,ai);
  }
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);});
- drawParkedMotorcycleHints();
  drawPlayer();
+ if(weather&&weather.cloud>.02)drawCloudShadows(c,[x0,y0,x1,y1],weather.cloud,state.clock);
+ // Q04: night falls on the world, while hints and the bank marker stay readable above it.
+ drawNightLighting([x0,y0,x1,y1],[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],ratio,cw,ch,dt);
+ if(weather&&weather.rain>.02)drawRain(c,state.clock,canvas.width,canvas.height,weather.rain);
+ drawCityEventOverlay(c,state.events,state.player.car<0?state.player:null,state.zoom);
+ drawParkedMotorcycleHints();
  for(const bank of state.bankEntrances)if(bank.x>=x0&&bank.x<=x1&&bank.y>=y0&&bank.y<=y1)drawBankEntrance(c,bank,state.clock);
+}
+const lightMap=document.createElement('canvas');
+const LAMP_KINDS=new Set([5,6,13]);
+function drawNightLighting([x0,y0,x1,y1],buildings,ratio,cw,ch,dt){
+ const light=combineWeather(daylightAt(state.npcClockMinutes),state.weather);state.light=light;
+ if(light.darkness<.004)return;
+ if(dt>0){state.nightFrame=(state.nightFrame||1/60)*.95+dt*.05;state.nightQuality=nightQuality(state.nightQuality,state.nightFrame);}
+ const lights=[],glows=[],pad=14,p=state.player;
+ if(light.lamps>0){
+  for(const prop of query(state.props,state.propsGrid,x0-pad,y0-pad,x1+pad,y1+pad)){
+   if(!LAMP_KINDS.has(prop.kind))continue;
+   // Pool of light on the pavement under the lamp head, plus the warm bulb itself.
+   lights.push({x:prop.x+.4,y:prop.y+.8,r:10,strength:light.lamps});
+   glows.push({x:prop.x,y:prop.y-5.9,r:2.4,strength:light.lamps,alpha:.8},{x:prop.x+.4,y:prop.y+.8,r:7.5,strength:light.lamps,alpha:.1});
+   // Q08: on wet ground the lamp is mirrored as a warm smear below it.
+   if(state.weather?.wetness>.2)glows.push({x:prop.x+.4,y:prop.y+2.2,r:3.2,strength:light.lamps*state.weather.wetness,alpha:.22},{x:prop.x+.4,y:prop.y+4.2,r:2.2,strength:light.lamps*state.weather.wetness,alpha:.14});
+  }
+  for(const door of state.doorGrid?query(state.doors,state.doorGrid,x0,y0,x1,y1):[])
+   if(door.open>0)lights.push({x:door.x+door.nx*.6,y:door.y+door.ny*.6,r:3.4,strength:light.lamps});
+ }
+ if(light.headlights>0){
+  const driven=state.traffic.filter(v=>v.body==='car');
+  if(p.car>=0&&state.cars[p.car])driven.push(state.cars[p.car]);
+  for(const c of state.commuters||[])if(c.bike.rider)driven.push(c.bike);
+  for(const v of driven){
+   if(v.x<x0-pad||v.x>x1+pad||v.y<y0-pad||v.y>y1+pad)continue;
+   const kind={x:v.x,y:v.y,a:v.a,vehicleType:isMotorcycle(v)?'motorcycle':'car'};
+   lights.push(...headlightLights(kind,light.headlights));glows.push(...vehicleLamps(kind,light.headlights));
+  }
+ }
+ // A faint halo keeps the protagonist readable on dark side streets.
+ if(p.car<0)lights.push({x:p.x,y:p.y,r:4.5,strength:.35*light.darkness/NIGHT_DARKNESS});
+ const w=Math.max(1,Math.ceil(canvas.width/2)),h=Math.max(1,Math.ceil(canvas.height/2));
+ if(lightMap.width!==w||lightMap.height!==h){lightMap.width=w;lightMap.height=h;}
+ const scale=.5*ratio*state.zoom;
+ paintLightMap(lightMap,{scale,offsetX:.5*ratio*cw/2-scale*state.camera.x,offsetY:.5*ratio*ch/2-scale*state.camera.y},light,lights);
+ c.save();c.setTransform(1,0,0,1,0,0);c.imageSmoothingEnabled=true;
+ c.drawImage(lightMap,0,0,w,h,0,0,w*2,h*2);c.restore();
+ // Lit windows: the real panes of each facade, switched on one by one as the evening goes on.
+ if(light.lamps>0&&state.zoom>=1.1&&state.nightQuality!==0){
+  c.save();c.fillStyle='#ffd27a';c.globalAlpha=.82*light.lamps;
+  for(const b of buildings){
+   const panes=facadeWindowPanes(b);
+   if(!panes.length)continue;
+   const path=litWindowPath(panes,b.art.litWindows||(b.art.litWindows=new Map()),light.windowShare);
+   if(path)c.fill(path);
+  }
+  c.restore();
+ }
+ paintGlows(c,glows);
 }
 function prepareMini(){
  const p=state.map.projection,off=document.createElement('canvas');off.width=168;off.height=142;
@@ -912,9 +1278,31 @@ function drawMini(){
  r.lineWidth=1.4;r.strokeStyle='#1e2920';r.stroke();
  r.fillStyle='#fff0b9';r.font='bold 8px monospace';r.fillText('MELITO',5,10);
 }
+function updateCityAudio(){
+ if(!cityAudio.started||!state.ready)return;
+ const p=state.player,car=p.car>=0?state.cars[p.car]:null;
+ const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen;
+ const traffic=[...state.traffic.filter(v=>v.body==='car'),...(state.commuters||[]).filter(c=>c.bike.rider).map(c=>c.bike)];
+ cityAudio.update({paused,interior:!!state.bankInterior,radioLive:radioStatus==='live',
+  player:{x:p.x,y:p.y,inVehicle:!!car,vehicleType:car&&isMotorcycle(car)?'motorcycle':'car',speed:car?car.speed:0,throttle:pressed.up||pressed.accelerate?1:0},
+  traffic:traffic.map(v=>({x:v.x,y:v.y,vehicleType:v.vehicleType,speed:v.braking?0:v.speed})),
+  night:(state.light?.darkness||0)/NIGHT_DARKNESS,rain:state.weather?.rain||0,
+  skid:car&&car.speed>8?Math.min(1,Math.abs(car.slip||0)/.45):0});
+ if(!paused&&!state.bankInterior){
+  const honker=cityAudio.npcHorns(traffic,p,state.clock);
+  if(honker)state.hornAlarm={x:honker.x,y:honker.y,t:state.social?.clock??0};
+ }
+}
+// Q09/Q11: the player's horn is heard, and chatting pedestrians nearby break up.
+function honk(){
+ const p=state.player;if(p.car<0)return;
+ cityAudio.horn(isMotorcycle(state.cars[p.car])?'moto':'auto');
+ state.hornAlarm={x:p.x,y:p.y,t:state.social?.clock??0};
+}
+function soundLabel(){$('pause-sound').textContent='SUONI: '+(cityAudio.muted?'OFF':'ON')+' · '+Math.round(cityAudio.volume*100)+'%';}
 function frame(now){
  const dt=state.last?Math.min(.05,(now-state.last)/1000):0;state.last=now;
- tick(dt);draw(dt);drawMini();requestAnimationFrame(frame);
+ tick(dt);draw(dt);drawMini();updateCityAudio();requestAnimationFrame(frame);
 }
 async function load(){
  if(state.loading)return;
@@ -957,6 +1345,11 @@ async function load(){
  finally{state.loading=false;}
 }
 function bind(){
+ // Q09: browsers allow sound only after a gesture; every gesture also resumes a suspended context.
+ for(const type of ['pointerdown','keydown'])window.addEventListener(type,()=>{cityAudio.start();},{capture:true});
+ document.addEventListener('visibilitychange',()=>cityAudio.focus(document.visibilityState!=='hidden'));
+ window.addEventListener('blur',()=>cityAudio.focus(false));
+ window.addEventListener('focus',()=>cityAudio.focus(true));
  // Keep page/browser zoom disabled while preserving the game's own camera zoom.
  window.addEventListener('keydown',e=>{
   const zoomKey=['+','=','-','_','0','Add','Subtract','NumpadAdd','NumpadSubtract','Numpad0'].includes(e.key)||['NumpadAdd','NumpadSubtract','Numpad0'].includes(e.code);
@@ -970,7 +1363,13 @@ function bind(){
   if(dir){e.preventDefault();pressed[dir]=true;}
   if(e.key==='Shift')pressed.run=true;
   if(e.code==='Space'){e.preventDefault();pressed.handbrake=true;}
+  if(state.shopOpen){
+   const index=Number(e.key)-1,offer=offersFor(state.shopOpen.kind)[index];
+   if(offer&&!e.repeat){e.preventDefault();buyFromShop(offer.id);return;}
+   if((e.key==='Escape'||e.key.toLowerCase()==='e')&&!e.repeat){e.preventDefault();closeShop();return;}
+  }
   if(e.key.toLowerCase()==='e'&&!e.repeat){e.preventDefault();toggleVehicle();}
+  if(e.key.toLowerCase()==='h'&&!e.repeat&&state.player.car>=0){e.preventDefault();honk();}
   if(e.key.toLowerCase()==='f'&&!e.repeat){e.preventDefault();interactMission();}
   if(e.key.toLowerCase()==='m'&&!e.repeat){e.preventDefault();toggleBigMap();}
   const carRadioAvailable=state.player.car>=0&&!state.bankInterior&&
@@ -997,6 +1396,9 @@ function bind(){
  steeringPad.addEventListener('pointerdown',e=>{
   if(state.player.car<0||state.bankInterior||wheel.held)return;
   e.preventDefault();wheel.held=true;wheel.pointerId=e.pointerId;wheel.pointerAngle=wheelPointer(e);
+  // Q09: a quick tap on the hub (no drag) sounds the horn.
+  const box=steeringPad.getBoundingClientRect();
+  wheel.tap={x:e.clientX,y:e.clientY,t:performance.now(),hub:Math.hypot(e.clientX-box.left-box.width/2,e.clientY-box.top-box.height/2)<box.width*.22};
   try{steeringPad.setPointerCapture(e.pointerId);}catch(_){}
  });
  steeringPad.addEventListener('pointermove',e=>{
@@ -1008,7 +1410,11 @@ function bind(){
   $('steering-face').style.transform='rotate('+wheel.angle+'rad)';
  });
  const releaseWheel=e=>{
-  if(wheel.pointerId===e.pointerId){wheel.held=false;wheel.pointerId=null;}
+  if(wheel.pointerId!==e.pointerId)return;
+  const tap=wheel.tap;wheel.tap=null;
+  if(e.type==='pointerup'&&tap?.hub&&performance.now()-tap.t<260&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<9&&state.player.car>=0)
+   honk();
+  wheel.held=false;wheel.pointerId=null;
  };
  for(const name of ['pointerup','pointercancel','lostpointercapture'])steeringPad.addEventListener(name,releaseWheel);
  // Keyboard wheel accessibility: left/right arrows or A/D already steer.
@@ -1065,6 +1471,11 @@ function bind(){
  $('map-toggle').addEventListener('click',toggleBigMap);
  $('map-close').addEventListener('click',toggleBigMap);
  $('dialog-close').addEventListener('click',()=>$('dialog').hidden=true);
+ $('shop-close').addEventListener('click',closeShop);
+ $('pause-sound').addEventListener('click',()=>{cityAudio.start();cityAudio.toggleMuted();soundLabel();});
+ $('pause-volume-down').addEventListener('click',()=>{cityAudio.changeVolume(-.1);soundLabel();});
+ $('pause-volume-up').addEventListener('click',()=>{cityAudio.changeVolume(.1);soundLabel();});
+ soundLabel();
  $('mission-reset').addEventListener('click',()=>{
   if(!state.progress)return;
   if(resetCurrentMission(state.progress)){
