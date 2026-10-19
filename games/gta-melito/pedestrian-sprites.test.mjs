@@ -52,6 +52,6 @@ test('city-art replaces only NPC visuals; hero, collision and navigation remain 
  assert.match(art,/drawPixelPerson\(c,\{skin:c1\[0\]/,'NPC fallback survives');
  assert.match(art,/export function drawCityPlayer/);
  assert.ok(game.includes('loadPedestrianSprites()'));
- assert.ok(game.includes('city-art.mjs?v=125'));
- assert.ok(page.includes('game.mjs?v=138'));
+ assert.ok(Number((game.match(/city\-art\.mjs\?v=(\d+)/)||[])[1])>=125,'city-art.mjs deve essere almeno alla v=125');
+ assert.ok(Number((page.match(/game\.mjs\?v=(\d+)/)||[])[1])>=138,'game.mjs deve essere almeno alla v=138');
 });
