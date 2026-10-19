@@ -200,3 +200,118 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Non eseguiti:** Node 22, browser, Android e deploy GitHub Pages; non attribuire ai link lo stato di pubblicazione finché il job non è verificato.
 - **Limite:** GitHub Pages deve essere configurato su sorgente GitHub Actions; controllare eventuali workflow Pages preesistenti per evitare deploy concorrenti.
 - **Da fare:** verificare esito del workflow, aprire entrambe le URL e iniziare collaudo manuale Q02–Q12; nessuna Q marcata su main e PR #29 lasciata aperta.
+
+
+laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
+- **Fatto:** primo collaudo reale della Q02 con Node 22 e browser; corretti 2 difetti di gioco e 15 test fragili; Q02 spuntata `[x]` in `TODO.md` con esito.
+- **Difetto 1 (banca):** `game.mjs` faceva avanzare l'orologio NPC anche dentro la banca, dove gli NPC non vengono simulati; ora `advanceNpcClock(...,{interior:!!state.bankInterior})`.
+- **Difetto 2 (blocco permanente):** un residente restava fermo per sempre dietro uno scooter parcheggiato sul marciapiede (frenato il 95% del tempo). `resident-routines.mjs` ora fa un passo laterale (0,9–2,6 m) solo su corsie libere e camminabili, avanza e rientra sulla linea, mai più di un passo d'uomo per tick. `roads.mjs` passa `validRecovery` alla routine.
+- **Test:** 14 asserzioni con versioni cache fisse (`game.mjs?v=138` ecc.) rese "almeno la versione N"; test HUD del volante riceve `formatNpcClock`; nuovi test scooter (aggiramento e attesa se i lati non sono camminabili) e controllo del flag banca. Suite: 160/175 → **177/177**.
+- **Cache:** `game.mjs?v=141`, `roads.mjs?v=141`, `resident-routines.mjs?v=003`.
+- **Browser (Chrome headless, desktop e telefono orizzontale):** orologio avanza all'aperto e si ferma in pausa e in banca; 5 fasce verificate; ciclo completo di un residente in 140 s senza salti; nessun errore JS (solo favicon 404 del sito, preesistente).
+- **Non eseguiti:** Android reale; HUD ora NPC non visibile sul telefono in orizzontale (barra nascosta).
+- **Da fare:** Q03 (ingressi negli edifici) sullo stesso ramo `collab/gta-melito-coda`, come concordato: una Q dopo l'altra e merge unico alla fine.
+
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q03 NPC che entrano ed escono dagli edifici
+- **Fatto:** i residenti della coorte (Q01–Q02) ora abitano dietro un portone e la loro uscita finisce dietro un'altra porta; 3 nuovi "clienti" vanno in negozi con nome presi da OSM. Q03 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `building-doors.mjs` (`probeDoor`, `validateDoor`, `doorFacesViewer`, `facadeExposure`, disegno a terra e in facciata); `resident-routines.mjs` con `stepOutside`/`stepDoorway` (tragitto dritto marciapiede↔soglia a passo d'uomo), `createDoorVisitors`, `attachDoorToPavement`; `traffic-collision.mjs` e `city-art.mjs` ignorano gli NPC `indoors`; `game.mjs`: `buildingAt` restituisce l'edificio trovato, porte create in `createCityPedestrians`, disegnate prima delle persone, chiusura dopo 1,4 s, niente scoperta dei tetti da chi è dentro.
+- **Regole rispettate:** l'NPC appare e sparisce solo sulle soglie (nessun teletrasporto in vista); da dentro non è un ostacolo e non può essere urtato; se un'auto è sulla soglia di casa resta dentro, se blocca la porta del negozio per 8 s fa la commissione fuori. Corretto anche un salto latente della Q02: dopo un urto lo spostamento laterale ora si azzera.
+- **Fonti:** portoni di casa `inventata`; porte dei negozi `osm-poi` con il nome OSM, posizione stimata sulla facciata dietro l'insegna. Nessun ingresso reale è dichiarato censito.
+- **Cache:** `game.mjs?v=142`, `roads.mjs?v=142`, `resident-routines.mjs?v=004`, `traffic-collision.mjs?v=126`, `city-art.mjs?v=126`, `bank-interior.mjs?v=004`, `impact-physics.mjs?v=002`, nuovo `building-doors.mjs?v=001`.
+- **Test:** nuovo `building-doors.test.mjs` (10 test); suite Node 22 **187/187**.
+- **Browser (Chrome headless, desktop 1280×720 e telefono 844×390):** 170 pedoni invariati; 8 residenti su 10 hanno il portone (2 tengono la fermata in strada della Q01), 3 clienti; 22 porte (19 inventate, 3 OSM). 150 s seguiti: residente 5 e cliente di «Le fantasie di Andrea» completano casa→meta→casa solo attraverso le proprie soglie, residente 0 completa andata, permanenza e uscita; 0 posizioni nei muri su 1.274 campioni per NPC, spostamento massimo 0,23 m per campione (100 ms). Foto: porte su Via Roma, uscita con porta aperta, porte a vetro dei negozi; nessun errore JS (solo il favicon 404 già noto).
+- **Prestazioni:** creazione dei pedoni con porte circa 140 ms una volta al caricamento (prima circa 60 ms); ricerca porte limitata e con cache.
+- **Non eseguiti / limiti:** Android reale; porte piccole allo zoom a piedi (leggibili ma discrete); facciate nascoste dietro i tetti escluse; gli NPC non usano la banca (il suo interno è giocabile e li mostrerebbe assenti).
+- **Da fare:** Q04 (giorno/notte e illuminazione) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q04 giorno/notte e illuminazione
+- **Fatto:** ciclo giorno/notte graduale legato all'orologio NPC, lampioni con pozze di luce, finestre accese sulle facciate, fari e fanali dei veicoli in movimento. Q04 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `daylight.mjs` (curva di luce per minuto, quota di finestre accese, mappa luminosa a mezza risoluzione con luci "bucate", aloni additivi, fari, interruttore di qualità); `city-art.mjs` esporta `facadeWindowPanes` (le stesse vetrate di `drawRaisedWalls`, in coordinate mondo); `game.mjs` disegna la notte dopo il protagonista e prima di suggerimenti e indicatore banca; parametro `?ora=HH:MM`.
+- **Regressioni:** di giorno non si esegue nulla (uscita immediata); confronto pixel con la versione precedente: 25 pixel diversi su 613.800 (solo indicatore missione animato).
+- **Cache:** `game.mjs?v=143`, `city-art.mjs?v=127`, `bank-interior.mjs?v=005`, nuovo `daylight.mjs?v=001`.
+- **Test:** nuovo `daylight.test.mjs` (8 test, compreso uno smoke di disegno su canvas simulato); suite Node 22 **195/195**.
+- **Browser (Chrome headless, PC 1280×720 e telefono 844×390):** 6 orari con foto e luminosità misurata (12:00 128,7 → 21:30 72,0 → 05:50 105,4); 60 s reali di tramonto senza salti; fari visibili alle 22:00; nessun errore JS.
+- **Prestazioni:** senza GPU, notte +1 ms a piedi e +4–6 ms con la visuale larga; sotto 30 fps si spengono le sole finestre.
+- **Non eseguiti / limiti:** Android reale e GPU vere; colori arcade non astronomici; luci dei lampioni solo sui lampioni dell'arredo procedurale (non su quelli di monumenti o interni).
+- **Da fare:** Q05 (eventi cittadini emergenti) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q05 eventi cittadini: l'oggetto perduto
+- **Fatto:** primo evento spontaneo. Un residente perde chiavi, portafoglio, spesa o cellulare, se ne accorge e torna a riprenderlo; oppure il giocatore lo raccoglie e lo restituisce (mancia 5 €). Q05 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `city-events.mjs` (logica deterministica, icone degli oggetti e fumetti); `resident-routines.mjs`: deviazione `plan.detour` sullo stesso marciapiede, con attesa sul posto; `game.mjs`: passo degli eventi nel `tick`, azione contestuale prima di porte e veicoli, etichetta RACCOGLI/RESTITUISCI sul pulsante azione, oggetto disegnato sotto le persone, fumetti sopra il buio della notte, mancia salvata nella campagna.
+- **Anti-spam:** un evento alla volta, primo dopo 45 s, poi pausa di 5 minuti; mai in auto o durante missioni a tempo.
+- **Cache:** `game.mjs?v=144`, `roads.mjs?v=143`, `resident-routines.mjs?v=005`, nuovo `city-events.mjs?v=001`.
+- **Test:** nuovo `city-events.test.mjs` (8 test); `steering-wheel.test.mjs` riceve `cityEventAction` nell'HUD isolato; suite Node 22 **203/203**.
+- **Browser (Chrome headless, PC e telefono):** evento naturale dopo 110 s seguendo un residente; ritrovato da solo in 26 s; con i tasti reali RACCOGLI → RESTITUISCI e soldi da € 0 a € 5; sul telefono il tocco su RACCOGLI funziona; nessun errore JS.
+- **Non eseguiti / limiti:** Android reale; un solo tipo di evento per ora.
+- **Da fare:** Q06 (economia locale di base) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q06 economia locale di base
+- **Fatto:** i negozi con nome OSM diventano banconi dove spendere i soldi delle missioni: prodotti che fanno correre di più, un servizio (taglio di capelli, +rispetto), un ricordo da collezione. Q06 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `local-shops.mjs` (catalogo per tipo di negozio, acquisto, fondi insufficienti, spinta di corsa, pulizia del salvataggio); `campaign.mjs`: campo `shop` in `freshProgress`/`readProgress`; `game.mjs`: COMPRA sul pulsante azione, pannello con saldo e messaggi, pausa del mondo, tasti 1–2/E/Esc, velocità a piedi × spinta, HUD «CARICO N S»; `index.html`: riquadro `shop-panel` nello stile dei dialoghi.
+- **Fatti e ipotesi:** nomi dei negozi reali (OSM), prodotti e prezzi inventati, scritto nel pannello.
+- **Cache:** `game.mjs?v=145`, `campaign.mjs?v=001` (prima senza versione), nuovo `local-shops.mjs?v=001`.
+- **Test:** nuovo `local-shops.test.mjs` (7 test); test isolati HUD e pausa aggiornati; suite Node 22 **210/210**.
+- **Browser (Chrome headless, PC e telefono):** fondi insufficienti a € 0, acquisto con i 75 € della ricompensa della prima missione (impostati a mano), HUD aggiornato, salvataggio confermato dopo il ricaricamento della pagina; sul telefono acquisto di un servizio con i tocchi; nessun errore JS.
+- **Non eseguiti / limiti:** Android reale; la missione non è stata giocata per intero nel browser.
+- **Da fare:** Q07 (ambiente fisicamente interattivo) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q07 ambiente fisicamente interattivo
+- **Fatto:** bidoni carrellati spostabili/ribaltabili e paletti dissuasori fissi in tutta la città. Q07 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `street-objects.mjs` (posizionamento deterministico, fisica dei bidoni, collisioni cerchio/veicolo, paletti, recupero fuori vista, disegno); `game.mjs`: `createStreetObjects` dopo pedoni e porte (al caricamento e al reset), `stepStreetPhysics` subito dopo il traffico, paletti in `carBlocked` e nella camminata, disegno sotto le persone.
+- **Regole:** niente oggetti in case, carreggiate, davanti alle porte o sotto le auto parcheggiate; traffico e pedoni non vengono bloccati; nessun riposizionamento in vista.
+- **Cache:** `game.mjs?v=146`, nuovo `street-objects.mjs?v=001`.
+- **Test:** nuovo `street-objects.test.mjs` (6 test); suite Node 22 **216/216**.
+- **Browser (Chrome headless):** 442 bidoni e 144 paletti, tutti in posizioni valide sulla mappa reale; urto d'auto, spinta a piedi, paletti e recupero verificati; traffico e pedoni invariati rispetto alla Q06; 0,26 ms per fotogramma; nessun errore JS.
+- **Non eseguiti / limiti:** Android reale; paletti piccoli allo zoom a piedi.
+- **Da fare:** Q08 (meteo) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q08 meteo
+- **Fatto:** sereno, nuvoloso e pioggia graduali legati all'orologio NPC, con asfalto bagnato, pozzanghere, gocce, ombrelli e interazione con la luce della Q04. Q08 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `weather.mjs` (calendario a blocchi di 3 ore, bagnato/asciutto, unione con la luce del giorno, gocce, nuvole, pozzanghere, ombrelli); `game.mjs`: `state.weather` a ogni passo, maschere `wetTile` (strade meno edifici e tetti proiettati) sotto la rivelazione dei tetti, pozzanghere posizionate con `coveredByBuilding`, ombrelli sopra i pedoni, nuvole prima della notte, gocce sopra la notte e sotto i fumetti, riflessi dei lampioni sul bagnato, etichetta meteo nell'HUD, parametro `?meteo=`.
+- **Scelte:** nessun cambio di aderenza (Q10); effetto sugli NPC solo visivo (ombrello).
+- **Cache:** `game.mjs?v=147`, nuovo `weather.mjs?v=001`.
+- **Test:** nuovo `weather.test.mjs` (7 test); suite Node 22 **223/223**.
+- **Browser (Chrome headless, PC e telefono):** foto di sereno, nuvoloso, pioggia di giorno e di notte dallo stesso punto; passaggio naturale al primo temporale senza blocchi; nessun errore JS; con la pioggia di giorno 48 fps contro 55 senza GPU.
+- **Non eseguiti / limiti:** Android reale e GPU vere.
+- **Da fare:** Q09 (audio ambientale dinamico) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q09 audio ambientale dinamico
+- **Fatto:** motori, traffico, clacson, fondo urbano e pioggia sintetizzati, con attenuazione per distanza e stereo, avvio su gesto, muto/volume e pausa/focus. Q09 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `city-audio.mjs` (mix puro testabile + nodi Web Audio); `game.mjs`: avvio al primo `pointerdown`/`keydown`, `visibilitychange`/`blur`/`focus`, aggiornamento a ogni fotogramma, clacson con H e tocco al centro del volante, clacson NPC limitati, stato radio per abbassare i motori; `index.html`: pulsanti SUONI e VOLUME nel menu di pausa.
+- **Diritti:** nessun audio di terzi; radio invariate.
+- **Cache:** `game.mjs?v=148`, nuovo `city-audio.mjs?v=001`.
+- **Test:** nuovo `city-audio.test.mjs` (8 test); suite Node 22 **231/231**.
+- **Browser (Chrome headless):** avvio solo dopo il clic, motore che sale in accelerazione, muto e volume dal menu, sospensione con la scheda nascosta, radio visibile; resa offline con segnale reale e senza saturazione; nessun errore JS.
+- **Non eseguiti / limiti:** ascolto reale (altoparlanti, Android): i volumi vanno regolati a orecchio.
+- **Da fare:** Q10 (guida arcade 2.0) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q10 guida arcade 2.0
+- **Fatto:** profili di guida diversi per auto (e modello), scooter e moto; sbandate col freno a mano o in curva veloce che si recuperano da sole; segni delle gomme e stridio. Q10 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `vehicle-handling.mjs` (`stepVehicle`, `applyGrip`, `handlingProfile`); `driving-controls.mjs` e `motorcycles.mjs` delegano a `stepVehicle` con i valori storici come predefiniti; `game.mjs` passa profilo e bagnato, muove l'auto lungo `car.travel`, segni `addSkidMarks`/`drawSkidMarks`; `city-audio.mjs`: rumore di stridio.
+- **Regressioni:** equivalenza esatta con la fisica precedente senza profilo; test esistenti di volante, pedali, freno, RETRO, scooter e tour di guida tutti verdi.
+- **Cache:** `game.mjs?v=149`, `driving-controls.mjs?v=096`, `motorcycles.mjs?v=004`, `city-audio.mjs?v=002`, `bank-interior.mjs?v=006`, nuovo `vehicle-handling.mjs?v=001`.
+- **Test:** nuovo `vehicle-handling.test.mjs` (7 test); suite Node 22 **238/238**.
+- **Browser (Chrome headless):** sbandata col freno a mano con segni e stridio, ritorno in linea, mai dentro i muri, RETRO senza scivolate; nessun errore JS.
+- **Non eseguiti / limiti:** prova di guida su telefono reale; profili da rifinire a sensazione.
+- **Da fare:** Q11 (socialità NPC più ricca) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q11 socialità NPC più ricca
+- **Fatto:** incontri spontanei tra conoscenti e piccoli gruppi (fino a 3) con orientamento, pausa, saluto e ripartenza; interruzione per pericolo; pochi fumetti contestuali. Q11 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `npc-social.mjs` (conoscenze, chi può fermarsi, gruppi, pericolo, fumetti); `roads.mjs`: chi chiacchiera salta il passo; `city-events.mjs`: chi chiacchiera non perde oggetti; `game.mjs`: `stepSocial` nel `tick` con veicoli, clacson (`honk()` e clacson NPC) e controllo della carreggiata.
+- **Correzioni durante il collaudo:** la distanza dagli incroci si applicava a ogni vertice delle vie OSM (quasi nessuno poteva fermarsi): ora solo agli incroci veri; un gruppo si era formato su un attraversamento di una carreggiata: ora mai sulla carreggiata.
+- **Cache:** `game.mjs?v=150`, `roads.mjs?v=144`, `city-events.mjs?v=002`, nuovo `npc-social.mjs?v=001`.
+- **Test:** nuovo `npc-social.test.mjs` (7 test); suite Node 22 **245/245**.
+- **Browser (Chrome headless):** 9 gruppi in 170 s in città, nessuno su carreggiata, nessun pedone incastrato, traffico e pedoni in movimento; nessun errore JS.
+- **Limite:** pedoni pochi e sparsi, quindi incontri rari vicino al giocatore (da migliorare con la densità per zona della Q13).
+- **Da fare:** Q12 (ciclo NPC a piedi ↔ scooter/auto) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q12 ciclo NPC a piedi ↔ scooter
+- **Fatto:** un residente esce di casa, prende il suo scooter (mezzo parcheggiato vero), guida lungo un percorso pianificato fino a una meta OSM, parcheggia, entra, esce e torna; se lo scooter è sparito torna a piedi e riprende la routine. Q12 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `npc-commute.mjs` (percorsi con unione degli incroci vicini, parcheggio, guida con raccordi dritti, camminata a punti, fasi del ciclo, furto); `roads.mjs` (`path` opzionale agli incroci, `lanePosition`/`sidewalkTurn` esportati, pendolari esclusi dal passo generico); `vehicle-entry.mjs` (scooter guidato da un NPC non prendibile); `npc-social.mjs` (il pendolare non si ferma a chiacchierare); `game.mjs` (`createCommuters` sceglie casa vicina e meta col giro più corto, `stepCommuters` nel `tick`, luci e suono).
+- **Scoperto e risolto:** la rete stradale del gioco è spezzata (le vie OSM si toccano senza punti in comune): per i percorsi si uniscono i nodi entro 6 m. Le svolte dei pedoni non permettono di girare dal lato interno: la camminata di ripiego usa punti sul marciapiede e attraversa agli incroci.
+- **Cache:** `game.mjs?v=151`, `roads.mjs?v=145`, `vehicle-entry.mjs?v=002`, `npc-social.mjs?v=002`, nuovo `npc-commute.mjs?v=001`.
+- **Test:** nuovo `npc-commute.test.mjs` (6 test); suite Node 22 **251/251**.
+- **Browser (Chrome headless):** ciclo completo in 469 s sulla mappa reale, scooter non prendibile mentre guidato, furto vero col tasto E e partenza a piedi; nessun errore JS.
+- **Non eseguiti / limiti:** arrivo a casa a piedi nel browser (mezz'ora di gioco, provato nel mondo di prova); un solo pendolare, niente auto guidate da NPC; Android reale.
+- **Da fare:** Q13 (reazioni avanzate e densità) sullo stesso ramo; la densità per zona aiuterà anche gli incontri della Q11.
