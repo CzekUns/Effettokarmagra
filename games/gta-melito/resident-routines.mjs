@@ -3,6 +3,7 @@
  * The route stays on one validated OSM pavement until the door/path system
  * is added in Q03. No in-camera teleport or separate NPC duplicate. */
 import {makeCollisionIndex,addToCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked} from './traffic-collision.mjs?v=125';
+import {makeResidentAgenda,residentDepartureWindow} from './npc-agenda.mjs?v=001';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const hash=n=>{let x=(Number(n)||1)|0;x=Math.imul(x^x>>>16,2246822519);x=Math.imul(x^x>>>13,3266489917);return (x^x>>>16)>>>0;};
 const rand=n=>hash(n)/4294967295;
@@ -47,7 +48,7 @@ export function createRoutineResidents(graph,count=10,seed=405,center={x:0,y:0},
   if(collidesWithTraffic(at,'walk',occupied))continue;
   if([...nearbyColliders(occupied,at.x,at.y,2)].some(other=>
    other.body==='walk'&&Math.hypot(at.x-other.x,at.y-other.y)<2.2))continue;
-  const plan={edge:choice.id,side,homeT,targetT,phase:'AT_HOME',cycles:0};
+  const plan={edge:choice.id,side,homeT,targetT,phase:'AT_HOME',cycles:0,agenda:makeResidentAgenda(seed+i*17,i)};
   const agent={...at,edge:choice.id,t:homeT,speed:.85+rand(seed+i*19)*.34,
    kind:i%7,seed:seed+i*17,wait:1.1+rand(seed+i*17)*2.3,body:'walk',side,
    routine:'resident',segments:0,residentRoutine:plan,braking:true,
@@ -56,7 +57,7 @@ export function createRoutineResidents(graph,count=10,seed=405,center={x:0,y:0},
  }
  return residents;
 }
-export function stepResidentRoutine(graph,agent,dt,index=null){
+export function stepResidentRoutine(graph,agent,dt,index=null,clockMinutes=null){
  const plan=agent.residentRoutine,e=graph.edges[plan.edge];
  if(!e||!e.walk)return;
  const elapsed=Math.min(Math.max(dt,0),.1);
@@ -78,9 +79,9 @@ export function stepResidentRoutine(graph,agent,dt,index=null){
  if(remaining<=advance+.00001){
   agent.t=destination;agent.braking=true;
   if(plan.phase==='OUTBOUND'){
-   plan.phase='ACTING';agent.wait=2+rand(agent.seed+plan.cycles*11)*3.5;
+   plan.phase='ACTING';if(plan.agenda)plan.agenda.status='ACTING';agent.wait=2+rand(agent.seed+plan.cycles*11)*3.5;
   }else{
-   plan.phase='AT_HOME';plan.cycles++;
+   plan.phase='AT_HOME';if(plan.agenda)plan.agenda.status='AT_HOME';plan.cycles++;
    agent.wait=1.4+rand(agent.seed+plan.cycles*19)*3;
   }
  }
