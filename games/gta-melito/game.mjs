@@ -13,7 +13,8 @@ import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?
 import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=001';
 import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote} from './local-shops.mjs?v=001';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
-import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=126';
+import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape} from './traffic-collision.mjs?v=126';
+import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
@@ -170,6 +171,30 @@ function roadPoint(road,fraction){
  }
  return {x:p[0],y:p[1],a:0};
 }
+// Q07: wheelie bins (movable) and cast-iron bollards (fixed), clear of houses, roads, doors and parked cars.
+function createStreetObjects(){
+ const border=toRing(state.map.border);
+ const avoid=[...state.props.map(q=>({x:q.x,y:q.y,r:1.8})),...(state.doors||[]).map(d=>({x:d.x,y:d.y,r:2.6})),
+  ...state.cars.map(v=>({x:v.x,y:v.y,r:3.6})),...state.bankEntrances.map(b=>({x:b.x,y:b.y,r:3})),
+  ...(state.shops||[]).map(s=>({x:s.x,y:s.y,r:3.2}))];
+ return placeStreetObjects(state.roads,{roadWidth:visualRoadWidth,avoid,
+  walkable:(x,y)=>validWalk(x,y)&&inside([x,y],border),
+  carriageway:(x,y,margin)=>{const r=nearest(x,y,30,state.roads,true);return !!r&&r.distance<visualRoadWidth(r.road)/2+margin;}});
+}
+const bodyShape=v=>vehicleShape(isMotorcycle(v)?{vehicleType:'motorcycle'}:{vehicleType:'car'});
+function stepStreetPhysics(dt){
+ const objects=state.streetObjects,p=state.player;if(!objects)return;
+ const vehicles=[];
+ if(p.car>=0){const car=state.cars[p.car];vehicles.push({x:car.x,y:car.y,a:car.a,vx:Math.cos(car.a)*car.speed,vy:Math.sin(car.a)*car.speed,shape:bodyShape(car)});}
+ for(const v of state.traffic)if(v.body==='car'){
+  const speed=v.braking?0:v.speed||0;vehicles.push({x:v.x,y:v.y,a:v.a,vx:Math.cos(v.a)*speed,vy:Math.sin(v.a)*speed,shape:bodyShape(v)});
+ }
+ const walkers=p.car<0?[{x:p.x,y:p.y}]:[];
+ for(const person of state.people)if(!person.indoors)walkers.push(person);
+ const hits=stepStreetObjects(objects,dt,{vehicles,walkers,canMove:canKnockbackMove,view:visibleBounds()});
+ // A wheelie bin is light: the player's car loses only a little speed.
+ if(p.car>=0&&hits.length)state.cars[p.car].speed*=.96;
+}
 // Q03: errands of named OSM shops worth a short visit on foot.
 const VISIT_KINDS=new Set(['bakery','pastry','bar','cafe','supermarket','pharmacy','hairdresser','stationery','hardware','clothes','butcher','houseware']);
 function createCityPedestrians(){
@@ -313,7 +338,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  }
  state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
  state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
- state.people=createCityPedestrians();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
@@ -578,6 +603,8 @@ function carBlocked(x,y,a,which,vehicle=state.cars[which]){
   if(!road||road.distance>width/2+SIDEWALK_DRIVE||!canDriveProbe(road.distance,width,
    road.distance>width/2-.55&&buildingAt(px,py)))return true;
  }
+ // Q07: cast-iron bollards stop the car like a wall.
+ if(state.streetObjects&&bollardBlocksVehicle(state.streetObjects,{x,y,a},bodyShape(vehicle)))return true;
  return !!(state.dynamicCollision&&collidesWithTraffic(
   {x,y,a,vehicleType:bike?'motorcycle':'car'},'car',state.dynamicCollision,vehicle));
 }
@@ -665,8 +692,9 @@ function tick(dt){
    advanceNonlethalImpact(p,dt,canKnockbackMove);
   }else if(Math.hypot(dx,dy)>.08){
    const len=Math.hypot(dx,dy),v=(pressed.run?RUN_SPEED:WALK_SPEED)*Math.min(1,len)*boostFactor(state.boost,state.clock),nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
-   if(validWalk(nx,p.y)&&inside([nx,p.y],toRing(state.map.border)))p.x=nx;
-   if(validWalk(p.x,ny)&&inside([p.x,ny],toRing(state.map.border)))p.y=ny;
+   const post=(x,y)=>state.streetObjects&&bollardBlocksWalker(state.streetObjects,x,y);
+   if(validWalk(nx,p.y)&&inside([nx,p.y],toRing(state.map.border))&&!post(nx,p.y))p.x=nx;
+   if(validWalk(p.x,ny)&&inside([p.x,ny],toRing(state.map.border))&&!post(p.x,ny))p.y=ny;
    p.a=Math.atan2(dy,dx);state.distance+=v*dt;
   }
  }
@@ -674,6 +702,7 @@ function tick(dt){
  for(const car of state.cars)if(car!==state.cars[p.car])
   advanceNonlethalImpact(car,dt,canKnockbackMove);
  updateTraffic(dt);
+ stepStreetPhysics(dt);
  const screen=visibleBounds(),inset=18+4;
  const signal=stepCityEvents(state.events,dt,{people:state.people,graph:state.graph,
   player:{x:p.x,y:p.y,onFoot:p.car<0},view:[screen[0]+inset,screen[1]+inset,screen[2]-inset,screen[3]-inset],
@@ -716,7 +745,7 @@ function compareRoadWidths(){
  state.graph=buildRoadGraph(state.roads);
  state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
  state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
- state.people=createCityPedestrians();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
  state.propsGrid=makeIndex(state.props);
@@ -976,6 +1005,7 @@ function draw(dt=0){
   const doors=query(state.doors,state.doorGrid,x0,y0,x1,y1);
   drawDoorSteps(c,doors,state.zoom);drawDoorFronts(c,doors,state.zoom);
  }
+ drawStreetObjects(c,state.streetObjects,[x0,y0,x1,y1],state.zoom);
  drawLostItem(c,state.events,state.player.car<0?state.player:null,state.clock);
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  for(const ai of state.traffic)if(ai.x>=x0&&ai.x<=x1&&ai.y>=y0&&ai.y<=y1){

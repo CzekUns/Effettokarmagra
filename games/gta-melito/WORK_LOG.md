@@ -244,3 +244,13 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Browser (Chrome headless, PC e telefono):** fondi insufficienti a € 0, acquisto con i 75 € della ricompensa della prima missione (impostati a mano), HUD aggiornato, salvataggio confermato dopo il ricaricamento della pagina; sul telefono acquisto di un servizio con i tocchi; nessun errore JS.
 - **Non eseguiti / limiti:** Android reale; la missione non è stata giocata per intero nel browser.
 - **Da fare:** Q07 (ambiente fisicamente interattivo) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q07 ambiente fisicamente interattivo
+- **Fatto:** bidoni carrellati spostabili/ribaltabili e paletti dissuasori fissi in tutta la città. Q07 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `street-objects.mjs` (posizionamento deterministico, fisica dei bidoni, collisioni cerchio/veicolo, paletti, recupero fuori vista, disegno); `game.mjs`: `createStreetObjects` dopo pedoni e porte (al caricamento e al reset), `stepStreetPhysics` subito dopo il traffico, paletti in `carBlocked` e nella camminata, disegno sotto le persone.
+- **Regole:** niente oggetti in case, carreggiate, davanti alle porte o sotto le auto parcheggiate; traffico e pedoni non vengono bloccati; nessun riposizionamento in vista.
+- **Cache:** `game.mjs?v=146`, nuovo `street-objects.mjs?v=001`.
+- **Test:** nuovo `street-objects.test.mjs` (6 test); suite Node 22 **216/216**.
+- **Browser (Chrome headless):** 442 bidoni e 144 paletti, tutti in posizioni valide sulla mappa reale; urto d'auto, spinta a piedi, paletti e recupero verificati; traffico e pedoni invariati rispetto alla Q06; 0,26 ms per fotogramma; nessun errore JS.
+- **Non eseguiti / limiti:** Android reale; paletti piccoli allo zoom a piedi.
+- **Da fare:** Q08 (meteo) sullo stesso ramo.

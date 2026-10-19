@@ -505,3 +505,9 @@ Aggiunta una barretta compatta nella parte superiore della scena, visibile solo 
 **Grafica:** quattro piccole icone in pixel art per gli oggetti a terra (chiavi dorate, portafoglio marrone, busta bianca con manici verdi, cellulare con schermo azzurro), con un cerchio giallo pulsante quando il giocatore è vicino; l'oggetto raccolto si vede accanto al protagonista. Fumetti chiari col bordo scuro e la punta sopra la testa del personaggio, testo monospace come le altre etichette, visibili 3,5 s e leggibili anche di notte.
 
 **Verifiche:** foto Chrome headless dell'oggetto a terra, di «La spesa?!», di «Preso!» e di «Grazie assai!» con «+5 €»; foto sul telefono in orizzontale. Non provato su un telefono reale.
+
+### 2026-10-19 — Bidoni della differenziata e paletti (Q07)
+
+**Grafica:** bidoni carrellati visti dall'alto (coperchio colorato blu, giallo, verde o grigio, maniglia scura, ombra), in gruppi sul marciapiede; ribaltati diventano più lunghi, col coperchio aperto e un po' di carta per terra. Paletti in ghisa scura con testa chiara a cupola e ombra, sul bordo del marciapiede vicino agli incroci.
+
+**Verifiche:** foto Chrome headless di un gruppo di bidoni su Via Roma, di un bidone ribaltato e dei paletti a un angolo; i paletti sono piccoli (circa 4 px allo zoom a piedi) ma leggibili. Non provato su un telefono reale.
