@@ -61,9 +61,17 @@ export function stepResidentRoutine(graph,agent,dt,index=null,clockMinutes=null)
  const plan=agent.residentRoutine,e=graph.edges[plan.edge];
  if(!e||!e.walk)return;
  const elapsed=Math.min(Math.max(dt,0),.1);
+ if(plan.phase==='AT_HOME'&&Number.isFinite(clockMinutes)){
+  const run=residentDepartureWindow(plan.agenda,clockMinutes);
+  agent.braking=true;
+  if(run!==null&&run!==plan.agenda.lastRunId){
+   plan.agenda.lastRunId=run;plan.agenda.status='OUTBOUND';plan.phase='OUTBOUND';agent.wait=0;
+  }
+  return;
+ }
  if(plan.phase==='AT_HOME'||plan.phase==='ACTING'){
   agent.braking=true;agent.wait=Math.max(0,(agent.wait||0)-elapsed);
-  if(agent.wait<=0)plan.phase=plan.phase==='AT_HOME'?'OUTBOUND':'RETURNING';
+  if(agent.wait<=0){plan.phase=plan.phase==='AT_HOME'?'OUTBOUND':'RETURNING';if(plan.agenda)plan.agenda.status=plan.phase;}
   return;
  }
  const destination=plan.phase==='OUTBOUND'?plan.targetT:plan.homeT;
