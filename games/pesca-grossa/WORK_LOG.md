@@ -54,3 +54,22 @@ Registro operativo del gioco `games/pesca-grossa/` (regole in [`AGENTS.md`](../.
 
 **Riferimenti**
 - Branch `pesca-grossa-2`, PR #25.
+
+## 2026-10-19 — Biagio animato e tre skin (Claude, Claude Code)
+
+**Fatto**
+- Biagio non è più l'SVG fermo `assets/biaggio-power.svg`: è disegnato e animato in `art.js` (respiro, sguardo verso galleggiante o pesce, canna che si carica nel lancio, corpo che si piega all'indietro con la tensione, manovella del mulinello che gira mentre si recupera, sudore con la lenza al limite).
+- Espressioni: tranquillo, attento quando il galleggiante trema, sorpreso all'abboccata, concentrato e poi a denti stretti nel combattimento, deluso quando il pesce scappa, felice nel trofeo.
+- Trofeo: alla cattura Biagio solleva il pesce sopra la testa per circa un secondo; in carriera la scheda della cattura si apre dopo.
+- Canna più lunga e dettagliata (sughero, anelli, mulinello). Punta della canna spostata a (446,228) in `game.js` (`TIP0`), mano in `HAND`.
+- Tre skin scelte dal Guardaroba (pulsante a forma di maglietta in alto e voce nel menu), con anteprime animate; la scelta resta in `biagio-pesca-prefs`:
+  - **base**: pelato, canottiera nera, occhiali bianchi, braccia tatuate (fasce tribali, onde, ancora, rosa), cuore «MAMMA» sul petto, stella sul collo, orecchino e catenina d'oro;
+  - **giovane**: cappellino rosso, maglietta blu, tracolla nera, pantaloncini color sabbia, come negli sprite di Effetto Karmagra e Scootercross;
+  - **pesce** («Pescato!»): una cernia gigante col cappello da pescatore tiene Biagio in braccio come un trofeo; i suoi occhi seguono la lenza e la bocca reagisce all'azione.
+
+**Verifiche e stato**
+- `node games/pesca-grossa/rules.test.js`: ok. Prova in Chrome headless: le tre skin in attesa, combattimento e trofeo; guardaroba su telefono e desktop; giro completo carriera e sfida. Nessun errore JavaScript.
+- **Non eseguito:** prova su telefono vero.
+
+**Riferimenti**
+- Branch `pesca-grossa-skin`.
