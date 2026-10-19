@@ -111,7 +111,7 @@ Se un'immagine è troppo stretta si **espande il crop**, non si ridisegna obblig
 
 1. Modello riconoscibile, **generazione corretta**, dimensioni coerenti con la strada: auto vere come riferimento artistico lecito. Non allungare Panda/Punto/Ypsilon o ingrandire uno scooter fino alla scala di un furgone.
 2. **Veicoli: una vista ESATTAMENTE top-down** per ciascuna variante. Fronte verso **−Y del PNG**: il gioco può ruotarlo con `angle+Math.PI/2`. No isometrie.
-3. Un modello per sheet; stessi pivot, forma, rotazione e dimensioni in tutte le varianti colore. Dove possibile, colori di produzione verificati per anno/allestimento; altrimenti dichiarare “varianti illustrative”.
+3. Un foglio 4×4 per **due modelli**, otto varianti per ciascuno; per tutte le otto varianti dello stesso modello usare pivot, scala, orientamento e proporzioni coerenti. Dove possibile, colori di produzione verificati per anno/allestimento; altrimenti dichiarare “varianti illustrative”.
 4. Sprite singoli realmente trasparenti; poi atlante ottimizzato. Dimensioni già viste in repo (sono **esempi, non obblighi universali**): Panda `88×132`; utilitarie `40×60`/cella; moto `40×68`/cella (16 modelli/vernici in `160×272`).
 5. Auto: tettuccio, parabrezza, lunotto, fari e specchietti con silhouette pulita. Moto: **due ruote**, manubrio, sella, cupolino e, se necessario, cavalletto; i piccoli mezzi non devono sembrare vecchie auto Canvas.
 6. Se una moto è **parcheggiata**, mostrare sella **vuota** e renderla effettivamente guidabile. Se è **in corsa**, disegnare un guidatore sopra con proporzioni e orientamento corretti; mai una moto nuova sopra la “vecchia moto” procedurale.
