@@ -315,3 +315,13 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Browser (Chrome headless):** ciclo completo in 469 s sulla mappa reale, scooter non prendibile mentre guidato, furto vero col tasto E e partenza a piedi; nessun errore JS.
 - **Non eseguiti / limiti:** arrivo a casa a piedi nel browser (mezz'ora di gioco, provato nel mondo di prova); un solo pendolare, niente auto guidate da NPC; Android reale.
 - **Da fare:** Q13 (reazioni avanzate e densità) sullo stesso ramo; la densità per zona aiuterà anche gli incontri della Q11.
+
+### 2026-10-19 — ChatGPT/GitHub — Ricognizione nuova versione e stop automazioni GTA Melito
+- **Fatto:** disattivata su richiesta utente l'unica automazione GTA Melito ancora attiva («GTA Melito — PR e migliorie»); le altre automazioni GTA visibili risultavano già disattivate. Nessuna automazione estranea toccata.
+- **Ricognizione:** verificato `main` dopo merge PR #30, commit `35c08b3`: Q02–Q12 integrate, 12 Q marcate [x] su 24, prossima Q13; PR #29 del collaboratore ancora aperta e conflittuale rispetto alla `main`.
+- **Nuove funzioni integrate:** agenda, porte e interni NPC, ciclo giorno/notte, oggetto smarrito, acquisti, oggetti stradali, meteo, audio, guida 2.0, socialità e pendolare in scooter.
+- **Test/CI verificati:** GitHub Actions «GTA Melito visual and campaign validation» superata sul merge `35c08b3`; diario del collaboratore riporta 251/251 test Node 22 e prove Chrome headless, non ripetuti in questa ricognizione.
+- **Pubblicazione:** workflow custom «Publish Uns Arcade with GTA Melito stable and beta» superato sul commit `b85b179`; workflow Pages automatico parallelo fallito al deploy; custom workflow mantiene tre copie `gta-melito`, `gta-melito-stable`, `gta-melito-beta`.
+- **Limiti:** impossibile aprire il sito pubblico nel browser/HTTP da questo ambiente (DNS `czekuns.github.io` non risolto e lettore Web non accessibile); nessuna prova visiva Android/PC reale eseguita qui.
+- **Osservazioni:** la riga «Ultima esecuzione automatica» nella TODO è rimasta al checkpoint Q02, precedente al merge Q02–Q12; non rispecchia il nuovo stato delle checkbox. Q13–Q24 ancora aperte.
+- **Da fare solo su nuova richiesta:** prova manuale dei tre URL, verifiche Android e revisione conflitti PR #29; le automazioni GTA restano spente finché l'utente non richiede di riattivarle.
