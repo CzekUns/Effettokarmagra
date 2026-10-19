@@ -138,3 +138,13 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Verifiche/stato:** scrittura della TODO sul branch main riuscita; si tratta esclusivamente di pianificazione, senza creazione di sprite, nuove funzioni, test Node/browser o deploy.
 - **Da fare:** il lavoratore orario deve continuare con la prima Q aperta (Q02 alla lettura odierna), una sola Q per esecuzione; arriverà successivamente a Q18–Q24 senza saltare elementi.
 - **Riferimenti:** `games/gta-melito/TODO.md`, commit `525e338`; nessuna nuova automazione creata.
+
+### 2026-10-19 — ChatGPT/GitHub — Diagnosi arresto del lavoratore orario
+- **Fatto:** diagnosticato lo stop della coda Q: l'automazione «GTA Melito — Sviluppo Orario» risulta disattivata, pur avendo ancora attività Q02–Q24 aperte.
+- **Stato scheduler verificato:** ultima esecuzione alle 08:31 circa ora di Roma; disabilitazione registrata verso le 08:32. La cronologia disponibile non specifica la causa precisa della disabilitazione.
+- **Stato codice:** dopo Q01 sono stati pubblicati `npc-agenda.mjs`, test Q02 e commit parziali `062f70e`, `88dd5c3`, `2aa85ff`, ma i moduli di loop `game.mjs`/`roads.mjs`/`resident-routines.mjs` non importano ancora l'agenda.
+- **Stato TODO:** 24 attività, 1 [x]; Q02 rimane [ ] e ora include un checkpoint IN CORSO nel commit `e5c6902` per il successivo lavoratore.
+- **Verifiche realmente eseguite:** lettura diretta repository e permessi di scrittura GitHub confermati; nessun test Node 22, prova browser/Android o deploy eseguito in questa sessione.
+- **Da fare:** completare SOLO Q02 per la prossima esecuzione; avviare correttamente clock/agenda nel gioco e verificare che le missioni restino a timer in secondi reali.
+- **Resilienza:** riattivare l'unica automazione, evitando che un blocco temporaneo dei tool o task incompleta provochino una nuova disattivazione; registrare sempre Q02 [ ] con avanzamento e riprovare l'ora successiva.
+- **Riferimenti:** branch `main`, TODO Q02; nessun file di gameplay modificato durante la diagnosi.
