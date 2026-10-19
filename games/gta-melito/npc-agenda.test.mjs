@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {freshProgress,updateTimer} from './campaign.mjs';
 import {NPC_START_MINUTE,advanceNpcClock,npcDaypart,formatNpcClock,makeResidentAgenda,residentDepartureWindow} from './npc-agenda.mjs';
 
 test('Q02 NPC clock covers five dayparts and rolls over midnight',()=>{
@@ -30,4 +31,12 @@ test('Q02 staggered residents occupy every slot and have reproducible daily depa
  }
  const night=a.find(x=>x.slot==='notte');
  assert.equal(residentDepartureWindow(night,night.startMinute+75),0);
+});
+
+test('Q02 mission countdown stays in real seconds rather than NPC minutes',()=>{
+ const p=freshProgress();p.mission=1;p.remaining=100;
+ const clock=advanceNpcClock(NPC_START_MINUTE,.05);
+ assert.equal(clock,NPC_START_MINUTE+.05);
+ assert.equal(updateTimer(p,.05),null);
+ assert.equal(p.remaining,99.95);
 });
