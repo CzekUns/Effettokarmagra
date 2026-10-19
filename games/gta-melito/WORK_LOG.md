@@ -284,3 +284,13 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Browser (Chrome headless):** sbandata col freno a mano con segni e stridio, ritorno in linea, mai dentro i muri, RETRO senza scivolate; nessun errore JS.
 - **Non eseguiti / limiti:** prova di guida su telefono reale; profili da rifinire a sensazione.
 - **Da fare:** Q11 (socialità NPC più ricca) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q11 socialità NPC più ricca
+- **Fatto:** incontri spontanei tra conoscenti e piccoli gruppi (fino a 3) con orientamento, pausa, saluto e ripartenza; interruzione per pericolo; pochi fumetti contestuali. Q11 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `npc-social.mjs` (conoscenze, chi può fermarsi, gruppi, pericolo, fumetti); `roads.mjs`: chi chiacchiera salta il passo; `city-events.mjs`: chi chiacchiera non perde oggetti; `game.mjs`: `stepSocial` nel `tick` con veicoli, clacson (`honk()` e clacson NPC) e controllo della carreggiata.
+- **Correzioni durante il collaudo:** la distanza dagli incroci si applicava a ogni vertice delle vie OSM (quasi nessuno poteva fermarsi): ora solo agli incroci veri; un gruppo si era formato su un attraversamento di una carreggiata: ora mai sulla carreggiata.
+- **Cache:** `game.mjs?v=150`, `roads.mjs?v=144`, `city-events.mjs?v=002`, nuovo `npc-social.mjs?v=001`.
+- **Test:** nuovo `npc-social.test.mjs` (7 test); suite Node 22 **245/245**.
+- **Browser (Chrome headless):** 9 gruppi in 170 s in città, nessuno su carreggiata, nessun pedone incastrato, traffico e pedoni in movimento; nessun errore JS.
+- **Limite:** pedoni pochi e sparsi, quindi incontri rari vicino al giocatore (da migliorare con la densità per zona della Q13).
+- **Da fare:** Q12 (ciclo NPC a piedi ↔ scooter/auto) sullo stesso ramo.

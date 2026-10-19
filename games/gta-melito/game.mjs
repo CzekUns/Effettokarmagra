@@ -6,15 +6,16 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=143';
+import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=144';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=005';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
-import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=001';
+import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=002';
 import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote} from './local-shops.mjs?v=001';
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
 import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=002';
+import {createSocial,stepSocial} from './npc-social.mjs?v=001';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape} from './traffic-collision.mjs?v=126';
 import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
@@ -252,6 +253,8 @@ function createCityPedestrians(){
  const routine=[...residents,...visitors];
  // Q05: city events belong to this cohort; a new cohort starts a fresh, deterministic sequence.
  state.events=createCityEvents(505);
+ // Q11: acquaintances who meet on the pavement; a new cohort starts a fresh sequence too.
+ state.social=createSocial(909);
  state.doors=[...new Set(routine.flatMap(p=>[p.residentRoutine.homeDoor,p.residentRoutine.targetDoor]).filter(Boolean))];
  state.doorGrid=makeIndex(state.doors.map(d=>Object.assign(d,{p:[d.wallX-3,d.wallY-4,d.wallX+3,d.wallY+2]})));
  const walkers=createAgents(state.graph,170-routine.length,310,'walk',
@@ -769,6 +772,13 @@ function tick(dt){
   player:{x:p.x,y:p.y,onFoot:p.car<0},view:[screen[0]+inset,screen[1]+inset,screen[2]-inset,screen[3]-inset],
   allowed:!state.progress||state.progress.remaining===null});
  if(signal)updateHud();
+ if(state.social){
+  const view=visibleBounds(),vehicles=state.traffic.filter(v=>v.body==='car').map(v=>({x:v.x,y:v.y,speed:v.braking?0:v.speed}));
+  if(p.car>=0)vehicles.push({x:state.cars[p.car].x,y:state.cars[p.car].y,speed:state.cars[p.car].speed});
+  stepSocial(state.social,dt,{people:state.people,graph:state.graph,view,vehicles,alarm:state.hornAlarm,
+   rain:state.weather?.rain||0,night:(state.light?.darkness||0)/NIGHT_DARKNESS,say:(agent,text)=>cityEventBubble(state.events,agent,text),
+   onRoad:(x,y)=>{const r=nearest(x,y,30,state.roads,true);return !!r&&r.distance<visualRoadWidth(r.road)/2+.3;}});
+ }
  if(state.progress){
   const result=updateTimer(state.progress,dt);
   if(result){message(result.message,'TEMPO SCADUTO');saveProgress(localStorage,state.progress);refreshCampaign();}
@@ -1210,7 +1220,16 @@ function updateCityAudio(){
   traffic:traffic.map(v=>({x:v.x,y:v.y,vehicleType:v.vehicleType,speed:v.braking?0:v.speed})),
   night:(state.light?.darkness||0)/NIGHT_DARKNESS,rain:state.weather?.rain||0,
   skid:car&&car.speed>8?Math.min(1,Math.abs(car.slip||0)/.45):0});
- if(!paused&&!state.bankInterior)cityAudio.npcHorns(traffic,p,state.clock);
+ if(!paused&&!state.bankInterior){
+  const honker=cityAudio.npcHorns(traffic,p,state.clock);
+  if(honker)state.hornAlarm={x:honker.x,y:honker.y,t:state.social?.clock??0};
+ }
+}
+// Q09/Q11: the player's horn is heard, and chatting pedestrians nearby break up.
+function honk(){
+ const p=state.player;if(p.car<0)return;
+ cityAudio.horn(isMotorcycle(state.cars[p.car])?'moto':'auto');
+ state.hornAlarm={x:p.x,y:p.y,t:state.social?.clock??0};
 }
 function soundLabel(){$('pause-sound').textContent='SUONI: '+(cityAudio.muted?'OFF':'ON')+' · '+Math.round(cityAudio.volume*100)+'%';}
 function frame(now){
@@ -1282,7 +1301,7 @@ function bind(){
    if((e.key==='Escape'||e.key.toLowerCase()==='e')&&!e.repeat){e.preventDefault();closeShop();return;}
   }
   if(e.key.toLowerCase()==='e'&&!e.repeat){e.preventDefault();toggleVehicle();}
-  if(e.key.toLowerCase()==='h'&&!e.repeat&&state.player.car>=0){e.preventDefault();cityAudio.horn(isMotorcycle(state.cars[state.player.car])?'moto':'auto');}
+  if(e.key.toLowerCase()==='h'&&!e.repeat&&state.player.car>=0){e.preventDefault();honk();}
   if(e.key.toLowerCase()==='f'&&!e.repeat){e.preventDefault();interactMission();}
   if(e.key.toLowerCase()==='m'&&!e.repeat){e.preventDefault();toggleBigMap();}
   const carRadioAvailable=state.player.car>=0&&!state.bankInterior&&
@@ -1326,7 +1345,7 @@ function bind(){
   if(wheel.pointerId!==e.pointerId)return;
   const tap=wheel.tap;wheel.tap=null;
   if(e.type==='pointerup'&&tap?.hub&&performance.now()-tap.t<260&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<9&&state.player.car>=0)
-   cityAudio.horn(isMotorcycle(state.cars[state.player.car])?'moto':'auto');
+   honk();
   wheel.held=false;wheel.pointerId=null;
  };
  for(const name of ['pointerup','pointercancel','lostpointercapture'])steeringPad.addEventListener(name,releaseWheel);

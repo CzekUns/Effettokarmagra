@@ -340,6 +340,8 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
  for(const agent of agents){
   const x=agent.x,y=agent.y;
   if(agent.impactTime>0){agent.braking=true;continue;}
+  // Q11: chatting with an acquaintance; npc-social.mjs turns them face to face and lets go.
+  if(agent.social?.hold){agent.braking=true;agent.stalled=0;continue;}
   if(restoreAgentRoutine(graph,agent,dt,world,index)){
    if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);
    continue;

@@ -26,7 +26,7 @@ export function createCityEvents(seed=505){
 export const MIN_ROAD_AHEAD=22;
 export function canLoseSomething(agent,graph=null){
  const plan=agent?.residentRoutine;
- if(!plan||agent.indoors||plan.doorStep||plan.detour||agent.needsRoutineRecovery||agent.impactTime>0)return false;
+ if(!plan||agent.indoors||plan.doorStep||plan.detour||agent.needsRoutineRecovery||agent.impactTime>0||agent.social?.hold)return false;
  if(plan.phase!=='OUTBOUND'&&plan.phase!=='RETURNING')return false;
  if(Math.abs(plan.lateral||0)>=.001||Math.abs(plan.lateralGoal||0)>=.001)return false;
  const e=graph?.edges?.[plan.edge];
