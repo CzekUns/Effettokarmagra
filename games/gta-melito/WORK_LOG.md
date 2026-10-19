@@ -234,3 +234,13 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Browser (Chrome headless, PC e telefono):** evento naturale dopo 110 s seguendo un residente; ritrovato da solo in 26 s; con i tasti reali RACCOGLI → RESTITUISCI e soldi da € 0 a € 5; sul telefono il tocco su RACCOGLI funziona; nessun errore JS.
 - **Non eseguiti / limiti:** Android reale; un solo tipo di evento per ora.
 - **Da fare:** Q06 (economia locale di base) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q06 economia locale di base
+- **Fatto:** i negozi con nome OSM diventano banconi dove spendere i soldi delle missioni: prodotti che fanno correre di più, un servizio (taglio di capelli, +rispetto), un ricordo da collezione. Q06 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `local-shops.mjs` (catalogo per tipo di negozio, acquisto, fondi insufficienti, spinta di corsa, pulizia del salvataggio); `campaign.mjs`: campo `shop` in `freshProgress`/`readProgress`; `game.mjs`: COMPRA sul pulsante azione, pannello con saldo e messaggi, pausa del mondo, tasti 1–2/E/Esc, velocità a piedi × spinta, HUD «CARICO N S»; `index.html`: riquadro `shop-panel` nello stile dei dialoghi.
+- **Fatti e ipotesi:** nomi dei negozi reali (OSM), prodotti e prezzi inventati, scritto nel pannello.
+- **Cache:** `game.mjs?v=145`, `campaign.mjs?v=001` (prima senza versione), nuovo `local-shops.mjs?v=001`.
+- **Test:** nuovo `local-shops.test.mjs` (7 test); test isolati HUD e pausa aggiornati; suite Node 22 **210/210**.
+- **Browser (Chrome headless, PC e telefono):** fondi insufficienti a € 0, acquisto con i 75 € della ricompensa della prima missione (impostati a mano), HUD aggiornato, salvataggio confermato dopo il ricaricamento della pagina; sul telefono acquisto di un servizio con i tocchi; nessun errore JS.
+- **Non eseguiti / limiti:** Android reale; la missione non è stata giocata per intero nel browser.
+- **Da fare:** Q07 (ambiente fisicamente interattivo) sullo stesso ramo.

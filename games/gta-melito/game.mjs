@@ -11,10 +11,11 @@ import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
 import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=001';
+import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote} from './local-shops.mjs?v=001';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=126';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
-import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
+import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
 import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=127';
 import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS} from './car-sprites.mjs?v=106';
@@ -468,8 +469,41 @@ function updateTraffic(dt){
 function interiorZoom(){
  return targetCameraZoom({inVehicle:false,moving:false},state.zoomBias)*BANK_FOOT_ZOOM_MULTIPLIER;
 }
+const SHOP_KINDS={bar:'BAR',cafe:'CAFFETTERIA',pastry:'PASTICCERIA',bakery:'PANIFICIO',supermarket:'SUPERMERCATO',convenience:'ALIMENTARI',stationery:'CARTOLERIA',hairdresser:'PARRUCCHIERE'};
+function openShop(shop){
+ state.shopOpen=shop;
+ for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
+ $('shop-kind').textContent=(SHOP_KINDS[shop.kind]||'NEGOZIO')+' · MELITO';
+ $('shop-name').textContent=shop.name.toUpperCase();$('shop-note').textContent=shopNote();
+ $('shop-feedback').textContent='';$('shop-feedback').classList.remove('err');
+ renderShop();$('shop-panel').hidden=false;
+}
+function renderShop(){
+ const shop=state.shopOpen,money=state.progress?.money??0;if(!shop)return;
+ $('shop-balance').textContent='SALDO: € '+money;
+ const list=$('shop-offers');list.textContent='';
+ offersFor(shop.kind).forEach((offer,i)=>{
+  const button=document.createElement('button');button.type='button';button.dataset.offer=offer.id;
+  button.className=money>=offer.price?'':'poor';
+  const label=document.createElement('span');label.textContent=(i+1)+' · '+offer.name;
+  const price=document.createElement('span');price.textContent='€ '+offer.price;
+  button.append(label,price);button.addEventListener('click',()=>buyFromShop(offer.id));list.append(button);
+ });
+}
+function buyFromShop(offerId){
+ const shop=state.shopOpen;if(!shop||!state.progress)return;
+ const result=buyOffer(state.progress,offerId,shop);
+ if(result.ok){
+  saveProgress(localStorage,state.progress);refreshCampaign();
+  state.boost=addBoost(state.boost,result.offer,state.clock);
+ }
+ $('shop-feedback').textContent=purchaseMessage(result);$('shop-feedback').classList.toggle('err',!result.ok);
+ renderShop();updateHud();
+}
+function closeShop(){state.shopOpen=null;$('shop-panel').hidden=true;canvas.focus?.({preventScroll:true});updateHud();}
 function toggleVehicle(){
  if(!state.ready)return;
+ if(state.shopOpen){closeShop();return;}
  const p=state.player;
  if(state.bankInterior){
   const interior=state.bankInterior;state.bankInterior=null;
@@ -486,6 +520,9 @@ function toggleVehicle(){
    }else cityEventBubble(state.events,p,'Preso!');
    updateHud();return;
   }
+  // Q06: next to the awning of a named OSM shop the action opens its counter.
+  const shop=nearestShop(state.shops,p);
+  if(shop){openShop(shop);return;}
   const entrance=nearestBankEntrance(state.bankEntrances,p);
   if(entrance){
    const local={x:.5,y:.89,a:-Math.PI/2,moving:false};
@@ -552,7 +589,7 @@ function toRing(border){
 }
 function tick(dt){
  if(!state.ready)return;
- if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden){
+ if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||state.shopOpen){
   for(const key of Object.keys(pressed))pressed[key]=false;
   stick.x=0;stick.y=0;
   return;
@@ -627,7 +664,7 @@ function tick(dt){
   if(p.impactTime>0){
    advanceNonlethalImpact(p,dt,canKnockbackMove);
   }else if(Math.hypot(dx,dy)>.08){
-   const len=Math.hypot(dx,dy),v=(pressed.run?RUN_SPEED:WALK_SPEED)*Math.min(1,len),nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
+   const len=Math.hypot(dx,dy),v=(pressed.run?RUN_SPEED:WALK_SPEED)*Math.min(1,len)*boostFactor(state.boost,state.clock),nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
    if(validWalk(nx,p.y)&&inside([nx,p.y],toRing(state.map.border)))p.x=nx;
    if(validWalk(p.x,ny)&&inside([p.x,ny],toRing(state.map.border)))p.y=ny;
    p.a=Math.atan2(dy,dx);state.distance+=v*dt;
@@ -704,13 +741,15 @@ function updateHud(){
   $('action').textContent='ESCI DALLA BANCA';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
   $('camera-mode').textContent='INTERNO · '+interiorZoom().toFixed(1)+'×';return;
  }
- $('vehicle').textContent=p.car>=0?(isMotorcycle(state.cars[p.car])?'MOTO · ':'AUTO · ')+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H':'A PIEDI';
+ const boostLeft=boostSecondsLeft(state.boost,state.clock);
+ $('vehicle').textContent=p.car>=0?(isMotorcycle(state.cars[p.car])?'MOTO · ':'AUTO · ')+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H':'A PIEDI'+(boostLeft?' · CARICO '+boostLeft+' S':'');
  const n=state.roadGrid?nearest(p.x,p.y,70):null;
  if(n&&n.road.n)$('street').textContent=n.road.n.toUpperCase();
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
  const bank= p.car<0?nearestBankEntrance(state.bankEntrances,p):null;
  const eventAction=p.car<0?cityEventAction(state.events,p):null;
- $('action').textContent=eventAction||(bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':nearestEnterableVehicle(state.cars,p)?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ const shopNear=p.car<0&&!eventAction?nearestShop(state.shops,p):null;
+ $('action').textContent=eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':nearestEnterableVehicle(state.cars,p)?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
@@ -1078,6 +1117,11 @@ function bind(){
   if(dir){e.preventDefault();pressed[dir]=true;}
   if(e.key==='Shift')pressed.run=true;
   if(e.code==='Space'){e.preventDefault();pressed.handbrake=true;}
+  if(state.shopOpen){
+   const index=Number(e.key)-1,offer=offersFor(state.shopOpen.kind)[index];
+   if(offer&&!e.repeat){e.preventDefault();buyFromShop(offer.id);return;}
+   if((e.key==='Escape'||e.key.toLowerCase()==='e')&&!e.repeat){e.preventDefault();closeShop();return;}
+  }
   if(e.key.toLowerCase()==='e'&&!e.repeat){e.preventDefault();toggleVehicle();}
   if(e.key.toLowerCase()==='f'&&!e.repeat){e.preventDefault();interactMission();}
   if(e.key.toLowerCase()==='m'&&!e.repeat){e.preventDefault();toggleBigMap();}
@@ -1173,6 +1217,7 @@ function bind(){
  $('map-toggle').addEventListener('click',toggleBigMap);
  $('map-close').addEventListener('click',toggleBigMap);
  $('dialog-close').addEventListener('click',()=>$('dialog').hidden=true);
+ $('shop-close').addEventListener('click',closeShop);
  $('mission-reset').addEventListener('click',()=>{
   if(!state.progress)return;
   if(resetCurrentMission(state.progress)){

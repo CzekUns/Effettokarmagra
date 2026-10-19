@@ -74,7 +74,7 @@ test('Q02 live game wires clock, road stepping, pause/interior guards and indepe
  const roads=await readFile(new URL('./roads.mjs',import.meta.url),'utf8');
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
  assert.match(game,/state\.npcClockMinutes=advanceNpcClock\(state\.npcClockMinutes,dt(,\{interior:!!state\.bankInterior\})?\)/);
- assert.match(game,/if\(state\.mapOpen\|\|!\$\('dialog'\)\.hidden\|\|!\$\('pause-menu'\)\.hidden\)/);
+ assert.match(game,/if\(state\.mapOpen\|\|!\$\('dialog'\)\.hidden\|\|!\$\('pause-menu'\)\.hidden(\|\|[^)]*)?\)/);
  assert.ok(game.indexOf('state.npcClockMinutes=advanceNpcClock')<game.search(/if\(state\.bankInterior\)\s*\{\s*const axes=/));
  assert.match(game,/advanceNpcClock\(state\.npcClockMinutes,dt,\{interior:!!state\.bankInterior\}\)/,'inside the bank the NPC clock must stay frozen');
  assert.match(game,/updateTimer\(state\.progress,dt\)/);
