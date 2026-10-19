@@ -187,3 +187,5 @@ Fix v104: `vehicle-alpha.mjs` contiene i contorni (envelope delle silhouette der
 - Un link ↗ apre la pagina della stazione. In caso di errore/autoplay bloccato, il pannello mostra lo stato e permette un nuovo tocco. Le preferenze vengono salvate localmente.
 - **I sei URL HTTPS sono candidati reperiti online, non verificati con una prova di ascolto reale su Android o desktop.** Lo streaming può essere rifiutato, spostato o risultare incompatibile con il browser; l'app non scarica/ritrasmette/archivia alcun brano, apre direttamente il server dell'emittente. Prima di mantenere la funzione in una pubblicazione stabile, chiarire condizioni d'uso e permessi dell'integrazione con ciascuna emittente.
 - Logica e test: `car-radio.mjs`, `car-radio.test.mjs`. Una prova di funzioni in sandbox JavaScript non sostituisce ascolto reale o verifica legale.
+
+<!-- Q02: five-slot fictional NPC agenda is being integrated; see TODO for status. -->
