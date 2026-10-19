@@ -264,3 +264,13 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Browser (Chrome headless, PC e telefono):** foto di sereno, nuvoloso, pioggia di giorno e di notte dallo stesso punto; passaggio naturale al primo temporale senza blocchi; nessun errore JS; con la pioggia di giorno 48 fps contro 55 senza GPU.
 - **Non eseguiti / limiti:** Android reale e GPU vere.
 - **Da fare:** Q09 (audio ambientale dinamico) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q09 audio ambientale dinamico
+- **Fatto:** motori, traffico, clacson, fondo urbano e pioggia sintetizzati, con attenuazione per distanza e stereo, avvio su gesto, muto/volume e pausa/focus. Q09 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `city-audio.mjs` (mix puro testabile + nodi Web Audio); `game.mjs`: avvio al primo `pointerdown`/`keydown`, `visibilitychange`/`blur`/`focus`, aggiornamento a ogni fotogramma, clacson con H e tocco al centro del volante, clacson NPC limitati, stato radio per abbassare i motori; `index.html`: pulsanti SUONI e VOLUME nel menu di pausa.
+- **Diritti:** nessun audio di terzi; radio invariate.
+- **Cache:** `game.mjs?v=148`, nuovo `city-audio.mjs?v=001`.
+- **Test:** nuovo `city-audio.test.mjs` (8 test); suite Node 22 **231/231**.
+- **Browser (Chrome headless):** avvio solo dopo il clic, motore che sale in accelerazione, muto e volume dal menu, sospensione con la scheda nascosta, radio visibile; resa offline con segnale reale e senza saturazione; nessun errore JS.
+- **Non eseguiti / limiti:** ascolto reale (altoparlanti, Android): i volumi vanno regolati a orecchio.
+- **Da fare:** Q10 (guida arcade 2.0) sullo stesso ramo.

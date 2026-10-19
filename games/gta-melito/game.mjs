@@ -14,6 +14,7 @@ import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEv
 import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote} from './local-shops.mjs?v=001';
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
 import {buildingVolume} from './building-volume.mjs?v=088';
+import {createCityAudio} from './city-audio.mjs?v=001';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape} from './traffic-collision.mjs?v=126';
 import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
@@ -44,7 +45,10 @@ import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 import {createCarRadio} from './car-radio.mjs?v=001';
 const $=id=>document.getElementById(id);
+// Q09: last radio status, read by the city sound to duck engines while a station plays.
+let radioStatus='off';
 function updateCarRadioUi({inVehicle,status,station,enabled}){
+ radioStatus=status;
  const panel=$('car-radio');
  panel.hidden=!inVehicle;
  $('radio-name').textContent=station.name;
@@ -97,6 +101,8 @@ function startMinuteFromUrl(){
  return match&&Number(match[1])<24&&Number(match[2])<60?Number(match[1])*60+Number(match[2]):NPC_START_MINUTE;
 }
 const START_MINUTE=startMinuteFromUrl();
+// Q09: synthesized city sound; created only on the first user gesture.
+const cityAudio=createCityAudio({storage:globalThis.localStorage});
 // Q08: ?meteo=pioggia|nuvoloso|sereno fixes the weather for checks; otherwise it follows the clock.
 const FORCED_WEATHER=(()=>{const w=new URLSearchParams(globalThis.location?.search||'').get('meteo');return ['pioggia','nuvoloso','sereno'].includes(w)?w:null;})();
 const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
@@ -1163,9 +1169,21 @@ function drawMini(){
  r.lineWidth=1.4;r.strokeStyle='#1e2920';r.stroke();
  r.fillStyle='#fff0b9';r.font='bold 8px monospace';r.fillText('MELITO',5,10);
 }
+function updateCityAudio(){
+ if(!cityAudio.started||!state.ready)return;
+ const p=state.player,car=p.car>=0?state.cars[p.car]:null;
+ const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen;
+ const traffic=state.traffic.filter(v=>v.body==='car');
+ cityAudio.update({paused,interior:!!state.bankInterior,radioLive:radioStatus==='live',
+  player:{x:p.x,y:p.y,inVehicle:!!car,vehicleType:car&&isMotorcycle(car)?'motorcycle':'car',speed:car?car.speed:0,throttle:pressed.up||pressed.accelerate?1:0},
+  traffic:traffic.map(v=>({x:v.x,y:v.y,vehicleType:v.vehicleType,speed:v.braking?0:v.speed})),
+  night:(state.light?.darkness||0)/NIGHT_DARKNESS,rain:state.weather?.rain||0});
+ if(!paused&&!state.bankInterior)cityAudio.npcHorns(traffic,p,state.clock);
+}
+function soundLabel(){$('pause-sound').textContent='SUONI: '+(cityAudio.muted?'OFF':'ON')+' · '+Math.round(cityAudio.volume*100)+'%';}
 function frame(now){
  const dt=state.last?Math.min(.05,(now-state.last)/1000):0;state.last=now;
- tick(dt);draw(dt);drawMini();requestAnimationFrame(frame);
+ tick(dt);draw(dt);drawMini();updateCityAudio();requestAnimationFrame(frame);
 }
 async function load(){
  if(state.loading)return;
@@ -1208,6 +1226,11 @@ async function load(){
  finally{state.loading=false;}
 }
 function bind(){
+ // Q09: browsers allow sound only after a gesture; every gesture also resumes a suspended context.
+ for(const type of ['pointerdown','keydown'])window.addEventListener(type,()=>{cityAudio.start();},{capture:true});
+ document.addEventListener('visibilitychange',()=>cityAudio.focus(document.visibilityState!=='hidden'));
+ window.addEventListener('blur',()=>cityAudio.focus(false));
+ window.addEventListener('focus',()=>cityAudio.focus(true));
  // Keep page/browser zoom disabled while preserving the game's own camera zoom.
  window.addEventListener('keydown',e=>{
   const zoomKey=['+','=','-','_','0','Add','Subtract','NumpadAdd','NumpadSubtract','Numpad0'].includes(e.key)||['NumpadAdd','NumpadSubtract','Numpad0'].includes(e.code);
@@ -1227,6 +1250,7 @@ function bind(){
    if((e.key==='Escape'||e.key.toLowerCase()==='e')&&!e.repeat){e.preventDefault();closeShop();return;}
   }
   if(e.key.toLowerCase()==='e'&&!e.repeat){e.preventDefault();toggleVehicle();}
+  if(e.key.toLowerCase()==='h'&&!e.repeat&&state.player.car>=0){e.preventDefault();cityAudio.horn(isMotorcycle(state.cars[state.player.car])?'moto':'auto');}
   if(e.key.toLowerCase()==='f'&&!e.repeat){e.preventDefault();interactMission();}
   if(e.key.toLowerCase()==='m'&&!e.repeat){e.preventDefault();toggleBigMap();}
   const carRadioAvailable=state.player.car>=0&&!state.bankInterior&&
@@ -1253,6 +1277,9 @@ function bind(){
  steeringPad.addEventListener('pointerdown',e=>{
   if(state.player.car<0||state.bankInterior||wheel.held)return;
   e.preventDefault();wheel.held=true;wheel.pointerId=e.pointerId;wheel.pointerAngle=wheelPointer(e);
+  // Q09: a quick tap on the hub (no drag) sounds the horn.
+  const box=steeringPad.getBoundingClientRect();
+  wheel.tap={x:e.clientX,y:e.clientY,t:performance.now(),hub:Math.hypot(e.clientX-box.left-box.width/2,e.clientY-box.top-box.height/2)<box.width*.22};
   try{steeringPad.setPointerCapture(e.pointerId);}catch(_){}
  });
  steeringPad.addEventListener('pointermove',e=>{
@@ -1264,7 +1291,11 @@ function bind(){
   $('steering-face').style.transform='rotate('+wheel.angle+'rad)';
  });
  const releaseWheel=e=>{
-  if(wheel.pointerId===e.pointerId){wheel.held=false;wheel.pointerId=null;}
+  if(wheel.pointerId!==e.pointerId)return;
+  const tap=wheel.tap;wheel.tap=null;
+  if(e.type==='pointerup'&&tap?.hub&&performance.now()-tap.t<260&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<9&&state.player.car>=0)
+   cityAudio.horn(isMotorcycle(state.cars[state.player.car])?'moto':'auto');
+  wheel.held=false;wheel.pointerId=null;
  };
  for(const name of ['pointerup','pointercancel','lostpointercapture'])steeringPad.addEventListener(name,releaseWheel);
  // Keyboard wheel accessibility: left/right arrows or A/D already steer.
@@ -1322,6 +1353,10 @@ function bind(){
  $('map-close').addEventListener('click',toggleBigMap);
  $('dialog-close').addEventListener('click',()=>$('dialog').hidden=true);
  $('shop-close').addEventListener('click',closeShop);
+ $('pause-sound').addEventListener('click',()=>{cityAudio.start();cityAudio.toggleMuted();soundLabel();});
+ $('pause-volume-down').addEventListener('click',()=>{cityAudio.changeVolume(-.1);soundLabel();});
+ $('pause-volume-up').addEventListener('click',()=>{cityAudio.changeVolume(.1);soundLabel();});
+ soundLabel();
  $('mission-reset').addEventListener('click',()=>{
   if(!state.progress)return;
   if(resetCurrentMission(state.progress)){
