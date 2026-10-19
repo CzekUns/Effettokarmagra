@@ -6,12 +6,14 @@ export function makeCollisionIndex(items,cell=16){
 }
 const cellKey=(x,y,cell)=>Math.floor(x/cell)+','+Math.floor(y/cell);
 export function addToCollisionIndex(index,item){
- if(!item||!Number.isFinite(item.x)||!Number.isFinite(item.y))return;
+ // Q03: a resident inside a building is out of the street until it walks out of its door.
+ if(!item||item.indoors||!Number.isFinite(item.x)||!Number.isFinite(item.y))return;
  const key=cellKey(item.x,item.y,index.cell);
  if(!index.bins.has(key))index.bins.set(key,new Set());index.bins.get(key).add(item);
 }
 export function moveInCollisionIndex(index,item,oldX,oldY){
  const before=cellKey(oldX,oldY,index.cell),after=cellKey(item.x,item.y,index.cell);
+ if(item.indoors){index.bins.get(before)?.delete(item);return;}
  if(before===after)return;
  index.bins.get(before)?.delete(item);
  if(!index.bins.has(after))index.bins.set(after,new Set());

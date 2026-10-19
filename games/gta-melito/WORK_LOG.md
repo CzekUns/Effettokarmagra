@@ -201,3 +201,15 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Non eseguiti:** Android reale; HUD ora NPC non visibile sul telefono in orizzontale (barra nascosta).
 - **Da fare:** Q03 (ingressi negli edifici) sullo stesso ramo `collab/gta-melito-coda`, come concordato: una Q dopo l'altra e merge unico alla fine.
 
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q03 NPC che entrano ed escono dagli edifici
+- **Fatto:** i residenti della coorte (Q01–Q02) ora abitano dietro un portone e la loro uscita finisce dietro un'altra porta; 3 nuovi "clienti" vanno in negozi con nome presi da OSM. Q03 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `building-doors.mjs` (`probeDoor`, `validateDoor`, `doorFacesViewer`, `facadeExposure`, disegno a terra e in facciata); `resident-routines.mjs` con `stepOutside`/`stepDoorway` (tragitto dritto marciapiede↔soglia a passo d'uomo), `createDoorVisitors`, `attachDoorToPavement`; `traffic-collision.mjs` e `city-art.mjs` ignorano gli NPC `indoors`; `game.mjs`: `buildingAt` restituisce l'edificio trovato, porte create in `createCityPedestrians`, disegnate prima delle persone, chiusura dopo 1,4 s, niente scoperta dei tetti da chi è dentro.
+- **Regole rispettate:** l'NPC appare e sparisce solo sulle soglie (nessun teletrasporto in vista); da dentro non è un ostacolo e non può essere urtato; se un'auto è sulla soglia di casa resta dentro, se blocca la porta del negozio per 8 s fa la commissione fuori. Corretto anche un salto latente della Q02: dopo un urto lo spostamento laterale ora si azzera.
+- **Fonti:** portoni di casa `inventata`; porte dei negozi `osm-poi` con il nome OSM, posizione stimata sulla facciata dietro l'insegna. Nessun ingresso reale è dichiarato censito.
+- **Cache:** `game.mjs?v=142`, `roads.mjs?v=142`, `resident-routines.mjs?v=004`, `traffic-collision.mjs?v=126`, `city-art.mjs?v=126`, `bank-interior.mjs?v=004`, `impact-physics.mjs?v=002`, nuovo `building-doors.mjs?v=001`.
+- **Test:** nuovo `building-doors.test.mjs` (10 test); suite Node 22 **187/187**.
+- **Browser (Chrome headless, desktop 1280×720 e telefono 844×390):** 170 pedoni invariati; 8 residenti su 10 hanno il portone (2 tengono la fermata in strada della Q01), 3 clienti; 22 porte (19 inventate, 3 OSM). 150 s seguiti: residente 5 e cliente di «Le fantasie di Andrea» completano casa→meta→casa solo attraverso le proprie soglie, residente 0 completa andata, permanenza e uscita; 0 posizioni nei muri su 1.274 campioni per NPC, spostamento massimo 0,23 m per campione (100 ms). Foto: porte su Via Roma, uscita con porta aperta, porte a vetro dei negozi; nessun errore JS (solo il favicon 404 già noto).
+- **Prestazioni:** creazione dei pedoni con porte circa 140 ms una volta al caricamento (prima circa 60 ms); ricerca porte limitata e con cache.
+- **Non eseguiti / limiti:** Android reale; porte piccole allo zoom a piedi (leggibili ma discrete); facciate nascoste dietro i tetti escluse; gli NPC non usano la banca (il suo interno è giocabile e li mostrerebbe assenti).
+- **Da fare:** Q04 (giorno/notte e illuminazione) sullo stesso ramo.

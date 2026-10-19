@@ -612,7 +612,8 @@ function drawPixelPerson(c,{skin,hair,coat,pants,trim,variant=0},step){
 export function drawCityPeople(c,people,graph,clock,bounds,alpha=1){
  const [x0,y0,x1,y1]=bounds;
  for(const p of people){
-  if(p.x<x0-14||p.x>x1+14||p.y<y0-14||p.y>y1+14)continue;
+  // Q03: residents inside a building are simulated, not drawn on its roof.
+  if(p.indoors||p.x<x0-14||p.x>x1+14||p.y<y0-14||p.y>y1+14)continue;
   // The walking route already runs on the sidewalk; render the collision pose.
   const x=p.prevX===undefined?p.x:p.prevX+(p.x-p.prevX)*alpha;
   const y=p.prevY===undefined?p.y:p.prevY+(p.y-p.prevY)*alpha;

@@ -485,3 +485,11 @@ Aggiunta una barretta compatta nella parte superiore della scena, visibile solo 
 **Funzionamento:** nuovo stato `pressed.reverse` e relativo binding pointer/touch con cattura puntatore in `game.mjs`, azzerato quando si scende, si entra in pausa o si perde il focus. `driveAxes()` trasmette velocità richiesta negativa con RETRO tenuto premuto; i comandi ACCELERA e RETRO contemporanei si annullano senza azionare il freno. Le funzioni di guida esistenti `stepDriving()` e `stepMotorcycle()` gestiscono già accelerazione inversa, limite di retromarcia e frenata prima di invertire il moto.
 
 **Verifiche:** eseguito smoke test JavaScript su moduli reali: sintassi, input e funzionamento da fermo; tenendo RETRO l'auto raggiunge -12 unità/s e la moto -4; gestione tasti opposti, tasto S su tastiera, freno e lettura layout/cache `game.mjs?v=138` superati. Aggiunti test automatici in `steering-wheel.test.mjs` e aggiornati i controlli versione delle altre suite. **Suite Node completa, browser reale e test multitouch Android non eseguiti**.
+
+### 2026-10-19 — Portoni e porte dei negozi per gli NPC (Q03)
+
+**Grafica:** nuovi portoni disegnati sul filo del muro, leggibili dall'alto con qualsiasi orientamento della facciata: gradino in piperno grigio scuro sul marciapiede, vano del portone in legno marrone (vetro azzurro per i negozi OSM) e stipiti in pietra chiara. Quando qualcuno entra o esce il portone resta aperto 1,4 s: vano scuro e luce calda sul gradino. Sulle facciate ben esposte (`facadeExposure ≥ 0,45`) c'è anche il portone in alzato. Disegno in `building-doors.mjs`, dopo gli edifici e prima delle persone.
+
+**Fatti e ipotesi:** i portoni di casa sono inventati; per 3 negozi con nome OSM (Le fantasie di Andrea, I Grimaldi's BARBER, L'Angolo Dei Colori) la porta è stimata sulla facciata dietro l'insegna, non rilevata.
+
+**Verifiche:** screenshot Chrome headless su desktop 1280×720 e telefono 844×390 in orizzontale: porte visibili lungo Via Roma, residente che esce dalla porta aperta, porte a vetro nel gruppo di negozi a sud. Allo zoom a piedi una porta è larga circa 10 px: si vede ma è discreta. Non provato su un telefono reale.

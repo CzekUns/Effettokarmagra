@@ -92,7 +92,7 @@ test('Q01 visible knocked resident recovers gradually to its original pavement',
 test('Q01 game integrates residents into both initial and road-width reset populations',async()=>{
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  const roads=await readFile(new URL('./roads.mjs',import.meta.url),'utf8');
- assert.ok(Number((game.match(/import \{createRoutineResidents\} from '.\/resident-routines\.mjs\?v=(\d+)'/)||[])[1])>=2,'resident-routines.mjs almeno alla v=002');
+ assert.ok(Number((game.match(/import \{[^}]*createRoutineResidents[^}]*\} from '.\/resident-routines\.mjs\?v=(\d+)'/)||[])[1])>=2,'resident-routines.mjs almeno alla v=002');
  assert.equal((game.match(/state\.people=createCityPedestrians\(\);/g)||[]).length,2);
  assert.match(roads,/stepResidentRoutine\(graph,agent,elapsed,index,clockMinutes(,valid)?\)/);
  assert.match(roads,/restoreResidentRoutine\(graph,agent,dt,world,index\)/);

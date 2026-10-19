@@ -6,14 +6,15 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=141';
-import {createRoutineResidents} from './resident-routines.mjs?v=003';
+import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=142';
+import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=004';
+import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
-import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=125';
+import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=126';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp} from './city-art.mjs?v=125';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp} from './city-art.mjs?v=126';
 import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS} from './car-sprites.mjs?v=106';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
@@ -30,8 +31,8 @@ import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
-import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=003';
-import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=001';
+import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=004';
+import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=002';
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
@@ -132,8 +133,9 @@ function nearest(x,y,max=24,roads=state.roads,driveOnly=false,walkOnly=false){
   }
  }return best;
 }
+// Q03: returns the building found (still truthy), so doors know which footprint they belong to.
 function buildingAt(x,y){
- const hit=buildings=>buildings.some(b=>{
+ const hit=buildings=>buildings.find(b=>{
   const bd=b.bounds;if(!bd||x<bd[0]||x>bd[2]||y<bd[1]||y>bd[3])return false;
   let found=false,p=b.p;
   for(let i=0,j=p.length-2;i<p.length;j=i,i+=2){
@@ -141,9 +143,10 @@ function buildingAt(x,y){
    if(((ay>y)!==(by>y))&&(x<(bx-ax)*(y-ay)/(by-ay)+ax))found=!found;
   }return found;
  });
- if(hit(query(state.buildings,state.buildingGrid,x-5,y-5,x+5,y+5)))return true;
+ const real=hit(query(state.buildings,state.buildingGrid,x-5,y-5,x+5,y+5));
+ if(real)return real;
  return state.inferredGrid?
-  hit(query(state.inferredBuildings,state.inferredGrid,x-5,y-5,x+5,y+5)):false;
+  hit(query(state.inferredBuildings,state.inferredGrid,x-5,y-5,x+5,y+5))||false:false;
 }
 function validWalk(x,y){
  return x>=0&&y>=0&&x<state.map.projection.width&&y<state.map.projection.height&&!buildingAt(x,y);
@@ -158,14 +161,37 @@ function roadPoint(road,fraction){
  }
  return {x:p[0],y:p[1],a:0};
 }
+// Q03: errands of named OSM shops worth a short visit on foot.
+const VISIT_KINDS=new Set(['bakery','pastry','bar','cafe','supermarket','pharmacy','hairdresser','stationery','hardware','clothes','butcher','houseware']);
 function createCityPedestrians(){
  const border=toRing(state.map.border);
+ const walkOK=(x,y)=>validWalk(x,y)&&inside([x,y],border);
+ // Doors only on facades facing the viewer: the NPC visibly reaches the threshold.
+ const doorAt=(origin,normal,extra)=>{
+  const door=probeDoor(origin,normal,buildingAt,walkOK,{viewerOnly:true,...extra});
+  return door.valid&&doorFacesViewer(door)?door:null;
+ };
  const residents=createRoutineResidents(state.graph,10,405,
-  {x:state.spawn[0],y:state.spawn[1]},[...state.cars,...state.traffic],
-  (x,y)=>validWalk(x,y)&&inside([x,y],border));
- const walkers=createAgents(state.graph,170-residents.length,310,'walk',
-  [...state.cars,...state.traffic,...residents]);
- return [...residents,...walkers];
+  {x:state.spawn[0],y:state.spawn[1]},[...state.cars,...state.traffic],walkOK,{doorAt});
+ // Nearest named shops first; a few spare ones in case a home door is not found.
+ const shops=[],closest=(state.shops||[]).filter(shop=>VISIT_KINDS.has(shop.kind))
+  .map(shop=>({shop,distance:Math.hypot(shop.x-state.spawn[0],shop.y-state.spawn[1])}))
+  .sort((a,b)=>a.distance-b.distance);
+ for(const {shop} of closest){
+  if(shops.length>=6)break;
+  const door=doorAt({x:shop.x,y:shop.y},{x:-Math.sin(shop.a)*shop.side,y:Math.cos(shop.a)*shop.side},
+   {source:DOOR_SOURCE.OSM_POI,label:shop.name,kind:shop.kind});
+  const placed=door&&attachDoorToPavement(state.graph,door,doorAt);
+  if(placed)shops.push(placed);
+ }
+ const visitors=createDoorVisitors(state.graph,shops,3,811,
+  [...state.cars,...state.traffic,...residents],walkOK,doorAt);
+ const routine=[...residents,...visitors];
+ state.doors=[...new Set(routine.flatMap(p=>[p.residentRoutine.homeDoor,p.residentRoutine.targetDoor]).filter(Boolean))];
+ state.doorGrid=makeIndex(state.doors.map(d=>Object.assign(d,{p:[d.wallX-3,d.wallY-4,d.wallX+3,d.wallY+2]})));
+ const walkers=createAgents(state.graph,170-routine.length,310,'walk',
+  [...state.cars,...state.traffic,...routine]);
+ return [...routine,...walkers];
 }
 function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
@@ -414,6 +440,7 @@ function updateTraffic(dt){
  state.trafficClock+=dt;
  if(state.trafficClock<.05)return;
  const elapsed=.05;state.trafficClock-=elapsed;
+ for(const door of state.doors||[])if(door.open>0)door.open=Math.max(0,door.open-elapsed);
  for(const agent of [...state.people,...state.traffic]){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
   advanceNonlethalImpact(agent,elapsed,canKnockbackMove);
@@ -736,7 +763,7 @@ function drawRoofReveal(ctx,buildings,roads,dt,bounds){
  const [x0,y0,x1,y1]=bounds;
  const actors=[car||{...state.player,body:'walk'}];
  for(const person of state.people){
-  if(person.x<x0-12||person.x>x1+12||person.y<y0-12||person.y>y1+12)continue;
+  if(person.indoors||person.x<x0-12||person.x>x1+12||person.y<y0-12||person.y>y1+12)continue;
   actors.push(person);
  }
  const revealActors=actors.map(actor=>{
@@ -881,6 +908,10 @@ function draw(dt=0){
  // Storefront labels are tied to nearby real POIs, not floating over every roof.
  if(state.progress)drawWorldLandmarks(c,state.landmarks,activeTarget(state.progress,state.landmarks),[x0,y0,x1,y1],state.clock,state.zoom,currentStep(state.progress)?.step.speaker);
  const alpha=Math.min(1,state.trafficClock/.05);
+ if(state.doorGrid){
+  const doors=query(state.doors,state.doorGrid,x0,y0,x1,y1);
+  drawDoorSteps(c,doors,state.zoom);drawDoorFronts(c,doors,state.zoom);
+ }
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  for(const ai of state.traffic)if(ai.x>=x0&&ai.x<=x1&&ai.y>=y0&&ai.y<=y1){
   const x=ai.prevX===undefined?ai.x:ai.prevX+(ai.x-ai.prevX)*alpha;
