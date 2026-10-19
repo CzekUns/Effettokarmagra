@@ -190,3 +190,13 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Non eseguiti:** test Node/browser/deploy e nuove implementazioni gameplay; l'assegnazione GitHub non avvia automaticamente l'AI esterna.
 - **Da fare:** l'AI del collaboratore, una volta avviata sul proprio account, prende Q02 e apre una PR; il revisore valuta merge o richiesta correzioni, senza sovrapposizioni.
 - **Riferimenti:** issue https://github.com/CzekUns/Effettokarmagra/issues/28; branch main; aggiornamenti `AGENTS.md` commit `3c1f800`, `TODO.md` commit `ba7c48d`.
+
+### 2026-10-19 — ChatGPT/GitHub — Pubblicazione doppia Stabile/Beta e piano collaudo
+- **Fatto:** aggiunte due schede GTA Melito al catalogo Uns Arcade: Stabile e Sperimentale, con percorsi distinti.
+- **Come:** `arcade/catalog.js` aggiornato (`553c0b6`), cache bust homepage (`b2dba59`).
+- **Workflow:** creato `.github/workflows/publish-arcade-gta-variants.yml` (`6cdaa77`) che assembla sito main, stabile dal branch backup e Beta dalla PR #29, senza unire codice gameplay in main.
+- **Test manuali:** creato `games/gta-melito/PLAYTEST_BETA.md` (`7c6c065`) con prove in ordine, criteri di severità e modalità segnalazione.
+- **Verifiche effettuate:** SHA GitHub e commit di scrittura confermati; branch backup `backup/gta-melito-stable-2026-10-19` già esistente.
+- **Non eseguiti:** Node 22, browser, Android e deploy GitHub Pages; non attribuire ai link lo stato di pubblicazione finché il job non è verificato.
+- **Limite:** GitHub Pages deve essere configurato su sorgente GitHub Actions; controllare eventuali workflow Pages preesistenti per evitare deploy concorrenti.
+- **Da fare:** verificare esito del workflow, aprire entrambe le URL e iniziare collaudo manuale Q02–Q12; nessuna Q marcata su main e PR #29 lasciata aperta.
