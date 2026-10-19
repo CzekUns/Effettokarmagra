@@ -58,14 +58,26 @@ window.ARCADE_CATALOG = [
     accent: "aqua"
   },
   {
+    id: "gta-melito-stable",
+    title: "GTA: Melito",
+    subtitle: "Versione stabile · precedente",
+    genre: "Open world / Guida",
+    description: "Versione precedente congelata, da usare come riferimento se la sperimentale presenta problemi.",
+    href: "./games/gta-melito-stable/",
+    artwork: "./games/gta-melito/cover.svg",
+    support: "Telefono e PC · Stabile",
+    status: "live",
+    accent: "aqua"
+  },
+  {
     id: "gta-melito",
     title: "GTA: Melito",
-    subtitle: "Open world pixel art nel cuore di Melito",
+    subtitle: "Versione sperimentale · Q02–Q12",
     genre: "Open world / Guida",
     description: "Melito in stile top-down rétro: palazzi del centro storico, cupola di Santa Maria delle Grazie, negozi geolocalizzati, pedoni e auto ridisegnati. Missioni disponibili.",
-    href: "./games/gta-melito/",
+    href: "./games/gta-melito-beta/",
     artwork: "./games/gta-melito/cover.svg",
-    support: "Telefono e PC · Visual update 0.4",
+    support: "Telefono e PC · Beta, da collaudare",
     status: "live",
     accent: "orange"
   }
