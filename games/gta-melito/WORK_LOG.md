@@ -224,3 +224,13 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Prestazioni:** senza GPU, notte +1 ms a piedi e +4–6 ms con la visuale larga; sotto 30 fps si spengono le sole finestre.
 - **Non eseguiti / limiti:** Android reale e GPU vere; colori arcade non astronomici; luci dei lampioni solo sui lampioni dell'arredo procedurale (non su quelli di monumenti o interni).
 - **Da fare:** Q05 (eventi cittadini emergenti) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q05 eventi cittadini: l'oggetto perduto
+- **Fatto:** primo evento spontaneo. Un residente perde chiavi, portafoglio, spesa o cellulare, se ne accorge e torna a riprenderlo; oppure il giocatore lo raccoglie e lo restituisce (mancia 5 €). Q05 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `city-events.mjs` (logica deterministica, icone degli oggetti e fumetti); `resident-routines.mjs`: deviazione `plan.detour` sullo stesso marciapiede, con attesa sul posto; `game.mjs`: passo degli eventi nel `tick`, azione contestuale prima di porte e veicoli, etichetta RACCOGLI/RESTITUISCI sul pulsante azione, oggetto disegnato sotto le persone, fumetti sopra il buio della notte, mancia salvata nella campagna.
+- **Anti-spam:** un evento alla volta, primo dopo 45 s, poi pausa di 5 minuti; mai in auto o durante missioni a tempo.
+- **Cache:** `game.mjs?v=144`, `roads.mjs?v=143`, `resident-routines.mjs?v=005`, nuovo `city-events.mjs?v=001`.
+- **Test:** nuovo `city-events.test.mjs` (8 test); `steering-wheel.test.mjs` riceve `cityEventAction` nell'HUD isolato; suite Node 22 **203/203**.
+- **Browser (Chrome headless, PC e telefono):** evento naturale dopo 110 s seguendo un residente; ritrovato da solo in 26 s; con i tasti reali RACCOGLI → RESTITUISCI e soldi da € 0 a € 5; sul telefono il tocco su RACCOGLI funziona; nessun errore JS.
+- **Non eseguiti / limiti:** Android reale; un solo tipo di evento per ora.
+- **Da fare:** Q06 (economia locale di base) sullo stesso ramo.

@@ -5,6 +5,7 @@ import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,return
 import {stepDriving} from './driving-controls.mjs';
 import {stepMotorcycle} from './motorcycles.mjs';
 import {formatNpcClock} from './npc-agenda.mjs';
+import {cityEventAction} from './city-events.mjs';
 
 test('finger movement rotates a true wheel with positive right and negative left steering',()=>{
  const top=pointerWheelAngle(60,10,60,60);
@@ -100,12 +101,12 @@ test('real HUD switches visible controls between car, walking and interior scene
  assert.ok(start>0&&end>start);
  const update=new Function('state','document','pressed','nearestBankEntrance',
   'nearestEnterableVehicle','moveAxes','describeCameraZoom','interiorZoom',
-  'isMotorcycle','nearest','formatNpcClock',[
+  'isMotorcycle','nearest','formatNpcClock','cityEventAction',[
    'const $=id=>document.getElementById(id);',
    game.slice(start,end),
    'return updateHud;'
   ].join('\n'))(state,document,{run:false},()=>null,()=>null,
-  ()=>({x:0,y:0}),()=>'',()=>6.6,()=>false,()=>null,formatNpcClock);
+  ()=>({x:0,y:0}),()=>'',()=>6.6,()=>false,()=>null,formatNpcClock,cityEventAction);
  update();
  assert.ok(nodes.get('stage').classes.has('driving'),'in the car the wheel must appear');
  assert.ok(controls.classes.has('driving'),'in the car the pedals must appear');

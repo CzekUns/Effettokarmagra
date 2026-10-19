@@ -6,10 +6,11 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=142';
-import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=004';
+import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=143';
+import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=005';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
+import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=001';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=126';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
@@ -194,6 +195,8 @@ function createCityPedestrians(){
  const visitors=createDoorVisitors(state.graph,shops,3,811,
   [...state.cars,...state.traffic,...residents],walkOK,doorAt);
  const routine=[...residents,...visitors];
+ // Q05: city events belong to this cohort; a new cohort starts a fresh, deterministic sequence.
+ state.events=createCityEvents(505);
  state.doors=[...new Set(routine.flatMap(p=>[p.residentRoutine.homeDoor,p.residentRoutine.targetDoor]).filter(Boolean))];
  state.doorGrid=makeIndex(state.doors.map(d=>Object.assign(d,{p:[d.wallX-3,d.wallY-4,d.wallX+3,d.wallY+2]})));
  const walkers=createAgents(state.graph,170-routine.length,310,'walk',
@@ -474,6 +477,15 @@ function toggleVehicle(){
   state.camera.x=p.x;state.camera.y=p.y;updateHud();return;
  }
  if(p.car<0){
+  // Q05: picking up or giving back a lost item comes before doors and vehicles.
+  const event=interactCityEvent(state.events,p);
+  if(event){
+   if(event.type==='returned'&&state.progress){
+    state.progress.money+=event.reward;saveProgress(localStorage,state.progress);refreshCampaign();
+    cityEventBubble(state.events,p,'+'+event.reward+' €');
+   }else cityEventBubble(state.events,p,'Preso!');
+   updateHud();return;
+  }
   const entrance=nearestBankEntrance(state.bankEntrances,p);
   if(entrance){
    const local={x:.5,y:.89,a:-Math.PI/2,moving:false};
@@ -625,6 +637,11 @@ function tick(dt){
  for(const car of state.cars)if(car!==state.cars[p.car])
   advanceNonlethalImpact(car,dt,canKnockbackMove);
  updateTraffic(dt);
+ const screen=visibleBounds(),inset=18+4;
+ const signal=stepCityEvents(state.events,dt,{people:state.people,graph:state.graph,
+  player:{x:p.x,y:p.y,onFoot:p.car<0},view:[screen[0]+inset,screen[1]+inset,screen[2]-inset,screen[3]-inset],
+  allowed:!state.progress||state.progress.remaining===null});
+ if(signal)updateHud();
  if(state.progress){
   const result=updateTimer(state.progress,dt);
   if(result){message(result.message,'TEMPO SCADUTO');saveProgress(localStorage,state.progress);refreshCampaign();}
@@ -692,7 +709,8 @@ function updateHud(){
  if(n&&n.road.n)$('street').textContent=n.road.n.toUpperCase();
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
  const bank= p.car<0?nearestBankEntrance(state.bankEntrances,p):null;
- $('action').textContent=bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':nearestEnterableVehicle(state.cars,p)?.bike?'SALTA IN SELLA':'ENTRA IN AUTO';
+ const eventAction=p.car<0?cityEventAction(state.events,p):null;
+ $('action').textContent=eventAction||(bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':nearestEnterableVehicle(state.cars,p)?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
@@ -919,6 +937,7 @@ function draw(dt=0){
   const doors=query(state.doors,state.doorGrid,x0,y0,x1,y1);
   drawDoorSteps(c,doors,state.zoom);drawDoorFronts(c,doors,state.zoom);
  }
+ drawLostItem(c,state.events,state.player.car<0?state.player:null,state.clock);
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  for(const ai of state.traffic)if(ai.x>=x0&&ai.x<=x1&&ai.y>=y0&&ai.y<=y1){
   const x=ai.prevX===undefined?ai.x:ai.prevX+(ai.x-ai.prevX)*alpha;
@@ -930,6 +949,7 @@ function draw(dt=0){
  drawPlayer();
  // Q04: night falls on the world, while hints and the bank marker stay readable above it.
  drawNightLighting([x0,y0,x1,y1],[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],ratio,cw,ch,dt);
+ drawCityEventOverlay(c,state.events,state.player.car<0?state.player:null,state.zoom);
  drawParkedMotorcycleHints();
  for(const bank of state.bankEntrances)if(bank.x>=x0&&bank.x<=x1&&bank.y>=y0&&bank.y<=y1)drawBankEntrance(c,bank,state.clock);
 }

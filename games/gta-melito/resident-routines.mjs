@@ -230,7 +230,10 @@ export function stepResidentRoutine(graph,agent,dt,index=null,clockMinutes=null,
   }
   return;
  }
- const destination=plan.phase==='OUTBOUND'?plan.targetT:plan.homeT;
+ // Q05: a city event (lost item) can send the resident back along its own pavement,
+ // or keep it standing there looking around; the routine resumes once the detour is cleared.
+ if(plan.detour?.hold){agent.braking=true;return;}
+ const destination=plan.detour?plan.detour.t:plan.phase==='OUTBOUND'?plan.targetT:plan.homeT;
  const stride=agent.speed*elapsed;
  // Q02: un ostacolo fermo sul marciapiede (es. scooter parcheggiato) si aggira di lato,
  // a passo d'uomo: prima lo spostamento laterale, poi avanti, poi il rientro sulla linea.
@@ -263,6 +266,7 @@ export function stepResidentRoutine(graph,agent,dt,index=null,clockMinutes=null,
  }
  if(remaining<=advance+.00001){
   agent.t=destination;agent.braking=true;
+  if(plan.detour){plan.detour.arrived=true;return;}
   const door=plan.phase==='OUTBOUND'?plan.targetDoor:plan.homeDoor;
   // Q03: the last metres lead straight to the threshold; the NPC vanishes only there.
   if(door){plan.doorStep={mode:'ENTER',door};plan.blocked=0;return;}

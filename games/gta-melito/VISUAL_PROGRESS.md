@@ -499,3 +499,9 @@ Aggiunta una barretta compatta nella parte superiore della scena, visibile solo 
 **Grafica:** sopra la città, a partire dalle 17:10, scende un velo graduale: dorato verso le 18:30, viola al crepuscolo, blu notte traslucido dalle 21:00 (opacità massima 0,58, la città resta leggibile), viola-arancio all'alba. Di notte compaiono pozze di luce calda sotto i lampioni già disegnati e le loro lampadine. Le finestre accese sono le stesse vetrate delle facciate, colorate giallo caldo e accese una alla volta. Le auto e le moto in movimento hanno fari bianchi con cono sulla strada e fanali rossi; le porte aperte della Q03 proiettano luce sul gradino. Il velo passa sotto i suggerimenti e sopra tutto il resto, minimappa esclusa.
 
 **Verifiche:** foto Chrome headless dallo stesso punto di Via Roma alle 12:00, 18:40, 19:30, 21:30, 23:30 e 05:50, su PC e telefono in orizzontale; foto dei fari su un'auto del traffico alle 22:00. Di giorno l'immagine resta identica a prima (confronto pixel). Non provato su un telefono reale.
+
+### 2026-10-19 — Oggetti perduti e fumetti (Q05)
+
+**Grafica:** quattro piccole icone in pixel art per gli oggetti a terra (chiavi dorate, portafoglio marrone, busta bianca con manici verdi, cellulare con schermo azzurro), con un cerchio giallo pulsante quando il giocatore è vicino; l'oggetto raccolto si vede accanto al protagonista. Fumetti chiari col bordo scuro e la punta sopra la testa del personaggio, testo monospace come le altre etichette, visibili 3,5 s e leggibili anche di notte.
+
+**Verifiche:** foto Chrome headless dell'oggetto a terra, di «La spesa?!», di «Preso!» e di «Grazie assai!» con «+5 €»; foto sul telefono in orizzontale. Non provato su un telefono reale.
