@@ -21,13 +21,13 @@ window.ARCADE_CATALOG = [
   {
     id: "pesca-grossa",
     title: "Biagio Gelo",
-    subtitle: "Pesca Grossa",
-    genre: "Pesca / Riflessi",
-    description: "Lancia l'amo, aspetta che abbocchi e recupera la lenza senza spezzarla. Riuscirai a prendere il pesce d'oro?",
+    subtitle: "Pesca Grossa 2.0",
+    genre: "Pesca / Carriera",
+    description: "Dal Lago Patria al Golfo di Napoli: 31 specie, meteo e orari, esche, frizione e combattimenti veri. Commissioni, Pescepedia, varianti Karmagra e cinque pesci leggendari. E c'è ancora la sfida da 90 secondi.",
     href: "./games/pesca-grossa/",
     artwork: "./assets/biaggio-power.svg",
     decoration: "./games/pesca-grossa/fish.svg",
-    support: "Telefono e PC",
+    support: "Telefono e PC · Carriera + sfida 90″",
     status: "live",
     accent: "aqua",
     recordKey: "biagio-pesca-record"
