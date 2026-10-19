@@ -45,8 +45,13 @@ test('four extra car families have eight distinct color variants each',()=>{
  const models=['seicento-1998','fiat-500-2007','fiat-uno-1983','smart-fortwo-2007'];
  assert.equal(CAR_ATLAS_VARIANT_IDS.length,16);
  assert.equal(Object.keys(EXTRA_CAR_VARIANTS).length,32);
- assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,48);
- assert.equal(new Set(CAR_TRAFFIC_SPRITE_IDS).size,48);
+ // Original 48 palette variants remain intact; two standalone shop/work vehicles
+ // can join the traffic without pretending to be factory color variants.
+ assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,50);
+ assert.equal(new Set(CAR_TRAFFIC_SPRITE_IDS).size,50);
+ assert.deepEqual(CAR_TRAFFIC_SPRITE_IDS.slice(0,48),
+  [...CAR_ATLAS_VARIANT_IDS,...Object.keys(EXTRA_CAR_VARIANTS)]);
+ assert.deepEqual(CAR_TRAFFIC_SPRITE_IDS.slice(48),['ape-car-azzurra','furgone-fritti']);
  for(const model of models)assert.equal(Object.keys(EXTRA_CAR_VARIANTS).filter(x=>x.startsWith(model+'-')).length,8);
  assert.equal(EXTRA_CAR_VARIANTS['smart-fortwo-2007-green'].index,15);
  assert.equal(EXTRA_CAR_VARIANTS['fiat-uno-1983-white'].index,0);
