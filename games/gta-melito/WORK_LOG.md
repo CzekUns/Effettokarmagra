@@ -159,3 +159,13 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Verifiche realmente fatte:** rilettura file e SHA remoti; commit delle modifiche confermati da GitHub. Node 22 disponibile nel container ma repository non scaricabile per DNS GitHub: test Node/browser **non eseguiti**.
 - **Limiti/da fare:** eseguire Node 22 e smoke browser PC/mobile su checkout completo, verificare comportamento visivo e potenziali conflitti orari; mantenere Q02 [ ] sino al collaudo.
 - **Riferimenti:** branch main, commit `a10dd7b`, `649e41f`, `ff13b83`, `5e5f2e1`, `50bbee8`, `54a219b`, `033c7c7`.
+
+### 2026-10-19 — ChatGPT/GitHub — Q02 correzione regressioni dei test
+- **Fatto:** corretta asserzione Q01 che cercava erroneamente l'import `resident-routines.mjs?v=001`; il gioco usa `v002`.
+- **Fatto:** corretta asserzione Q02 per individuare il ramo banca senza dipendere da spaziature e indentazione.
+- **Codice:** modificati solo `resident-routines.test.mjs` e `npc-agenda.test.mjs`, non il loop del gioco.
+- **Commit:** `25db9b1` (versione import Q01), `2afdfd2` (match robusto controllo banca), branch `main`.
+- **Verifiche:** lettura SHA e contenuti GitHub, entrambe le scritture confermate da commit remoti.
+- **Node 22:** disponibile (`v22.16.0`), ma `git ls-remote` fallisce per `Could not resolve host: github.com`; suite Node non eseguita.
+- **Browser/Android:** non eseguiti, nessuna conferma del deploy; Q02 resta aperta per collaudo.
+- **Prossimo passo:** testare suite e gioco su checkout raggiungibile, registrare esiti e correggere problemi prima di marcare Q02 [x].
