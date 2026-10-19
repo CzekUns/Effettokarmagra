@@ -341,3 +341,11 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **File:** `PIXEL_ART_MODUS.md` (nuovo), `AGENTS.md` (link/istruzioni), `WORK_LOG.md` (questa voce).
 - **Test e distribuzione:** intervento solo documentale; da verificare presenza dei file su GitHub dopo commit; test Node, browser e Android non eseguiti perché non sono state modificate funzioni di gioco.
 - **Da fare:** riprendere la correzione del WebP della chiesa su un'attività dedicata, applicando il protocollo descritto; per ogni nuovo asset usare la checklist e i registri permanenti.
+
+
+### 2026-10-19 — ChatGPT/GitHub — PIXEL ART MODUS: esempi apribili dalla guida
+- **Richiesta:** rendere direttamente navigabili i campioni grafici, anziché menzionare soltanto nomi e percorsi degli asset.
+- **Fatto:** aggiunta sezione «Esempi visivi e codice — link diretti» in `PIXEL_ART_MODUS.md`, con file PNG/WebP e renderer di riferimento per edifici, protagonista/NPC, personaggi speciali, Panda, Punto/Ypsilon, scooter/moto, Ape Car e furgone.
+- **Verifiche:** controllata tramite l'albero GitHub l'esistenza di tutti i file grafici elencati. La versione WebP della chiesa è marcata come esempio **ancora da correggere** per il corpo posteriore; il master ImageGen non è nella repo, dunque non è stato creato un link fittizio.
+- **File:** aggiornati solo `PIXEL_ART_MODUS.md` e questo `WORK_LOG.md`. Nessun PNG, modello, logica o cache alterati; nessun test browser o Android eseguito.
+- **Da fare:** quando si correggerà il WebP della chiesa, archiviare anche la sorgente master verificata e aggiornare il collegamento a quell'originale.

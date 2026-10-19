@@ -17,6 +17,25 @@ Ordine vincolante per ogni nuovo asset o revisione:
 
 **Priorità:** coerenza, sagoma completa, leggibilità e corretto rendering nel gioco prima del numero di nuovi soggetti. Non dichiarare una prova visiva o un deploy senza averli eseguiti.
 
+## Esempi visivi e codice — link diretti
+
+Questi sono **file realmente presenti in questa repository**. I link relativi sono cliccabili su GitHub: aprire gli asset prima di disegnare altre versioni. Gli esempi stabiliscono stile, proporzioni e formato, **non** certificano che ogni dettaglio sia perfetto. Confrontarli anche alla scala reale del gioco.
+
+| Categoria | Immagini di esempio da aprire | Dove vedere l'integrazione |
+| --- | --- | --- |
+| **Edificio speciale** | [Chiesa Santa Maria delle Grazie — WebP](./assets/buildings/chiesa-santa-maria-delle-grazie-game.webp) | [city-art.mjs](./city-art.mjs), [building-volume.mjs](./building-volume.mjs) |
+| **Persona / NPC** | [Prima tavola: quattro pedoni, quattro direzioni](./assets/people/pedoni-4x4frames-24x40-rgba.png) | [pedestrian-sprites.mjs](./pedestrian-sprites.mjs) |
+| **Protagonista / nuovi NPC** | [Seconda tavola con protagonista in felpa rossa](./assets/people/pedoni-secondo-lotto-4x4frames-24x40-rgba.png) | [extra-pedestrian-sprites.mjs](./extra-pedestrian-sprites.mjs) |
+| **Personaggio professionale** | [Friggitore in camice bianco: 4 direzioni](./assets/people/friggitore-bianco-4dir-4frames-24x40.png) | [friggitore-sprites.mjs](./friggitore-sprites.mjs) |
+| **Auto approvata** | [Fiat Panda moderna bianca — PNG](./assets/vehicles/panda-modern-white.png) e [Panda Fire rossa — PNG](./assets/vehicles/panda-fire-red.png) | [car-sprites.mjs](./car-sprites.mjs), [VEHICLE_ART_GUIDE.md](./VEHICLE_ART_GUIDE.md) |
+| **Atlante auto** | [Punto / Ypsilon — colori, PNG con alpha](./assets/vehicles/punto-ypsilon-16colors-rgba.png) | [car-sprites.mjs](./car-sprites.mjs) |
+| **Moto e scooter** | [16 varianti — atlante PNG](./assets/vehicles/moto-16-40x68-256.png) | [motorcycles.mjs](./motorcycles.mjs) |
+| **Mezzi speciali** | [Ape Car](./assets/vehicles/ape-car-top.png) e [furgone dei fritti](./assets/vehicles/furgone-fritti-top.png) | [car-sprites.mjs](./car-sprites.mjs) |
+
+**ATTENZIONE — CHIESA:** il WebP linkato documenta la versione **attualmente presente nel progetto**, ma il suo *retro appare troncato*. Non copiarne il taglio come esempio corretto: usare la tavola ImageGen originale completa quando disponibile, recuperare l'estensione posteriore e ricontrollare il posizionamento nel gioco. **La tavola originale ImageGen non è attualmente archiviata nella repository**: non inventare un link GitHub al master; va prima trasferito lì con una verifica del contenuto.
+
+**Per nuove chat e altri agenti:** aprire **almeno un esempio della categoria interessata** e il suo modulo di rendering prima di produrre l'asset. Se i link non sono raggiungibili, usare i percorsi indicati nella cartella `assets/` della repo e annotare il problema nel WORK_LOG.
+
 ## 1. Regole comuni di disegno
 
 | Aspetto | Regola |
@@ -107,7 +126,7 @@ Se un'immagine è troppo stretta si **espande il crop**, non si ridisegna obblig
 | --- | --- |
 | Soggetto | Edificio/OSM ID, umano/identità o veicolo/modello e anno. |
 | Materiale sorgente | Percorso master, versione e riferimenti con uso consentito; che cosa è ipotesi. |
-| Ritaggio/crop | `sourceRect` e margini, frame/direzioni, dimensioni, pivot, orientamento e alpha. |
+| Ritaglio/crop | `sourceRect` e margini, frame/direzioni, dimensioni, pivot, orientamento e alpha. |
 | Output | Asset esatti, atlas layout, codice renderer/loader, stato del vecchio asset. |
 | Integrazione | In quale zona/veicolo/NPC compare in gioco; cosa succede alle collisioni. |
 | Test / screenshot | Node, mobile, desktop, prima/dopo con stessa camera: **eseguiti o no**. |
