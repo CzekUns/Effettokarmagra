@@ -75,7 +75,7 @@ test('Q02 live game wires clock, road stepping, pause/interior guards and indepe
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
  assert.match(game,/state\.npcClockMinutes=advanceNpcClock\(state\.npcClockMinutes,dt\)/);
  assert.match(game,/if\(state\.mapOpen\|\|!\$\('dialog'\)\.hidden\|\|!\$\('pause-menu'\)\.hidden\)/);
- assert.ok(game.indexOf('state.npcClockMinutes=advanceNpcClock')<game.indexOf('if(state.bankInterior){\n   const axes='));
+ assert.ok(game.indexOf('state.npcClockMinutes=advanceNpcClock')<game.search(/if\(state\.bankInterior\)\s*\{\s*const axes=/));
  assert.match(game,/updateTimer\(state\.progress,dt\)/);
  assert.match(game,/npcClockMinutes:state\.npcClockMinutes/);
  assert.match(roads,/world\.npcClockMinutes/);
