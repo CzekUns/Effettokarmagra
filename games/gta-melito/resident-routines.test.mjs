@@ -62,6 +62,6 @@ test('Q01 game integrates residents into both initial and road-width reset popul
  const roads=await readFile(new URL('./roads.mjs',import.meta.url),'utf8');
  assert.match(game,/import \{createRoutineResidents\} from '.\/resident-routines\.mjs\?v=001'/);
  assert.equal((game.match(/state\.people=createCityPedestrians\(\);/g)||[]).length,2);
- assert.match(roads,/stepResidentRoutine\(graph,agent,elapsed,index\)/);
+ assert.match(roads,/stepResidentRoutine\(graph,agent,elapsed,index,clockMinutes\)/);
  assert.match(roads,/restoreResidentRoutine\(graph,agent,dt,world,index\)/);
 });
