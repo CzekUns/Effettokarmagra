@@ -10,11 +10,12 @@ import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs?v=142';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=004';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
+import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=126';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp} from './city-art.mjs?v=126';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=127';
 import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS} from './car-sprites.mjs?v=106';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
@@ -31,7 +32,7 @@ import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
-import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=004';
+import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=005';
 import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=002';
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
@@ -85,7 +86,13 @@ function animateSteeringWheel(dt){
  const face=$('steering-face');
  if(face)face.style.transform='rotate('+wheel.angle+'rad)';
 }
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,npcClockMinutes:NPC_START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+// Q04: ?ora=21:30 starts the simulated clock at that time (testing day/night); default 07:30.
+function startMinuteFromUrl(){
+ const match=/^(\d{1,2})[:.](\d{2})$/.exec(new URLSearchParams(globalThis.location?.search||'').get('ora')||'');
+ return match&&Number(match[1])<24&&Number(match[2])<60?Number(match[1])*60+Number(match[2]):NPC_START_MINUTE;
+}
+const START_MINUTE=startMinuteFromUrl();
+const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const WALK=new Set([...DRIVE,'pedestrian','footway','path','steps']);
 const colors=['#8f8271','#a29076','#797970','#ae947b','#938c7b','#7b8581','#a58c85'];
@@ -303,7 +310,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
  state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
  state.people=createCityPedestrians();
- state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=NPC_START_MINUTE;
+ state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
  $('inferred-count').textContent=String(state.inferredBuildings.length);
@@ -920,9 +927,58 @@ function draw(dt=0){
   drawCar(x,y,a,ai.kind,false,ai.model,ai);
  }
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);});
- drawParkedMotorcycleHints();
  drawPlayer();
+ // Q04: night falls on the world, while hints and the bank marker stay readable above it.
+ drawNightLighting([x0,y0,x1,y1],[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],ratio,cw,ch,dt);
+ drawParkedMotorcycleHints();
  for(const bank of state.bankEntrances)if(bank.x>=x0&&bank.x<=x1&&bank.y>=y0&&bank.y<=y1)drawBankEntrance(c,bank,state.clock);
+}
+const lightMap=document.createElement('canvas');
+const LAMP_KINDS=new Set([5,6,13]);
+function drawNightLighting([x0,y0,x1,y1],buildings,ratio,cw,ch,dt){
+ const light=daylightAt(state.npcClockMinutes);state.light=light;
+ if(light.darkness<.004)return;
+ if(dt>0){state.nightFrame=(state.nightFrame||1/60)*.95+dt*.05;state.nightQuality=nightQuality(state.nightQuality,state.nightFrame);}
+ const lights=[],glows=[],pad=14,p=state.player;
+ if(light.lamps>0){
+  for(const prop of query(state.props,state.propsGrid,x0-pad,y0-pad,x1+pad,y1+pad)){
+   if(!LAMP_KINDS.has(prop.kind))continue;
+   // Pool of light on the pavement under the lamp head, plus the warm bulb itself.
+   lights.push({x:prop.x+.4,y:prop.y+.8,r:10,strength:light.lamps});
+   glows.push({x:prop.x,y:prop.y-5.9,r:2.4,strength:light.lamps,alpha:.8},{x:prop.x+.4,y:prop.y+.8,r:7.5,strength:light.lamps,alpha:.1});
+  }
+  for(const door of state.doorGrid?query(state.doors,state.doorGrid,x0,y0,x1,y1):[])
+   if(door.open>0)lights.push({x:door.x+door.nx*.6,y:door.y+door.ny*.6,r:3.4,strength:light.lamps});
+ }
+ if(light.headlights>0){
+  const driven=state.traffic.filter(v=>v.body==='car');
+  if(p.car>=0&&state.cars[p.car])driven.push(state.cars[p.car]);
+  for(const v of driven){
+   if(v.x<x0-pad||v.x>x1+pad||v.y<y0-pad||v.y>y1+pad)continue;
+   const kind={x:v.x,y:v.y,a:v.a,vehicleType:isMotorcycle(v)?'motorcycle':'car'};
+   lights.push(...headlightLights(kind,light.headlights));glows.push(...vehicleLamps(kind,light.headlights));
+  }
+ }
+ // A faint halo keeps the protagonist readable on dark side streets.
+ if(p.car<0)lights.push({x:p.x,y:p.y,r:4.5,strength:.35*light.darkness/NIGHT_DARKNESS});
+ const w=Math.max(1,Math.ceil(canvas.width/2)),h=Math.max(1,Math.ceil(canvas.height/2));
+ if(lightMap.width!==w||lightMap.height!==h){lightMap.width=w;lightMap.height=h;}
+ const scale=.5*ratio*state.zoom;
+ paintLightMap(lightMap,{scale,offsetX:.5*ratio*cw/2-scale*state.camera.x,offsetY:.5*ratio*ch/2-scale*state.camera.y},light,lights);
+ c.save();c.setTransform(1,0,0,1,0,0);c.imageSmoothingEnabled=true;
+ c.drawImage(lightMap,0,0,w,h,0,0,w*2,h*2);c.restore();
+ // Lit windows: the real panes of each facade, switched on one by one as the evening goes on.
+ if(light.lamps>0&&state.zoom>=1.1&&state.nightQuality!==0){
+  c.save();c.fillStyle='#ffd27a';c.globalAlpha=.82*light.lamps;
+  for(const b of buildings){
+   const panes=facadeWindowPanes(b);
+   if(!panes.length)continue;
+   const path=litWindowPath(panes,b.art.litWindows||(b.art.litWindows=new Map()),light.windowShare);
+   if(path)c.fill(path);
+  }
+  c.restore();
+ }
+ paintGlows(c,glows);
 }
 function prepareMini(){
  const p=state.map.projection,off=document.createElement('canvas');off.width=168;off.height=142;

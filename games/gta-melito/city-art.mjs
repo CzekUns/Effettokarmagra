@@ -497,6 +497,29 @@ function drawRaisedWalls(c,b,v,zoom){
   c.restore();
  }
 }
+/* Q04: the same glass panes drawRaisedWalls paints on the exposed facades (tile zoom),
+ * as world-space quads, so night lighting can switch real windows on and off. */
+export function facadeWindowPanes(b){
+ const a=b?.art;
+ if(!a)return [];
+ if(a.windowPanes)return a.windowPanes;
+ const v=buildingVolume(b),p=b.p,panes=[];
+ if(v&&b.id!==SANTA_MARIA_OSM_ID)for(let j=2;j<p.length;j+=2){
+  const edgeX=p[j]-p[j-2],edgeY=p[j+1]-p[j-1],len=Math.hypot(edgeX,edgeY);
+  if(len<6||!exposedFacade(edgeX,edgeY,v))continue;
+  const floors=Math.min(v.stories,3),doors=a.type==='industrial'||a.type==='market';
+  const columns=Math.max(1,Math.min(18,Math.floor(len/(doors?7.5:4.8))));
+  const depth=Math.hypot(v.dx,v.dy),ex=edgeX/len,ey=edgeY/len,sx=v.dx/depth,sy=v.dy/depth;
+  const ox=p[j-2]-v.dx,oy=p[j-1]-v.dy,at=(u,w)=>[ox+ex*u+sx*w,oy+ey*u+sy*w];
+  for(let floor=0;floor<floors;floor++)for(let col=1;col<=columns;col++){
+   const wx=len*col/(columns+1),wy=depth*(floor+.48)/floors,seed=h(a.seed+floor*97+col*131+j*17);
+   const w=doors?2.4:seed%4===0?1.8:1.45,hh=floors>=5?1.35:1.85,u0=wx-w*.5,w0=wy-hh*.55;
+   panes.push({seed,quad:[...at(u0,w0),...at(u0+w,w0),...at(u0+w,w0+hh),...at(u0,w0+hh)]});
+  }
+ }
+ a.windowPanes=panes;
+ return panes;
+}
 export function drawCityBuildings(c,buildings,zoom){
  const sorted=[...buildings].filter(b=>b.art).sort((a,b)=>{
   const va=buildingVolume(a),vb=buildingVolume(b);

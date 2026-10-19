@@ -493,3 +493,9 @@ Aggiunta una barretta compatta nella parte superiore della scena, visibile solo 
 **Fatti e ipotesi:** i portoni di casa sono inventati; per 3 negozi con nome OSM (Le fantasie di Andrea, I Grimaldi's BARBER, L'Angolo Dei Colori) la porta è stimata sulla facciata dietro l'insegna, non rilevata.
 
 **Verifiche:** screenshot Chrome headless su desktop 1280×720 e telefono 844×390 in orizzontale: porte visibili lungo Via Roma, residente che esce dalla porta aperta, porte a vetro nel gruppo di negozi a sud. Allo zoom a piedi una porta è larga circa 10 px: si vede ma è discreta. Non provato su un telefono reale.
+
+### 2026-10-19 — Giorno, tramonto, notte e alba (Q04)
+
+**Grafica:** sopra la città, a partire dalle 17:10, scende un velo graduale: dorato verso le 18:30, viola al crepuscolo, blu notte traslucido dalle 21:00 (opacità massima 0,58, la città resta leggibile), viola-arancio all'alba. Di notte compaiono pozze di luce calda sotto i lampioni già disegnati e le loro lampadine. Le finestre accese sono le stesse vetrate delle facciate, colorate giallo caldo e accese una alla volta. Le auto e le moto in movimento hanno fari bianchi con cono sulla strada e fanali rossi; le porte aperte della Q03 proiettano luce sul gradino. Il velo passa sotto i suggerimenti e sopra tutto il resto, minimappa esclusa.
+
+**Verifiche:** foto Chrome headless dallo stesso punto di Via Roma alle 12:00, 18:40, 19:30, 21:30, 23:30 e 05:50, su PC e telefono in orizzontale; foto dei fari su un'auto del traffico alle 22:00. Di giorno l'immagine resta identica a prima (confronto pixel). Non provato su un telefono reale.

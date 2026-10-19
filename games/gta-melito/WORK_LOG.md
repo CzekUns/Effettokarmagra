@@ -213,3 +213,14 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Prestazioni:** creazione dei pedoni con porte circa 140 ms una volta al caricamento (prima circa 60 ms); ricerca porte limitata e con cache.
 - **Non eseguiti / limiti:** Android reale; porte piccole allo zoom a piedi (leggibili ma discrete); facciate nascoste dietro i tetti escluse; gli NPC non usano la banca (il suo interno è giocabile e li mostrerebbe assenti).
 - **Da fare:** Q04 (giorno/notte e illuminazione) sullo stesso ramo.
+
+### 2026-10-19 — Claude (account `ilconsulentelogistico-hue`) — Q04 giorno/notte e illuminazione
+- **Fatto:** ciclo giorno/notte graduale legato all'orologio NPC, lampioni con pozze di luce, finestre accese sulle facciate, fari e fanali dei veicoli in movimento. Q04 spuntata `[x]` in `TODO.md` con esito.
+- **Come:** nuovo `daylight.mjs` (curva di luce per minuto, quota di finestre accese, mappa luminosa a mezza risoluzione con luci "bucate", aloni additivi, fari, interruttore di qualità); `city-art.mjs` esporta `facadeWindowPanes` (le stesse vetrate di `drawRaisedWalls`, in coordinate mondo); `game.mjs` disegna la notte dopo il protagonista e prima di suggerimenti e indicatore banca; parametro `?ora=HH:MM`.
+- **Regressioni:** di giorno non si esegue nulla (uscita immediata); confronto pixel con la versione precedente: 25 pixel diversi su 613.800 (solo indicatore missione animato).
+- **Cache:** `game.mjs?v=143`, `city-art.mjs?v=127`, `bank-interior.mjs?v=005`, nuovo `daylight.mjs?v=001`.
+- **Test:** nuovo `daylight.test.mjs` (8 test, compreso uno smoke di disegno su canvas simulato); suite Node 22 **195/195**.
+- **Browser (Chrome headless, PC 1280×720 e telefono 844×390):** 6 orari con foto e luminosità misurata (12:00 128,7 → 21:30 72,0 → 05:50 105,4); 60 s reali di tramonto senza salti; fari visibili alle 22:00; nessun errore JS.
+- **Prestazioni:** senza GPU, notte +1 ms a piedi e +4–6 ms con la visuale larga; sotto 30 fps si spengono le sole finestre.
+- **Non eseguiti / limiti:** Android reale e GPU vere; colori arcade non astronomici; luci dei lampioni solo sui lampioni dell'arredo procedurale (non su quelli di monumenti o interni).
+- **Da fare:** Q05 (eventi cittadini emergenti) sullo stesso ramo.
