@@ -332,3 +332,12 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Verifiche:** dimensione/trasparenza PNG e SHA blob Git confrontate con i file originali; visione delle sprite e confronto con gli asset già presenti; smoke JavaScript effettivo di sintassi, caricamento/draw e registri modelli/passante superato. Creato `friggitoria-art.test.mjs`. **Nessun test completo Node, browser in-game o Android reale eseguito** in questa sessione.
 - **Da fare:** verificare in gioco inquadratura e posizione, eseguire la suite Node e controlli mobile. Le TODO **Q16/Q17 restano [ ]**: il lavoro attuale è una base grafica e integrazione standard, non include ancora fisica dell'Ape triciclo, varianti colore, sosta attiva, vendita né collaudi richiesti. Continuare per ordine senza attribuire il completamento al collaboratore.
 - **Riferimenti:** main; PNG `852c33b` corretto e verificato con `c5d68e2`; `car-sprites.mjs` `edb47e1`; `friggitore-sprites.mjs` `7648d7a`; `city-art.mjs` `0ace2e9`; `game.mjs` `034555c`; pagina `c276bd7`; test `5ad5171`; dettaglio artistico nel `VISUAL_PROGRESS.md`.
+
+
+### 2026-10-19 — ChatGPT/GitHub — Istituito il PIXEL ART MODUS per le prossime chat
+- **Fatto:** creato `PIXEL_ART_MODUS.md` come guida operativa unica per edifici, persone e veicoli; collegato direttamente a `AGENTS.md` per renderlo obbligatorio a nuove chat e collaboratori.
+- **Regole:** vista top-down/2.5D coerente, confronto con asset già approvati, master originale non distruttivo, ritaglio alpha autentico, allineamenti/pivot, atlanti animati, rendering esclusivo per monumenti, collisioni separate dall'immagine, prove sul telefono e tracciabilità del rilascio.
+- **Caso Chiesa:** precisato come recuperare il retro troncato dal master originale e allargare il crop/riancorare il WebP senza riattivare il vecchio Canvas; **nessun asset della chiesa cambiato** in questa sessione.
+- **File:** `PIXEL_ART_MODUS.md` (nuovo), `AGENTS.md` (link/istruzioni), `WORK_LOG.md` (questa voce).
+- **Test e distribuzione:** intervento solo documentale; da verificare presenza dei file su GitHub dopo commit; test Node, browser e Android non eseguiti perché non sono state modificate funzioni di gioco.
+- **Da fare:** riprendere la correzione del WebP della chiesa su un'attività dedicata, applicando il protocollo descritto; per ogni nuovo asset usare la checklist e i registri permanenti.
