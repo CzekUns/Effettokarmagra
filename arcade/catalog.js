@@ -75,7 +75,7 @@ window.ARCADE_CATALOG = [
     subtitle: "Versione sperimentale · Q02–Q12",
     genre: "Open world / Guida",
     description: "Melito in stile top-down rétro: palazzi del centro storico, cupola di Santa Maria delle Grazie, negozi geolocalizzati, pedoni e auto ridisegnati. Missioni disponibili.",
-    href: "./games/gta-melito-beta/",
+    href: "./games/gta-melito/",
     artwork: "./games/gta-melito/cover.svg",
     support: "Telefono e PC · Beta, da collaudare",
     status: "live",
