@@ -179,3 +179,14 @@ Usare voci **brevi (indicativamente 5–10 righe)**, ma abbastanza precise da pe
 - **Test non eseguiti:** nessun nuovo test Node, browser o deploy in questo turno, nessun codice gameplay modificato.
 - **Da fare:** il collaboratore esegue/verifica Q02 e propone eventuale PR; il lavoratore orario continua in ordine sulla TODO, integrando i risultati quando disponibili.
 - **Riferimenti:** issue https://github.com/CzekUns/Effettokarmagra/issues/28; branch main.
+
+### 2026-10-19 — ChatGPT/GitHub — Nuovi ruoli: TODO al collaboratore, merge e migliorie al revisore
+- **Fatto:** concordato assetto a due account per GTA Melito, senza lavoratori concorrenti sulle medesime Q.
+- **Collaboratore:** `ilconsulentelogistico-hue` incaricato tramite issue #28 di implementare Q02–Q24 in ordine, branch separato e PR per ciascuna task; permessi `write` già verificati.
+- **Revisore:** automazione oraria esistente riadattata come «GTA Melito — PR e migliorie», attiva, per valutare PR, integrare solo dopo controlli e sviluppare fix indipendenti dalle Q.
+- **Documentazione:** aggiornati `AGENTS.md` locale e `TODO.md` con protocollo multi-agente e divieto di push diretto a `main` da parte del collaboratore per le Q.
+- **Stato TODO:** Q01 [x], Q02 [ ] IN CORSO, tutte le altre Q ancora aperte; nessuna Q marcata completata in questa sessione.
+- **Verifiche:** confermati assegnatario issue #28 e assenza di PR aperte nella ricerca GitHub; GitHub ha confermato commit della sola documentazione.
+- **Non eseguiti:** test Node/browser/deploy e nuove implementazioni gameplay; l'assegnazione GitHub non avvia automaticamente l'AI esterna.
+- **Da fare:** l'AI del collaboratore, una volta avviata sul proprio account, prende Q02 e apre una PR; il revisore valuta merge o richiesta correzioni, senza sovrapposizioni.
+- **Riferimenti:** issue https://github.com/CzekUns/Effettokarmagra/issues/28; branch main; aggiornamenti `AGENTS.md` commit `3c1f800`, `TODO.md` commit `ba7c48d`.
