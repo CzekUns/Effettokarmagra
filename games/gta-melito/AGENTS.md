@@ -2,6 +2,14 @@
 
 Ambito: solo `games/gta-melito/`. Questo è il gioco GTA Melito di Uns Arcade, **non Ninomon** né gli altri giochi della repository.
 
+## Coordinamento multi-agente — sviluppo TODO delegato
+
+- **Collaboratore `ilconsulentelogistico-hue`:** responsabile di **implementare la prima Q non completata** di `TODO.md` (una Q per PR, senza saltare Q aperte); branch separato dalla `main`, test reali, commit e **Pull Request**. Il suo handoff è [issue #28](https://github.com/CzekUns/Effettokarmagra/issues/28).
+- **Revisore ChatGPT/GitHub principale:** controlla le PR, test, diff, conflitti e regole del gioco, poi fa merge solo se sufficientemente verificate; altrimenti richiede correzioni. Può sviluppare **bugfix, test e funzionalità indipendenti dalle Q attualmente assegnate**, senza modificare gli stessi file del collaboratore, preferibilmente su branch separati.
+- Il collaboratore ha permessi `write`, ma **non deve fare commit diretti su `main`** per le attività Q: soltanto PR. Non marcare una Q completata senza integrazione e prove; se la PR è incompleta, mantenere `[ ]`.
+- Non confondere **assegnazione dell'issue** con avvio dell'agente: l'AI dell'altro account deve ricevere istruzioni e operare realmente. Nessun agente deve dichiarare svolta un'attività delegata senza codice/test/PR verificabili.
+- Se la revisione richiede modifiche, preferire commenti o commit sul branch della PR; **mai** duplicare lo sviluppo della stessa Q su `main` in parallelo.
+
 ## Passaggio di mano obbligatorio — QUALSIASI intervento
 
 **Regola permanente per tutti: persone, agenti AI, ChatGPT e Work.** Chi lavora in questo gioco deve consultare l'ultima voce di [WORK_LOG.md](./WORK_LOG.md) **prima** di iniziare e lasciare una nuova voce **prima di consegnare o terminare la sessione**. Questa regola vale per codice, grafica, asset, AI, missioni, mappa, bug, refactoring e documentazione, non soltanto per i lavori estetici.
