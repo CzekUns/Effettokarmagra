@@ -69,6 +69,7 @@ import {placeBuildings} from './building-placement.mjs?v=123';
 import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=002';
 import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches} from './football-pitches.mjs?v=001';
 import {GARAGES,nearestGarage,canStoreVehicle,depositVehicle,takeVehicle,vehicleFromEntry,chooseExitSpot,garageMessage,vehicleLabel,ownedEntry,ownedCount,garageById,GARAGE_SLOTS,drawGarage} from './garages.mjs?v=001';
+import {paintOptions,paintName,PERF_LEVELS,perfPrice,PAINT_PRICE,NEON_PRICE,NEON_COLORS,tunedProfile,buyTuning,tuningMessage,drawNeonUnderglow,neonNightGlows} from './tuning.mjs?v=001';
 import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=001';
 import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
@@ -271,6 +272,14 @@ function openFootballMatch(pitch){
  cityEventBubble(state.events,state.player,'Calcetto in arrivo!');
  updateHud();
 }
+// Q36: the driven profile is always the model's BASE profile (BF05) plus the owned car's tuning.
+function vehicleProfile(car){
+ const base=handlingProfile(car),perf=car?.tuning?.perf||0;
+ if(!perf)return base;
+ if(!car.tunedProfile||car.tunedProfile.base!==base||car.tunedProfile.perf!==perf)
+  car.tunedProfile={base,perf,profile:tunedProfile(base,car.tuning)};
+ return car.tunedProfile.profile;
+}
 // Q35: fictional garages on OSM streets and the archive of owned vehicles (progress.garage).
 function setNotice(text){state.notice={text,until:state.clock+3.5};$('street').textContent=text;}
 function garagePrompt(p,busy){
@@ -278,7 +287,7 @@ function garagePrompt(p,busy){
  if(p.car>=0){
   const v=state.cars[p.car];if(!canStoreVehicle(v)||state.foodVendors?.some(f=>f.vehicle===v))return '';
   const g=nearestGarage(GARAGES,v,true);if(!g)return '';
-  return 'METTI IN GARAGE';
+  return g.kind==='officina'&&v.ownedId?'TUNING':'METTI IN GARAGE';
  }
  return nearestGarage(GARAGES,p,false)?'GARAGE':'';
 }
@@ -351,17 +360,37 @@ function renderGarage(){
  const open=state.garageOpen,save=state.progress?.garage;if(!open||!save)return;
  const money=state.progress.money,list=$('garage-list');list.textContent='';
  $('garage-balance').textContent='SALDO: € '+money+' · POSTI '+ownedCount(save)+'/'+GARAGE_SLOTS;
- {
+ const entry=open.tuneId?ownedEntry(save,open.tuneId):null;
+ if(!entry){
   if(!save.vehicles.length)garageHeading(list,'NESSUN VEICOLO. Arriva qui in auto e premi E · METTI IN GARAGE.');
   for(const v of save.vehicles){
    const here=v.stored&&v.garage===open.garage.id,where=v.stored?(here?'QUI':garageById(v.garage)?.nome.toUpperCase()):'IN STRADA';
    const tune=(v.tuning?.perf?' +'+v.tuning.perf+'%':'')+(v.tuning?.neon?' NEON':'');
    garageHeading(list,vehicleLabel(v.model)+tune+' · '+where);
    if(here)garageButton(list,'PRENDI','ESCE DAVANTI',()=>takeFromGarage(v.id));
+   if(here)garageButton(list,'TUNING','VERNICE · PRESTAZIONI · NEON',()=>{open.tuneId=v.id;garageFeedback('');renderGarage();});
    if(!v.stored)garageButton(list,'RICHIAMA QUI','TORNA IN GARAGE',()=>recallToGarage(v.id));
   }
   return;
  }
+ const street=streetCarOf(entry.id),base=handlingProfile({model:entry.model,vehicleType:'car'});
+ const perf=entry.tuning?.perf||0,tuned=tunedProfile(base,entry.tuning);
+ garageHeading(list,'TUNING · '+vehicleLabel(entry.model)+' · ACCELERAZIONE '+base.accel.toFixed(1)+'→'+tuned.accel.toFixed(1)+' · VEL. MAX '+Math.round(base.top*3.6)+'→'+Math.round(tuned.top*3.6)+' km/h');
+ const buy=(kind,value)=>{const r=buyTuning(state.progress,entry,kind,value,street);
+  if(r.ok){saveProgress(localStorage,state.progress);refreshCampaign();}
+  garageFeedback(tuningMessage(r),!r.ok);renderGarage();updateHud();};
+ garageHeading(list,'VERNICE (colori del modello) · € '+PAINT_PRICE);
+ const paints=paintOptions(entry.model).filter(id=>id!==entry.model);
+ if(!paints.length)garageHeading(list,'Questo modello ha un solo colore disegnato: niente vernice.');
+ for(const id of paints)garageButton(list,paintName(id),'€ '+PAINT_PRICE,()=>buy('paint',id),money<PAINT_PRICE);
+ garageHeading(list,'PRESTAZIONI · accelerazione e velocità massima sul modello base (tetto +15%)');
+ for(const level of PERF_LEVELS){const price=level>perf?perfPrice(perf,level):0;
+  garageButton(list,(level?'+'+level+'%':'DI SERIE')+(level===perf?' ✓':''),level===perf?'ATTUALE':price?'€ '+price:'GRATIS',()=>buy('perf',level),money<price);}
+ garageHeading(list,'NEON SOTTOSCOCCA · € '+NEON_PRICE+' (si vede di più di notte)');
+ for(const color of Object.keys(NEON_COLORS))garageButton(list,color.toUpperCase()+(entry.tuning?.neon===color?' ✓':''),'€ '+NEON_PRICE,()=>buy('neon',color),money<NEON_PRICE);
+ garageButton(list,'SPENTO'+(entry.tuning?.neon?'':' ✓'),'GRATIS',()=>buy('neon',null));
+ if(open.fromCar&&state.player.car>=0)garageButton(list,'METTI IN GARAGE','QUI',()=>{const g=open.garage;closeGarage();storeDrivenVehicle(g);});
+ else garageButton(list,'← INDIETRO','ELENCO',()=>{open.tuneId=null;garageFeedback('');renderGarage();});
 }
 function closeGarage(){state.garageOpen=null;$('garage-panel').hidden=true;canvas.focus?.({preventScroll:true});updateHud();}
 // BF12: perimeter walls, gates and guard booths of the enclosures (villa comunale, Municipio…),
@@ -1395,6 +1424,7 @@ function toggleVehicle(){
   // Q35/Q36: driving up to a garage shutter: tuning of an owned car at the officina, else park it inside.
   const garage=state.progress&&canStoreVehicle(vehicle)?nearestGarage(GARAGES,vehicle,true):null;
   if(garage){
+   if(garage.kind==='officina'&&vehicle.ownedId&&Math.abs(vehicle.speed||0)<=2.3){openGarage(garage,vehicle.ownedId);return;}
    storeDrivenVehicle(garage);return;
   }
   if(bike&&Math.abs(vehicle.speed||0)>2.3){
@@ -1556,7 +1586,7 @@ function tick(dt){
   }else{
    advanceNonlethalImpact(car,dt,canKnockbackMove);
    // Q10: each model has its own handling; wet roads (Q08) brake a little longer.
-   ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt,pressed.brake,damagedProfile(handlingProfile(car),car),state.weather?.wetness||0));
+   ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt,pressed.brake,vedamagedProfile(hicleProfile(car),car),state.weather?.wetness||0));
    const road=nearest(car.x,car.y,25,state.roads,true);
    const turn=guideIntersection({x:car.x,y:car.y,angle,speed},axes.x,road,
     state.graph,state.turnGuides,car.turnGuide||null,dt);
@@ -1578,7 +1608,7 @@ function tick(dt){
   }
   // Q10: the body points where the wheel says, but it travels where grip allows (recoverable slides).
   const grip=car.recoil>0?{travel:car.a,slip:0,speed,sliding:false}:
-   applyGrip(car,{angle:car.a,speed,dt,handbrake:pressed.handbrake,profile:damagedProfile(handlingProfile(car),car),wet:Math.min(1,wet+(surface?.gripLoss||0)),steer:axes.x});
+   applyGrip(car,{angle:car.a,speed,dt,handbrake:pressed.handbrake,profile:vedamagedProfile(hicleProfile(car),car),wet:Math.min(1,wet+(surface?.gripLoss||0)),steer:axes.x});
   car.travel=grip.travel;car.slip=grip.slip;speed=grip.speed;
   if(grip.sliding&&speed>8)addSkidMarks(car);
   const nx=car.x+Math.cos(car.travel)*speed*dt,ny=car.y+Math.sin(car.travel)*speed*dt;
@@ -2150,7 +2180,7 @@ function draw(dt=0){
  // Q22: lo scooter del pendolare (un mezzo della lista dei parcheggiati) mette la freccia prima delle svolte.
  // Q34: partenze, anelli, frecce e avversari delle gare (grafica provvisoria, da approvare).
  drawRaceWorld(c,state.races,[x0,y0,x1,y1],state.zoom,state.clock,v=>drawCar(v.x,v.y,v.a,3,false,v.model,v));
- state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1){{drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);if(v.turnSignal)drawBlinker(v.x,v.y,v.a,v);
+ state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1){if(v.tuning?.neon)drawNeonUnderglow(c,v,(state.light?.darkness||0)/NIGHT_DARKNESS,state.clock);{drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);if(v.turnSignal)drawBlinker(v.x,v.y,v.a,v);
   // Q20: auto in panne in attesa del carro attrezzi: quattro frecce e triangolo.
   if(v.broken&&i!==p.car){drawBlinker(v.x,v.y,v.a,v);drawWarningTriangle(c,v,vehicleShape(v));}}}});
  drawPlayer();
@@ -2217,6 +2247,9 @@ function drawNightLighting([x0,y0,x1,y1],buildings,ratio,cw,ch,dt){
    lights.push(...headlightLights(kind,light.headlights*fade));glows.push(...vehicleLamps(kind,light.headlights*fade));
   }
  }
+ // Q36: neon under owned cars, coloured light on the asphalt at night.
+ for(const v of state.cars){if(!v.tuning?.neon||v.x<x0-pad||v.x>x1+pad||v.y<y0-pad||v.y>y1+pad)continue;
+  const neon=neonNightGlows(v,light.darkness/NIGHT_DARKNESS);lights.push(...neon.lights);glows.push(...neon.glows);}
  // BF07: le luci dei semafori (simulati) restano accese e colorano l'asfalto davanti alla linea.
  const signalLight=signalGlows(state.graph.signals,[x0,y0,x1,y1],signalSeconds(),Math.max(light.lamps||0,light.darkness/NIGHT_DARKNESS));
  lights.push(...signalLight.lights);glows.push(...signalLight.glows);
