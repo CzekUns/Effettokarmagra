@@ -536,3 +536,6 @@ Aggiunta una barretta compatta nella parte superiore della scena, visibile solo 
 - **Controlli locali effettivi:** verificata con PIL la presenza dell'alpha nei 16 ritagli e l'anteprima pixel a zoom; non risultano clip evidenti nello sheet compresso. **Suite Node completa, visita al browser e test su Android non eseguiti in questa sessione:** verificare CI/deploy successivi.
 - **Limite artistico:** il banco grafico 'o pere e 'o musso ricorda ancora frutti di mare/fritti e non riproduce in modo convincente la specialità tradizionale; sostituire la variante mantenendo indice 9 quando possibile.
 - **TODO:** Q16/Q17 non sono completate; restano fisica triciclo, soste commerciali/routine, vera modalità di marcia con tende chiuse e collaudo mobile.
+
+### 2026-10-20 — Quattro NPC professionali, tavola 384×160
+Nuovi sprite top-down 2.5D: friggitore in camice bianco, vigile urbano, lavavetri al semaforo (secchio blu e spazzola), contrabbandiere con borsello sotto l'ascella. Layout dei personaggi [4 × 4 frame per ciascuno] distribuito in 16 colonne × 4 righe, celle 24×40, RGBA trasparente. Pubblicati i quattro ritagli singoli 96×160. Leggibilità verificata con anteprima zoom nearest-neighbor, trasparenza/celle/dimensioni controllate. **Solo libreria di asset, non visualizzati ancora nel gioco**; non confondere con il vecchio friggitore già presente.

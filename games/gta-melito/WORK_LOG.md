@@ -358,3 +358,10 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Controlli locali effettivi:** verificata con PIL la presenza dell'alpha nei 16 ritagli e l'anteprima pixel a zoom; non risultano clip evidenti nello sheet compresso. **Suite Node completa, visita al browser e test su Android non eseguiti in questa sessione:** verificare CI/deploy successivi.
 - **Limite artistico:** il banco grafico 'o pere e 'o musso ricorda ancora frutti di mare/fritti e non riproduce in modo convincente la specialità tradizionale; sostituire la variante mantenendo indice 9 quando possibile.
 - **TODO:** Q16/Q17 non sono completate; restano fisica triciclo, soste commerciali/routine, vera modalità di marcia con tende chiuse e collaudo mobile.
+
+### 2026-10-20 — ChatGPT/GitHub — Sheet NPC: friggitore, vigile, lavavetri, contrabbandiere
+- **Fatto:** realizzato uno sheet RGBA `assets/people/npc-mestieri-4chars-4dir-4frames-24x40.png`, 384×160 con 16 colonne × 4 righe, 64 pose, e quattro sottosheet individuali 96×160.
+- **Dettagli:** camice/cuffietta bassi bianchi del friggitore, divisa blu e berretto del vigile, secchio e tergivetro del lavavetri, borsello sotto ascella del contrabbandiere.
+- **Verifiche locali eseguite:** Pillow: misura di PNG, alpha 0–255, 4 frame distinti per ciascuna delle 4 direzioni di ciascun personaggio, margine superiore non troncato e sfondo trasparente agli angoli. SHA Git blob dei file confrontati con PNG locali, corrispondono.
+- **Codice/gameplay:** nessun runtime modificato; non dichiarare i nuovi NPC già presenti nel gioco. Rimane il friggitore storico già integrato. Node/browser/Android non eseguiti perché questa sessione ha consegnato solo asset grafici.
+- **Documentazione:** aggiornato PIXEL_ART_MODUS.md con ordine delle celle, link e note per il prossimo incarico. Per attivarli creare un renderer/loader e routine di quartiere dedicate, senza toccare missioni, mappa e fisica incidentalmente.

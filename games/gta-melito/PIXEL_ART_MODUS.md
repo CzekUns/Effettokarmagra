@@ -27,6 +27,7 @@ Questi sono **file realmente presenti in questa repository**. I link relativi so
 | **Persona / NPC** | [Prima tavola: quattro pedoni, quattro direzioni](./assets/people/pedoni-4x4frames-24x40-rgba.png) | [pedestrian-sprites.mjs](./pedestrian-sprites.mjs) |
 | **Protagonista / nuovi NPC** | [Seconda tavola con protagonista in felpa rossa](./assets/people/pedoni-secondo-lotto-4x4frames-24x40-rgba.png) | [extra-pedestrian-sprites.mjs](./extra-pedestrian-sprites.mjs) |
 | **Personaggio professionale** | [Friggitore in camice bianco: 4 direzioni](./assets/people/friggitore-bianco-4dir-4frames-24x40.png) | [friggitore-sprites.mjs](./friggitore-sprites.mjs) |
+| **Quattro nuovi NPC di mestiere (sheet 4×4 pose/personaggio)** | [Tavola trasparente: friggitore, vigile, lavavetri, contrabbandiere](./assets/people/npc-mestieri-4chars-4dir-4frames-24x40.png) | Asset predisposto per future integrazioni; il vecchio [friggitore-sprites.mjs](./friggitore-sprites.mjs) rimane in uso e non è sostituito. |
 | **Auto approvata** | [Fiat Panda moderna bianca — PNG](./assets/vehicles/panda-modern-white.png) e [Panda Fire rossa — PNG](./assets/vehicles/panda-fire-red.png) | [car-sprites.mjs](./car-sprites.mjs), [VEHICLE_ART_GUIDE.md](./VEHICLE_ART_GUIDE.md) |
 | **Atlante auto** | [Punto / Ypsilon — colori, PNG con alpha](./assets/vehicles/punto-ypsilon-16colors-rgba.png) | [car-sprites.mjs](./car-sprites.mjs) |
 | **Moto e scooter** | [16 varianti — atlante PNG](./assets/vehicles/moto-16-40x68-256.png) | [motorcycles.mjs](./motorcycles.mjs) |
@@ -94,6 +95,19 @@ Se un'immagine è troppo stretta si **espande il crop**, non si ridisegna obblig
 6. Associare animazione a velocità/spostamento reali, direzione di marcia e frame idle. Protagonista e NPC devono avere logica visiva separata (non duplicare casualmente il protagonista tra i passanti).
 7. Il **protagonista deve essere identico anche negli interni** (banche, locali), salvo animazioni/addobbi intenzionali. Controllare porte, tetti trasparenti, urti, persone davanti e dietro edifici.
 8. Veicolo a due ruote: il guidatore **sale visivamente in sella**, cambia stato dal corpo a piedi a quello seduto, non deve comparire doppio (uno a piedi + uno sopra la moto). L'eventuale casco è nello stato di guida.
+
+### Tavola NPC a quattro identità — esempio mestieri (20 ottobre 2026)
+
+La nuova [tavola 384×160 in PNG RGBA](./assets/people/npc-mestieri-4chars-4dir-4frames-24x40.png) contiene **4 personaggi × 4 direzioni × 4 frame di camminata = 64 celle** da `24×40 px`. Le **16 colonne** si dividono in quattro gruppi successivi da quattro frame; le **quattro righe** sono `up`, `down`, `left`, `right`, nell'ordine già adottato dal gioco.
+
+| Colonne (zero-based) | Identità | Dettagli identificativi |
+| --- | --- | --- |
+| 0–3 | Friggitore | Camice da salumiere/macellaio, cuffietta bassa bianca; non tocco da chef alto. |
+| 4–7 | Vigile urbano | Uniforme blu scuro, cappello bianco/blu, distintivo. |
+| 8–11 | Lavavetri ai semafori | Vestiario verde, tergivetro e secchio azzurro: gli oggetti sono inclusi nei frame. |
+| 12–15 | Contrabbandiere | Abiti civili, borsello/marsupio sotto l'ascella con tracolla visibile. |
+
+Ritagli singoli: [friggitore](./assets/people/npc-friggitore-4dir-4frames.png), [vigile](./assets/people/npc-vigile-4dir-4frames.png), [lavavetri](./assets/people/npc-lavavetri-4dir-4frames.png), [contrabbandiere](./assets/people/npc-contrabbandiere-4dir-4frames.png). Ogni ritaglio è `96×160` con 4 frame orizzontali e quattro direzioni verticali; l'atlante principale è trasparente, i frame hanno il medesimo pivot ai piedi e non perdono mani o oggetti al bordo. **Sono asset grafici predisposti, non NPC già attivi nel mondo**: un'implementazione successiva dovrà collegare loader, renderer, distribuzione sul territorio, animazione e routine contestuali senza modificare le collisioni per adattarle al disegno. Non rimuovere il vecchio friggitore già integrato prima della sostituzione verificata.
 
 ## 4. VEICOLI — automobili, moto, Ape, furgoni
 
