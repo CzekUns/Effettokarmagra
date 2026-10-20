@@ -560,3 +560,62 @@ Aggiunto il renderer per l'atlante originale `npc-mestieri-4chars-4dir-4frames-2
 **Interfaccia:** nella colonna di guida a destra il pulsante rosso FRENO è ora in alto, il verde ACCELERA al centro e RETRO in basso; misure, colori e ombre invariati.
 
 **Verifiche:** foto Chrome headless sul telefono in orizzontale prima/dopo (stessa scena), con prova dei tre tasti a tocco vero e controllo che non coprano minimappa, missioni e volante. Non provato su un telefono reale.
+
+
+### 2026-10-20 — Claude — BF07 semafori di gioco, linee d'arresto e frecce degli NPC
+**Stile:**
+- palo e lanterna disegnati in pixel art procedurale con la stessa grammatica dei lampioni di `visuals.mjs`: base scura, palo sottile che sale verso l'alto dello schermo, ombra corta verso sud-est;
+- lanterna nera con bordo chiaro e tre luci (rosso in alto), spente in tinte scure;
+- la luce accesa ha un bordo luminoso di un pixel, così si legge anche con lo zoom largo dell'auto;
+- di notte alone colorato additivo (`paintGlows`) e riflesso sull'asfalto davanti alla linea d'arresto;
+- linea d'arresto bianca solo sulla corsia percorsa;
+- frecce ambra lampeggianti sugli spigoli del lato della svolta.
+- Nessun asset PNG nuovo.
+
+**Onestà:** i semafori sono **simulati** (nessun nodo OSM `traffic_signals`) e lo dichiarano codice, README e scheda PAUSA.
+
+**Verifiche:** foto Chrome headless dell'incrocio di Largo Cinque Via e Corso Europa:
+- di giorno, verde e rosso;
+- di notte con pioggia (`?ora=21:30`);
+- su telefono 844×390;
+- coda al rosso con un'auto alla linea e una freccia accesa (Corso Europa, nodo 552).
+
+I pali stanno sui marciapiedi e non coprono minimappa né comandi. Non provato su telefono reale.
+
+
+### 2026-10-20 — Claude — BF08 lavavetri al finestrino ai semafori di gioco
+**Sprite:** è quello già presente nell'atlante dei mestieri (colonne 8–11). Nessuna nuova arte; la tavola resta «da rivedere» secondo PIXEL_ART_MODUS.
+- Durante il lavaggio il lavavetri è fermo sul frame d'appoggio, rivolto all'auto: nessun «camminare sul posto».
+- Il movimento del lavaggio è un piccolo tergivetro disegnato sul parabrezza (manico scuro, gomma azzurra) che va avanti e indietro sul lato guida, con tre gocce chiare che brillano.
+- Quando sta davanti all'auto (più in basso sullo schermo) si disegna sopra di lei; quando sta dietro, l'auto lo copre in parte, come vuole la vista 2.5D.
+
+**Verifiche:** foto Chrome headless del lavavetri al finestrino:
+- di un'utilitaria NPC ferma al rosso in Via Signorelli;
+- dell'auto del giocatore in Corso Europa, su PC e su telefono 844×390.
+
+Il lavavetri resta sul lato guida e il tergivetro si vede sul parabrezza. Non copre comandi né minimappa. Non provato su telefono reale.
+### 2026-10-20 — Varchi di confine: strade tagliate dritte e imbocchi che sfumano (BF09)
+
+**Grafica:**
+- Le strade non finiscono più con mezzo cerchio sopra l'area nera: il taglio è dritto, lungo il confine comunale.
+- A ogni strada che prosegue in un altro comune, un imbocco a trapezio continua asfalto, marciapiedi e cordolo per 16 m, li stringe un poco e li fa sparire nel buio. Sulle strade larghe a doppio senso si vede anche la mezzeria che si perde.
+- Le auto NPC che escono svaniscono dentro l'imbocco, insieme ai fari; quelle che entrano emergono dal buio.
+
+**Verifiche:** foto Chrome headless prima e dopo su una trunk (SP 500), una residential (Via Hugo Pratt) e una service (Via Visconti), su PC, telefono 844×390 e alle 21:30 con la pioggia. Ci sono anche le foto di un'uscita e di un ingresso in movimento. Non provato su Android reale.
+### 2026-10-20 — Volumi separati nel menu PAUSA (BF10)
+
+**Interfaccia:** nella scheda PAUSA, sotto i comandi, un blocco audio con **SUONI: ON/OFF** (generale) e due cornici scure con nome, **−**, percentuale e **＋**: **EFFETTI / AMBIENTE** e **RADIO / MUSICA**. Stessi colori, bordi e altezza minima (38 px) dei pulsanti della pausa sul telefono; su PC le due cornici hanno lo stesso stile (gli altri pulsanti della pausa su PC restano quelli del browser, come prima).
+
+**Verifiche:** foto Chrome headless del menu pausa su PC 1280×720 e telefono 844×390 in orizzontale, clic e tocchi veri su tutti i pulsanti, nessuna sovrapposizione tra pulsanti, nessun elemento fuori dalla scheda, ogni pulsante riceve davvero il tocco (non coperto da volante o pedali). Non provato su un telefono reale.
+### 2026-10-20 — Apertura da PC: solo la plancia di gioco (BF11)
+
+**Interfaccia:** su PC la pagina si apre direttamente sulla plancia, a tutta finestra e senza cornice né scorrimento. Sopra la mappa restano solo:
+- in alto a sinistra un piccolo pulsante Ⅱ rotondo, accanto all'etichetta della via;
+- in alto a destra la minimappa;
+- in basso a destra MISSIONI;
+- al centro, solo vicino a qualcosa da fare, l'indicazione «E · ENTRA IN AUTO / COMPRA / RACCOGLI…» nello stesso riquadro scuro con bordo oro dell'indicatore missione;
+- in fondo una minuscola attribuzione «© OpenStreetMap · ISTAT · menu PAUSA: Esc / P».
+
+Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA, diviso in 5 sezioni con titoletti spaziati nello stile del gioco.
+
+**Verifiche:** foto Chrome headless prima/dopo a 1280×720, 1366×768 e 1920×1080, menu pausa (inizio e fondo), indicazione del tasto E e telefono 844×390 in guida e in pausa, invariato. Non provato su un PC con schermo touch né su un telefono reale.

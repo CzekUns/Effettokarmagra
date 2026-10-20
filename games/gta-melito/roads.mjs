@@ -2,6 +2,8 @@ import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
 import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=006';
 import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=128';
 import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=002';
+import {buildJunctions,chooseSignals,junctionDecision,pruneReservations,pedestrianMayCross,clockSecondsFromMinutes} from './junctions.mjs?v=001';
+import {findBorderGates,gateMouthClear,borderRing,GATE_RULES} from './border-gates.mjs?v=001';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
  * Simulates moving traffic through intersections with legal one-way exits. */
@@ -40,7 +42,7 @@ function circularRoadDirections(roads){
  }
  return directions;
 }
-export function buildRoadGraph(roads){
+export function buildRoadGraph(roads,settings={}){
  const nodes=[],lookup=new Map(),edges=[],trafficStarts=[],walkStarts=[];
  const circular=circularRoadDirections(roads);
  function vertex(x,y){
@@ -68,20 +70,31 @@ export function buildRoadGraph(roads){
   }
  }
  const junctions=nodes.filter(n=>n.out.filter(e=>edges[e].car).length>=3).length;
+ // BF09: the last node of a car street cut by the municipal border is a gate to another town.
+ const gates=settings.border?findBorderGates({nodes,edges},settings.border):[];
+ // A gate whose way into the dark runs under a building drawn beyond the border is not used.
+ for(const g of gates){g.blocked=!!settings.gateClear&&!gateMouthClear(g,settings.gateClear);if(!g.blocked)nodes[g.node].gate=g.index;}
  const liveCar=liveCarEdges(nodes,edges);
- const throughStarts=trafficStarts.filter(id=>liveCar[id]&&hasThroughExit({nodes,edges,liveCar},id));
- return {nodes,edges,trafficStarts,throughStarts,walkStarts,junctions,liveCar};
+ const throughStarts=trafficStarts.filter(id=>liveCar[id]&&hasThroughExit({nodes,edges,liveCar,gates},id));
+ const ring=borderRing(settings.border),center=ring.length?ring.reduce((c,p)=>({x:c.x+p[0]/ring.length,y:c.y+p[1]/ring.length}),{x:0,y:0}):null;
+ const graph={nodes,edges,trafficStarts,throughStarts,walkStarts,junctions,liveCar,gates,borderCenter:center};
+ // BF07: incroci con linee d'arresto e precedenze; semafori SIMULATI sugli incroci principali.
+ graph.intersections=buildJunctions(graph);
+ graph.signals=chooseSignals(graph,graph.intersections);
+ return graph;
 }
 // BF03: car edges from which traffic can keep driving for ever (a U-turn at a two-way dead end
 // counts). An edge whose every route ends at a one-way terminal is a trap: in Melito a chain of
 // one-way segments can lead there, so no NPC is spawned on it or turns into it.
+// BF09: an edge that reaches a border gate leads out of the town, so it is never a trap.
 function liveCarEdges(nodes,edges){
  const incoming=nodes.map(()=>[]),left=new Int32Array(edges.length),live=new Uint8Array(edges.length),dead=[];
+ const sink=id=>nodes[edges[id].to].gate!==undefined;
  edges.forEach((e,id)=>{if(!e.car)return;incoming[e.to].push(id);live[id]=1;
-  left[id]=nodes[e.to].out.filter(next=>edges[next].car).length;if(!left[id])dead.push(id);});
+  left[id]=nodes[e.to].out.filter(next=>edges[next].car).length;if(!left[id]&&!sink(id))dead.push(id);});
  while(dead.length){
   const id=dead.pop();live[id]=0;
-  for(const before of incoming[edges[id].from])if(live[before]&&--left[before]===0)dead.push(before);
+  for(const before of incoming[edges[id].from])if(live[before]&&--left[before]===0&&!sink(before))dead.push(before);
  }
  return live;
 }
@@ -168,7 +181,9 @@ function carSpawnClear(graph,edgeIndex,t,at,occupied,junctionGap,settings){
  return true;
 }
 function hasThroughExit(graph,id){
- const edge=graph.edges[id];
+ const edge=graph.edges[id],gate=graph.nodes[edge.to].gate;
+ // BF09: the street goes on into the next town.
+ if(gate!==undefined&&graph.gates?.[gate]?.exit===id)return true;
  // BF03: an exit into a trap does not count, or a car would drive up to it only to turn back.
  return graph.nodes[edge.to].out.some(next=>graph.edges[next].car&&graph.edges[next].to!==edge.from&&
   (!graph.liveCar||graph.liveCar[next]));
@@ -260,6 +275,9 @@ function nextPose(graph,agent,distance){
   const remaining=(1-route.t)*edge.len;
   if(distance<remaining){route.t+=distance/edge.len;break;}
   distance-=remaining;
+  // BF09: at a border gate a car of the traffic drives on into the dark instead of turning back.
+  const gate=graph.nodes[edge.to].gate;
+  if(gate!==undefined&&usesGates(agent)&&graph.gates[gate].exit===route.edge){route.t=1;route.reachGate=gate;break;}
   const next=chooseTurn(graph,edge.to,route.edge,route,e=>agent.body==='car'?e.car:e.walk);
   if(next==null){
    // A one-way endpoint has no legal exit. Remain there until the offscreen
@@ -269,6 +287,24 @@ function nextPose(graph,agent,distance){
   route.edge=next;route.t=0;
  }
  return {...route,...position(graph,route.edge,route.t,agent.body,route.side),vehicleType:agent.vehicleType,model:agent.model};
+}
+// BF07: the next junction on the route the car will really take: the same turns as nextPose
+// (chooseTurn on a copy of the route, so the agent's own seed is untouched).
+function nextJunction(graph,agent,maxDist){
+ const junctions=graph.intersections;if(!junctions||agent.edge==null)return null;
+ const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1,body:agent.body,routine:agent.routine,home:agent.home,path:agent.path};
+ let dist=0;
+ for(let hops=0;hops<12;hops++){
+  const edge=graph.edges[route.edge];if(!edge)return null;
+  dist+=(1-route.t)*edge.len;
+  const J=junctions.byNode.get(edge.to);
+  const next=chooseTurn(graph,edge.to,route.edge,route,e=>e.car);
+  if(next==null)return null;
+  if(J)return {J,A:J.approaches.get(route.edge),dist,inEdge:route.edge,outEdge:next};
+  if(dist>maxDist)return null;
+  route.edge=next;route.t=0;
+ }
+ return null;
 }
 // BF01: reverse slowly along the current lane (never into another body), then wait.
 function backOff(graph,agent,elapsed,index){
@@ -298,6 +334,16 @@ export function unstickVehicle(agent,index,world,dt){
  agent.x=nx;agent.y=ny;agent.braking=true;agent.unstuck=(agent.unstuck||0)+1;
  return true;
 }
+// The pavement continuations a pedestrian can take at the end of its edge (and its route copy).
+function walkPlans(graph,agent,edge){
+ const plans=new Map();
+ for(const id of graph.nodes[edge.to].out){
+  if(!graph.edges[id].walk)continue;
+  const plan=sidewalkTurn(graph,agent.edge,id,agent.side||1);
+  if(plan)plans.set(id,plan);
+ }
+ return {plans,route:{seed:agent.seed,body:'walk',routine:agent.routine,home:agent.home,path:agent.path}};
+}
 export {position as lanePosition,sidewalkTurn,nextPose as previewNextPose};
 export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockMinutes=null,valid=null){
  if(!Number.isFinite(dt)||dt<=0||agent.impactTime>0||agent.needsRoutineRecovery)return;
@@ -320,14 +366,23 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
  let speed=agent.speed;
  if(agent.body==='walk'){
   if(agent.corner){stepSidewalkCorner(agent,speed*elapsed,index);return;}
-  if(agent.t*edge.len+speed*elapsed>=edge.len){
-   const plans=new Map();
-   for(const id of graph.nodes[edge.to].out){
-    if(!graph.edges[id].walk)continue;
-    const plan=sidewalkTurn(graph,agent.edge,id,agent.side||1);
-    if(plan)plans.set(id,plan);
+  // BF07: at a junction with (simulated) traffic lights a pedestrian who goes straight on crosses
+  // the side street only with the green of its own street; it waits on the kerb, before the road.
+  const signalled=graph.intersections?.byNode.get(edge.to);
+  if(signalled?.signal){
+   const left=(1-agent.t)*edge.len,kerb=signalled.r+1;
+   if(left>=kerb-.05&&left-speed*elapsed<kerb){
+    const {plans,route}=walkPlans(graph,agent,edge),chosen=chooseTurn(graph,edge.to,agent.edge,route,(_,id)=>plans.has(id));
+    const turn=chosen==null?0:Math.abs(Math.atan2(Math.sin(graph.edges[chosen].angle-edge.angle),Math.cos(graph.edges[chosen].angle-edge.angle)));
+    if(chosen!=null&&turn<.32&&!pedestrianMayCross(signalled,edge.angle,false,graph.intersections.clockSeconds)){
+     Object.assign(agent,position(graph,agent.edge,1-kerb/edge.len,'walk',agent.side),{t:1-kerb/edge.len,braking:true,signalWait:true});
+     return;
+    }
    }
-   const route={seed:agent.seed,body:'walk',routine:agent.routine,home:agent.home,path:agent.path};
+  }
+  agent.signalWait=false;
+  if(agent.t*edge.len+speed*elapsed>=edge.len){
+   const {plans,route}=walkPlans(graph,agent,edge);
    const chosen=chooseTurn(graph,edge.to,agent.edge,route,(_,id)=>plans.has(id));
    if(chosen!=null){
     const at=position(graph,agent.edge,1,'walk',agent.side);
@@ -340,28 +395,33 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
    agent.t=1;agent.braking=true;return;
   }
  }
- let profile=null;
+ let profile=null,limit=Infinity;
  if(agent.body==='car'){
   // BF05: crociera adatta al mezzo (Ape e furgoni più lenti) e spinta progressiva come il giocatore.
   profile=handlingProfile(agent);
   const cruise=npcCruise(profile,agent.speed);speed=cruise;
   // Following distance is checked only for traffic on this nearby segment.
   const near=index?nearbyColliders(index,agent.x,agent.y,18):others;
+  agent.follows=null;
   for(const other of near){
    if(other===agent||other.body!=='car'||other.edge!==agent.edge)continue;
    const ahead=(other.t-agent.t)*edge.len;
-   if(ahead>0&&ahead<12)speed=Math.min(speed,cruise*clamp((ahead-5)/7,0,1));
+   if(ahead>0&&ahead<12){const v=cruise*clamp((ahead-5)/7,0,1);if(v<speed){speed=v;agent.follows=other;}}
   }
+  // BF07: stop line of the next junction (red light, right of way, junction or exit not free).
+  if(Number.isFinite(agent.jLimit)){limit=Math.max(0,agent.jLimit);speed=Math.min(speed,Math.sqrt(2*4.5*limit));}
   speed=npcSpeedStep(profile,agent.v,speed,elapsed);
  }
+ if(limit<=1e-3){agent.braking=true;agent.blockedBy=null;if(profile)agent.v=0;return;}
  // Try reduced motion before stopping; this lets traffic queue naturally.
  // BF01: remember who blocks the move, so a mutual block at a junction can be untied.
  for(const factor of [1,.5,.25]){
-  const next=nextPose(graph,agent,speed*elapsed*factor);
+  const next=nextPose(graph,agent,Math.min(speed*elapsed*factor,limit));
   const blocker=index?trafficMoveBlocker(agent,next,agent.body,index,agent):null;
   if(blocker){agent.blockedBy=blocker;continue;}
   Object.assign(agent,next);agent.braking=false;agent.blockedBy=null;
-  if(profile)agent.v=speed*factor;
+  if(profile)agent.v=Math.min(speed*factor,limit/elapsed);
+  if(next.reachGate!==undefined){delete agent.reachGate;agent.gateMode={kind:'out',gate:next.reachGate,d:0};agent.gateFade=1;}
   return;
  }
  agent.braking=true;
@@ -456,12 +516,149 @@ export function yieldsInGridlock(agent){
  if(!pool.length){for(const car of ring)car.cannotYield=false;pool=ring;}
  return pool.includes(agent)&&pool.every(car=>car===agent||(agent.seed|0)>(car.seed|0));
 }
+/* BF09: border gates. A car of the moving traffic that reaches a gate on its way out drives on
+ * into the dark beyond the cut and fades away; the same vehicle object then comes back as another
+ * car from a free entry gate (out of the dark, so also in view: no pop-in in the middle of a road).
+ * While beyond the border, t runs past the end of its edge (t>1 going out, t<0 coming in): the
+ * lane position stays continuous and the cars behind keep their distance. */
+const usesGates=agent=>agent.body==='car'&&!agent.path&&!agent.commuter&&!agent.stationary&&
+ !agent.residentRoutine&&agent.gates!==false;
+function gateLimbo(agent,gate=null){
+ Object.assign(agent,{gateMode:{kind:'wait',gate,d:0,retry:.4},gateFade:0,gateLimbo:true,
+  x:-6000-(agent.seed%997)*12,y:-6000,braking:true,blockedBy:null,backoff:0,stalled:0,v:0});
+}
+function rehomeAtGate(graph,agent,gate){
+ const node=graph.nodes[gate.node],radius=agent.home?.radius||250,c=graph.borderCenter;
+ // A new driver lives some way inside the town, not on the border line.
+ const k=c?Math.min(1,Math.min(radius*.6,200)/(Math.hypot(c.x-node.x,c.y-node.y)||1)):0;
+ const home={x:node.x+(c?(c.x-node.x)*k:0),y:node.y+(c?(c.y-node.y)*k:0),edge:gate.entry,side:agent.side||1,radius};
+ const options=graph.throughStarts?.length?graph.throughStarts:graph.trafficStarts;
+ home.returnEdges=options.filter(id=>{
+  const e=graph.edges[id],a=graph.nodes[e.from],b=graph.nodes[e.to];
+  return Math.min(Math.hypot(a.x-home.x,a.y-home.y),Math.hypot(b.x-home.x,b.y-home.y))<=radius*.55;
+ });
+ if(!home.returnEdges.includes(gate.entry))home.returnEdges.unshift(gate.entry);
+ agent.home=home;
+}
+function enterFromGate(graph,agent,index,skip=null){
+ const entries=graph.entryGates||(graph.entryGates=(graph.gates||[]).filter(g=>g.entry!==null&&!g.blocked&&graph.liveCar?.[g.entry]));
+ if(!entries.length)return false;
+ for(let attempt=0;attempt<6;attempt++){
+  const g=entries[hash(agent.seed*31+attempt*977+(agent.gateTrips||0)*131)%entries.length];
+  if(g.index===skip&&entries.length>1)continue;
+  const e=graph.edges[g.entry],t=-GATE_RULES.travel/e.len;
+  const start={...position(graph,g.entry,t,'car'),vehicleType:agent.vehicleType,model:agent.model};
+  const lane=position(graph,g.entry,0,'car');
+  // Nobody in the mouth and on the first metres of the lane: one car at a time comes in.
+  if(index&&(collidesWithTraffic(start,'car',index,agent)||[...nearbyColliders(index,lane.x,lane.y,14)].some(other=>
+    other!==agent&&!other.gateLimbo&&Math.hypot(other.x-lane.x,other.y-lane.y)<(other.body==='walk'?4:10))))continue;
+  Object.assign(agent,start,{edge:g.entry,t,gateMode:{kind:'in',gate:g.index,d:GATE_RULES.travel},gateFade:0,
+   gateLimbo:false,wait:0,stalled:0,braking:false,blockedBy:null,backoff:0,needsRoutineRecovery:false,
+   prevX:start.x,prevY:start.y,prevA:start.a,seed:agent.seed+attempt+1,respawnFails:0,v:0});
+  rehomeAtGate(graph,agent,g);
+  return true;
+ }
+ return false;
+}
+export function stepGate(graph,agent,dt,index){
+ const m=agent.gateMode,elapsed=Math.min(dt,.1);
+ if(m.kind==='wait'){
+  m.retry-=elapsed;if(m.retry>0||agent.retire)return;
+  if(!enterFromGate(graph,agent,index,m.gate))m.retry=.5;
+  return;
+ }
+ const g=graph.gates[m.gate],edgeId=m.kind==='out'?g.exit:g.entry,e=graph.edges[edgeId];
+ const speed=Math.max(3,npcCruise(handlingProfile(agent),agent.speed));
+ const d=Math.max(0,m.kind==='out'?m.d+speed*elapsed:m.d-speed*elapsed);
+ const t=m.kind==='out'?1+d/e.len:-d/e.len;
+ const pose={...position(graph,edgeId,t,'car'),vehicleType:agent.vehicleType,model:agent.model};
+ const blocker=index?trafficMoveBlocker(agent,pose,'car',index,agent):null;
+ if(blocker){
+  agent.braking=true;agent.v=0;agent.blockedBy=blocker;m.blocked=(m.blocked||0)+elapsed;
+  // Kept out for long (a queue, the player standing at the border): try another gate.
+  if(m.kind==='in'&&m.blocked>6&&m.d>GATE_RULES.fade*.6)gateLimbo(agent,m.gate);
+  return;
+ }
+ m.blocked=0;m.d=d;
+ Object.assign(agent,{x:pose.x,y:pose.y,a:pose.a,edge:edgeId,t,braking:false,blockedBy:null,v:speed});
+ agent.gateFade=clamp(1-d/GATE_RULES.fade,0,1);
+ if(m.kind==='out'&&d>=GATE_RULES.travel){
+  agent.gateTrips=(agent.gateTrips||0)+1;agent.gateExits=(agent.gateExits||0)+1;
+  const gate=m.gate;gateLimbo(agent,gate);
+  if(agent.retire){agent.gone=true;return;}
+  enterFromGate(graph,agent,index,gate);
+  return;
+ }
+ if(m.kind==='in'&&d<=0){
+  Object.assign(agent,position(graph,g.entry,0,'car'),{edge:g.entry,t:0});
+  agent.gateMode=null;agent.gateFade=1;agent.gateEntries=(agent.gateEntries||0)+1;
+ }
+}
+// A new vehicle for balanceTraffic: it waits beyond the border and comes in from a free gate.
+export function createGateVehicle(graph,seed,{vehicleType='car',model=null}={}){
+ const role=['through','local','courier'][hash(seed*31)%3];
+ const first=(graph.gates||[]).find(g=>g.entry!==null);
+ const agent={x:0,y:0,a:0,edge:first?first.entry:0,t:0,vehicleType,model,body:'car',
+  speed:(vehicleType==='motorcycle'?9:7)+rand(seed*13)*7,kind:seed%7,seed,wait:0,side:seed%2?1:-1,
+  routine:role,segments:0,home:{x:0,y:0,radius:role==='local'?185:role==='courier'?250:360,returnEdges:[]}};
+ gateLimbo(agent);agent.gateMode.retry=0;
+ return agent;
+}
+/* BF09: keeps the moving traffic at `target` vehicles through the border gates (e.g. rush hours,
+ * Q13). Missing vehicles come in from a gate (out of the dark); extra ones are marked and leave at
+ * the next gate they reach, or at once when they are out of sight. `make()` returns a new vehicle
+ * (createGateVehicle) or null. Returns the vehicles added and removed in this call. */
+export function balanceTraffic(graph,traffic,target,world={},make=null,{maxAdd=2}={}){
+ let added=0,removed=0;
+ const view=world.view;
+ for(let i=traffic.length-1;i>=0;i--){
+  const v=traffic[i];
+  if(v.gone||v.retire&&(v.gateLimbo||!v.gateMode&&view&&outsideView(v.x,v.y,view,15))){traffic.splice(i,1);removed++;}
+ }
+ if(!Number.isFinite(target))return {added,removed};
+ let active=traffic.reduce((n,v)=>n+(v.retire?0:1),0);
+ for(let i=traffic.length-1;i>=0&&active>target;i--)
+  if(!traffic[i].retire&&usesGates(traffic[i])){traffic[i].retire=true;active--;}
+ for(const v of traffic){if(active>=target)break;if(v.retire){v.retire=false;active++;}}
+ while(make&&active<target&&added<maxAdd&&graph.gates?.length){
+  const v=make();if(!v)break;
+  traffic.push(v);active++;added++;
+ }
+ return {added,removed};
+}
 export function stepAgents(graph,agents,dt,player=null,world={}){
  const playerBody=player&&Number.isFinite(player.x)&&Number.isFinite(player.y)?
   {x:player.x,y:player.y,a:player.a||0,body:player.car>=0?'car':'walk',vehicleType:player.vehicleType||'car'}:null;
  const index=makeCollisionIndex([...agents,...(world.parked||[]),...(world.traffic||[]),...(world.people||[]),playerBody]);
+ // BF07: the next junction of every car, the cars approaching each junction, and the clock of the
+ // (simulated) traffic lights: game clock when given, otherwise the simulated time.
+ const junctions=graph.intersections;
+ let jctx=null;
+ if(junctions){
+  if(Number.isFinite(world.npcClockMinutes))junctions.clockSeconds=clockSecondsFromMinutes(world.npcClockMinutes);
+  else if(agents.some(a=>a.body==='car'))junctions.clockSeconds+=dt;
+  if(agents.some(a=>a.body==='car')){
+   jctx={approaching:new Map(),traffic:new Set(),index,player:playerBody,signalSeconds:junctions.clockSeconds,
+    time:(junctions.time=(junctions.time||0)+dt)};
+   for(const agent of agents){
+    if(agent.body!=='car'||agent.commuter||agent.stationary){continue;}
+    jctx.traffic.add(agent);
+    // Outside the map (varchi di confine, t oltre 0..1) there are no junctions to negotiate.
+    agent.jx=agent.impactTime>0||agent.needsRoutineRecovery||agent.gateMode||!(agent.t>=0&&agent.t<=1)?null:nextJunction(graph,agent,70);
+    if(!agent.jx){agent.turnSignal=null;continue;}
+    let list=jctx.approaching.get(agent.jx.J);if(!list)jctx.approaching.set(agent.jx.J,list=[]);
+    list.push(agent);
+   }
+   for(const J of junctions.list)if(J.reserved.size)pruneReservations(J);
+  }
+ }
  for(const agent of agents){
   const x=agent.x,y=agent.y;
+  // BF09: beyond the border (leaving, coming in, or waiting for a free gate).
+  if(agent.gateMode){
+   if(agent.impactTime>0||agent.needsRoutineRecovery){agent.gateMode=null;agent.gateFade=1;agent.gateLimbo=false;}
+   else{stepGate(graph,agent,dt,index);if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);continue;}
+  }
   if(agent.impactTime>0){agent.braking=true;continue;}
   if(agent.body==='car'&&unstickVehicle(agent,index,world,dt)){
    agent.stalled=0;if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);continue;
@@ -469,6 +666,8 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
   // Vendors and junction-side washers hold an actual foot position, but after
   // nonlethal impacts they step back towards it instead of snapping on screen.
   if(agent.stationary){
+   // BF08: a washer at work is moved by window-washers.mjs; back on the kerb it is a post again.
+   if(agent.scripted)continue;
    const post=agent.post||agent.home;
    if(post){
     const dx=post.x-agent.x,dy=post.y-agent.y,d=Math.hypot(dx,dy);
@@ -495,9 +694,23 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
    if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);
    continue;
   }
+  agent.jLimit=Infinity;agent.jHold=null;
+  if(jctx&&agent.jx&&!(agent.backoff>0)&&!(agent.wait>0)){
+   const jx=agent.jx,shape=vehicleShape(agent);
+   // Where the whole car would stand once out of the junction (for "do not block the box").
+   jx.landing=jx.dist-shape.halfLength-jx.A.stop<25?nextPose(graph,agent,jx.dist+jx.J.r+shape.halfLength+1):null;
+   const decision=junctionDecision(graph,agent,jx,jctx);
+   agent.jLimit=decision.limit;agent.jHold=decision.reason;
+  }
   stepAgent(graph,agent,dt,agents,player,index,world.npcClockMinutes,world.validRecovery);
-  agent.stalled=Math.hypot(agent.x-x,agent.y-y)<.02?
-   (agent.stalled||0)+dt:0;
+  const moved=Math.hypot(agent.x-x,agent.y-y)>=.02;
+  if(agent.body==='car'){
+   agent.jWait=agent.jHold&&!moved?(agent.jWait||0)+dt:0;
+   // Waiting at a red light (or queued behind a car that is) is not a deadlock: no recovery.
+   const leader=agent.blockedBy||agent.follows;
+   agent.redQueue=!moved&&(agent.jHold==='rosso'||agent.jHold==='giallo'||!!(leader&&(leader.jHold==='rosso'||leader.redQueue)));
+  }
+  agent.stalled=!moved&&!agent.redQueue&&!agent.signalWait?(agent.stalled||0)+dt:0;
   if(agent.body==='car'){
    // BF01: two cars blocking each other (typically across a junction) for over 2,5 s: the one with
    // the higher seed yields and backs up a couple of metres; the other one can then pass.

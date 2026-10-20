@@ -468,3 +468,206 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** suite Node 22 **265/265**.
 - **Browser (Chrome headless, telefono 844×390 touch, prima/dopo):** prima ACCELERA y=172, FRENO 242; dopo FRENO 172, ACCELERA 242, RETRO 312. Con tocchi veri: ACCELERA porta l'auto a 38,3, FRENO la ferma a 0 senza retromarcia, RETRO −12 solo mentre premuto; due dita insieme su volante e ACCELERA funzionano; la pausa non lascia ACCELERA premuto; in banca i pedali spariscono e risalendo in auto l'ordine resta giusto; nessuna sovrapposizione con minimappa, missioni, volante, pausa, radio e pulsante azione; nessun errore JS.
 - **Non eseguiti / limiti:** telefono Android reale.
+
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF07 incroci con buon senso e semafori visibili (richiesta del committente)
+- **Richiesta (Simone, 20/10):** «serve la logica di buon senso per gli incroci. semafori visibili e lavavetri ai semafori che fanno routine sulle auto ferme avvicinandosi al lato guida». Questa voce copre incroci e semafori; i lavavetri sono BF08. Copre in parte anche la Q22 (riga di stato in `TODO.md`).
+- **Prima:** nessuna regola agli incroci. Le auto entravano tutte insieme e si fermavano solo quando si toccavano; nessun semaforo, nessuna freccia. Gli incastri li scioglievano solo il recupero di BF01 e lo spostamento fuori vista.
+- **Semafori SIMULATI, dichiarati:** `data/melito-map.json` non ha nodi `highway=traffic_signals` e dal server Overpass non risponde. Quindi i semafori sono posizionamenti di gioco: 8 sugli incroci principali, scelti con una regola (almeno 3 accessi, una strada terziaria o maggiore, nessun altro incrocio entro 20 m, almeno 130 m fra due semafori). `SIGNALS_SIMULATED`/`SIGNAL_NOTE` in `junctions.mjs`, README e una riga nella scheda PAUSA lo dicono: non sono i semafori reali di Melito.
+- **Logica (`junctions.mjs`, `roads.mjs`):**
+  - ogni auto e moto del traffico calcola il prossimo incrocio sul percorso che farà davvero (stesse svolte di `nextPose`, sul seme copiato);
+  - linea d'arresto dopo le strisce. Rosso: si ferma. Giallo: si ferma se ha lo spazio, altrimenti passa;
+  - non impegna l'incrocio se all'uscita non c'è posto per tutta la sagoma;
+  - un permesso per manovra: le traiettorie in conflitto passano una alla volta, i dritti opposti insieme;
+  - senza semaforo: precedenza al rango della strada, a parità a destra; chi gira a sinistra cede a chi arriva di fronte. Fra mezzi fermi passa chi aspetta da più tempo, e dopo 6 s si passa comunque se incrocio e uscita sono liberi;
+  - chi è già oltre la linea libera sempre l'incrocio; un permesso inutilizzato scade dopo 5 s;
+  - chi aspetta al rosso, e chi è in coda dietro di lui, non conta come «fermo» per il recupero fuori vista;
+  - frecce degli NPC negli ultimi 30 m prima della svolta;
+  - i pedoni che vanno dritti a un incrocio con semaforo aspettano sul cordolo (a r+1 m dal nodo) il verde della propria via.
+- **Grafica (`traffic-light-art.mjs`, `game.mjs`):**
+  - palo e lanterna in pixel art procedurale come i lampioni, sul marciapiede all'angolo destro di ogni accesso (21 pali), mai in un edificio, sulla carreggiata o addosso a lampioni e auto in sosta;
+  - tre luci, quella accesa con un bordo luminoso; di notte alone colorato e riflesso sull'asfalto;
+  - linea d'arresto bianca solo sulla corsia usata;
+  - frecce ambra sugli spigoli del lato della svolta, circa 1,5 Hz.
+  - Nessun nuovo PNG.
+- **Base:** ramo `integ` (BF01–BF06 insieme). La velocità degli NPC resta quella di BF05: la linea d'arresto limita solo la velocità obiettivo prima di `npcSpeedStep` e il passo massimo; le decisioni usano la velocità vera `agent.v`.
+- **Cache:** `game.mjs?v=158`, `roads.mjs?v=149` (anche in `npc-commute.mjs`), `npc-commute.mjs?v=004`; nuovi `junctions.mjs?v=001` e `traffic-light-art.mjs?v=001`.
+- **Test:** nuovo `bf07-junctions.test.mjs`, 10 test:
+  - fasi deterministiche, mai verde su entrambi gli assi, tutto rosso di sgombero;
+  - coda al rosso e partenza al verde in ordine;
+  - chi è già oltre la linea libera l'incrocio;
+  - precedenza a destra;
+  - rango che batte la destra;
+  - uscita occupata → attesa prima della linea;
+  - quattro auto insieme senza incidenti e senza attese oltre 12 s;
+  - frecce;
+  - pedone al semaforo;
+  - mappa reale: 6–12 semafori, cablaggio (anche: chi aspetta alla linea non urta i pedoni), nota PAUSA, README.
+
+  Suite **309/309** su `integ`.
+- **Node, mappa reale, 140 mezzi, prima → dopo:**
+  - con recupero fuori vista (180 s): km percorsi 267 → 265, ritiri 20 → 23, compenetrazioni 0 → 0, passaggi col rosso 0;
+  - senza recupero (120 s, caso peggiore): auto ferme da oltre 20 s 41 → 19–27 (dipende dal giro).
+- **Browser** (Chrome headless, 3 minuti: 90 s a piedi accanto al semaforo di Largo Cinque Via, poi 90 s di guida automatica dal punto di partenza), base `integ` → BF07:
+  - compenetrazioni 0 → 0;
+  - salti visibili 0 → 1 (un ritorno dopo un urto del giocatore, meccanismo di BF01);
+  - ritiri fuori vista 54 → 58;
+  - auto ferme in vista oltre 10 s senza rosso 0 → 2;
+  - code al rosso fino a 5 mezzi, 0 passaggi col rosso, 0 errori JS;
+  - guida automatica 1.510 → 1.169 m: le code ai semafori fermano anche il giocatore, che resta libero di aggirarle.
+
+  Foto: giorno, notte con pioggia (`?ora=21:30`) e telefono 844×390. I semafori si leggono; la coda al rosso è ferma alla linea e si vede la freccia di un'auto che svolta.
+- **Correzione emersa dalle prove:** in `impactTraffic` un'auto NPC «bloccata» spingeva in avanti i pedoni che aveva davanti. Ora non lo fa più se aspetta alla linea (rosso, precedenza) o è in coda dietro una che aspetta: chi attraversa sulle strisce davanti alle auto ferme non viene urtato.
+- **Limiti:**
+  - semafori non rilevati: vanno sostituiti con dati OSM veri se arriveranno;
+  - lo scooter dei pendolari (Q12) non rispetta semafori e precedenze;
+  - i pedoni aspettano solo agli incroci con semaforo e solo quando vanno dritti;
+  - la rete OSM spezzata (strade che si incrociano senza nodo comune) resta senza regole e la gestisce il recupero;
+  - i pali non hanno collisione, per non bloccare il giocatore;
+  - nessuna prova su telefono reale.
+- **Da fare:** BF08 (lavavetri ai semafori).
+
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF08 lavavetri ai semafori, al finestrino del lato guida (richiesta del committente)
+- **Richiesta (Simone, 20/10):** «lavavetri ai semafori che fanno routine sulle auto ferme avvicinandosi al lato guida». Parte da BF07, che ha messo i semafori di gioco.
+- **Prima:** 7 lavavetri **fermi** accanto a incroci qualsiasi, senza nessuna azione.
+- **Ora (`window-washers.mjs`, `street-professions.mjs`):**
+  - un lavavetri per ciascun semaforo di gioco con spazio a sinistra delle auto (corsia ad almeno 2,7 m dalla mezzeria): 7 sulla mappa;
+  - sta sul marciapiede accanto al palo;
+  - col rosso, quando la prima auto della coda è ferma da 1 s e il rosso che resta basta per arrivare e lavare, passa davanti al paraurti sulle strisce, risale il fianco sinistro e si ferma al finestrino del **lato guida**;
+  - lava il parabrezza 3–6 s, poi torna sul marciapiede per la stessa strada;
+  - al giallo o al verde, o se l'auto si muove, rientra subito; l'auto davanti alla quale ripassa lo aspetta;
+  - fa lo stesso con l'auto del giocatore se è la prima ferma al rosso; ignora moto e scooter;
+  - fumetti rari («Pulisco il vetro?», «Grazie, capo!»);
+  - se lo urtano lascia la routine e torna al suo posto con la logica dei mestieri.
+- **Gioco (`game.mjs`, `roads.mjs`):**
+  - la routine va avanti dopo il traffico dello stesso passo;
+  - il recupero «torna al palo» dei mestieri lascia stare il lavavetri al lavoro (`agent.scripted`);
+  - le auto NPC non lo urtano mentre lavora (in `impactTraffic`);
+  - quando sta davanti all'auto (più in basso sullo schermo) si disegna sopra di lei;
+  - tergivetro animato sul vetro dal lato guida;
+  - sprite esistente, fermo durante il lavaggio.
+- **Cache:** `game.mjs?v=159`, `roads.mjs?v=150` (anche in `npc-commute.mjs`), `npc-commute.mjs?v=005`, `street-professions.mjs?v=004`; nuovo `window-washers.mjs?v=001`.
+- **Test:** nuovo `bf08-washers.test.mjs`, 7 test, che falliscono senza la correzione:
+  - posti sulla mappa reale: accanto ai pali, oltre il cordolo, uno per incrocio;
+  - routine completa: lato guida, al finestrino, 3–6 s di lavaggio, di nuovo sul marciapiede, mai davanti a un'auto che si muove, auto ripartita col verde;
+  - rosso insufficiente → resta sul marciapiede;
+  - moto ignorate;
+  - auto del giocatore;
+  - auto che si sposta prima → torna indietro senza lavare;
+  - cablaggio.
+
+  Suite **316/316** su `integ` + BF07.
+- **Browser (Chrome headless, mappa reale):**
+  - su un'auto NPC ferma al rosso in Via Signorelli: fasi complete, sempre sul lato sinistro, mai dentro un'auto, lavaggio 4,4 s, di nuovo esattamente al suo posto, l'auto riparte col verde;
+  - sull'auto del giocatore in Corso Europa: giro completo dal lato guida;
+  - stesso esito su PC e su telefono 844×390; 0 errori JS.
+  - Prima della correzione in `impactTraffic`, un'auto NPC «bloccata» dal lavavetri lo spingeva via quando ripassava davanti a lei: ora lo aspetta.
+- **Limiti:**
+  - sprite dei mestieri ancora «da rivedere» secondo PIXEL_ART_MODUS: niente frame dedicati al lavaggio, solo il tergivetro disegnato;
+  - nessuna mancia o denaro per il giocatore;
+  - un solo lavavetri per semaforo e solo la prima auto della coda;
+  - le figure sono grandi rispetto alle auto, quindi al finestrino il lavavetri sovrappone un poco la carrozzeria (si disegna sopra o sotto secondo chi sta davanti);
+  - non provato su telefono reale.
+- **Da fare:** revisione e merge di BF07 e BF08; frecce e semafori per lo scooter dei pendolari (Q12/Q22).
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF09 varchi di confine: sparizione controllata e taglio delle strade
+- **Richiesta del committente:** le strade che finiscono in un altro comune e le aree nere diventano punti di sparizione controllata delle auto NPC, da usare in futuro per collegare nuove mappe; le strade non devono più finire arrotondate sul confine.
+- **Prima (Chrome headless, 3 minuti di gioco):**
+  - 70 estremità di strade carrabili sul confine;
+  - 24 inversioni a U al confine e 1 salto visibile, cioè lo scambio di corsia dell'inversione;
+  - 9 sensi unici in uscita dal comune erano capolinea (BF03 li trattava come trappole);
+  - le strade finivano con mezzo cerchio di asfalto e marciapiede sopra l'area nera.
+- **Correzione:**
+  - Nuovo `border-gates.mjs`. `findBorderGates` trova i varchi: un nodo con un solo vicino carrabile a ≤ 1,5 m dal confine ISTAT. Ognuno ha `id` stabile (`osmWay@x,y`), angolo verso l'esterno, strada, tipo, OSM way e sensi (`entrata`, `uscita`, `entrambi`).
+  - `borderGateList` (in gioco `state.borderGates`) esporta i varchi anche in WGS84, con `comune` vuoto perché il dato non c'è: è la base per collegare in futuro le mappe dei comuni vicini.
+  - `gateMouthClear` esclude dal traffico i varchi il cui tratto nel buio passa sotto un edificio disegnato oltre il confine (2 casi: Corso Europa e Via Cupa di Melito).
+  - `roads.mjs`: `buildRoadGraph(roads,{border,gateClear})` crea `graph.gates`. In `liveCarEdges` un arco che arriva a un varco non è una trappola; in `hasThroughExit` conta come uscita.
+  - In `nextPose` un'auto del traffico che arriva a un varco in uscita prosegue oltre la fine dell'arco (t > 1) e sfuma (`gateFade`) in 11 m. A 13 m un'altra auto entra da un varco in entrata libero, scelto in modo deterministico: nessuno nell'imbocco e i primi 10 m della corsia liberi. L'auto entra con t < 0, uscendo dal buio, e la nuova casa di quartiere è verso l'interno.
+  - Pendolari Q12, percorsi pianificati, mestieri fermi e residenti non usano i varchi. Durante un urto la modalità varco si annulla.
+  - `balanceTraffic` e `createGateVehicle` portano il traffico a `state.trafficTarget` (oggi 140) aggiungendo mezzi solo dai varchi e togliendoli fuori vista o al prossimo varco: è la leva per le ore di punta della Q13.
+  - `game.mjs`: strade tagliate dritte con un clip sul confine, applicato solo vicino al confine; con il clip ovunque il disegno in centro su PC passava da circa 20 a circa 40 ms per fotogramma. Imbocchi a trapezio disegnati solo fuori dal confine (clip `evenodd`): asfalto, marciapiede, cordolo e silhouette proseguono per 16 m, si restringono all'82% e sfumano; c'è anche la mezzeria sulle strade a doppio senso larghe. Mezzi e fari sfumano con `gateFade`; l'asfalto bagnato è tagliato allo stesso modo.
+- **Cache:** `roads.mjs?v=149`, `npc-commute.mjs?v=004` (importa roads 149), `game.mjs?v=159`, nuovo `border-gates.mjs?v=001`.
+- **Test:**
+  - Nuovo `bf09-border-gates.test.mjs` con 7 test:
+    - varchi, sensi, angolo e WGS84 su un comune quadrato di prova;
+    - un senso unico che esce non è più una trappola;
+    - uscita nel buio con sfumatura completa e rientro da un altro varco senza salti né inversioni;
+    - nessun ingresso finché la corsia è occupata;
+    - `balanceTraffic` in su e in giù, senza comparse fuori dai varchi;
+    - pendolari esclusi;
+    - collegamento nel gioco.
+  - Adattati 2 controlli di collegamento di BF02 e BF03, che ora accettano `TRAFFIC_COUNT` e `{border}`.
+  - Suite **306/306**.
+- **Browser (Chrome headless, dopo, 3 minuti):**
+  - 70 varchi (2 esclusi), 86 uscite e 85 entrate, 140 mezzi dall'inizio alla fine;
+  - 0 inversioni al confine, 0 salti visibili, 0 auto ferme ai capolinea e 0 ferme in vista oltre 10 s, 0 errori JS;
+  - fotografati in movimento uscite nel buio (SP 500, Via San Vito) e ingressi dal buio (una residenziale senza nome), su PC e telefono 844×390;
+  - prova di stress BF01: compenetrazioni 0, nessun NPC fermo in vista, come sulla base.
+- **Prestazioni (`draw()` medio, macchina condivisa molto carica):** centro su PC 13,3 ms prima e 15,0 ms dopo (stessa coppia di misure), telefono 52,4 e 53,4 ms; vicino al confine 0,3–3 ms in entrambi. Differenza entro il rumore.
+- **Limiti:**
+  - le auto parcheggiate e i pedoni non usano i varchi;
+  - il comune confinante non è noto;
+  - un varco con tratto nel buio molto curvo usa la direzione dell'ultimo tratto;
+  - i mezzi che entrano tengono il modello del mezzo uscito;
+  - non provato su Android reale.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF10 audio del motore per marce e volumi separati radio/effetti
+- **Richiesta del committente:** «bello l'audio della macchina ma tipo potrebbe andare un pò di rumore per le marce più alte. inoltre nel menu pausa quando apri lo smartphone metti le impostazioni volume tra musica radio e volume fx/ambientale».
+- **Cosa succedeva:** il motore sintetizzato di Q09 (`engineTone`) saliva di tono in modo lineare con la velocità, senza tenere conto del cambio automatico BF05: nessun cambio marcia udibile e nessun rumore in più ad alta velocità. Un solo volume (`prefs.volume`) per gli effetti; la radio era fissa al 52% (`audio.volume=.52`) senza regolazione.
+- **Motore:** nuovo `engineSound` in `city-audio.mjs`, con marcia e giri presi da `gearAt` e dal profilo BF05 del modello (`handlingProfile`). Dentro la marcia il tono sale coi giri; al cambio scende (meno nelle marce lunghe) e la voce cala per un attimo con lo stesso `shiftDip` della spinta; lo scooter a variatore sale continuo e poi si stabilizza; la RETRO ha un suo tono. Gas: filtro più aperto; rilascio: più morbido. Carattere per famiglia: auto, furgone (più cupo), Ape (ronzio brillante del monocilindrico), moto e scooter (più acuti). `engineTone` resta per compatibilità.
+- **Rumore delle marce alte:** nuovo strato di rumore (rumore marrone filtrato: rombo/aria/rotolamento) che cresce con la velocità e con la marcia, più forte sotto gas; silenzio da fermi, a piedi e in banca. Livelli bassi (massimo ~0,07–0,09 contro ~0,27 della voce del motore) e un compressore leggero in uscita (`DynamicsCompressor`, se il browser lo ha) contro la saturazione.
+- **Traffico:** le voci dei 4 mezzi NPC più vicini usano lo stesso modello con il loro profilo e la velocità reale `agent.v` di BF05.
+- **Volumi:** preferenze `{muted, effects, radio}` nella stessa chiave `gta-melito-audio-v1`; il vecchio `volume` diventa EFFETTI, la radio parte dal 52%. `car-radio.mjs` ha `setVolume` (anche prima che esista l'elemento audio; 0 = muto senza staccare lo stream). Menu PAUSA: **SUONI: ON/OFF** generale (zittisce effetti E radio), **EFFETTI / AMBIENTE − 70% ＋**, **RADIO / MUSICA − 52% ＋**, passi da 10 punti. Nota aggiunta sotto la Q37: l'app Impostazioni dello smartphone dovrà contenere questi due volumi.
+- **Cache:** `game.mjs?v=158`, `city-audio.mjs?v=003`, `car-radio.mjs?v=002`.
+- **Test:** nuovo `bf10-audio.test.mjs` (7 test: marce e cali al cambio sulla Punto, rumore crescente per marcia e velocità e gas/rilascio, variatore dello scooter e RETRO, famiglie diverse e voci del traffico, migrazione e persistenza separata dei volumi, SUONI OFF su effetti e radio e volume applicato all'elemento audio, cablaggio); aggiornati 2 controlli Q09 (4 anelli di rumore invece di 3; preferenze salvate nel nuovo formato). Suite **306/306**.
+- **Browser (Chrome headless, richieste esterne bloccate):** accelerazione registrata su Via Roma (rettilineo di 632 m, strada sgombra) con ACCELERA tenuto: Panda 0→100 km/h in 3,8 s, massima 140 km/h, 4 cambi a 32/55/79/107 km/h con tono 118→89, 120→92, 123→97, 128→104 Hz e voce che cala a 0,83–0,89; rumore massimo per marcia 0,003 / 0,010 / 0,021 / 0,040 / 0,069; in rilascio filtro da ~1.900 a 1.210 Hz e rumore 0,049. Ape: 3 marce, cambi a 19 e 38 km/h (152→113, 160→122 Hz), massima 61 km/h. Traffico vicino: voci auto in 1ª e 2ª, Ape, furgone, moto e scooter. Menu pausa su PC 1280×720 e telefono 844×390: clic/tocchi veri, 0 sovrapposizioni, ogni pulsante riceve il tocco, RADIO + porta l'elemento audio da 0,52 a 0,72, SUONI OFF lo porta a 0 e il mix degli effetti a 0, SUONI ON li riporta; valori uguali dopo la ricarica; Invio da tastiera funziona; nessun comando di guida resta premuto dopo la pausa. Nessun errore JS (solo favicon 404).
+- **Limiti:** l'audio non è stato ascoltato davvero (Chrome headless): sono verificati solo i parametri calcolati e applicati. Lo SPAZIO non attiva i pulsanti della pausa perché il gioco lo usa come freno a mano (comportamento già esistente, Invio sì). Su PC gli altri pulsanti della pausa hanno ancora lo stile del browser (preesistente). Lo smartphone della Q37 non esiste: i volumi sono nel menu pausa attuale. Non provato su telefono reale.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF11 apertura da PC: solo plancia di gioco, il resto nel menu pausa
+- **Richiesta del committente (testuale):** «un altro fix è l'apertura da pc. deve mostrare solo la plancia di gioco, non tutto quello che c'è attorno, tutto il resto va nel menu pausa».
+- **Prima (Chrome headless, base integrazione BF01–BF06):** su PC la plancia era una finestra dentro la pagina. Sopra c'erano titolo, barra di stato e barra del confronto strade; sotto i pulsanti, due paragrafi di istruzioni e i crediti. La pagina scorreva: 998 px di altezza a 1280×720, 1244 a 1920×1080, 1032 a 1366×768. Plancia di 1248×504 a 1280×720 e 1468×750 a 1920×1080.
+- **Correzione `index.html`:**
+  - header, `.hud`, `.road-width-bar`, istruzioni e footer spostati DENTRO il menu PAUSA, in 5 sezioni: STATO · INFO, COMANDI, MAPPA · ZOOM · SUONI (le scorciatoie di prima, immutate), STRUMENTI · CONFRONTO STRADE, CREDITI E LICENZE. Gli ID non cambiano, quindi `game.mjs` aggiorna ora, luogo, mezzo, camera e conteggi come prima;
+  - nuovo blocco CSS solo PC: `(min-width:761px) and (pointer:fine)` o `(pointer:none)`. Plancia a 100dvh senza bordo, nessuno scorrimento, nessun pulsante sotto la plancia, pulsante Ⅱ rotondo in alto a sinistra, etichetta della via spostata accanto;
+  - indicazione `#pc-prompt` «E · …» solo quando un'azione è davvero a portata: oggetto perduto, negozio, banca, mezzo libero vicino, uscita dalla banca;
+  - piccola attribuzione «© OpenStreetMap · ISTAT · menu PAUSA: Esc / P» in fondo alla plancia;
+  - su PC il riepilogo `#pause-details` e il doppio CONFRONTA STRADE sono nascosti, perché le stesse voci sono già nelle sezioni;
+  - le regole delle schede del menu valgono ora anche su PC. Prima erano scritte solo nel blocco telefono, e su PC il menu era senza stile.
+- **Telefono invariato:** il blocco telefono continua a nascondere header/barre/istruzioni/crediti e ora nasconde anche le nuove sezioni e i titoletti, quindi il menu START resta quello di prima.
+- **Correzione `game.mjs`:** il tasto P apre e chiude la pausa come Esc, ma non con un negozio aperto, dove i tasti servono per comprare. `boardPrompt()` aggiorna l'indicazione dentro `updateHud`. Cache `game.mjs?v=160`.
+- **Test:** nuovo `bf11-pc-board.test.mjs` con 5 test, tutti falliscono sulla base:
+  - niente attorno alla plancia;
+  - sezioni e contenuti nel menu;
+  - tutti gli ID usati da `game.mjs` esistono;
+  - blocco PC;
+  - telefono invariato;
+  - tasti Esc/P e indicazione E.
+  Suite **304/304**.
+- **Prove Chrome headless dopo, a 1280×720, 1920×1080 e 1366×768:**
+  - pagina grande quanto la finestra (nessuna barra), plancia e canvas a 0,0 a tutta finestra, rapporto pixel uguale in orizzontale e verticale (0,659–0,660, nessuna deformazione);
+  - header/barre/istruzioni/crediti/pulsanti invisibili all'apertura;
+  - indicazione «E · ENTRA IN AUTO» accanto all'auto, nascosta lontano;
+  - Esc apre la pausa con le 5 sezioni visibili e l'orologio fermo (stesso minuto dopo 1,2 s); Esc chiude; P apre e chiude; Ⅱ apre; RIPRENDI chiude;
+  - CONFRONTA CON PRIMA dal menu porta a «PRIMA · 7,0» e torna indietro;
+  - in auto, aprendo la pausa: mezzo «AUTO · … KM/H», ora uguale all'orologio NPC, via VIA ROMA;
+  - ridimensionata la finestra al 78%×86%: plancia e canvas seguono, nessuna barra;
+  - unico errore, il favicon 404 già noto.
+- **Telefono 844×390 con tocchi veri:**
+  - stesso layout BF06: FRENO y=172, ACCELERA 242, RETRO 312, volante, levetta, Ⅱ, nessuna indicazione PC né attribuzione;
+  - ACCELERA porta l'auto a 11,3;
+  - START apre il menu con solo le scorciatoie e il riepilogo, come prima; RIPRENDI chiude.
+- **Limiti:**
+  - non provato su un PC con schermo touch né su un tablet in verticale, che mantiene il layout di prima;
+  - sul telefono crediti e istruzioni restano non visibili, come prima di BF11;
+  - con lo smartphone della Q37 queste voci andranno nelle app (nota sotto la Q37);
+  - non provato su telefono reale.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Area mercatale di Melito da arredare: dati e fogli per i banchi (proposta Q42)
+- **Richiesta del committente:** individuare l'area mercatale, segnarla come zona «da arredare» e proporre al proprietario un foglio descrittivo per creare i banchi, con ombrelloni grandi che diventano trasparenti quando il giocatore ci passa sotto.
+- **Area trovata:** il mercato settimanale del rione 219, nell'isolato tra Via Praga, Via Dublino, Via Budapest e Via Ginevra, con Via Berlino che parte dall'angolo sud-est. Fonti: Melitonline 28/10/2025 («tra via Dublino e via Praga, nel rione 219») e 09/04/2026 («via Berlino»), OSM con due tettoie `building=roof` al centro. Non c'è nessun `amenity=marketplace` in OSM. La riqualificazione è in corso fino al 30/09/2027. Il giorno (venerdì) viene solo da elenchi non ufficiali: non verificato. Il numero di posteggi non è stato trovato. Seconda area: mercato ortofrutticolo comunale in Corso Europa 496 (da Waze).
+- **File:**
+  - `MERCATO_MELITO.md`: fonti, area, coordinate di gioco e WGS84, stato DA ARREDARE, regole proposte;
+  - `data/market-area.json`: non usato dal gioco, `used_by_game:false`, `verified` per voce;
+  - `mercato-banchi.csv`: 14 tipi di banco, 23 banchi indicativi;
+  - `mercato-requisiti.csv`: R01–R16, con R01 gli ombrelloni trasparenti come i tetti di `roof-reveal.mjs` e R16 le tettoie OSM da rendere pensilina;
+  - in `TODO.md` la proposta **Q42**, `[ ]`.
+- **Test:** nuovo `mercato-dati.test.mjs` (2 test: dati validi, strade presenti nella mappa, nessun vertice stradale dentro l'area, CSV coerenti, R01 presente). Suite **304/304**.
+- **Browser (Chrome headless, PC e telefono):** oggi l'area è una piazzetta pavimentata con due alberi, circondata da baie di sosta. Le tettoie al centro sono disegnate come un edificio pieno e non sono camminabili.
+- **Non eseguito:** conferma con il SUAP del Comune di giorno, orari, posteggi e sede provvisoria durante i lavori; nessun banco o ombrellone implementato (lo farà la Q42).

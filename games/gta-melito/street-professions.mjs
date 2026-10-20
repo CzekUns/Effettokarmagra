@@ -4,6 +4,7 @@
  * No new map features, traffic signal claims or synthetic street geometry. */
 import {MARKET_VARIANTS} from './car-sprites.mjs?v=108';
 import {vehicleHitsPedestrian} from './traffic-collision.mjs?v=128';
+import {washerSpots} from './window-washers.mjs?v=001';
 export const TRAFFIC_APES=Object.freeze([
  'ape-azzurra-vuota','ape-azzurra-ferro','ape-verde-vuota','ape-verde-ferro'
 ]);
@@ -148,8 +149,18 @@ export function createStreetProfessionActors(graph,vendors,parked,existing,{walk
  };
  OFFICER_AREAS.forEach((p,i)=>add(p,'vigile',3900+i*97,{radius:75}));
  // Work by intersections and remain on the pavement rather than in a vehicle lane.
+ // BF08: with the (simulated) traffic lights, one washer per light, next to its post on the
+ // pavement; window-washers.mjs moves them to the driver side of the first car stopped at red.
  let washers=0;
- for(const near of candidateJunctions(graph)){
+ for(const spot of graph.signals?.length?washerSpots(graph,graph.signals,{walkerOK,occupied}):[]){
+  const e=graph.edges[spot.A.edge],d=Math.hypot(spot.x-graph.nodes[e.to].x,spot.y-graph.nodes[e.to].y);
+  const at={x:spot.x,y:spot.y,a:spot.a},seed=4700+washers*101;
+  const agent={...at,edge:spot.A.edge,t:Math.max(0,1-d/e.len),side:1,body:'walk',kind:1,seed,speed:0,routine:'errand',
+   segments:0,wait:0,braking:true,profession:'lavavetri',stationary:true,post:{...at},
+   home:{...at,edge:spot.A.edge,side:1,radius:12,returnEdges:[spot.A.edge]},washer:{J:spot.J,A:spot.A,phase:'KERB'}};
+  actors.push(agent);occupied.push(agent);washers++;
+ }
+ if(!washers)for(const near of candidateJunctions(graph)){
   if(washers>=7)break;
   if(actors.some(a=>a.profession==='lavavetri'&&distance(a,near)<135))continue;
   const where={...near,road:/./};
