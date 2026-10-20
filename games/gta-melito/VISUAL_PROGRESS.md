@@ -662,3 +662,7 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 ### 2026-10-20 — Q17 banco degli ambulanti
 - Nessuna nuova arte. Il pannello acquisti, lo stesso dei negozi Q06, ora si apre anche al banco dei furgoncini, con l'intestazione «AMBULANTE · MELITO». Sulla plancia PC compare la scritta «E · COMPRA · NOME DEL BANCO». Foto: banco «Zeppole e panzerotti» in Via Roma.
 
+### 2026-10-20 — Q25 interni dei negozi (Claude, PROVVISORIO · da approvare)
+- Tre interni in pixel art procedurale con la stessa palette, gli stessi muri e le stesse ombre della banca: **bar** (bancone in legno con macchina del caffè e tazzine, mensole di bottiglie, vetrina dei dolci, tre tavolini con sedie, pavimento in graniglia), **panificio/pasticceria** (banco vetrina con pane e cassa, scaffali del pane a parete, cesti, piastrelle chiare), **minimarket** (scaffali con prodotti generici senza marche, frigoriferi a vetro, frutta, cassa, linoleum). Commesso con lo sprite dei pedoni. Fuori: punto luminoso caldo sul portone, senza scritta sopra l'insegna.
+- **Da far vedere a Simone:** Bar Alexander su Corso Europa (628,1291) e Panificio Pagliuca: avvicinarsi al punto luminoso sul portone, E · ENTRA, poi andare al bancone (PARLA).
+

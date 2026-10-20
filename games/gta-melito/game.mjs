@@ -55,6 +55,7 @@ import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
 import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=008';
+import {resolveShopEntrances,nearestShopEntrance,drawShopEntrance,enterShop,stepShopInteriorPlayer,shopInteriorCamera,interiorCounterNear,drawShopInterior} from './shop-interiors.mjs?v=001';
 import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=004';
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
@@ -235,7 +236,7 @@ function roadPoint(road,fraction){
 function createStreetObjects(){
  const border=toRing(state.map.border);
  const avoid=[...state.props.map(q=>({x:q.x,y:q.y,r:1.8})),...(state.doors||[]).map(d=>({x:d.x,y:d.y,r:2.6})),
-  ...state.cars.map(v=>({x:v.x,y:v.y,r:3.6})),...state.bankEntrances.map(b=>({x:b.x,y:b.y,r:3})),
+  ...state.cars.map(v=>({x:v.x,y:v.y,r:3.6})),...state.bankEntrances.map(b=>({x:b.x,y:b.y,r:3})),...(state.shopEntrances||[]).map(e=>({x:e.x,y:e.y,r:2.4})),
   ...(state.shops||[]).map(s=>({x:s.x,y:s.y,r:3.2})),...(state.signalPosts||[]).map(q=>({x:q.x,y:q.y,r:1.8}))];
  return placeStreetObjects(state.roads,{roadWidth:visualRoadWidth,avoid,
   walkable:(x,y)=>validWalk(x,y)&&inside([x,y],border),
@@ -373,6 +374,23 @@ function canStand(x,y){
 function onCarriageway(x,y){
  const r=nearest(x,y,30,state.roads,true);
  return !!r&&r.distance<visualRoadWidth(r.road)/2+.3||inParkingBay(x,y,.2);
+}
+// Q25: walk-in doors of named OSM shops (bar, bakery, minimarket…) on a straight, reachable facade,
+// clear of the carriageway and a little away from the awning where one buys outside (Q06).
+function createShopEntrances(){
+ const border=toRing(state.map.border),walkOK=(x,y)=>validWalk(x,y)&&inside([x,y],border);
+ const probe=(origin,normal,shop)=>{
+  const door=probeDoor(origin,normal,buildingAt,walkOK,{source:DOOR_SOURCE.OSM_POI,label:shop.name,kind:shop.kind});
+  return door.valid?door:null;
+ };
+ state.shopEntrances=resolveShopEntrances(state.shops||[],{probe,isWalkable:walkOK,onRoad:onCarriageway});
+ state.shopInterior=null;
+}
+// Q25: on foot, the closer of the shop door (ENTRA) and the outdoor counter (COMPRA, Q06/Q17).
+function footShopTarget(p){
+ const door=nearestShopEntrance(state.shopEntrances,p),counter=nearestCounter(p);
+ if(door&&(!counter||door.distance<Math.hypot(counter.x-p.x,counter.y-p.y)))return {door:door.entrance};
+ return counter?{counter}:null;
 }
 // Q03: errands of named OSM shops worth a short visit on foot.
 const VISIT_KINDS=new Set(['bakery','pastry','bar','cafe','supermarket','pharmacy','hairdresser','stationery','hardware','clothes','butcher','houseware']);
@@ -538,6 +556,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
   if(state.cars.length>=Math.min(PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP+parkedBikeCount))break;
  }
  state.traffic=createTraffic(START_MINUTE);prepareSignals();
+ createShopEntrances();
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
@@ -826,6 +845,20 @@ function buyFromShop(offerId){
  $('shop-feedback').textContent=purchaseMessage(result);$('shop-feedback').classList.toggle('err',!result.ok);
  renderShop();updateHud();
 }
+// Q25: same player, camera and walking speed as the street; the exact outside spot is restored on exit.
+function enterShopInterior(entrance){
+ const p=state.player,inner=enterShop(entrance,p);
+ inner.camera=shopInteriorCamera(inner.room,inner.player,canvas.clientWidth,canvas.clientHeight,interiorZoom());
+ state.shopInterior=inner;
+ for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;resetDrivingControls();
+ updateHud();
+}
+function leaveShop(){
+ const p=state.player,inner=state.shopInterior;if(!inner)return;
+ state.shopInterior=null;
+ p.x=inner.outside.x;p.y=inner.outside.y;p.a=inner.outside.a;
+ state.camera.x=p.x;state.camera.y=p.y;updateHud();
+}
 function closeShop(){state.shopOpen=null;$('shop-panel').hidden=true;canvas.focus?.({preventScroll:true});updateHud();}
 function toggleVehicle(){
  if(!state.ready)return;
@@ -835,6 +868,12 @@ function toggleVehicle(){
   const interior=state.bankInterior;state.bankInterior=null;
   p.x=interior.outside.x;p.y=interior.outside.y;p.a=interior.outside.a;
   state.camera.x=p.x;state.camera.y=p.y;updateHud();return;
+ }
+ if(state.shopInterior){
+  // Q26 hook: at the counter the clerk answers; buying stays at the outdoor counter for now.
+  const counter=interiorCounterNear(state.shopInterior);
+  if(counter&&!state.shopInterior.greeted){state.shopInterior.greeted=true;state.shopInterior.greet={text:'Buongiorno! Dica pure.',until:state.clock+2.6};return;}
+  leaveShop();return;
  }
  if(p.car<0){
   // Q05: picking up or giving back a lost item comes before doors and vehicles.
@@ -847,7 +886,9 @@ function toggleVehicle(){
    updateHud();return;
   }
   // Q06: next to the awning of a named OSM shop the action opens its counter.
-  const shop=nearestCounter(p);
+  const target=footShopTarget(p);
+  if(target?.door){enterShopInterior(target.door);return;}
+  const shop=target?.counter;
   if(shop){openShop(shop);return;}
   const entrance=nearestBankEntrance(state.bankEntrances,p);
   if(entrance){
@@ -971,9 +1012,18 @@ function tick(dt){
   return;
  }
  // Q02: in banca gli NPC non vengono simulati, quindi anche il loro orologio resta fermo.
- state.npcClockMinutes=advanceNpcClock(state.npcClockMinutes,dt,{interior:!!state.bankInterior});
+ state.npcClockMinutes=advanceNpcClock(state.npcClockMinutes,dt,{interior:!!state.bankInterior||!!state.shopInterior});
  state.weather=weatherAt(state.npcClockMinutes,{forced:FORCED_WEATHER});
  animateSteeringWheel(dt);
+ if(state.shopInterior){
+  const inner=state.shopInterior;
+  if(stepShopInteriorPlayer(inner,moveAxes(),pressed.run,dt)==='exit'){leaveShop();return;}
+  if(!interiorCounterNear(inner))inner.greeted=false;
+  inner.camera=shopInteriorCamera(inner.room,inner.player,canvas.clientWidth,canvas.clientHeight,interiorZoom(),inner.camera,dt);
+  state.clock+=dt;state.hud+=dt;
+  if(state.hud>.18){state.hud=0;updateHud();}
+  return;
+ }
  if(state.bankInterior){
   const axes=moveAxes(),local=state.bankInterior.player;
   stepBankInteriorPlayer(local,axes,pressed.run,dt);
@@ -1116,6 +1166,7 @@ function compareRoadWidths(){
  // street furniture, crosswalks and building-side storefront placements.
  state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y),laneClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createEnclosures();createParkingBays();
  state.traffic=createTraffic(state.npcClockMinutes);prepareSignals();
+ createShopEntrances();
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
@@ -1129,13 +1180,21 @@ function compareRoadWidths(){
 function updateHud(){
  const npcClockLabel=$('npc-clock');if(npcClockLabel)npcClockLabel.textContent=npcWeekday(state.npcClockMinutes)+' · '+formatNpcClock(state.npcClockMinutes)+(state.weather?' · '+state.weather.label:'');
  const p=state.player;
- const driving=p.car>=0&&!state.bankInterior;
+ const driving=p.car>=0&&!state.bankInterior&&!state.shopInterior;
  // The map container must receive the mode class: otherwise CSS keeps the
  // walking joystick visible even though driveAxes no longer reads it.
  const stage=$('stage')||document.querySelector?.('.stage');
- stage?.classList.toggle('interior',!!state.bankInterior);
+ stage?.classList.toggle('interior',!!state.bankInterior||!!state.shopInterior);
  stage?.classList.toggle('driving',driving);
  document.querySelector?.('.controls')?.classList.toggle('driving',driving);
+ if(state.shopInterior){
+  const inner=state.shopInterior,counter=interiorCounterNear(inner);
+  $('vehicle').textContent='DENTRO · '+(inner.room.size==='piccolo'?'BOTTEGA':'LOCALE');$('street').textContent=inner.shop.name.toUpperCase();
+  $('action').classList.remove('idle');$('action').setAttribute('aria-disabled','false');
+  $('action').textContent=counter&&!inner.greeted?'PARLA':'ESCI';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
+  boardPrompt(counter&&!inner.greeted?'PARLA · '+counter.label:'ESCI DAL NEGOZIO');
+  $('camera-mode').textContent='INTERNO · '+interiorZoom().toFixed(1)+'×';return;
+ }
  if(state.bankInterior){
   $('vehicle').textContent='ALL’INTERNO DELLA BANCA';$('street').textContent=state.bankInterior.bank.n.toUpperCase();
   $('action').textContent='ESCI DALLA BANCA';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
@@ -1149,14 +1208,15 @@ function updateHud(){
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
  const bank= p.car<0?nearestBankEntrance(state.bankEntrances,p):null;
  const eventAction=p.car<0?cityEventAction(state.events,p):null;
- const shopNear=p.car<0&&!eventAction?nearestCounter(p):null;
+ const footTarget=p.car<0&&!eventAction?footShopTarget(p):null;
+ const shopNear=footTarget?.counter||null,shopDoor=footTarget?.door||null;
  const enterable=p.car<0?nearestEnterableVehicle(state.cars,p):null;
- $('action').textContent=eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ $('action').textContent=eventAction||(shopDoor?'ENTRA':shopNear?'COMPRA':bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
  // Q15: on foot with nothing in reach the touch button is shown dimmed (it used to invite to get into a
  // car that was not there; the tap then only said to get closer to a vehicle).
- const idle=p.car<0&&!eventAction&&!shopNear&&!bank&&!enterable;
+ const idle=p.car<0&&!eventAction&&!shopNear&&!shopDoor&&!bank&&!enterable;
  $('action').classList.toggle('idle',idle);$('action').setAttribute('aria-disabled',idle?'true':'false');
- boardPrompt(p.car>=0?'':eventAction||(shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
+ boardPrompt(p.car>=0?'':eventAction||(shopDoor?'ENTRA · '+shopDoor.shop.name.toUpperCase():shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
@@ -1399,6 +1459,7 @@ function draw(dt=0){
  c.fillStyle='#15221e';c.fillRect(0,0,cw,ch);
  if(!state.ready)return;
  if(state.bankInterior){drawBankInterior(c,cw,ch,state.clock,state.bankInterior.bank,state.bankInterior.player,interiorZoom(),state.bankInterior.camera);return;}
+ if(state.shopInterior){drawShopInterior(c,cw,ch,state.clock,state.shopInterior,interiorZoom(),state.shopInterior.camera);return;}
  const p=state.player;
  c.translate(cw/2,ch/2);c.scale(state.zoom,state.zoom);c.translate(-state.camera.x,-state.camera.y);
  const [x0,y0,x1,y1]=visibleBounds();
@@ -1511,6 +1572,7 @@ function draw(dt=0){
  drawCityEventOverlay(c,state.events,state.player.car<0?state.player:null,state.zoom);
  drawParkedMotorcycleHints();
  for(const bank of state.bankEntrances)if(bank.x>=x0&&bank.x<=x1&&bank.y>=y0&&bank.y<=y1)drawBankEntrance(c,bank,state.clock);
+ if(state.player.car<0)for(const e of state.shopEntrances||[])if(e.x>=x0&&e.x<=x1&&e.y>=y0&&e.y<=y1)drawShopEntrance(c,e,state.clock);
  // BF13: foto aerea di confronto sopra tutta la scena, in trasparenza (spenta: nessun costo).
  if(state.satellite?.enabled)state.satellite.draw(c,[x0,y0,x1,y1],state.zoom);
 }
@@ -1580,7 +1642,7 @@ function prepareMini(){
  b.restore();state.mapCanvas=off;state.mini={k,ox,oy};
 }
 function drawMini(){
- if(!state.mapCanvas||state.bankInterior)return;
+ if(!state.mapCanvas||state.bankInterior||state.shopInterior)return;
  r.clearRect(0,0,168,142);r.drawImage(state.mapCanvas,0,0);
  if(state.progress)drawMinimapLandmarks(r,state.landmarks,activeTarget(state.progress,state.landmarks),state.mini);
  const {k,ox,oy}=state.mini,p=state.player,x=ox+p.x*k,y=oy+p.y*k;
@@ -1593,7 +1655,7 @@ function updateCityAudio(){
  const p=state.player,car=p.car>=0?state.cars[p.car]:null;
  const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen;
  const traffic=[...state.traffic.filter(v=>v.body==='car'),...(state.commuters||[]).filter(c=>c.bike.rider).map(c=>c.bike)];
- cityAudio.update({paused,interior:!!state.bankInterior,radioLive:radioStatus==='live',
+ cityAudio.update({paused,interior:!!state.bankInterior||!!state.shopInterior,radioLive:radioStatus==='live',
   player:{x:p.x,y:p.y,inVehicle:!!car,vehicleType:car&&isMotorcycle(car)?'motorcycle':'car',model:car?.model||'',speed:car?car.speed:0,throttle:pressed.up||pressed.accelerate?1:0},
   // BF10: marcia e giri anche per il traffico, dalla velocità reale (agent.v di BF05) e dal modello.
   traffic:traffic.map(v=>({x:v.x,y:v.y,vehicleType:v.vehicleType,model:v.model||'',speed:v.braking?0:(Number.isFinite(v.v)?v.v:v.speed)})),
@@ -1703,7 +1765,7 @@ function bind(){
   if(e.key.toLowerCase()==='h'&&!e.repeat&&state.player.car>=0){e.preventDefault();honk();}
   if(e.key.toLowerCase()==='f'&&!e.repeat){e.preventDefault();interactMission();}
   if(e.key.toLowerCase()==='m'&&!e.repeat){e.preventDefault();toggleBigMap();}
-  const carRadioAvailable=state.player.car>=0&&!state.bankInterior&&
+  const carRadioAvailable=state.player.car>=0&&!state.bankInterior&&!state.shopInterior&&
    !isMotorcycle(state.cars[state.player.car])&&pause.hidden&&!state.mapOpen&&$('dialog').hidden;
   if(carRadioAvailable&&e.key.toLowerCase()==='r'&&!e.repeat){
    e.preventDefault();e.shiftKey?carRadio.previous():carRadio.next();
@@ -1711,7 +1773,7 @@ function bind(){
   if(carRadioAvailable&&e.key.toLowerCase()==='t'&&!e.repeat){
    e.preventDefault();carRadio.toggle();
   }
-  if(e.key==='Escape'){if(state.bankInterior){toggleVehicle();return;}$('fullmap').hidden=true;state.mapOpen=false;$('dialog').hidden=true;if(!pause.hidden)closePause();else openPause();}
+  if(e.key==='Escape'){if(state.bankInterior){toggleVehicle();return;}if(state.shopInterior){leaveShop();return;}$('fullmap').hidden=true;state.mapOpen=false;$('dialog').hidden=true;if(!pause.hidden)closePause();else openPause();}
   // BF11: on a PC the PAUSE menu holds everything that used to sit around the board; P opens and closes it too.
   if(e.key.toLowerCase()==='p'&&!e.repeat&&!state.shopOpen){e.preventDefault();$('fullmap').hidden=true;state.mapOpen=false;if(!pause.hidden)closePause();else openPause();}
  });
@@ -1727,7 +1789,7 @@ function bind(){
   return pointerWheelAngle(e.clientX,e.clientY,box.left+box.width/2,box.top+box.height/2);
  };
  steeringPad.addEventListener('pointerdown',e=>{
-  if(state.player.car<0||state.bankInterior||wheel.held)return;
+  if(state.player.car<0||state.bankInterior||state.shopInterior||wheel.held)return;
   e.preventDefault();wheel.held=true;wheel.pointerId=e.pointerId;wheel.pointerAngle=wheelPointer(e);
   // Q09: a quick tap on the hub (no drag) sounds the horn.
   const box=steeringPad.getBoundingClientRect();
