@@ -103,7 +103,7 @@ export function clockSecondsFromMinutes(minutes){return minutes/NPC_MINUTES_PER_
 // Geometria della manovra dentro l'incrocio (corsia di ingresso → corsia di uscita), memorizzata.
 function lanePoint(graph,edgeId,distanceFromNode,atEnd){
  const e=graph.edges[edgeId],node=graph.nodes[atEnd?e.to:e.from],u={x:Math.cos(e.angle),y:Math.sin(e.angle)};
- const off=roadTrafficLaneOffset(e.streetWidth),s=atEnd?-distanceFromNode:distanceFromNode;
+ const off=e.laneOffset??roadTrafficLaneOffset(e.streetWidth),s=atEnd?-distanceFromNode:distanceFromNode; // Q15: lane fitted to buildings
  return {x:node.x+u.x*s-Math.sin(e.angle)*off,y:node.y+u.y*s+Math.cos(e.angle)*off};
 }
 export function movementOf(graph,junction,inEdge,outEdge){

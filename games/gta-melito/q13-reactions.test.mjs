@@ -1,9 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=153';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=154';
 import {vehicleHitsPedestrian,makeCollisionIndex} from './traffic-collision.mjs?v=128';
-import {createReactions,stepReactions,startCrossing,kerbWait,pickBlockedHorn,vehicleThreat,crossingThreat,speedOf,REACTION_RULES} from './npc-reactions.mjs?v=001';
+import {createReactions,stepReactions,startCrossing,kerbWait,pickBlockedHorn,vehicleThreat,crossingThreat,speedOf,REACTION_RULES} from './npc-reactions.mjs?v=002';
 import {canSocialize} from './npc-social.mjs?v=003';
 
 // Via Roma lungo x (residenziale, larga 8) e una traversa a x=300.
