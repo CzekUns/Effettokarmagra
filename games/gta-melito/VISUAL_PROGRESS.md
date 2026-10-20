@@ -602,3 +602,8 @@ Il lavavetri resta sul lato guida e il tergivetro si vede sul parabrezza. Non co
 - Le auto NPC che escono svaniscono dentro l'imbocco, insieme ai fari; quelle che entrano emergono dal buio.
 
 **Verifiche:** foto Chrome headless prima e dopo su una trunk (SP 500), una residential (Via Hugo Pratt) e una service (Via Visconti), su PC, telefono 844×390 e alle 21:30 con la pioggia. Ci sono anche le foto di un'uscita e di un ingresso in movimento. Non provato su Android reale.
+### 2026-10-20 — Volumi separati nel menu PAUSA (BF10)
+
+**Interfaccia:** nella scheda PAUSA, sotto i comandi, un blocco audio con **SUONI: ON/OFF** (generale) e due cornici scure con nome, **−**, percentuale e **＋**: **EFFETTI / AMBIENTE** e **RADIO / MUSICA**. Stessi colori, bordi e altezza minima (38 px) dei pulsanti della pausa sul telefono; su PC le due cornici hanno lo stesso stile (gli altri pulsanti della pausa su PC restano quelli del browser, come prima).
+
+**Verifiche:** foto Chrome headless del menu pausa su PC 1280×720 e telefono 844×390 in orizzontale, clic e tocchi veri su tutti i pulsanti, nessuna sovrapposizione tra pulsanti, nessun elemento fuori dalla scheda, ogni pulsante riceve davvero il tocco (non coperto da volante o pedali). Non provato su un telefono reale.

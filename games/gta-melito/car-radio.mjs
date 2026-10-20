@@ -16,14 +16,18 @@ const clampIndex=value=>Number.isInteger(value)&&value>=0&&value<RADIO_STATIONS.
 export const radioStationAt=index=>RADIO_STATIONS[clampIndex(index)];
 export const nextRadioIndex=(index,step)=>((clampIndex(index)+(step<0?-1:1)+RADIO_STATIONS.length)%RADIO_STATIONS.length);
 
-/** Each call creates an independent tuner. An injected Audio factory makes it testable on Node. */
-export function createCarRadio({audioFactory=()=>new Audio(),onChange=()=>{},storage=null}={}){
- let index=0,enabled=true,inVehicle=false,status='off',audio=null,serial=0;
+/** Each call creates an independent tuner. An injected Audio factory makes it testable on Node.
+ * BF10: `volume` is the RADIO/MUSICA level chosen in the pause menu (saved by city-audio.mjs);
+ * 0 silences the stream without disconnecting it. */
+export const RADIO_VOLUME=.52;
+export function createCarRadio({audioFactory=()=>new Audio(),onChange=()=>{},storage=null,volume:startVolume=RADIO_VOLUME}={}){
+ const level=v=>Number.isFinite(v)?Math.max(0,Math.min(1,v)):RADIO_VOLUME;
+ let index=0,enabled=true,inVehicle=false,status='off',audio=null,serial=0,volume=level(startVolume);
  try{
   const saved=JSON.parse(storage?.getItem(STORAGE_KEY)||'null');
   if(saved&&typeof saved==='object'){index=clampIndex(saved.index);enabled=saved.enabled!==false;}
  }catch(_){}
- const snapshot=()=>({index,enabled,inVehicle,status,station:RADIO_STATIONS[index]});
+ const snapshot=()=>({index,enabled,inVehicle,status,volume,station:RADIO_STATIONS[index]});
  const emit=()=>onChange(snapshot());
  const persist=()=>{try{storage?.setItem(STORAGE_KEY,JSON.stringify({index,enabled}));}catch(_){}};
  function stopAudio(){
@@ -35,7 +39,7 @@ export function createCarRadio({audioFactory=()=>new Audio(),onChange=()=>{},sto
   if(audio)return audio;
   audio=audioFactory();
   audio.preload='none';
-  audio.volume=.52;
+  audio.volume=volume;
   audio.addEventListener?.('error',()=>{
    if(inVehicle&&enabled){status='unavailable';emit();}
   });
@@ -84,6 +88,11 @@ export function createCarRadio({audioFactory=()=>new Audio(),onChange=()=>{},sto
    stopAudio();status='tap';emit();
   }
  }
+ function setVolume(value){
+  volume=level(value);
+  if(audio)try{audio.volume=volume;}catch(_){}
+  return volume;
+ }
  emit();
- return {snapshot,enterVehicle,leaveVehicle,next:()=>tune(1),previous:()=>tune(-1),toggle,suspend};
+ return {snapshot,enterVehicle,leaveVehicle,next:()=>tune(1),previous:()=>tune(-1),toggle,suspend,setVolume};
 }
