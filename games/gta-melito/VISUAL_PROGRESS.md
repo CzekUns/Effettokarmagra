@@ -658,3 +658,7 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 
 ### 2026-10-20 — Q16 Ape Car (Claude)
 - Nuovo `assets/vehicles/ape-classica-16-rgba.png` (224×256, 4×4 da 56×64): Ape Car vista dall'alto in 8 tinte (azzurra, verde, rossa, bianca, grigia, gialla, blu, crema) pulite e vissute; derivato dalle due Ape approvate di `ape-food-16` con ricolorazione della sola carrozzeria. Presentazione: `assets/vehicles/sources/ape-classica-16-sheet.png`. Tinte = interpretazioni, non codici di fabbrica.
+
+### 2026-10-20 — Q17 banco degli ambulanti
+- Nessuna nuova arte. Il pannello acquisti, lo stesso dei negozi Q06, ora si apre anche al banco dei furgoncini, con l'intestazione «AMBULANTE · MELITO». Sulla plancia PC compare la scritta «E · COMPRA · NOME DEL BANCO». Foto: banco «Zeppole e panzerotti» in Via Roma.
+

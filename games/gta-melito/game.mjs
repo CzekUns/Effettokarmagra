@@ -14,7 +14,7 @@ import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock,npcWeekday} from './npc-agenda.mjs?v=002';
 import {createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols} from './market.mjs?v=001';
 import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=002';
-import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote} from './local-shops.mjs?v=001';
+import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote,vendorShops} from './local-shops.mjs?v=002';
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
 import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=004';
@@ -30,7 +30,7 @@ import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=001';
 import {prepareSignalPosts,drawStopLines,drawSignals,signalGlows} from './traffic-light-art.mjs?v=001';
 import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=001';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
-import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=001';
+import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=002';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
 import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=131';
 import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
@@ -510,6 +510,8 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  });
  for(const {vehicle} of state.foodVendors)vehicle.parkingBay={x:vehicle.x,y:vehicle.y};
  state.cars.push(...state.foodVendors.map(v=>v.vehicle));
+ // Q17: each food truck sells at its counter while its fryer is there.
+ state.vendorShops=vendorShops(state.foodVendors);
  // Separate two-wheel parking pass; OSM road candidates remain subject to
  // all road/building and existing parked-vehicle collision validations.
  let parkedBikeCount=state.cars.filter(isMotorcycle).length;
@@ -788,11 +790,17 @@ function interiorZoom(){
  return targetCameraZoom({inVehicle:false,moving:false},state.zoomBias)*BANK_FOOT_ZOOM_MULTIPLIER;
 }
 const SHOP_KINDS={bar:'BAR',cafe:'CAFFETTERIA',pastry:'PASTICCERIA',bakery:'PANIFICIO',supermarket:'SUPERMERCATO',convenience:'ALIMENTARI',stationery:'CARTOLERIA',hairdresser:'PARRUCCHIERE'};
+// Q06/Q17: the closest counter on foot, a named OSM shop or the counter of a food truck.
+function nearestCounter(p){
+ const shop=nearestShop(state.shops,p),stall=nearestShop(state.vendorShops,p);
+ if(!shop||!stall)return shop||stall;
+ return Math.hypot(stall.x-p.x,stall.y-p.y)<Math.hypot(shop.x-p.x,shop.y-p.y)?stall:shop;
+}
 function openShop(shop){
  state.shopOpen=shop;
  for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
- $('shop-kind').textContent=(SHOP_KINDS[shop.kind]||'NEGOZIO')+' · MELITO';
- $('shop-name').textContent=shop.name.toUpperCase();$('shop-note').textContent=shopNote();
+ $('shop-kind').textContent=(shop.vendor?'AMBULANTE':SHOP_KINDS[shop.kind]||'NEGOZIO')+' · MELITO';
+ $('shop-name').textContent=shop.name.toUpperCase();$('shop-note').textContent=shopNote(shop);
  $('shop-feedback').textContent='';$('shop-feedback').classList.remove('err');
  renderShop();$('shop-panel').hidden=false;
 }
@@ -839,7 +847,7 @@ function toggleVehicle(){
    updateHud();return;
   }
   // Q06: next to the awning of a named OSM shop the action opens its counter.
-  const shop=nearestShop(state.shops,p);
+  const shop=nearestCounter(p);
   if(shop){openShop(shop);return;}
   const entrance=nearestBankEntrance(state.bankEntrances,p);
   if(entrance){
@@ -1141,10 +1149,10 @@ function updateHud(){
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
  const bank= p.car<0?nearestBankEntrance(state.bankEntrances,p):null;
  const eventAction=p.car<0?cityEventAction(state.events,p):null;
- const shopNear=p.car<0&&!eventAction?nearestShop(state.shops,p):null;
+ const shopNear=p.car<0&&!eventAction?nearestCounter(p):null;
  const enterable=p.car<0?nearestEnterableVehicle(state.cars,p):null;
  $('action').textContent=eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
- boardPrompt(p.car>=0?'':eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
+ boardPrompt(p.car>=0?'':eventAction||(shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
