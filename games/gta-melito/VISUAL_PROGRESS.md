@@ -724,3 +724,8 @@ Schermata della slot in pixel art disegnata via codice. Griglia logica 192×128,
 ### 2026-10-20 — Q27 arredi dei bar e cabinati (Claude / `ilconsulentelogistico-hue`) — grafica provvisoria
 - Bar grande 80×60: bancone, vetrina dolci, 4 sgabelli rossi, 2 tavolini con sedie, cabinato slot (tre rulli) e cabinato video poker (carte su panno verde) contro la parete destra, tavolo da biliardo con sponde in legno, sei buche, biglie e stecca. Bar piccolo 64×50: bancone, sgabelli, due tavolini, un cabinato, niente biliardo. Punto luminoso davanti a ogni gioco. Pixel art procedurale con palette e ombre della banca; arredi e giochi inventati.
 - **Non verificato a schermo** (nessuna foto in questa sessione): da far vedere e approvare a Simone.
+
+### 2026-10-20 — Q30 biliardo «BILIARDO DEL RIONE» (grafica PROVVISORIA, da approvare)
+- Tavolo visto dall'alto disegnato in codice su una griglia logica 224×136, ingrandita senza sfocature: cornice di legno con venature e diamanti color perla, sponde verde scuro, panno verde con trama a punti, linea di battuta e punto di acchito, 6 buche nere con bordo.
+- Biglie 7×7 px con contorno scuro, ombra sul panno, ombreggiatura e punto di luce; la 9 è rigata. Stecca con puntale azzurro di gesso, ghiera bianca, fusto chiaro e calcio scuro, che arretra con la potenza. Linea di mira a puntini, biglia fantasma e direzione della biglia colpita in oro. In alto la striscia del punteggio con le biglie imbucate da ciascuno e la freccia del turno.
+- Da vedere: PAUSA › STRUMENTI › PROVA BILIARDO, oppure `?minigioco=biliardo`, su PC e telefono in orizzontale.

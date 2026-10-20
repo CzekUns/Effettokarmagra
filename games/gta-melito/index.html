@@ -374,6 +374,16 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
 /* Q31: goriziana, stesso pannello; il tavolo si tocca e si trascina per mirare (niente scroll della pagina). */
 #goriziana-canvas{width:min(92vw,576px,calc((96vh - 230px)*1.5));aspect-ratio:3/2;image-rendering:pixelated;image-rendering:crisp-edges;display:block;margin:0 auto;touch-action:none;cursor:crosshair}
 .poker-holds{margin:6px 0 0}.poker-holds button{min-width:58px;font-size:11px}.poker-holds button[aria-pressed="true"]{background:#9b6b1d;color:#1b1410}
+/* Q30: biliardo, tavolo grande a sinistra e comandi in colonna a destra (anche sul telefono in orizzontale). */
+.slot-card.pool-card{display:flex;align-items:flex-start;gap:10px;max-width:98vw;text-align:left}
+#pool-canvas{height:min(calc(96vh - 24px),calc((98vw - 270px)*.607),540px);width:auto;aspect-ratio:224/136;flex:none;image-rendering:pixelated;image-rendering:crisp-edges;display:block;touch-action:none;cursor:crosshair}
+.pool-side{width:220px;max-height:calc(96vh - 24px);overflow:auto;display:flex;flex-direction:column;gap:6px}
+.pool-title{margin:0;font-size:13px;color:#e9b949;letter-spacing:.06em}.pool-score{margin:0;font-weight:bold;font-size:14px}.pool-msg{margin:0;min-height:30px;font-size:12px;color:#f2d24b}
+.pool-power{height:10px;border:1px solid #e9b949;background:#1b1410}.pool-power span{display:block;height:100%;width:0;background:linear-gradient(90deg,#3f7a3a,#e9b949,#c8322a)}
+.pool-controls{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0}.pool-controls button{min-width:0;padding:6px 6px}.pool-controls .slot-spin{grid-column:1/-1;font-size:14px}
+.pool-record{margin:0;font-size:10px;color:#d8c9a8}.pool-side .slot-rules,.pool-side .slot-note{margin:0}
+@media (max-height:500px){.pool-title,.pool-score{display:none}.pool-side .slot-rules,.pool-side .slot-note,.pool-record{font-size:9.5px;line-height:1.25}}
+@media (max-width:640px){.slot-card.pool-card{flex-direction:column;align-items:center}#pool-canvas{width:min(94vw,560px);height:auto}.pool-side{width:auto;max-height:none}}
 </style>
 </head><body><main class="app">
 <div class="stage" id="stage">
@@ -478,10 +488,11 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
   <button id="road-width-compare" type="button" aria-pressed="false">CONFRONTA CON PRIMA</button>
  </div>
  <div class="pause-audio pause-satellite" role="group" aria-label="Foto aerea di confronto"><button id="pause-satellite" type="button" aria-pressed="false" aria-label="Mostra o nascondi la foto aerea Esri sopra la mappa">SATELLITE: OFF</button><div class="pause-volume" role="group" aria-label="Opacità della foto aerea"><span class="pause-volume-name">OPACITÀ FOTO</span><button id="pause-satellite-down" type="button" aria-label="Riduci l'opacità della foto aerea">−</button><output id="pause-satellite-level" aria-live="polite">50%</output><button id="pause-satellite-up" type="button" aria-label="Aumenta l'opacità della foto aerea">＋</button></div></div>
- <div class="pause-audio" role="group" aria-label="Minigiochi di prova"><button id="pause-slot" type="button" aria-label="Apri la slot machine di prova con crediti virtuali">PROVA SLOT</button><button id="pause-poker" type="button" aria-label="Apri il video poker di prova con crediti virtuali">PROVA VIDEO POKER</button><button id="pause-goriziana" type="button" aria-label="Apri la goriziana di prova, biliardo a nove birilli senza soldi">PROVA GORIZIANA</button></div>
+ <div class="pause-audio" role="group" aria-label="Minigiochi di prova"><button id="pause-slot" type="button" aria-label="Apri la slot machine di prova con crediti virtuali">PROVA SLOT</button><button id="pause-poker" type="button" aria-label="Apri il video poker di prova con crediti virtuali">PROVA VIDEO POKER</button><button id="pause-goriziana" type="button" aria-label="Apri la goriziana di prova, biliardo a nove birilli senza soldi">PROVA GORIZIANA</button><button id="pause-pool" type="button" aria-label="Apri il biliardo arcade di prova, senza denaro né scommesse">PROVA BILIARDO</button></div>
  <p class="pause-info">PROVA SLOT: slot machine arcade di fantasia (Q28), solo crediti virtuali di gioco che non si comprano e non valgono denaro. In attesa del cabinato nei bar (Q27).</p>
  <p class="pause-info">PROVA VIDEO POKER: video poker Jacks or Better di fantasia (Q29), crediti virtuali propri, separati da quelli della slot; anche lui in attesa del cabinato (Q27).</p>
  <p class="pause-info">PROVA GORIZIANA: biliardo all'italiana a nove birilli, tavolo senza buche (Q31), regole semplificate a schermo, partita contro l'IA a 30 punti o 5 tiri a testa; niente soldi né crediti. In attesa del tavolo nei bar grandi (Q27).</p>
+ <p class="pause-info">PROVA BILIARDO: biliardo arcade di fantasia (Q30) visto dall'alto, contro la CPU o a tiro libero, con regole semplificate scritte sul pannello; niente denaro né scommesse, si salvano solo i risultati. Nel gioco vero si giocherà solo dai tavoli disegnati nei bar grandi (Q27).</p>
  <p class="pause-info">FOTO AEREA DI CONFRONTO: la foto Esri World Imagery sopra la mappa del gioco, per vedere dove mancano dettagli. Si scarica solo mentre è accesa e riparte sempre spenta.</p>
  </section>
  <section class="pause-section pause-credits" aria-labelledby="pause-h-credits"><h3 id="pause-h-credits">CREDITI E LICENZE</h3>
@@ -492,4 +503,4 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  <div class="rotate-screen" id="rotate-screen" hidden><div class="rotate-card"><span class="rotate-icon" aria-hidden="true">▰</span><h2>RUOTA LO SCHERMO</h2><p>GTA Melito si gioca in orizzontale. Ruota il telefono per continuare.</p></div></div>
 </div>
 <div class="controls" aria-label="Comandi"><div class="touch-actions" aria-label="Azioni"><button class="control-action" id="action">ENTRA IN VEICOLO</button><button id="sprint" aria-label="Corri a piedi">CORRI</button><div class="pedals" aria-label="Pedali di guida"><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="accelerator" aria-label="Tieni premuto per accelerare">ACCELERA</button><button id="reverse" aria-label="Tieni premuto per andare in retromarcia">RETRO</button></div></div><div class="dpad" aria-hidden="true"></div><div class="buttons"><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-auto" aria-label="Ripristina zoom automatico">AUTO</button><button class="mini" id="zoom-in" aria-label="Regola zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div></div>
-</main><script type="module" src="./game.mjs?v=193"></script></body></html>
+</main><script type="module" src="./game.mjs?v=194"></script></body></html>

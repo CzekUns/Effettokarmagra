@@ -36,6 +36,7 @@ import {openSlotMachine,isSlotOpen} from './minigame-slot.mjs?v=001';
 import {openPokerMachine,isPokerOpen} from './minigame-poker.mjs?v=001';
 import {riderPickups,riderDestinations,riderOffers,riderVehicleCheck,acceptOffer,cancelJob,stepJob,completeDelivery,riderStats,riderRoute,routeLookahead,PICKUP_RADIUS,DELIVERY_RADIUS} from './rider.mjs?v=001';
 import {openGoriziana,isGorizianaOpen} from './minigame-goriziana.mjs?v=001';
+import {openPoolMachine,isPoolOpen} from './minigame-pool.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
 import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes,SANTA_MARIA_OSM_ID} from './city-art.mjs?v=132';
 import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
@@ -148,7 +149,7 @@ const SLOT_FROM_URL=new URLSearchParams(globalThis.location?.search||'').get('mi
 // Q28: la slot si apre sopra la scena, che resta in pausa; la radio tace e torna all'uscita.
 // Aggancio per il cabinato della Q27: openSlotGame() davanti al cabinato del bar.
 function openSlotGame(){
- if(isSlotOpen()||isPokerOpen()||isGorizianaOpen())return false;
+ if(isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen())return false;
  for(const key of Object.keys(pressed))pressed[key]=false;
  carRadio.duck(true);
  return openSlotMachine({storage:globalThis.localStorage,onExit:()=>{carRadio.duck(false);canvas.focus?.({preventScroll:true});updateHud();}});
@@ -158,7 +159,7 @@ const POKER_FROM_URL=new URLSearchParams(globalThis.location?.search||'').get('m
 // Q29: stesso contratto della slot: scena in pausa sotto il cabinato, radio abbassata, ritorno alla scena.
 // Aggancio per il cabinato della Q27: openPokerGame() davanti al cabinato del bar.
 function openPokerGame(){
- if(isPokerOpen()||isSlotOpen()||isGorizianaOpen())return false;
+ if(isPokerOpen()||isSlotOpen()||isGorizianaOpen()||isPoolOpen())return false;
  for(const key of Object.keys(pressed))pressed[key]=false;
  carRadio.duck(true);
  return openPokerMachine({storage:globalThis.localStorage,onExit:()=>{carRadio.duck(false);canvas.focus?.({preventScroll:true});updateHud();}});
@@ -172,6 +173,16 @@ function openGorizianaGame(){
  for(const key of Object.keys(pressed))pressed[key]=false;
  carRadio.duck(true);
  return openGoriziana({onExit:()=>{carRadio.duck(false);canvas.focus?.({preventScroll:true});updateHud();}});
+}
+// Q30: ?minigioco=biliardo apre subito il biliardo di prova (niente denaro né scommesse, si salvano solo i risultati).
+const POOL_FROM_URL=new URLSearchParams(globalThis.location?.search||'').get('minigioco')==='biliardo';
+// Q30: stesso contratto di slot e poker: scena in pausa sotto il tavolo, radio abbassata, ritorno alla scena.
+// Aggancio per la Q27: openPoolGame() SOLO davanti a un tavolo da biliardo disegnato in un bar grande.
+function openPoolGame(){
+ if(isPoolOpen()||isSlotOpen()||isPokerOpen())return false;
+ for(const key of Object.keys(pressed))pressed[key]=false;
+ carRadio.duck(true);
+ return openPoolMachine({storage:globalThis.localStorage,onExit:()=>{carRadio.duck(false);canvas.focus?.({preventScroll:true});updateHud();}});
 }
 const FORCED_WEATHER=(()=>{const w=new URLSearchParams(globalThis.location?.search||'').get('meteo');return ['pioggia','nuvoloso','sereno'].includes(w)?w:null;})();
 const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
@@ -811,7 +822,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  $('inferred-count').textContent=String(state.inferredBuildings.length);
  $('junction-count').textContent=String(state.graph.junctions);
  $('place').textContent='MELITO DI NAPOLI · MAPPA REALE';
- state.ready=true;hideLoading();if(SLOT_FROM_URL)openSlotGame();else if(POKER_FROM_URL)openPokerGame();else if(GORIZIANA_FROM_URL)openGorizianaGame();{const v=satelliteFromUrl(globalThis.location?.search||'');if(v){satelliteOverlay()?.setEnabled(true);state.satellite?.setOpacity(v);}satelliteLabel();}state.last=0;canvas.focus({preventScroll:true});prepareMini();refreshCampaign();updateRoadWidthLabel();updateHud();
+ state.ready=true;hideLoading();if(SLOT_FROM_URL)openSlotGame();else if(POKER_FROM_URL)openPokerGame();else if(GORIZIANA_FROM_URL)openGorizianaGame();else if(POOL_FROM_URL)openPoolGame();{const v=satelliteFromUrl(globalThis.location?.search||'');if(v){satelliteOverlay()?.setEnabled(true);state.satellite?.setOpacity(v);}satelliteLabel();}state.last=0;canvas.focus({preventScroll:true});prepareMini();refreshCampaign();updateRoadWidthLabel();updateHud();
 }
 
 /* Campaign v0.3 — map positions always resolved from the downloaded OSM snapshot. */
@@ -1540,7 +1551,7 @@ function drawSkidMarks([x0,y0,x1,y1]){
 }
 function tick(dt){
  if(!state.ready)return;
- if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||state.shopOpen||state.garageOpen||state.riderOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()){
+ if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||state.shopOpen||state.garageOpen||state.riderOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen()){
   for(const key of Object.keys(pressed))pressed[key]=false;
   stick.x=0;stick.y=0;
   return;
@@ -2315,7 +2326,7 @@ function drawMini(){
 function updateCityAudio(){
  if(!cityAudio.started||!state.ready)return;
  const p=state.player,car=p.car>=0?state.cars[p.car]:null;
- const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen||!!state.garageOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen();
+ const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen||!!state.garageOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen();
  const traffic=[...state.traffic.filter(v=>v.body==='car'),...(state.commuters||[]).filter(c=>c.bike.rider).map(c=>c.bike)];
  cityAudio.update({paused,interior:!!state.bankInterior||!!state.shopInterior,radioLive:radioStatus==='live',
   player:{x:p.x,y:p.y,inVehicle:!!car,vehicleType:car&&isMotorcycle(car)?'motorcycle':'car',model:car?.model||'',speed:car?car.speed:0,throttle:pressed.up||pressed.accelerate?1:0},
@@ -2568,6 +2579,7 @@ function bind(){
  $('pause-slot').addEventListener('click',()=>{closePause();openSlotGame();});
  $('pause-poker').addEventListener('click',()=>{closePause();openPokerGame();});
  $('pause-goriziana').addEventListener('click',()=>{closePause();openGorizianaGame();});
+ $('pause-pool').addEventListener('click',()=>{closePause();openPoolGame();});
  for(const [id,dir] of [['pause-satellite-down',-1],['pause-satellite-up',1]])$(id).addEventListener('click',()=>{satelliteOverlay()?.stepOpacity(dir);satelliteLabel();});
  $('pause-rider').addEventListener('click',()=>{closePause();openRiderApp();});
  $('rider-close').addEventListener('click',closeRiderApp);

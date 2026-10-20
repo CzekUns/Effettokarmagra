@@ -125,5 +125,5 @@ test('Q39: pannello RIDER apribile da PAUSA, con J e openRiderApp()', () => {
  assert.match(html,/id="pause-rider"/);assert.match(html,/id="rider-panel"/);assert.match(html,/id="rider-hud"/);
  assert.match(game,/function openRiderApp\(\)/);assert.match(game,/window\.openRiderApp=openRiderApp/);
  assert.match(game,/e\.key\.toLowerCase\(\)==='j'/);
- assert.match(html,/game\.mjs\?v=193/);
+ assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=193);
 });
