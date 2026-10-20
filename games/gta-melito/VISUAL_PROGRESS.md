@@ -543,3 +543,9 @@ Nuovi sprite top-down 2.5D: friggitore in camice bianco, vigile urbano, lavavetr
 
 ### 2026-10-20 — Strada viva: Ape, food truck e mestieri NPC (branch di sviluppo)
 Aggiunto il renderer per l'atlante originale `npc-mestieri-4chars-4dir-4frames-24x40.png` (friggitore, vigile, lavavetri, contrabbandiere), collegato agli attori reali della simulazione; gli asset `ape-food-16-rgba.png` già presenti alimentano Ape AI senza tendalino aperto e food truck in sosta. Nuovi ancoraggi commerciali deterministici sulla cartografia, con controlli geometrici; non sono esercizi commerciali o semafori verificati sul campo. Il numero di passanti comuni è stato ridotto mentre aumenta la varietà delle mansioni. Aggiornato `index.html` a `game.mjs?v=154`, import di `city-art.mjs?v=129` e `roads.mjs?v=146`. Non sono state prodotte fotografie/screenshot prima-dopo né controlli manuali di rendering browser/telefono in questa sessione: per completare il QA occorre aprire il gioco e confrontare i cinque siti previsti sul percorso. 
+
+### 2026-10-20 — Pedali touch in ordine FRENO, ACCELERA, RETRO (BF06)
+
+**Interfaccia:** nella colonna di guida a destra il pulsante rosso FRENO è ora in alto, il verde ACCELERA al centro e RETRO in basso; misure, colori e ombre invariati.
+
+**Verifiche:** foto Chrome headless sul telefono in orizzontale prima/dopo (stessa scena), con prova dei tre tasti a tocco vero e controllo che non coprano minimappa, missioni e volante. Non provato su un telefono reale.
