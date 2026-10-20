@@ -2,6 +2,8 @@
  * OSM roads define the real geometry; vendor locations and job identities
  * are artistic placements, NOT surveyed shops, licensed stalls or traffic lights.
  * No new map features, traffic signal claims or synthetic street geometry. */
+import {MARKET_VARIANTS} from './car-sprites.mjs?v=108';
+import {vehicleHitsPedestrian} from './traffic-collision.mjs?v=128';
 export const TRAFFIC_APES=Object.freeze([
  'ape-azzurra-vuota','ape-azzurra-ferro','ape-verde-vuota','ape-verde-ferro'
 ]);
@@ -27,6 +29,33 @@ const roadChoices=(graph,where,minimum=18)=>graph.edges.map((edge,id)=>({edge,id
   const mid=e=>boundsPoint(graph,e.id,.5,1,0);
   return distance(mid(a),where)-distance(mid(b),where)||a.id-b.id;
  });
+/* BF04: service side measured on the RGBA PNGs (alpha > 40), in metres from the sprite centre
+ * as drawn by car-sprites.mjs (rotate(angle+PI/2): sprite right = (-sin a, cos a), sprite top =
+ * the bonnet). All 8 'furgone-ambulante' cells open their hatch with the striped awning on the
+ * sprite's right: body edge at +1.55..+1.83 m, awning edge at +3.67 m, counter along the van
+ * from about -2.6 to +3.2 m (front negative). The fritti van has the same side: edge +2.57 m. */
+export const SERVICE_SIDES=Object.freeze({
+ 'furgone-ambulante':Object.freeze({side:1,edge:3.67,along:Object.freeze([-2.6,3.2])}),
+ 'furgone-fritti':Object.freeze({side:1,edge:2.57,along:Object.freeze([-2.49,3.34])})
+});
+export const FRYER_GAP=.6;
+export function serviceSide(model){
+ return SERVICE_SIDES[MARKET_VARIANTS[model]?.model||model]||null;
+}
+/* Where the fryer stands: just outside the counter, `gap` metres beyond the awning edge,
+ * `along` metres along the van (0 = middle of the counter), facing the counter. */
+export function fryerServicePose(vehicle,{gap=FRYER_GAP,along=0}={}){
+ const s=serviceSide(vehicle?.model);
+ if(!s)return null;
+ const ly=(s.along[0]+s.along[1])/2+along,lx=s.side*(s.edge+gap);
+ const nx=-Math.sin(vehicle.a),ny=Math.cos(vehicle.a),hx=Math.cos(vehicle.a),hy=Math.sin(vehicle.a);
+ return {x:vehicle.x+nx*lx-hx*ly,y:vehicle.y+ny*lx-hy*ly,a:Math.atan2(-ny*s.side,-nx*s.side)};
+}
+// The counter faces the pavement: a van parked on the far side of an edge points the other way.
+export function servicePavementHeading(edgeAngle,side,model){
+ const s=serviceSide(model);
+ return edgeAngle+((s?s.side:1)*side<0?Math.PI:0);
+}
 function clearOf(point,actors,range){
  return actors.every(other=>!other||distance(point,other)>=range);
 }
@@ -46,18 +75,18 @@ export function placeStreetFoodVendors(graph,parked,{vehicleOK,walkerOK,vehicleO
     const lateral=vehicleOffset?vehicleOffset(edge.streetWidth):edge.streetWidth/2+2.25;
     if(lateral==null)continue;
     const pose=boundsPoint(graph,id,t,side,lateral);
-    const vehicle={...pose,model:where.model,vehicleType:'car',type:6,speed:0,
-     vendorStand:true,vendorDistrict:where.name};
+    const vehicle={...pose,a:servicePavementHeading(edge.angle,side,where.model),model:where.model,
+     vehicleType:'car',type:6,speed:0,vendorStand:true,vendorDistrict:where.name};
     if(!clearOf(vehicle,occupied,12)||!clearOf(vehicle,placed.map(v=>v.vehicle),125)||
       !vehicleOK(vehicle))continue;
-    for(const ahead of [6.7,-6.7,8.3,-8.3])for(const extra of [3.2,4.4,2.3]){
-     const person={x:pose.x+Math.cos(pose.a)*ahead-Math.sin(pose.a)*side*extra,
-      y:pose.y+Math.sin(pose.a)*ahead+Math.cos(pose.a)*side*extra,
-      a:pose.a+(ahead<0?0:Math.PI)};
+    // BF04: the fryer works at the counter of ITS van, never metres away from it.
+    for(const along of [0,-.9,.9])for(const gap of [FRYER_GAP,.9]){
+     const person=fryerServicePose(vehicle,{gap,along});
+     if(!person||vehicleHitsPedestrian(vehicle,person,.8))continue;
      if(!walkerOK(person)||!clearOf(person,occupied,5.8))continue;
      selected={vehicle,fryer:{...person,stationary:true,profession:'friggitore',
       body:'walk',kind:1,speed:0,seed:3200+placed.length,braking:true,
-      post:{x:person.x,y:person.y},district:where.name}};
+      post:{x:person.x,y:person.y,a:person.a},district:where.name}};
      break;
     }
     if(selected)break;

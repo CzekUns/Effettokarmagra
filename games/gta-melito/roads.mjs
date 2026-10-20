@@ -470,7 +470,10 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
       Object.assign(agent,next,{braking:false});
       moveInCollisionIndex(index,agent,x,y);
      }else agent.braking=true;
-    }else agent.braking=true;
+    }else{
+     // BF04: back at the post the worker faces its counter again (e.g. the fryer).
+     agent.braking=true;if(Number.isFinite(post.a))agent.a=post.a;
+    }
    }
    continue;
   }

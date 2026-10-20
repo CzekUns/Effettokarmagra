@@ -550,3 +550,8 @@ Aggiunto il renderer per l'atlante originale `npc-mestieri-4chars-4dir-4frames-2
 - **Livelli:** la fascia è dipinta nelle tessere statiche subito dopo l'asfalto e prima di edifici e tetti, quindi non copre mai un tetto; viene ridipinta anche nel riquadro di "tetto svelato". Nessun asset PNG nuovo: solo forme e linee nel canvas.
 - **Prova visiva (Chrome headless, 1280×720, zoom a piedi):** A/B prima/dopo su Via Roma (partenza: la Panda iniziale prima stava 1,36 m dentro la corsia, ora è nello stallo con lo scooter accanto), Piazza Santo Stefano, Corso Europa e una residenziale (Via Papa Giovanni XXIII). Confronto affiancato allegato alla PR.
 - **Limiti:** la sagoma disegnata delle auto (≈4,5–5 m) resta più larga della sagoma di collisione (3,4 m), quindi sulle residenziali un'auto in sosta e una che passa possono sfiorarsi graficamente senza toccarsi; non provato su telefono reale.
+### 2026-10-20 — Friggitore al banco del suo furgone (BF04)
+
+**Grafica:** il friggitore in camice bianco sta ora subito fuori dalla tendina a strisce del suo food truck, a metà del banco e rivolto verso di esso; i furgoni sono girati in modo che banco e tendina guardino il marciapiede su entrambi i lati della strada. Prima il friggitore compariva a 8–9 m, spesso dietro il furgone o dal lato della carreggiata.
+
+**Verifiche:** foto Chrome headless ravvicinate prima/dopo di tutti e 5 i furgoni (Piazza Santo Stefano, Piazza Immacolata, Corso Europa, Largo Cinque Via, Via Roma) e misure nel gioco reale. Non provato su un telefono reale.
