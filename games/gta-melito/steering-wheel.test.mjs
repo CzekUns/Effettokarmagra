@@ -102,7 +102,7 @@ test('real HUD switches visible controls between car, walking and interior scene
  assert.ok(start>0&&end>start);
  const update=new Function('state','document','pressed','nearestBankEntrance',
   'nearestEnterableVehicle','moveAxes','describeCameraZoom','interiorZoom',
-  'isMotorcycle','nearest','formatNpcClock','cityEventAction','nearestShop','boostSecondsLeft','npcWeekday','nearestCounter','footShopTarget',
+  'isMotorcycle','nearest','formatNpcClock','cityEventAction','nearestShop','boostSecondsLeft','npcWeekday','nearestCounter','pitchHotspot','footShopTarget',
   'DAMAGE_LABEL','damageLevel','nearWorkshop','repairCost',
   // Q21: passengers (no one on board, nobody asking for a lift in this scene)
   'occupantsOf','liftHere','PASSENGER_RULES',[
@@ -110,7 +110,7 @@ test('real HUD switches visible controls between car, walking and interior scene
    game.slice(start,end),
    'return updateHud;'
   ].join('\n'))(state,document,{run:false},()=>null,()=>null,
-  ()=>({x:0,y:0}),()=>'',()=>6.6,()=>false,()=>null,formatNpcClock,cityEventAction,nearestShop,boostSecondsLeft,npcWeekday,p=>nearestShop([],p),()=>null,
+  ()=>({x:0,y:0}),()=>'',()=>6.6,()=>false,()=>null,formatNpcClock,cityEventAction,nearestShop,boostSecondsLeft,npcWeekday,p=>nearestShop([],p),()=>null,()=>null,
   {integro:'',ammaccato:'AMMACCATA',grave:'DANNEGGIATA'},()=>'integro',()=>false,()=>0,
   ()=>[],()=>null,{stopSpeed:1.2});
  update();

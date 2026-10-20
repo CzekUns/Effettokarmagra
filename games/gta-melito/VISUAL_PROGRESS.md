@@ -716,3 +716,7 @@ Schermata della slot in pixel art disegnata via codice. Griglia logica 192×128,
 ### 2026-10-20 — Q29 video poker «POKER DEL GOLFO» (grafica PROVVISORIA, da approvare)
 - Schermata pixel art disegnata in codice: tavolo verde con cornice e luci, tabella delle combinazioni su due colonne (la riga vinta si illumina), 5 carte 30×42 px con rango, seme piccolo e seme grande, corona dorata sulle figure, dorso blu a rombi, nastro dorato «TIENI» sulle carte tenute; pulsanti TIENI 1–5 per il touch.
 - Da vedere: PAUSA › STRUMENTI › PROVA VIDEO POKER, oppure `?minigioco=poker`, su PC e telefono in orizzontale.
+
+## 2026-10-20 — Q32 campetti (grafica PROVVISORIA, da approvare)
+- Campi in erba sintetica a strisce, linee bianche (calcio a 5: area a semicerchio, centro; calcio a 11: aree FIFA), porte con rete, recinzione a rete verde scuro con pali ogni 3 m, cancello socchiuso, fari ai quattro angoli. Disegno procedurale nel livello a terra, sotto i tetti.
+- Dove guardarli: Via delle Palme (550, 1198) e (528, 1276); Corso Europa (1026, 1882).

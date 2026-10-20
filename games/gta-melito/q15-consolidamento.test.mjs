@@ -48,7 +48,7 @@ test('Q15 game wiring: lanes fitted on load and on the width switch, idle action
  const [game,html,junctions]=await Promise.all(['game.mjs','index.html','junctions.mjs'].map(f=>readFile(new URL('./'+f,import.meta.url),'utf8')));
  assert.equal((game.match(/laneClear:\(x,y\)=>!buildingAt\(x,y\)/g)||[]).length,2);
  assert.match(junctions,/const off=e\.laneOffset\?\?roadTrafficLaneOffset\(e\.streetWidth\)/,'junction paths use the fitted lane');
- assert.match(game,/const idle=p\.car<0&&!eventAction&&!shopNear&&(?:!shopDoor&&)?!bank&&!enterable;/);
+ assert.match(game,/const idle=p\.car<0&&!eventAction&&!shopNear&&(?:!pitchNear&&)?(?:!shopDoor&&)?!bank&&!enterable;/);
  assert.match(html,/\.control-action\.idle\{opacity:\.5/);
  assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=168);
 });

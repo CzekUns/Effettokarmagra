@@ -1039,3 +1039,11 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Cache:** `game.mjs?v=184`, `minigame-poker.mjs?v=001`.
 - **Test:** `q29-poker.test.mjs` (8 test); resi tolleranti a `||isPokerOpen()` in coda alle condizioni di pausa 2 controlli di `q28-slot.test.mjs` e 1 di `local-shops.test.mjs` (Q06); suite completa 425/425. Chrome headless PC e telefono 844×390, 53–63 FPS: tasti e tocchi veri, TIENI, cambio pagato e salvato, pausa sotto, ESC, 0 sovrapposizioni, 0 errori JS. Dopo le foto: l'etichetta TIENI sopra le carte toccava la tabella, ora è un nastro dorato dentro la carta. Prova browser ripetuta 3 volte (una per i numeri, una dopo il ritocco).
 - **Limiti:** grafica provvisoria da approvare; cabinato Q27 mancante; niente suoni; Android reale non provato.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q32 campetti da calcetto: accesso e mappa
+- **Fonti:** foto aerea Esri World Imagery (consultata 20/10/2026, tile in cache fuori dal repo) e audit BF13 (A01 Via delle Palme, M12 Corso Europa). Nessun `leisure=pitch` nell'estratto OSM del gioco.
+- **Campi:** campetto di Via delle Palme (550,1198) 52×32; campo a 11 di Via delle Palme (528,5,1276) 61×108; campetto di Corso Europa (1026,1882) 30×17. Tutti senza edifici OSM e senza strade dentro la recinzione (test su griglia di 1,5 m).
+- **Infill:** filtrati in `prepareMap` i segnaposto inventati che toccano un campo (10, tra cui i 9 sul campo di Via delle Palme).
+- **Gioco:** nuovo `football-pitches.mjs`, con dati, cancello sul lato raggiungibile (ricerca a griglia fino a una strada), collisioni, hotspot e disegno; cablato in `validWalk`, `carBlocked`, `canKnockbackMove`, nel disegno a terra e nel tetto trasparente, al caricamento e al cambio di larghezza strade; prompt e tasto E «GIOCA A CALCETTO»; avviso temporaneo `state.notice`. Cache `game.mjs?v=185`.
+- **Prove:** 6 test nuovi e suite completa; Chrome headless su PC e telefono, una prova breve, 51–60 FPS, 0 errori.
+- **Limiti:** grafica provvisoria da far approvare; partita della Q33 non ancora presente; Android reale non provato.
