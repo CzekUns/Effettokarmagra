@@ -852,3 +852,26 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** nuovo `q15-consolidamento.test.mjs` (4 test, falliscono senza le correzioni); resi tolleranti 1 controllo di BF09 e le versioni cache. Suite completa a fine lavoro.
 - **Cache:** `game.mjs?v=168`, `roads.mjs?v=154`, `junctions.mjs?v=002`, `camera-zoom.mjs?v=101`, `npc-commute.mjs?v=009`, `npc-density.mjs?v=002`, `npc-reactions.mjs?v=002`, `traffic-light-art.mjs?v=002`, `window-washers.mjs?v=002`, `street-professions.mjs?v=005`.
 - **Residui (Q15 resta `[ ]`):** sagome OSM sulla carreggiata visuale fuori zona (Via Papa Giovanni XXIII, Via Lago di Como), un'auto parcheggiata dentro una sagoma a (1308,1305), pedoni rasenti la chiesa nella sagoma, raggio di salita in auto di 9,5 m, telecamera veloce nelle inversioni a U. Non eseguiti per la regola di prove brevi: notte/pioggia e telefono completi, partita integrata di 5 minuti. Android reale non disponibile.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q23 danni progressivi visibili ai veicoli
+- **Fatto:** nuovo `vehicle-damage.mjs`. Danno 0–100 dagli urti non letali in tre stati: integro, ammaccato (da 22), grave (da 62).
+  - Chi è colpito prende il danno pieno, chi colpisce il 55%, muri e paletti il 70%, con un cooldown di 0,35 s.
+  - Segni sopra lo sprite in coordinate normalizzate: graffi, ammaccature e vetro incrinato dopo un frontale forte. Seguono la scala dei veicoli (BF14).
+  - Con danno grave il cofano fa un fumo leggero.
+  - Solo l'auto del giocatore con danno grave perde un po' di prestazioni (spinta ×0,8, velocità massima ×0,85).
+  - Gli NPC tornano integri dopo 20 s fuori vista.
+  - Officina di gioco simulata in Via Roma, vicino alla partenza: «E · RIPARA · N €» con il saldo Q06 salvato. Davanti all'officina niente stalli (keepClear di BF02).
+  - Nell'HUD compare lo stato del mezzo.
+- **Codice:** `game.mjs` (impactTraffic, urto diretto, rimbalzo contro i muri, profilo di guida, drawCar, updateTraffic, toggleVehicle, updateHud, createWorkshop prima delle baie), `car-sprites.mjs` (`carDrawSize`).
+- **Versioni cache:** `game.mjs?v=178`, `car-sprites.mjs?v=110`, `street-professions.mjs?v=006`, `vehicle-damage.mjs?v=001`.
+- **Test:** `q23-damage.test.mjs` (7). Adattati i controlli testuali in `vehicle-handling`, `bf11-pc-board`, `steering-wheel` (banco HUD), `bf12-enclosures` e `parking-bays`.
+- **Browser** (Chrome headless, 49–61 FPS, carico 7–9):
+  - urto vero contro un muro: 14–17 punti;
+  - foto dei tre livelli;
+  - riparazione con il tasto E, saldo da 100 a 60 € salvato;
+  - 0 errori JS.
+- **Limiti:**
+  - scooter e moto senza danni;
+  - danno del mezzo non persistente dopo il ricaricamento;
+  - grafica provvisoria, da approvare;
+  - touch e telefono reale non provati.
