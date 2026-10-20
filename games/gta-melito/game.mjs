@@ -15,7 +15,7 @@ import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEv
 import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote} from './local-shops.mjs?v=001';
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
 import {buildingVolume} from './building-volume.mjs?v=088';
-import {createCityAudio} from './city-audio.mjs?v=002';
+import {createCityAudio} from './city-audio.mjs?v=003';
 import {createSocial,stepSocial} from './npc-social.mjs?v=002';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker} from './traffic-collision.mjs?v=128';
@@ -50,7 +50,7 @@ import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpa
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
-import {createCarRadio} from './car-radio.mjs?v=001';
+import {createCarRadio} from './car-radio.mjs?v=002';
 const $=id=>document.getElementById(id);
 // Q09: last radio status, read by the city sound to duck engines while a station plays.
 let radioStatus='off';
@@ -109,7 +109,9 @@ function startMinuteFromUrl(){
 }
 const START_MINUTE=startMinuteFromUrl();
 // Q09: synthesized city sound; created only on the first user gesture.
-const cityAudio=createCityAudio({storage:globalThis.localStorage});
+// BF10: RADIO/MUSICA ed EFFETTI/AMBIENTE separati; il livello radio (0 con SUONI OFF) va allo stream.
+const cityAudio=createCityAudio({storage:globalThis.localStorage,onRadioLevel:level=>carRadio.setVolume(level)});
+carRadio.setVolume(cityAudio.radioLevel);
 // Q08: ?meteo=pioggia|nuvoloso|sereno fixes the weather for checks; otherwise it follows the clock.
 const FORCED_WEATHER=(()=>{const w=new URLSearchParams(globalThis.location?.search||'').get('meteo');return ['pioggia','nuvoloso','sereno'].includes(w)?w:null;})();
 const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
@@ -1345,8 +1347,9 @@ function updateCityAudio(){
  const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen;
  const traffic=[...state.traffic.filter(v=>v.body==='car'),...(state.commuters||[]).filter(c=>c.bike.rider).map(c=>c.bike)];
  cityAudio.update({paused,interior:!!state.bankInterior,radioLive:radioStatus==='live',
-  player:{x:p.x,y:p.y,inVehicle:!!car,vehicleType:car&&isMotorcycle(car)?'motorcycle':'car',speed:car?car.speed:0,throttle:pressed.up||pressed.accelerate?1:0},
-  traffic:traffic.map(v=>({x:v.x,y:v.y,vehicleType:v.vehicleType,speed:v.braking?0:v.speed})),
+  player:{x:p.x,y:p.y,inVehicle:!!car,vehicleType:car&&isMotorcycle(car)?'motorcycle':'car',model:car?.model||'',speed:car?car.speed:0,throttle:pressed.up||pressed.accelerate?1:0},
+  // BF10: marcia e giri anche per il traffico, dalla velocità reale (agent.v di BF05) e dal modello.
+  traffic:traffic.map(v=>({x:v.x,y:v.y,vehicleType:v.vehicleType,model:v.model||'',speed:v.braking?0:(Number.isFinite(v.v)?v.v:v.speed)})),
   night:(state.light?.darkness||0)/NIGHT_DARKNESS,rain:state.weather?.rain||0,
   skid:car&&car.speed>8?Math.min(1,Math.abs(car.slip||0)/.45):0});
  if(!paused&&!state.bankInterior){
@@ -1360,7 +1363,12 @@ function honk(){
  cityAudio.horn(isMotorcycle(state.cars[p.car])?'moto':'auto');
  state.hornAlarm={x:p.x,y:p.y,t:state.social?.clock??0};
 }
-function soundLabel(){$('pause-sound').textContent='SUONI: '+(cityAudio.muted?'OFF':'ON')+' · '+Math.round(cityAudio.volume*100)+'%';}
+function soundLabel(){
+ $('pause-sound').textContent='SUONI: '+(cityAudio.muted?'OFF':'ON');
+ $('pause-sound').setAttribute('aria-pressed',String(!cityAudio.muted));
+ $('pause-fx-level').textContent=Math.round(cityAudio.effectsVolume*100)+'%';
+ $('pause-radio-level').textContent=Math.round(cityAudio.radioVolume*100)+'%';
+}
 function frame(now){
  const dt=state.last?Math.min(.05,(now-state.last)/1000):0;state.last=now;
  tick(dt);draw(dt);drawMini();updateCityAudio();requestAnimationFrame(frame);
@@ -1536,6 +1544,8 @@ function bind(){
  $('pause-sound').addEventListener('click',()=>{cityAudio.start();cityAudio.toggleMuted();soundLabel();});
  $('pause-volume-down').addEventListener('click',()=>{cityAudio.changeVolume(-.1);soundLabel();});
  $('pause-volume-up').addEventListener('click',()=>{cityAudio.changeVolume(.1);soundLabel();});
+ $('pause-radio-down').addEventListener('click',()=>{cityAudio.changeRadioVolume(-.1);soundLabel();});
+ $('pause-radio-up').addEventListener('click',()=>{cityAudio.changeRadioVolume(.1);soundLabel();});
  soundLabel();
  $('mission-reset').addEventListener('click',()=>{
   if(!state.progress)return;

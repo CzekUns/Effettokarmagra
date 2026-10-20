@@ -26,7 +26,7 @@ test('Q09 nothing is created before a user gesture; the first gesture builds and
  assert.equal(made,0,'no AudioContext without a gesture');assert.equal(audio.started,false);assert.equal(audio.contextState,'none');
  assert.equal(audio.start(),true);assert.equal(made,1);assert.equal(ctx.state,'running');
  assert.ok(ctx.log.filter(x=>x==='osc-start').length>=2+TRAFFIC_VOICES*2,'engine and traffic voices running');
- assert.equal(ctx.log.filter(x=>x==='noise-start').length,3,'city background, rain and tyre-squeal loops');
+ assert.equal(ctx.log.filter(x=>x==='noise-start').length,4,'city background, rain, tyre-squeal and (BF10) driving-noise loops');
  audio.start();assert.equal(made,1,'one context only');
  const broken=createCityAudio({contextFactory:()=>{throw Error('no audio');}});
  assert.equal(broken.start(),false,'a browser without Web Audio simply stays silent');
@@ -61,7 +61,7 @@ test('Q09 mute and volume are saved; pause, stop and lost focus silence everythi
  audio.start();
  assert.ok(audio.update(street).master>0);
  assert.equal(audio.toggleMuted(),true);assert.equal(ctx.state,'suspended');assert.equal(audio.update(street).master,0);
- assert.deepEqual(JSON.parse(store.getItem(AUDIO_STORAGE_KEY)),{muted:true,volume:.7});
+ assert.deepEqual(JSON.parse(store.getItem(AUDIO_STORAGE_KEY)),{muted:true,effects:.7,radio:.52},'BF10: effects and radio saved separately');
  const again=createCityAudio({contextFactory:fakeContext,storage:store});
  assert.equal(again.muted,true,'still muted after a reload');
  audio.toggleMuted();assert.equal(ctx.state,'running');
