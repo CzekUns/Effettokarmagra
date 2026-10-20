@@ -126,6 +126,18 @@ Il primo sheet è la **fonte di verità artistica** per silhouette, proporzioni 
 
 Ritagli singoli: [friggitore](./assets/people/npc-friggitore-4dir-4frames.png), [vigile](./assets/people/npc-vigile-4dir-4frames.png), [lavavetri](./assets/people/npc-lavavetri-4dir-4frames.png), [contrabbandiere](./assets/people/npc-contrabbandiere-4dir-4frames.png). Ogni ritaglio è `96×160` con 4 frame orizzontali e quattro direzioni verticali; l'atlante principale è trasparente, i frame hanno il medesimo pivot ai piedi e non perdono mani o oggetti al bordo. **Sono asset grafici predisposti, non NPC già attivi nel mondo**: un'implementazione successiva dovrà collegare loader, renderer, distribuzione sul territorio, animazione e routine contestuali senza modificare le collisioni per adattarle al disegno. Non rimuovere il vecchio friggitore già integrato prima della sostituzione verificata.
 
+
+### Sheet mestieri dalla reference primaria — APPROVATO PER IL GIOCO (20 ottobre 2026)
+
+**Asset ufficiale in uso per gli NPC di mestiere**: [`npc-mestieri-prima-reference-384x160.png`](./assets/people/npc-mestieri-prima-reference-384x160.png), derivato dal [primo foglio dei pedoni](./assets/people/pedoni-4x4frames-24x40-rgba.png). Il committente **ha approvato l'uso dei nuovi asset**, poi la [PR #34](https://github.com/CzekUns/Effettokarmagra/pull/34) è stata risolta e integrata in `main` il 20 ottobre 2026. La vecchia tavola `npc-mestieri-4chars-4dir-4frames-24x40.png` resta nell'archivio per confronto e **non è più caricata** dal renderer dei mestieri.
+
+- **Formato master:** 384×160 px con quattro identità da 4 direzioni × 4 fotogrammi, celle 24×40, righe `up/down/left/right`.
+- **Ordine personaggi:** friggitore 0–3 (camice bianco), vigile 4–7 (uniforme blu), lavavetri 8–11 (verde e tergivetro), contrabbandiere 12–15 (borsello a tracolla).
+- **Ritagli individuali:** [friggitore](./assets/people/npc-prima-reference-friggitore-96x160.png), [vigile](./assets/people/npc-prima-reference-vigile-96x160.png), [lavavetri](./assets/people/npc-prima-reference-lavavetri-96x160.png), [contrabbandiere](./assets/people/npc-prima-reference-contrabbandiere-96x160.png).
+- **Attivazione reale:** `profession-sprites.mjs` carica il master nuovo, richiamato da `city-art.mjs` e `game.mjs` con versioni cache aggiornate; il test `approved-profession-sprites.test.mjs` verifica struttura dei file e collegamenti. I vecchi PNG non sono stati eliminati; questo cambio riguarda solo il disegno, non le routine o collisioni.
+- **QA residuo:** collaudo visivo con browser Android reale, proporzioni e direzioni in marcia/idle da verificare sul campo. L'approvazione per l'utilizzo non sostituisce automaticamente la prova di giocabilità.
+
+
 ## 4. VEICOLI — automobili, moto, Ape, furgoni
 
 ### Standard predefinito sheet veicoli: 16 sprite, 8 per modello
