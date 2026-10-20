@@ -654,3 +654,7 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 - **Rudere dell'ex piscina comunale:** muri bassi in calcestruzzo con macchie, copertura crollata attorno alla vasca e la vasca interrata vuota, con piastrelle azzurre sbiadite, crepe, erbacce e scaletta; con la pioggia, pozzanghere e cerchi.
 - **Verifiche:** foto su PC di giorno, di notte (23:30, con la pioggia casuale di Q08) e sotto pioggia forzata; telefono 844×390; trasparenza con il giocatore sotto la vasca.
 
+
+
+### 2026-10-20 — Q16 Ape Car (Claude)
+- Nuovo `assets/vehicles/ape-classica-16-rgba.png` (224×256, 4×4 da 56×64): Ape Car vista dall'alto in 8 tinte (azzurra, verde, rossa, bianca, grigia, gialla, blu, crema) pulite e vissute; derivato dalle due Ape approvate di `ape-food-16` con ricolorazione della sola carrozzeria. Presentazione: `assets/vehicles/sources/ape-classica-16-sheet.png`. Tinte = interpretazioni, non codici di fabbrica.

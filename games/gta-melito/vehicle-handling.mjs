@@ -23,7 +23,8 @@ export const SCOOTER_HANDLING=freeze({...MOTORCYCLE_HANDLING,kind:'scooter',laun
 // Moto: la più pronta in ripresa, frena forte, ad alta velocità sterza meno.
 export const MOTO_HANDLING=freeze({...MOTORCYCLE_HANDLING,kind:'moto',accel:17.5,brake:56,top:37,corner:13,steer:2.75,steerFall:.045,steerMin:.95,steerLow:5.5,grip:8,handbrakeGrip:1.6,maxSlip:.72,scrub:.6});
 // Ape a tre ruote e furgoncini commerciali: lenti in partenza e in punta, frenano meno.
-export const APE_HANDLING=freeze({...CAR_HANDLING,kind:'ape',launch:.38,launchSpeed:3,gears:[.3,.6],accel:6,brake:34,top:17,reverse:6,reverseAccel:5,corner:7,steer:2.3,grip:5.8,maxSlip:.6});
+// Q16: un triciclo corto gira molto più stretto di un'auto, anche a passo d'uomo (steer/steerLow).
+export const APE_HANDLING=freeze({...CAR_HANDLING,kind:'ape',launch:.38,launchSpeed:3,gears:[.3,.6],accel:6,brake:34,top:17,reverse:6,reverseAccel:5,corner:7,steer:2.9,steerLow:4.5,grip:5.8,maxSlip:.6});
 export const VAN_HANDLING=freeze({...CAR_HANDLING,kind:'furgone',launch:.4,gears:[.24,.46,.7],accel:8,brake:38,top:26,reverse:8,reverseAccel:6,corner:8,steer:2.05,steerMin:1,grip:6.4,maxSlip:.7});
 const CAR_MODELS={
  'punto-188':{accel:14,top:41,brake:50},
