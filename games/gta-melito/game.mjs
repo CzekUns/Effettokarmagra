@@ -70,7 +70,8 @@ import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlas
 import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches} from './football-pitches.mjs?v=001';
 import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=001';
 import {createCarRadio} from './car-radio.mjs?v=003';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=001';
+import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=002';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
 import {PASSENGER_RULES,seatCapacity,ensureSeats,occupantsOf,freeSeat,boardPassenger,alightPassenger,hitchhikersNear,liftCandidate,liftDestination,alightSpot,doorSpots,trafficOccupants,lookOf,drawCabinOccupants} from './passengers.mjs?v=001';
 import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
@@ -271,6 +272,34 @@ function openFootballMatch(pitch){
 }
 // BF12: perimeter walls, gates and guard booths of the enclosures (villa comunale, Municipio…),
 // computed on the current road widths: the walls stand just beyond the painted pavement.
+// Q34: gare clandestine come evento arcade di FINZIONE (street-race.mjs): 1–2 partenze periferiche.
+function createRaces(){
+ state.races=null;
+ try{state.races=createRaceWorld(state.graph);}catch(error){console.warn('Gare non disponibili:',error);return;}
+ // Avversari con sprite del traffico (grafica provvisoria, da approvare).
+ state.races.rivals.forEach((list,i)=>list.forEach((v,k)=>{v.model=CAR_TRAFFIC_SPRITE_IDS[(i*5+k*3+1)%CAR_TRAFFIC_SPRITE_IDS.length];}));
+}
+function beginStreetRace(route){
+ const p=state.player;if(!startRace(state.races,route.id,p.car))return;
+ message(RACE_DISCLAIMER+'\nPercorso: '+route.names.slice(0,3).join(', ')+' ('+Math.round(route.length)+' m, '+route.checkpoints.length+' anelli). Chiudi questo messaggio: parte il conto alla rovescia. Scendere dall’auto o allontanarsi annulla la gara.',
+  route.label,'GARA');
+}
+function stepStreetRace(dt){
+ const races=state.races;if(!races){state.raceNear=null;return;}
+ const p=state.player,car=p.car>=0?state.cars[p.car]:null;
+ state.raceNear=car&&!isMotorcycle(car)?raceHotspot(races,p,true):null;
+ if(!races.active){parkIdleRivals(races,visibleBounds());return;}
+ const obstacles=[];
+ for(const v of state.traffic)if(Math.abs(v.x-p.x)<260&&Math.abs(v.y-p.y)<260)obstacles.push({x:v.x,y:v.y,speed:v.braking?0:(Number.isFinite(v.v)?v.v:v.speed)});
+ const event=stepRace(races,dt,{x:p.x,y:p.y,car:p.car,speed:car?Math.abs(car.speed||0):0},{obstacles});
+ if(event==='finish'){
+  const results=races.last;
+  if(state.progress&&awardPrize(state.progress,results)){saveProgress(localStorage,state.progress);refreshCampaign();}
+  message(resultsText(results),'ARRIVO · '+results.route+' · '+results.position+'°','GARA');
+ }else if(event==='cancel'){
+  state.notice={text:'GARA ANNULLATA · '+races.last.reason,until:state.clock+4};updateHud();
+ }
+}
 function createEnclosures(){
  state.enclosures=state.enclosureData?prepareEnclosures(state.enclosureData,{roads:state.roads,roadWidth:visualRoadWidth,
   sidewalkOuter:SIDEWALK_OUTER,inBorder:(x,y)=>inside([x,y],toRing(state.map.border))}):null;
@@ -575,6 +604,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  state.spawn=[point.x,point.y];Object.assign(state.player,{x:point.x,y:point.y,a:point.a,car:-1,vehicleType:null});
  state.camera.x=point.x;state.camera.y=point.y;state.distance=0;
  state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y),laneClear:(x,y)=>!buildingAt(x,y)});
+ createRaces();
  // BF09: the border gates as plain data (WGS84 too), the anchor points for future neighbouring maps.
  state.borderGates=borderGateList(state.graph.gates,state.map.projection);
  state.turnGuides=buildTurnGuides(state.graph);
@@ -1244,6 +1274,11 @@ function toggleVehicle(){
    updateHud();return;
   }
  }
+ // Q34: in auto alla partenza di una gara, E avvia la gara (non si scende).
+ if(p.car>=0&&!isMotorcycle(state.cars[p.car])){
+  const race=raceHotspot(state.races,p,true);
+  if(race){beginStreetRace(race);return;}
+ }
  if(p.car>=0){
   const vehicle=state.cars[p.car],bike=isMotorcycle(vehicle);
   // Q23: all'officina di gioco la prima E ripara il mezzo danneggiato (saldo della campagna Q06).
@@ -1503,6 +1538,7 @@ function tick(dt){
  for(const car of state.cars)if(car!==state.cars[p.car])
   advanceNonlethalImpact(car,dt,canKnockbackMove);
  updateTraffic(dt);
+ stepStreetRace(dt);
  stepCommuters(dt);
  stepStreetPhysics(dt);
  stepMelitoMarket(dt);
@@ -1554,7 +1590,7 @@ function compareRoadWidths(){
  setRoadWidthMode(getRoadWidthMode()==='before'?'wide':'before');
  // Every consumer shares the same module instance, including roads/traffic,
  // street furniture, crosswalks and building-side storefront placements.
- state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y),laneClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createPitches();createEnclosures();createWorkshop();createParkingBays();createRoadSurfaces();
+ state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y),laneClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createPitches();createEnclosures();createWorkshop();createParkingBays();createRaces();createRoadSurfaces();
  state.traffic=createTraffic(state.npcClockMinutes);prepareSignals();
  createShopEntrances();
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();state.service=createServices();
@@ -1609,12 +1645,15 @@ function updateHud(){
  // Q23: fermo davanti all'officina di gioco con il mezzo danneggiato, E ripara (a pagamento).
  const repair=myCar&&nearWorkshop(state.workshop,myCar)&&Math.abs(myCar.speed||0)<1.5?repairCost(myCar):0;
  const pitchNear=p.car<0&&!eventAction&&!shopNear?pitchHotspot(state.pitches,p.x,p.y):null;
- $('action').textContent=eventAction||(shopDoor?'ENTRA':shopNear?'COMPRA':pitchNear?'GIOCA A CALCETTO':bank?'ENTRA IN BANCA':repair?'RIPARA · '+repair+' €':p.car>=0?liftAction||'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ // Q34: la partenza vicina è calcolata nel tick (stepStreetRace).
+ const raceNear=p.car>=0?state.raceNear:null;
+ $('action').textContent=eventAction||(shopDoor?'ENTRA':shopNear?'COMPRA':pitchNear?'GIOCA A CALCETTO':bank?'ENTRA IN BANCA':raceNear?'GARA':repair?'RIPARA · '+repair+' €':p.car>=0?liftAction||'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
  // Q15: on foot with nothing in reach the touch button is shown dimmed (it used to invite to get into a
  // car that was not there; the tap then only said to get closer to a vehicle).
  const idle=p.car<0&&!eventAction&&!shopNear&&!pitchNear&&!shopDoor&&!bank&&!enterable;
  $('action').classList.toggle('idle',idle);$('action').setAttribute('aria-disabled',idle?'true':'false');
  boardPrompt(p.car>=0?(repair?'RIPARA · '+repair+' € · OFFICINA DI GIOCO':liftAction||''):eventAction||(shopDoor?'ENTRA · '+shopDoor.shop.name.toUpperCase():shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):pitchNear?'GIOCA A CALCETTO':bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
+ if(raceNear)boardPrompt('GARA');
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
@@ -2005,6 +2044,8 @@ function draw(dt=0){
    drawCar(tp.x,tp.y,tp.a,ai.towed.type,false,ai.towed.model,ai.towed);c.restore();}
  }
  // Q22: lo scooter del pendolare (un mezzo della lista dei parcheggiati) mette la freccia prima delle svolte.
+ // Q34: partenze, anelli, frecce e avversari delle gare (grafica provvisoria, da approvare).
+ drawRaceWorld(c,state.races,[x0,y0,x1,y1],state.zoom,state.clock,v=>drawCar(v.x,v.y,v.a,3,false,v.model,v));
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1){drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);if(v.turnSignal)drawBlinker(v.x,v.y,v.a,v);
   // Q20: auto in panne in attesa del carro attrezzi: quattro frecce e triangolo.
   if(v.broken&&i!==p.car){drawBlinker(v.x,v.y,v.a,v);drawWarningTriangle(c,v,vehicleShape(v));}}});
@@ -2036,6 +2077,8 @@ function draw(dt=0){
  if(state.player.car<0)for(const e of state.shopEntrances||[])if(e.x>=x0&&e.x<=x1&&e.y>=y0&&e.y<=y1)drawShopEntrance(c,e,state.clock);
  drawRiderWorld(c);
  // BF13: foto aerea di confronto sopra tutta la scena, in trasparenza (spenta: nessun costo).
+ // Q34: cronometro, checkpoint e posizione in coordinate schermo.
+ if(state.races?.active){c.save();c.setTransform(ratio,0,0,ratio,0,0);drawRaceHud(c,state.races,cw,ch);c.restore();}
  if(state.satellite?.enabled)state.satellite.draw(c,[x0,y0,x1,y1],state.zoom);
 }
 const lightMap=document.createElement('canvas');
@@ -2108,6 +2151,7 @@ function drawMini(){
  r.clearRect(0,0,168,142);r.drawImage(state.mapCanvas,0,0);
  if(state.progress)drawMinimapLandmarks(r,state.landmarks,activeTarget(state.progress,state.landmarks),state.mini);
  drawRiderMini();
+ drawRaceMini(r,state.races,state.mini);
  const {k,ox,oy}=state.mini,p=state.player,x=ox+p.x*k,y=oy+p.y*k;
  // Q21: meta del passeggero a bordo.
  const ride=p.car>=0?state.cars[p.car]:null,going=ride?occupantsOf(ride).map(n=>n.liftTo).find(Boolean):null;

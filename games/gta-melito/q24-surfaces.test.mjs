@@ -104,7 +104,7 @@ test('Q24 game wiring: created with the stalls, effect before grip, kerb, jolt, 
  const [game,audio,html]=await Promise.all(['game.mjs','city-audio.mjs','index.html'].map(f=>readFile(new URL('./'+f,import.meta.url),'utf8')));
  assert.match(game,/import \{placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,(?:onSurfaceHit,)?drawRoadSurfaces,drawSurfacePuddles\} from '\.\/road-surfaces\.mjs\?v=\d+'/);
  assert.match(game,/onSurfaceHit\(e=>\{if\(\(e\.kind==='pothole'\|\|e\.kind==='bump'\)&&e\.intensity>\.6/,'Q23+Q24: a hard pothole leaves light damage');
- assert.equal((game.match(/createParkingBays\(\);createRoadSurfaces\(\);/g)||[]).length,2,'on load and on the width switch');
+ assert.equal((game.match(/createParkingBays\(\);(?:createRaces\(\);)?createRoadSurfaces\(\);/g)||[]).length,2,'on load and on the width switch');
  const surface=game.indexOf('roadSurfaceEffect(state.surfaces,car'),grip=game.indexOf('applyGrip(car,{angle:car.a');
  assert.ok(surface>0&&grip>surface,'the surface acts before the grip');
  assert.match(game,/wet:Math\.min\(1,wet\+\(surface\?\.gripLoss\|\|0\)\)/);
