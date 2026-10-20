@@ -73,6 +73,7 @@ import {paintOptions,paintName,PERF_LEVELS,perfPrice,PAINT_PRICE,NEON_PRICE,NEON
 import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=001';
 import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
+import {mountPhone} from './smartphone.mjs?v=001';
 import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=002';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
 import {PASSENGER_RULES,seatCapacity,ensureSeats,occupantsOf,freeSeat,boardPassenger,alightPassenger,hitchhikersNear,liftCandidate,liftDestination,alightSpot,doorSpots,trafficOccupants,lookOf,drawCabinOccupants} from './passengers.mjs?v=001';
@@ -2285,6 +2286,7 @@ function prepareMini(){
  for(const road of state.roads)if(DRIVE.has(road.t)){b.beginPath();b.moveTo(road.p[0],road.p[1]);for(let i=2;i<road.p.length;i+=2)b.lineTo(road.p[i],road.p[i+1]);b.stroke();}
  b.restore();state.mapCanvas=off;state.mini={k,ox,oy};
 }
+let phoneUi=null;
 function drawMini(){
  if(!state.mapCanvas||state.bankInterior||state.shopInterior)return;
  r.clearRect(0,0,168,142);r.drawImage(state.mapCanvas,0,0);
@@ -2447,6 +2449,8 @@ function bind(){
  for(const type of ['gesturestart','gesturechange','gestureend'])
   window.addEventListener(type,e=>e.preventDefault(),{passive:false});
  window.addEventListener('keydown',e=>{
+  // Q37: con il telefono aperto frecce, INVIO, ESC e la scrittura nella ricerca restano al telefono.
+  if(!$('pause-menu').hidden&&phoneUi?.key(e))return;
   const dir={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];
   if(dir){e.preventDefault();pressed[dir]=true;}
   if(e.key==='Shift')pressed.run=true;
@@ -2530,7 +2534,7 @@ function bind(){
  stickPad.addEventListener('pointermove',e=>{if(stickPad.hasPointerCapture?.(e.pointerId))updateStick(e);});
  for(const name of ['pointerup','pointercancel','lostpointercapture'])stickPad.addEventListener(name,resetStick);
  const pause=$('pause-menu'),pauseButton=$('pause-toggle');
- const openPause=()=>{carRadio.duck(true);refreshNovita();$('novita-copy').textContent='COPIA GIUDIZI';Object.keys(pressed).forEach(k=>pressed[k]=false);stick.x=0;stick.y=0;resetDrivingControls();pause.hidden=false;pauseButton.setAttribute('aria-expanded','true');$('pause-details').textContent='MEZZO: '+$('vehicle').textContent+'  ·  CAMERA: '+$('camera-mode').textContent+'  ·  STRADE: '+$('road-count').textContent+'  ·  EDIFICI OSM: '+$('building-count').textContent+'  ·  PLACEHOLDER: '+$('inferred-count').textContent+'  ·  INCROCI: '+$('junction-count').textContent+'  ·  '+$('road-width-current').textContent+' unità';};
+ const openPause=()=>{carRadio.duck(true);refreshNovita();$('novita-copy').textContent='COPIA GIUDIZI';Object.keys(pressed).forEach(k=>pressed[k]=false);stick.x=0;stick.y=0;resetDrivingControls();pause.hidden=false;phoneUi?.opened();pauseButton.setAttribute('aria-expanded','true');$('pause-details').textContent='MEZZO: '+$('vehicle').textContent+'  ·  CAMERA: '+$('camera-mode').textContent+'  ·  STRADE: '+$('road-count').textContent+'  ·  EDIFICI OSM: '+$('building-count').textContent+'  ·  PLACEHOLDER: '+$('inferred-count').textContent+'  ·  INCROCI: '+$('junction-count').textContent+'  ·  '+$('road-width-current').textContent+' unità';};
  const closePause=()=>{carRadio.duck(false);pause.hidden=true;pauseButton.setAttribute('aria-expanded','false');};
  // BF15: la lista NOVITÀ si ridisegna a ogni apertura (le voci «in arrivo» si attivano quando ci sono).
  function refreshNovita(){
@@ -2559,6 +2563,17 @@ function bind(){
  $('pause-missions').addEventListener('click',()=>{closePause();if($('mission-panel').hidden)$('mission-panel-toggle').click();});
  $('pause-map').addEventListener('click',()=>{closePause();toggleBigMap();});
  for(const [id,target] of [['pause-zoom-auto','zoom-auto'],['pause-zoom-in','zoom-in'],['pause-zoom-out','zoom-out'],['pause-reset','reset'],['pause-road-compare','road-width-compare']])$(id).addEventListener('click',()=>$(target).click());
+ // Q37: il menu PAUSA diventa lo smartphone; le vecchie voci passano in Impostazioni › Sviluppatore.
+ // In un DOM ridotto (prova Node) il telefono non si monta e resta il vecchio menu.
+ phoneUi=mountPhone(document,{menu:pause,env:{global:globalThis,
+  onResume:closePause,
+  onMap:()=>{closePause();toggleBigMap();},
+  onMissions:()=>{closePause();if($('mission-panel').hidden)$('mission-panel-toggle').click();},
+  onScreen:screen=>{
+   const clock=document.getElementById('phone-clock'),profile=document.getElementById('phone-profile-text');
+   if(clock)clock.textContent=$('npc-clock').textContent.split(' ')[0]||'';
+   if(screen==='profilo'&&profile)profile.textContent='SALDO '+$('mission-money').textContent+' · RISPETTO ★ '+$('mission-respect').textContent+' · MISSIONI '+$('mission-progress').textContent+' · MEZZO: '+$('vehicle').textContent+' · '+$('place').textContent;
+  }}});
  const orient=()=>{const rotate=$('rotate-screen');rotate.hidden=typeof matchMedia!=='function'||matchMedia('(orientation: landscape)').matches;};
  orient();window.addEventListener('orientationchange',orient);window.addEventListener('resize',orient);
  const lockLandscape=()=>{try{if(typeof screen!=='undefined'&&screen.orientation?.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(_){}};
