@@ -468,3 +468,42 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** suite Node 22 **265/265**.
 - **Browser (Chrome headless, telefono 844×390 touch, prima/dopo):** prima ACCELERA y=172, FRENO 242; dopo FRENO 172, ACCELERA 242, RETRO 312. Con tocchi veri: ACCELERA porta l'auto a 38,3, FRENO la ferma a 0 senza retromarcia, RETRO −12 solo mentre premuto; due dita insieme su volante e ACCELERA funzionano; la pausa non lascia ACCELERA premuto; in banca i pedali spariscono e risalendo in auto l'ordine resta giusto; nessuna sovrapposizione con minimappa, missioni, volante, pausa, radio e pulsante azione; nessun errore JS.
 - **Non eseguiti / limiti:** telefono Android reale.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF11 apertura da PC: solo plancia di gioco, il resto nel menu pausa
+- **Richiesta del committente (testuale):** «un altro fix è l'apertura da pc. deve mostrare solo la plancia di gioco, non tutto quello che c'è attorno, tutto il resto va nel menu pausa».
+- **Prima (Chrome headless, base integrazione BF01–BF06):** su PC la plancia era una finestra dentro la pagina. Sopra c'erano titolo, barra di stato e barra del confronto strade; sotto i pulsanti, due paragrafi di istruzioni e i crediti. La pagina scorreva: 998 px di altezza a 1280×720, 1244 a 1920×1080, 1032 a 1366×768. Plancia di 1248×504 a 1280×720 e 1468×750 a 1920×1080.
+- **Correzione `index.html`:**
+  - header, `.hud`, `.road-width-bar`, istruzioni e footer spostati DENTRO il menu PAUSA, in 5 sezioni: STATO · INFO, COMANDI, MAPPA · ZOOM · SUONI (le scorciatoie di prima, immutate), STRUMENTI · CONFRONTO STRADE, CREDITI E LICENZE. Gli ID non cambiano, quindi `game.mjs` aggiorna ora, luogo, mezzo, camera e conteggi come prima;
+  - nuovo blocco CSS solo PC: `(min-width:761px) and (pointer:fine)` o `(pointer:none)`. Plancia a 100dvh senza bordo, nessuno scorrimento, nessun pulsante sotto la plancia, pulsante Ⅱ rotondo in alto a sinistra, etichetta della via spostata accanto;
+  - indicazione `#pc-prompt` «E · …» solo quando un'azione è davvero a portata: oggetto perduto, negozio, banca, mezzo libero vicino, uscita dalla banca;
+  - piccola attribuzione «© OpenStreetMap · ISTAT · menu PAUSA: Esc / P» in fondo alla plancia;
+  - su PC il riepilogo `#pause-details` e il doppio CONFRONTA STRADE sono nascosti, perché le stesse voci sono già nelle sezioni;
+  - le regole delle schede del menu valgono ora anche su PC. Prima erano scritte solo nel blocco telefono, e su PC il menu era senza stile.
+- **Telefono invariato:** il blocco telefono continua a nascondere header/barre/istruzioni/crediti e ora nasconde anche le nuove sezioni e i titoletti, quindi il menu START resta quello di prima.
+- **Correzione `game.mjs`:** il tasto P apre e chiude la pausa come Esc, ma non con un negozio aperto, dove i tasti servono per comprare. `boardPrompt()` aggiorna l'indicazione dentro `updateHud`. Cache `game.mjs?v=160`.
+- **Test:** nuovo `bf11-pc-board.test.mjs` con 5 test, tutti falliscono sulla base:
+  - niente attorno alla plancia;
+  - sezioni e contenuti nel menu;
+  - tutti gli ID usati da `game.mjs` esistono;
+  - blocco PC;
+  - telefono invariato;
+  - tasti Esc/P e indicazione E.
+  Suite **304/304**.
+- **Prove Chrome headless dopo, a 1280×720, 1920×1080 e 1366×768:**
+  - pagina grande quanto la finestra (nessuna barra), plancia e canvas a 0,0 a tutta finestra, rapporto pixel uguale in orizzontale e verticale (0,659–0,660, nessuna deformazione);
+  - header/barre/istruzioni/crediti/pulsanti invisibili all'apertura;
+  - indicazione «E · ENTRA IN AUTO» accanto all'auto, nascosta lontano;
+  - Esc apre la pausa con le 5 sezioni visibili e l'orologio fermo (stesso minuto dopo 1,2 s); Esc chiude; P apre e chiude; Ⅱ apre; RIPRENDI chiude;
+  - CONFRONTA CON PRIMA dal menu porta a «PRIMA · 7,0» e torna indietro;
+  - in auto, aprendo la pausa: mezzo «AUTO · … KM/H», ora uguale all'orologio NPC, via VIA ROMA;
+  - ridimensionata la finestra al 78%×86%: plancia e canvas seguono, nessuna barra;
+  - unico errore, il favicon 404 già noto.
+- **Telefono 844×390 con tocchi veri:**
+  - stesso layout BF06: FRENO y=172, ACCELERA 242, RETRO 312, volante, levetta, Ⅱ, nessuna indicazione PC né attribuzione;
+  - ACCELERA porta l'auto a 11,3;
+  - START apre il menu con solo le scorciatoie e il riepilogo, come prima; RIPRENDI chiude.
+- **Limiti:**
+  - non provato su un PC con schermo touch né su un tablet in verticale, che mantiene il layout di prima;
+  - sul telefono crediti e istruzioni restano non visibili, come prima di BF11;
+  - con lo smartphone della Q37 queste voci andranno nelle app (nota sotto la Q37);
+  - non provato su telefono reale.

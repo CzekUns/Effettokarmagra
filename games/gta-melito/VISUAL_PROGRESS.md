@@ -560,3 +560,16 @@ Aggiunto il renderer per l'atlante originale `npc-mestieri-4chars-4dir-4frames-2
 **Interfaccia:** nella colonna di guida a destra il pulsante rosso FRENO è ora in alto, il verde ACCELERA al centro e RETRO in basso; misure, colori e ombre invariati.
 
 **Verifiche:** foto Chrome headless sul telefono in orizzontale prima/dopo (stessa scena), con prova dei tre tasti a tocco vero e controllo che non coprano minimappa, missioni e volante. Non provato su un telefono reale.
+
+### 2026-10-20 — Apertura da PC: solo la plancia di gioco (BF11)
+
+**Interfaccia:** su PC la pagina si apre direttamente sulla plancia, a tutta finestra e senza cornice né scorrimento. Sopra la mappa restano solo:
+- in alto a sinistra un piccolo pulsante Ⅱ rotondo, accanto all'etichetta della via;
+- in alto a destra la minimappa;
+- in basso a destra MISSIONI;
+- al centro, solo vicino a qualcosa da fare, l'indicazione «E · ENTRA IN AUTO / COMPRA / RACCOGLI…» nello stesso riquadro scuro con bordo oro dell'indicatore missione;
+- in fondo una minuscola attribuzione «© OpenStreetMap · ISTAT · menu PAUSA: Esc / P».
+
+Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA, diviso in 5 sezioni con titoletti spaziati nello stile del gioco.
+
+**Verifiche:** foto Chrome headless prima/dopo a 1280×720, 1366×768 e 1920×1080, menu pausa (inizio e fondo), indicazione del tasto E e telefono 844×390 in guida e in pausa, invariato. Non provato su un PC con schermo touch né su un telefono reale.

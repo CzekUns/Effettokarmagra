@@ -965,6 +965,7 @@ function updateHud(){
  if(state.bankInterior){
   $('vehicle').textContent='ALL’INTERNO DELLA BANCA';$('street').textContent=state.bankInterior.bank.n.toUpperCase();
   $('action').textContent='ESCI DALLA BANCA';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
+  boardPrompt('ESCI DALLA BANCA');
   $('camera-mode').textContent='INTERNO · '+interiorZoom().toFixed(1)+'×';return;
  }
  const boostLeft=boostSecondsLeft(state.boost,state.clock);
@@ -975,7 +976,9 @@ function updateHud(){
  const bank= p.car<0?nearestBankEntrance(state.bankEntrances,p):null;
  const eventAction=p.car<0?cityEventAction(state.events,p):null;
  const shopNear=p.car<0&&!eventAction?nearestShop(state.shops,p):null;
- $('action').textContent=eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':nearestEnterableVehicle(state.cars,p)?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ const enterable=p.car<0?nearestEnterableVehicle(state.cars,p):null;
+ $('action').textContent=eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ boardPrompt(p.car>=0?'':eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
@@ -983,6 +986,13 @@ function updateHud(){
   speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?RUN_SPEED:WALK_SPEED):0,
   running:pressed.run,moving:!!moving};
  $('camera-mode').textContent=describeCameraZoom(status)+' · '+state.zoom.toFixed(1)+'×';
+}
+// BF11: on a PC the board shows the E key only when something can really be done right here.
+function boardPrompt(label){
+ const el=$('pc-prompt');if(!el)return;
+ const text=label?'E · '+label:'';
+ if(el.textContent!==text)el.textContent=text;
+ el.hidden=!label;
 }
 function drawLine(p){c.beginPath();c.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)c.lineTo(p[i],p[i+1]);}
 function poly(p){drawLine(p);c.closePath();}
@@ -1442,6 +1452,8 @@ function bind(){
    e.preventDefault();carRadio.toggle();
   }
   if(e.key==='Escape'){if(state.bankInterior){toggleVehicle();return;}$('fullmap').hidden=true;state.mapOpen=false;$('dialog').hidden=true;if(!pause.hidden)closePause();else openPause();}
+  // BF11: on a PC the PAUSE menu holds everything that used to sit around the board; P opens and closes it too.
+  if(e.key.toLowerCase()==='p'&&!e.repeat&&!state.shopOpen){e.preventDefault();$('fullmap').hidden=true;state.mapOpen=false;if(!pause.hidden)closePause();else openPause();}
  });
  window.addEventListener('keyup',e=>{
   const dir={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];
