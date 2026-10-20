@@ -619,3 +619,15 @@ Il lavavetri resta sul lato guida e il tergivetro si vede sul parabrezza. Non co
 Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA, diviso in 5 sezioni con titoletti spaziati nello stile del gioco.
 
 **Verifiche:** foto Chrome headless prima/dopo a 1280×720, 1366×768 e 1920×1080, menu pausa (inizio e fondo), indicazione del tasto E e telefono 844×390 in guida e in pausa, invariato. Non provato su un PC con schermo touch né su un telefono reale.
+
+## 2026-10-20 — BF12 recinti e galleria di vetro (Claude)
+- **Mura perimetrali** in pixel art, con ombra a terra, faccia rialzata, copertina chiara e giunti:
+  - muro intonacato per i recinti privati;
+  - muretto con ringhiera in ferro per la villa comunale.
+
+  Si vedono anche di notte, perché la luce di Q04 le scurisce come il resto della città.
+- **Cancelli:** due pilastri con cappello e battenti aperti verso l'interno. Nei recinti privati c'è una sbarra bianca e rossa, alzata di giorno e abbassata di notte.
+- **Guardiola placeholder:** cabina chiara con fascia di vetri, tetto piano e porta verde, più la guardia (sprite vigile).
+- **Galleria Atlante:** facciate a vetrata continua con montanti, traversi e un riflesso diagonale; tetto rosato con atrio vetrato, come sulla foto aerea.
+- **Verifiche:** foto Chrome headless di villa, Municipio (cancelli e lato nord), recinto di fronte al mercato e galleria, di giorno e alle 23:30 con pioggia, su PC e su telefono 844×390. Telefono reale non provato.
+

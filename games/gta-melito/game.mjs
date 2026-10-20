@@ -28,7 +28,7 @@ import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=001';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=129';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=130';
 import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS,CAR_PARKED_SPRITE_IDS} from './car-sprites.mjs?v=108';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
@@ -54,6 +54,7 @@ import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpa
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
+import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=001';
 import {createCarRadio} from './car-radio.mjs?v=002';
 const $=id=>document.getElementById(id);
 // Q09: last radio status, read by the city sound to duck engines while a station plays.
@@ -200,8 +201,18 @@ function coveredByBuilding(x,y){
   (!!state.inferredGrid&&hit(query(state.inferredBuildings,state.inferredGrid,x-2,y-2,x+22,y+22)));
 }
 function validWalk(x,y){
- return x>=0&&y>=0&&x<state.map.projection.width&&y<state.map.projection.height&&!buildingAt(x,y);
+ return x>=0&&y>=0&&x<state.map.projection.width&&y<state.map.projection.height&&!buildingAt(x,y)&&
+  !(state.enclosures&&enclosureWalkBlocked(state.enclosures,x,y));
 }
+// BF12: perimeter walls, gates and guard booths of the enclosures (villa comunale, Municipio…),
+// computed on the current road widths: the walls stand just beyond the painted pavement.
+function createEnclosures(){
+ state.enclosures=state.enclosureData?prepareEnclosures(state.enclosureData,{roads:state.roads,roadWidth:visualRoadWidth,
+  sidewalkOuter:SIDEWALK_OUTER,inBorder:(x,y)=>inside([x,y],toRing(state.map.border))}):null;
+ if(state.enclosures)console.info('Recinti: '+state.enclosures.list.length+' con mura e cancelli'+
+  (state.enclosures.failed.length?', non disegnati: '+state.enclosures.failed.map(f=>f.id+' ('+f.reason+')').join(', '):''));
+}
+const enclosureTime=()=>({minutes:state.npcClockMinutes,traffic:state.traffic});
 function arcLength(p){let sum=0;for(let j=2;j<p.length;j+=2)sum+=Math.hypot(p[j]-p[j-2],p[j+1]-p[j-1]);return sum;}
 function roadPoint(road,fraction){
  const p=road.p,total=arcLength(p);let left=total*fraction;
@@ -353,13 +364,16 @@ function createCityPedestrians(){
   [...state.cars,...state.traffic,...routine,...professionals]);
  return [...routine,...professionals,...walkers];
 }
-function prepareMap(map,surveyData=[],infillCache=null,placement=null){
+function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureData=null){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
  staticTiles.clear();roofReveal.clear();tileRoadMode=null;
  state.map=map;
  state.roads=map.roads;state.buildings=placeBuildings(map,placement);
  prepareCityStyles(state.buildings,map.pois||[]);
  const survey=applySurveyDrafts(state.buildings,surveyData);
+ state.enclosureData=enclosureData;state.enclosures=null;
+ // BF12: glass buildings (galleria Atlante) keep their OSM polygon, only the art changes.
+ markGlassBuildings(state.buildings,enclosureData);
  const terracotta=applyApprovedArcadeRoofStyle(state.buildings);
  applyPiazzaRoofStudies(state.buildings);
  console.info('Melito visual city scan: '+survey.applied+'/'+survey.total+' buildings styled, '+survey.verified+' photo-verified');
@@ -416,6 +430,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  // BF02: every parked vehicle stands in a stall of the parking strip, never in a lane or on the
  // pavement; where there is no real room there is no parking (fewer vehicles, not worse ones).
  // Bollards of a previous load must not shape the stalls: street objects are placed afterwards.
+ createEnclosures();
  state.cars=[];state.streetObjects=null;createParkingBays();
  const free=(x,y,options)=>nearestFreeStalls(state.parkingBays,x,y,state.cars,vehiclesOverlap,options)[0]||null;
  const starterStall=free(point.x,point.y,{radius:60})||free(point.x,point.y);
@@ -563,6 +578,10 @@ function canKnockbackMove(x,y,actor){
  // BF01: the player's car and the parked vehicles are never shoved off the street (onto a
  // pavement or a square), where no move would be allowed any more and the car stayed stuck.
  if(actor&&state.cars.includes(actor)&&offStreetExcess(x,y,actor.a,actor)>offStreetExcess(actor.x,actor.y,actor.a,actor)+1e-6)return false;
+ // BF12: a shoved vehicle stops against an enclosure wall (walkers already stop there: validWalk).
+ if(actor&&state.enclosures&&(actor.body==='car'||state.cars.includes(actor))&&
+  enclosureVehicleContacts(state.enclosures,{x,y,a:actor.a},bodyShape(actor),{barriers:false})>
+  enclosureVehicleContacts(state.enclosures,{x:actor.x,y:actor.y,a:actor.a},bodyShape(actor),{barriers:false})+1e-9)return false;
  return true;
 }
 function impactTraffic(dt){
@@ -800,6 +819,12 @@ function carBlocked(x,y,a,which,vehicle=state.cars[which]){
  if(off>0&&!(Number.isFinite(vehicle?.x)&&off<offStreetExcess(vehicle.x,vehicle.y,vehicle.a,vehicle)-1e-6))return true;
  // Q07: cast-iron bollards stop the car like a wall.
  if(state.streetObjects&&bollardBlocksVehicle(state.streetObjects,{x,y,a},bodyShape(vehicle)))return true;
+ // BF12: enclosure walls, booths and (at night) the barriers of private gates; like BF01, a vehicle
+ // already touching a wall may always make the move that frees it.
+ if(state.enclosures){
+  const hit=enclosureVehicleContacts(state.enclosures,{x,y,a},bodyShape(vehicle),enclosureTime());
+  if(hit>0&&!(Number.isFinite(vehicle?.x)&&hit<=enclosureVehicleContacts(state.enclosures,{x:vehicle.x,y:vehicle.y,a:vehicle.a},bodyShape(vehicle),enclosureTime())+1e-9))return true;
+ }
  // BF01: touching another vehicle already (after a crash), every move that separates them is
  // allowed: the player can always reverse or steer away instead of staying pinned.
  if(!state.dynamicCollision)return false;
@@ -986,7 +1011,7 @@ function compareRoadWidths(){
  setRoadWidthMode(getRoadWidthMode()==='before'?'wide':'before');
  // Every consumer shares the same module instance, including roads/traffic,
  // street furniture, crosswalks and building-side storefront placements.
- state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createParkingBays();
+ state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createEnclosures();createParkingBays();
  state.traffic=createTraffic();prepareSignals();
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
@@ -1117,6 +1142,7 @@ function paintStaticScene(ctx,bounds,zoom){
  if(nearBorder(x0,y0,x1,y1,GATE_RULES.mouth+4)){ctx.save();borderPath(ctx);ctx.clip();drawCityStreets(ctx,roads,zoom);ctx.restore();drawGateMouths(ctx,bounds);}
  else drawCityStreets(ctx,roads,zoom);
  if(state.parkingBays)drawParkingBays(ctx,query(state.parkingBays.strips,state.bayGrid,x0,y0,x1,y1),zoom);
+ drawEnclosureWalls(ctx,state.enclosures,bounds,zoom);
  drawCityBuildings(ctx,[...inferred,...buildings],zoom);
  // The road remains below the entire roof, including the authored church art.
  // A small dynamic reveal makes the passage visible while travelling under it.
@@ -1155,6 +1181,7 @@ function drawRoofReveal(ctx,buildings,roads,dt,bounds){
   if(nearBorder(art.x0-22,art.y0-22,art.x1+22,art.y1+22)){ctx.save();borderPath(ctx);ctx.clip();drawCityStreets(ctx,roads,state.zoom);ctx.restore();}
   else drawCityStreets(ctx,roads,state.zoom);
   if(state.parkingBays)drawParkingBays(ctx,query(state.parkingBays.strips,state.bayGrid,art.x0-22,art.y0-22,art.x1+22,art.y1+22),state.zoom);
+  drawEnclosureWalls(ctx,state.enclosures,[art.x0-22,art.y0-22,art.x1+22,art.y1+22],state.zoom);
   ctx.globalAlpha=1-.72*amount;
   drawCityBuildings(ctx,[b],state.zoom);
   ctx.restore();
@@ -1325,6 +1352,7 @@ function draw(dt=0){
  }
  drawSkidMarks([x0,y0,x1,y1]);
  drawStreetObjects(c,state.streetObjects,[x0,y0,x1,y1],state.zoom);
+ drawEnclosureGates(c,state.enclosures,[x0,y0,x1,y1],state.zoom,{...enclosureTime(),clock:state.clock});
  drawLostItem(c,state.events,state.player.car<0?state.player:null,state.clock);
  // BF08: un lavavetri al finestrino si disegna sopra l'auto se le sta davanti (più in basso sullo
  // schermo): per questo disegno è saltato qui (indoors solo durante la chiamata) e ridisegnato dopo le auto.
@@ -1501,7 +1529,12 @@ async function load(){
    const req=await fetch('./data/building-placement.json',{cache:'no-cache'});
    if(req.ok)placement=await req.json();
   }catch(error){console.warn('Optional building placement unavailable',error);}
-  prepareMap(map,surveyData,infillCache,placement);
+  let enclosureData=null;
+  try{
+   const req=await fetch('./data/enclosures.json',{cache:'no-cache'});
+   if(req.ok)enclosureData=await req.json();
+  }catch(error){console.warn('Optional enclosures unavailable',error);}
+  prepareMap(map,surveyData,infillCache,placement,enclosureData);
  }catch(e){console.error('GTA Melito map load',e);loading('MAPPA NON DISPONIBILE','Non posso mostrare una Melito inventata: '+e.message+'. Riprova quando la cartografia è disponibile.',true);}
  finally{state.loading=false;}
 }
