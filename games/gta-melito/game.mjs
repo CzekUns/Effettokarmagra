@@ -11,7 +11,8 @@ import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} f
 import {drawBorderGates,borderGateList,borderRing,distanceToBorder,GATE_RULES} from './border-gates.mjs?v=001';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=006';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
-import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
+import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock,npcWeekday} from './npc-agenda.mjs?v=002';
+import {createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols} from './market.mjs?v=001';
 import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=002';
 import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote} from './local-shops.mjs?v=001';
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
@@ -117,6 +118,8 @@ const START_MINUTE=startMinuteFromUrl();
 const cityAudio=createCityAudio({storage:globalThis.localStorage,onRadioLevel:level=>carRadio.setVolume(level)});
 carRadio.setVolume(cityAudio.radioLevel);
 // Q08: ?meteo=pioggia|nuvoloso|sereno fixes the weather for checks; otherwise it follows the clock.
+// Q42: ?mercato=1 fa montare il mercato del rione 219 ogni giorno (per le prove); di norma è il venerdì.
+const FORCE_MARKET=new URLSearchParams(globalThis.location?.search||'').get('mercato')==='1';
 const FORCED_WEATHER=(()=>{const w=new URLSearchParams(globalThis.location?.search||'').get('meteo');return ['pioggia','nuvoloso','sereno'].includes(w)?w:null;})();
 const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
@@ -221,6 +224,25 @@ function createStreetObjects(){
  return placeStreetObjects(state.roads,{roadWidth:visualRoadWidth,avoid,
   walkable:(x,y)=>validWalk(x,y)&&inside([x,y],border),
   carriageway:(x,y,margin)=>{const r=nearest(x,y,30,state.roads,true);return !!r&&r.distance<visualRoadWidth(r.road)/2+margin||inParkingBay(x,y,margin);}});
+}
+// Q42: mercato del venerdì nel rione 219. Luogo reale (data/market-area.json); giorno, orari, banchi,
+// merci e venditori di fantasia. Banchi fuori da edifici, carreggiate, baie, porte e arredi.
+function createMelitoMarket(){
+ const border=toRing(state.map.border);
+ const walkable=(x,y)=>validWalk(x,y)&&inside([x,y],border);
+ const carriageway=(x,y,margin=0)=>{const r=nearest(x,y,30,state.roads,true);return !!r&&r.distance<visualRoadWidth(r.road)/2+margin||inParkingBay(x,y,margin);};
+ const obstacles=[...state.props.map(q=>q.kind<5?{x:q.x,y:q.y,r:3,walkR:.8,crown:4.6}:{x:q.x,y:q.y,r:1.7,walkR:1.1}),
+  ...(state.doors||[]).map(d=>({x:d.x,y:d.y,r:2.6})),...state.cars.map(v=>({x:v.x,y:v.y,r:3.4,walkR:2.4,crown:3.2})),
+  ...(state.signalPosts||[]).map(q=>({x:q.x,y:q.y,r:1.4}))];
+ return createMarket({roads:state.roads,walkable,carriageway,obstacles,roadHalf:road=>visualRoadWidth(road)/2});
+}
+function stepMelitoMarket(dt){
+ if(!state.market)return;
+ const p=state.player,car=p.car>=0?state.cars[p.car]:null;
+ stepMarket(state.market,dt,{minutes:state.npcClockMinutes,force:FORCE_MARKET,view:visibleBounds(),
+  player:{x:car?car.x:p.x,y:car?car.y:p.y,onFoot:!car},index:state.dynamicCollision,
+  say:(agent,text)=>cityEventBubble(state.events,agent,text),
+  advanceImpact:(agent,step)=>advanceNonlethalImpact(agent,step,canKnockbackMove)});
 }
 // BF02: the parking strip between lane and pavement, rebuilt with the road widths.
 function createParkingBays(){
@@ -461,7 +483,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
   if(state.cars.length>=Math.min(PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP+parkedBikeCount))break;
  }
  state.traffic=createTraffic();prepareSignals();
- state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();state.market=createMelitoMarket();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
@@ -563,13 +585,18 @@ function canKnockbackMove(x,y,actor){
  // BF01: the player's car and the parked vehicles are never shoved off the street (onto a
  // pavement or a square), where no move would be allowed any more and the car stayed stuck.
  if(actor&&state.cars.includes(actor)&&offStreetExcess(x,y,actor.a,actor)>offStreetExcess(actor.x,actor.y,actor.a,actor)+1e-6)return false;
+ // Q42: nessuna spinta dentro i banchi del mercato (persone e veicoli).
+ if(state.market&&actor){
+  if(actor.body==='car'||state.cars.includes(actor)){if(marketBlocksVehicle(state.market,{x,y,a:actor.a},bodyShape(actor),actor))return false;}
+  else if(marketBlocksWalker(state.market,x,y,.2))return false;
+ }
  return true;
 }
 function impactTraffic(dt){
  // The index limits contacts to adjacent street cells; no quadratic scan
  // over Melito's pedestrians. Include parked cars and player on foot.
  const p=state.player;
- const actors=[...state.people,...state.traffic,...state.cars,...(p.car<0?[p]:[])];
+ const actors=[...state.people,...(state.market?.people||[]),...state.traffic,...state.cars,...(p.car<0?[p]:[])];
  const nearby=makeCollisionIndex(actors);
  const active=[...state.traffic,...(p.car>=0?[state.cars[p.car]]:[])];
  for(const source of active){
@@ -799,6 +826,8 @@ function carBlocked(x,y,a,which,vehicle=state.cars[which]){
  // always make the move that brings it back towards the road, never one that takes it further.
  if(off>0&&!(Number.isFinite(vehicle?.x)&&off<offStreetExcess(vehicle.x,vehicle.y,vehicle.a,vehicle)-1e-6))return true;
  // Q07: cast-iron bollards stop the car like a wall.
+ // Q42: anche i banchi del mercato (non gli ombrelloni); come BF01, ci si può sempre allontanare.
+ if(state.market&&marketBlocksVehicle(state.market,{x,y,a},bodyShape(vehicle),vehicle))return true;
  if(state.streetObjects&&bollardBlocksVehicle(state.streetObjects,{x,y,a},bodyShape(vehicle)))return true;
  // BF01: touching another vehicle already (after a crash), every move that separates them is
  // allowed: the player can always reverse or steer away instead of staying pinned.
@@ -928,7 +957,7 @@ function tick(dt){
    advanceNonlethalImpact(p,dt,canKnockbackMove);
   }else if(Math.hypot(dx,dy)>.08){
    const len=Math.hypot(dx,dy),v=(pressed.run?RUN_SPEED:WALK_SPEED)*Math.min(1,len)*boostFactor(state.boost,state.clock),nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
-   const post=(x,y)=>state.streetObjects&&bollardBlocksWalker(state.streetObjects,x,y);
+   const post=(x,y)=>state.streetObjects&&bollardBlocksWalker(state.streetObjects,x,y)||marketBlocksWalker(state.market,x,y);
    if(validWalk(nx,p.y)&&inside([nx,p.y],toRing(state.map.border))&&!post(nx,p.y))p.x=nx;
    if(validWalk(p.x,ny)&&inside([p.x,ny],toRing(state.map.border))&&!post(p.x,ny))p.y=ny;
    p.a=Math.atan2(dy,dx);state.distance+=v*dt;
@@ -940,6 +969,7 @@ function tick(dt){
  updateTraffic(dt);
  stepCommuters(dt);
  stepStreetPhysics(dt);
+ stepMelitoMarket(dt);
  const screen=visibleBounds(),inset=18+4;
  const signal=stepCityEvents(state.events,dt,{people:state.people,graph:state.graph,
   player:{x:p.x,y:p.y,onFoot:p.car<0},view:[screen[0]+inset,screen[1]+inset,screen[2]-inset,screen[3]-inset],
@@ -988,7 +1018,7 @@ function compareRoadWidths(){
  // street furniture, crosswalks and building-side storefront placements.
  state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createParkingBays();
  state.traffic=createTraffic();prepareSignals();
- state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();state.market=createMelitoMarket();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
  state.propsGrid=makeIndex(state.props);
@@ -999,7 +1029,7 @@ function compareRoadWidths(){
 }
 
 function updateHud(){
- const npcClockLabel=$('npc-clock');if(npcClockLabel)npcClockLabel.textContent=formatNpcClock(state.npcClockMinutes)+(state.weather?' · '+state.weather.label:'');
+ const npcClockLabel=$('npc-clock');if(npcClockLabel)npcClockLabel.textContent=npcWeekday(state.npcClockMinutes)+' · '+formatNpcClock(state.npcClockMinutes)+(state.weather?' · '+state.weather.label:'');
  const p=state.player;
  const driving=p.car>=0&&!state.bankInterior;
  // The map container must receive the mode class: otherwise CSS keeps the
@@ -1278,6 +1308,7 @@ function draw(dt=0){
   drawPuddles(c,state.puddles||[],[x0,y0,x1,y1],weather.wetness,weather.rain,state.clock);
  }
  drawStopLines(c,state.graph.signals,[x0,y0,x1,y1],state.zoom);
+ drawMarketGround(c,state.market,[x0,y0,x1,y1],state.zoom);
  drawRoofReveal(c,[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],roads,dt,[x0,y0,x1,y1]);
  if(state.zoom>1.75){
   c.font='3.6px monospace';c.fillStyle='#e5d9bc';c.textAlign='center';
@@ -1325,14 +1356,16 @@ function draw(dt=0){
  }
  drawSkidMarks([x0,y0,x1,y1]);
  drawStreetObjects(c,state.streetObjects,[x0,y0,x1,y1],state.zoom);
+ drawMarketStalls(c,state.market,[x0,y0,x1,y1],state.clock);
  drawLostItem(c,state.events,state.player.car<0?state.player:null,state.clock);
  // BF08: un lavavetri al finestrino si disegna sopra l'auto se le sta davanti (più in basso sullo
  // schermo): per questo disegno è saltato qui (indoors solo durante la chiamata) e ridisegnato dopo le auto.
  const inFront=state.people.filter(q=>q.scripted&&q.washer?.car&&!q.indoors&&q.y>q.washer.car.y);
  for(const q of inFront)q.indoors=true;
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
+ if(state.market)drawCityPeople(c,state.market.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  for(const q of inFront)q.indoors=false;
- if(weather&&weather.rain>.3)for(const person of state.people){
+ if(weather&&weather.rain>.3)for(const person of [...state.people,...(state.market?.people||[]).filter(q=>!q.sheltered)]){
   if(person.indoors||person.x<x0||person.x>x1||person.y<y0||person.y>y1)continue;
   drawUmbrella(c,person.prevX===undefined?person.x:person.prevX+(person.x-person.prevX)*alpha,
    person.prevY===undefined?person.y:person.prevY+(person.y-person.prevY)*alpha,person,weather.rain);
@@ -1348,6 +1381,12 @@ function draw(dt=0){
  }
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);});
  drawPlayer();
+ // Q42: ombrelloni del mercato sopra persone e veicoli; sfumano col giocatore sotto (R01, come i tetti).
+ if(state.market){
+  const pc=p.car>=0?state.cars[p.car]:null;
+  stepParasolReveal(state.market,[pc?{x:pc.x,y:pc.y,radius:3}:{x:p.x,y:p.y,radius:.6}],dt);
+  drawMarketParasols(c,state.market,[x0,y0,x1,y1],state.clock,{rain:weather?.rain||0});
+ }
  if(inFront.length)drawCityPeople(c,inFront,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  drawWasherEffects(c,state.people,state.clock);
  drawSignals(c,state.graph.signals,[x0,y0,x1,y1],signalSeconds(),state.zoom);

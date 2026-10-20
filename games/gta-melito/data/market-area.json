@@ -1,8 +1,8 @@
 {
  "version": 1,
  "id": "mercato-settimanale-rione-219",
- "status": "da-arredare",
- "used_by_game": false,
+ "status": "prima-versione-placeholder",
+ "used_by_game": true,
  "name": "Area del mercato settimanale (rione 219)",
  "verified": {
   "location": true,
@@ -121,5 +121,9 @@
    "url": "https://www.openstreetmap.org/#map=19/40.92404/14.23118",
    "consulted": "2026-10-20"
   }
- ]
+ ],
+ "game": {
+  "module": "market.mjs",
+  "note": "market.mjs copia poligono, centro e vie (q42-market.test.mjs lo verifica); banchi segnaposto, ombrelloni procedurali, venditori e clienti di fantasia; giorno di gioco 0 = venerdì"
+ }
 }

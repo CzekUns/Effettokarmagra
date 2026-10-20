@@ -619,3 +619,12 @@ Il lavavetri resta sul lato guida e il tergivetro si vede sul parabrezza. Non co
 Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA, diviso in 5 sezioni con titoletti spaziati nello stile del gioco.
 
 **Verifiche:** foto Chrome headless prima/dopo a 1280×720, 1366×768 e 1920×1080, menu pausa (inizio e fondo), indicazione del tasto E e telefono 844×390 in guida e in pausa, invariato. Non provato su un PC con schermo touch né su un telefono reale.
+
+### 2026-10-20 — Q42 mercato del rione 219 (Claude)
+- **Ombrelloni:** pixel art procedurale, 4 px per unità, una cache per variante.
+  - Quadrati a quattro falde, con spicchi a strisce che convergono al pomolo, nervature scure, mantovana smerlata e luce da nord-ovest.
+  - Tondi a otto spicchi (giocattoli multicolori, fiori, bigiotteria); tenda rettangolare a strisce per i casalinghi.
+  - Colori dal foglio `mercato-banchi.csv`; abbigliamento a colori vivaci diversi per banco.
+- **Profondità e trasparenza:** la tela è sollevata sopra il palo (2.5D) e passa sopra persone e veicoli. Quando il giocatore è sotto o accanto sfuma all'80%, come i tetti.
+- **Banchi:** segnaposto semplici con bancone di legno, telo, merce stilizzata a blocchi nei colori del foglio e furgone-negozio per salumi e porchetta. Durante il montaggio ci sono cassette per terra; fuori orario restano i posteggi gialli numerati.
+- **Foto guardate:** montaggio, pieno, vuoto, notte con pioggia, pioggia, telefono, R01 a piedi e in auto.
