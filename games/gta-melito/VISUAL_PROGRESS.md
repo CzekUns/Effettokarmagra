@@ -705,3 +705,7 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 - **Carro attrezzi:** l'auto soccorsa è disegnata sul pianale, all'88%.
 - **Persone:** autista del corriere e operatore della nettezza urbana con gli sprite esistenti dei pedoni.
 - **Dove guardare:** `?servizio=1&ora=10:00` accelera le routine; le foto di prova sono fuori dal repo.
+### 2026-10-20 — Q25 interni dei negozi (Claude, PROVVISORIO · da approvare)
+- Tre interni in pixel art procedurale con la stessa palette, gli stessi muri e le stesse ombre della banca: **bar** (bancone in legno con macchina del caffè e tazzine, mensole di bottiglie, vetrina dei dolci, tre tavolini con sedie, pavimento in graniglia), **panificio/pasticceria** (banco vetrina con pane e cassa, scaffali del pane a parete, cesti, piastrelle chiare), **minimarket** (scaffali con prodotti generici senza marche, frigoriferi a vetro, frutta, cassa, linoleum). Commesso con lo sprite dei pedoni. Fuori: punto luminoso caldo sul portone, senza scritta sopra l'insegna.
+- **Da far vedere a Simone:** Bar Alexander su Corso Europa (628,1291) e Panificio Pagliuca: avvicinarsi al punto luminoso sul portone, E · ENTRA, poi andare al bancone (PARLA).
+
