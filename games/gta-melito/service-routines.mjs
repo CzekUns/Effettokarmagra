@@ -12,11 +12,16 @@
  * Un mezzo al lavoro è fermo per roads.mjs (serviceHold) e si muove solo qui, sempre un poco alla volta.
  * Ogni fase ha un tempo massimo: se qualcosa va storto (urto, posto occupato, strada che non porta)
  * il lavoro si chiude, lo si scrive nel registro e il mezzo riprende il traffico. */
+import {vs} from './world-scale.mjs?v=001';
 export const SERVICE_RULES=Object.freeze({
  courier:Object.freeze({firstDelay:[8,40],cooldown:[45,90],retry:12,doorRadius:30,bayRadius:24,ahead:[6,32],
   walkSpeed:1.5,deliver:[4,7],pullIn:2.6,pullOut:2.4,laneWait:25,maxJob:75}),
- refuse:Object.freeze({firstDelay:[6,30],cooldown:[22,45],retry:4,cruise:4.5,binReach:8,binRest:300,
-  walkSpeed:1.3,tip:2.2,maxJob:45}),
+ // BF14: camion e corsia sono in scala (sagoma e offset ×0,75), bidoni e marciapiedi no: dal fianco del
+ // camion al bidone ci sono fino a 1,5 m in più. binReach 8 → 9,5 tiene in portata gli stessi bidoni di
+ // prima; maxJob 45 → 60 basta per due bidoni con il cammino più lungo (prima si chiudeva a metà, i bidoni
+ // tornavano a posto di colpo); binAlong (bidone accanto al cassone, attorno al punto di carico) segue la sagoma.
+ refuse:Object.freeze({firstDelay:[6,30],cooldown:[22,45],retry:4,cruise:4.5,binReach:9.5,binAlong:[vs(-3),vs(4)],binRest:300,
+  walkSpeed:1.3,tip:2.2,maxJob:60}),
  tow:Object.freeze({breakdownEvery:[70,130],firstBreakdown:[25,60],maxBroken:1,dispatchRadius:420,maxTrip:150,
   approach:14,hook:1.5,load:3,carryMin:25,giveUp:200}),
  bus:Object.freeze({stopSpacing:260,maxStops:14,junctionClear:25,approach:45,dwell:[6,10],maxDwell:16,doors:1,
@@ -123,7 +128,7 @@ function startCourier(s,agent,ctx){
  const R=SERVICE_RULES.courier,e=ctx.graph.edges[agent.edge];
  if(!e||!(agent.t>.05&&agent.t<.9)||!ctx.freeStalls){agent.serviceNext=s.clock+scaled(s,4);return;}
  const f=frame(e.angle),mid=(R.ahead[0]+R.ahead[1])/2;
- const shape=ctx.shape?ctx.shape(agent):{halfLength:3.6,halfWidth:1.85};
+ const shape=ctx.shape?ctx.shape(agent):{halfLength:vs(3.6),halfWidth:vs(1.85)};
  for(const stall of ctx.freeStalls(agent.x+f.ux*mid,agent.y+f.uy*mid,(R.ahead[1]-R.ahead[0])/2+4)){
   const r=rel(stall,agent,f);
   if(r.along<R.ahead[0]||r.along>R.ahead[1]||r.across<1||r.across>9)continue;
@@ -206,13 +211,13 @@ function keepSlow(agent){if(agent.serviceCruise===undefined&&agent.speed>SERVICE
 function startRefuse(s,agent,ctx){
  const R=SERVICE_RULES.refuse,e=ctx.graph.edges[agent.edge],bins=ctx.objects?.bins;
  if(!e||!bins?.length||!(agent.t>.03&&agent.t<.97)){agent.serviceNext=s.clock+scaled(s,R.retry);return;}
- const f=frame(agent.a),shape=ctx.shape?ctx.shape(agent):{halfLength:4.8,halfWidth:1.9};
+ const f=frame(agent.a),shape=ctx.shape?ctx.shape(agent):{halfLength:vs(4.8),halfWidth:vs(1.9)};
  const rear={x:agent.x-f.ux*shape.halfLength*.75+f.nx*(shape.halfWidth+.45),y:agent.y-f.uy*shape.halfLength*.75+f.ny*(shape.halfWidth+.45)};
  let best=null;
  for(const bin of bins){
   if(bin.tipped||!bin.home||dist(bin,bin.home)>.3||s.clock-(bin.emptiedAt??-1e9)<scaled(s,R.binRest))continue;
   if(Math.abs(bin.x-rear.x)>14||Math.abs(bin.y-rear.y)>14)continue;
-  const r=rel(bin,rear,f);if(r.along<-3||r.along>4||r.across<.3||r.across>R.binReach)continue;
+  const r=rel(bin,rear,f);if(r.along<R.binAlong[0]||r.along>R.binAlong[1]||r.across<.3||r.across>R.binReach)continue;
   if(!walkClear(rear,bin,ctx))continue;
   if((ctx.parked||[]).some(v=>v!==agent&&Math.abs(v.x)<1e5&&segmentNearVehicle(rear,bin,v,ctx)))continue;
   if(!best||Math.hypot(r.along,r.across)<best.d)best={bin,d:Math.hypot(r.along,r.across)};
@@ -264,7 +269,7 @@ function stepRefuse(s,agent,job,dt,ctx){
   return;
  }
  if(job.phase==='back'){
-  const f=frame(agent.a),sh=ctx.shape?ctx.shape(agent):{halfLength:4.8,halfWidth:1.9};
+  const f=frame(agent.a),sh=ctx.shape?ctx.shape(agent):{halfLength:vs(4.8),halfWidth:vs(1.9)};
   const rear={x:agent.x-f.ux*sh.halfLength*.75+f.nx*(sh.halfWidth+.45),y:agent.y-f.uy*sh.halfLength*.75+f.ny*(sh.halfWidth+.45)};
   if(walkTo(op,rear,R.walkSpeed,dt)){s.stats.refuse.done++;finish(s,agent,job,ctx,'fatto');}
  }
@@ -346,7 +351,7 @@ function dispatchTow(s,ctx){
  }
 }
 function bedPose(truck,ctx){
- const sh=ctx.shape?ctx.shape(truck):{halfLength:4.8},f=frame(truck.a);
+ const sh=ctx.shape?ctx.shape(truck):{halfLength:vs(4.8)},f=frame(truck.a);
  return {x:truck.x-f.ux*sh.halfLength*.3,y:truck.y-f.uy*sh.halfLength*.3,a:truck.a};
 }
 function stepTow(s,agent,job,dt,ctx){
@@ -436,7 +441,7 @@ function crossesRoad(a,b,ctx){
  return false;
 }
 function busDoors(agent,ctx){
- const sh=ctx.shape?ctx.shape(agent):{halfLength:6.3,halfWidth:1.9},f=frame(agent.a);
+ const sh=ctx.shape?ctx.shape(agent):{halfLength:vs(6.3),halfWidth:vs(1.9)},f=frame(agent.a);
  return [.42,-.38].map(k=>({x:agent.x+f.ux*sh.halfLength*k+f.nx*(sh.halfWidth+.35),y:agent.y+f.uy*sh.halfLength*k+f.ny*(sh.halfWidth+.35)}));
 }
 function startBus(s,agent,ctx){

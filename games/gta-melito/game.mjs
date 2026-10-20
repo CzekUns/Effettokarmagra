@@ -24,9 +24,9 @@ import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=
 import {trafficTargetAt} from './traffic-rush.mjs?v=001';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=002';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker,addToCollisionIndex} from './traffic-collision.mjs?v=131';
-import {buildParkingBays,bayOffset,fitsParkingBay,nearestFreeStalls,parkInStall,insideParkingStrip,drawParkingBays} from './parking-bays.mjs?v=002';
+import {buildParkingBays,bayOffset,fitsParkingBay,nearestFreeStalls,parkInStall,insideParkingStrip,drawParkingBays} from './parking-bays.mjs?v=003';
 import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker,moveStreetObject} from './street-objects.mjs?v=002';
-import {createServiceRoutines,stepServiceRoutines,drawBusStops,drawBusDoors,drawWarningTriangle,towedCarPose} from './service-routines.mjs?v=001';
+import {createServiceRoutines,stepServiceRoutines,drawBusStops,drawBusDoors,drawWarningTriangle,towedCarPose} from './service-routines.mjs?v=002';
 import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=003';
 import {prepareSignalPosts,drawStopLines,drawSignals,signalGlows} from './traffic-light-art.mjs?v=004';
 import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=004';
@@ -797,8 +797,9 @@ function serviceContext(view,playerVehicle){
    return stalls.filter(st=>!near.some(v=>vehiclesOverlap({x:st.x,y:st.y,a:st.a,body:'car'},v))).slice(0,8);
   },
   stallTaken:(stall,agent)=>vehicles.some(v=>v!==agent&&live(v)&&vehiclesOverlap({x:stall.x,y:stall.y,a:stall.a,body:'car'},v)),
-  // la sosta del corriere è breve: il furgone non deve invadere la corsia (controllo con la larghezza di un'auto)
-  fits:(pose,v)=>{const sh=vehicleShape({...v,...pose});return !!state.parkingBays&&fitsParkingBay(state.parkingBays,pose,{halfLength:sh.halfLength,halfWidth:Math.min(sh.halfWidth,1.7)});},
+  // la sosta del corriere è breve: il furgone non deve invadere la corsia (controllo con la larghezza di un'auto,
+  // BF14: in scala, vs(1,7) come BAY_RULES; con 1,7 fisso il limite non tagliava più e il furgone era controllato a tutta larghezza)
+  fits:(pose,v)=>{const sh=vehicleShape({...v,...pose});return !!state.parkingBays&&fitsParkingBay(state.parkingBays,pose,{halfLength:sh.halfLength,halfWidth:Math.min(sh.halfWidth,vs(1.7))});},
   blocked:(agent,pose)=>!!state.dynamicCollision&&trafficMoveBlocked(agent,{...pose,vehicleType:'car',model:agent.model},'car',state.dynamicCollision,agent),
   shape:v=>vehicleShape(v),carPosition:(e,t)=>lanePosition(state.graph,e,t,'car'),
   planRoute:(a,b)=>planRoute(state.graph,a,b,'car'),

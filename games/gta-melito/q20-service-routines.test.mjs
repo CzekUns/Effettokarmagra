@@ -7,6 +7,7 @@ import {buildParkingBays,nearestFreeStalls,fitsParkingBay,parkInStall} from './p
 import {moveStreetObject} from './street-objects.mjs';
 import {planRoute} from './npc-commute.mjs';
 import {createServiceRoutines,stepServiceRoutines,makeBusStops,reportBreakdown,serviceKind,SERVICE_RULES} from './service-routines.mjs';
+import {vs} from './world-scale.mjs';
 
 const dt=.05;
 const FAR=[5000,5000,5100,5100];// nessuna camera sulla scena: le riconsegne fuori vista sono subito possibili
@@ -17,7 +18,8 @@ function world(graph,{traffic=[],parked=[],people=[],doors=[],objects=null,view=
   canStand:()=>true,onRoad:()=>false,
   freeStalls:(x,y,r)=>nearestFreeStalls(bays,x,y,all(),vehiclesOverlap,{radius:r,limit:8}),
   stallTaken:(stall,agent)=>all().some(v=>v!==agent&&vehiclesOverlap({x:stall.x,y:stall.y,a:stall.a,body:'car'},v)),
-  fits:(pose,v)=>{const sh=vehicleShape({...v,...pose});return fitsParkingBay(bays,pose,{halfLength:sh.halfLength,halfWidth:Math.min(sh.halfWidth,1.7)});},
+  // come game.mjs: sosta breve, il furgone si controlla con la larghezza di un'auto in scala BF14
+  fits:(pose,v)=>{const sh=vehicleShape({...v,...pose});return fitsParkingBay(bays,pose,{halfLength:sh.halfLength,halfWidth:Math.min(sh.halfWidth,vs(1.7))});},
   blocked:(agent,pose)=>trafficMoveBlocked(agent,{...pose,vehicleType:'car',model:agent.model},'car',makeCollisionIndex([...all(),...people]),agent),
   shape:v=>vehicleShape(v),carPosition:(e,t)=>lanePosition(graph,e,t,'car'),
   planRoute:(a,b)=>planRoute(graph,a,b,'car'),moveObject:(o,x,y)=>moveStreetObject(objects,o,x,y),parkInStall,
@@ -52,10 +54,19 @@ test('Q20 courier: into a free stall next to a door, the driver delivers and wal
  const E=eastEdge(graph),e=graph.edges[E],pave=e.streetWidth/2+1.7;
  const door={x:150,y:pave+2.5,wallX:150,wallY:pave+3.5,open:0,label:'Portone di prova'};
  const van=one(graph,'corriere-bianco',11,E);van.speed=8;
- const traffic=[van],{ctx}=world(graph,{traffic,doors:[door]});
+ const traffic=[van],{ctx,bays}=world(graph,{traffic,doors:[door]});
+ // BF14: in ogni stallo della residenziale un'auto ci sta (anche se lo stallo è al minimo verso la corsia),
+ // e così il furgone controllato con la larghezza di un'auto; a tutta larghezza il suo disegno entrerebbe
+ // nel margine della corsia.
+ const vanShape=vehicleShape(van),pose=st=>({x:st.x,y:st.y,a:e.angle});
+ assert.ok(bays.stalls.length>0&&bays.stalls.every(st=>fitsParkingBay(bays,{x:st.x,y:st.y,a:st.a},vehicleShape({model:'panda-modern-white'}))),'a car fits its own stalls');
+ assert.ok(bays.stalls.filter(st=>st.side>0).every(st=>ctx.fits(pose(st),van)),'the van fits checked as a car');
+ assert.equal(bays.stalls.some(st=>fitsParkingBay(bays,pose(st),vanShape)),false,'at full width it would not');
  const s=createServiceRoutines(graph,{test:true});
  let after=-1e9,prev={x:van.x,y:van.y},maxStep=0,inStall=false,driverAtDoor=false,doorOpened=false,stallPose=null;
- run(graph,ctx,s,60,()=>{
+ // BF14: gli stalli sono lunghi vs(7,2): il primo con un portone entro doorRadius è un altro, ~4 m più lontano
+ // dal portone, e l'autista cammina ~5 s in più fra andata e ritorno. Il film è più lungo, le verifiche restano.
+ run(graph,ctx,s,70,()=>{
   maxStep=Math.max(maxStep,Math.hypot(van.x-prev.x,van.y-prev.y));prev={x:van.x,y:van.y};
   const job=s.jobs.get(van);
   if(job?.pose&&!s.stats.courier.done){stallPose=job.pose;if(Math.hypot(van.x-job.pose.x,van.y-job.pose.y)<.05&&van.serviceHold)inStall=true;}
@@ -80,7 +91,9 @@ test('Q20 refuse truck: stops beside a bin, the operator empties it and puts it 
  const {ctx}=world(graph,{traffic:[truck],objects});
  const s=createServiceRoutines(graph,{test:true});
  let maxCruise=0,away=0,moved=false,stopped=false;
- run(graph,ctx,s,50,()=>{
+ // BF14: corsia e camion in scala, bidone fermo dov'era: l'operatore cammina ~1,5 m in più per tratto
+ // (quattro tratti), il lavoro dura ~27 s invece di ~24. Il film è più lungo, le verifiche restano le stesse.
+ run(graph,ctx,s,60,()=>{
   if(s.clock>.2)maxCruise=Math.max(maxCruise,truck.speed);away=Math.max(away,Math.hypot(bin.x-home.x,bin.y-home.y));
   if(away>.5)moved=true;if(truck.serviceHold)stopped=true;
  });
@@ -89,6 +102,7 @@ test('Q20 refuse truck: stops beside a bin, the operator empties it and puts it 
  assert.ok(away<9,'carried a few metres, not thrown: '+away.toFixed(1));
  assert.deepEqual([bin.x,bin.y],[home.x,home.y],'back exactly where it was');
  assert.ok(s.stats.refuse.done>=1&&s.stats.refuse.bins>=1,JSON.stringify(s.log));
+ assert.equal(s.stats.refuse.failed,0,'finished in time, not cut short: '+JSON.stringify(s.log));
  assert.equal(s.figures.length,0);assert.ok(truck.x>home.x+10,'and goes on');
 });
 

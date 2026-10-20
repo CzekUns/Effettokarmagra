@@ -157,14 +157,18 @@ function crosswalkRects(graph){
  return out;
 }
 /* Controllo di una sagoma contro le regole della fascia: corsie, pedoni, incroci, punti da
- * lasciare liberi. `own` è il tratto su cui è stata costruita (già rispettato per costruzione). */
-function poseConflict(bays,pose,{halfLength=BAY_RULES.halfLength,halfWidth=BAY_RULES.halfWidth,own=null}={}){
+ * lasciare liberi. `own` è il tratto su cui è stata costruita (già rispettato per costruzione).
+ * `band` è il tratto nella cui fascia la sagoma sta già (fitsParkingBay): lì le linee dipinte sono
+ * a posto per costruzione, verso quella corsia conta il corpo disegnato del mezzo. */
+function poseConflict(bays,pose,{halfLength=BAY_RULES.halfLength,halfWidth=BAY_RULES.halfWidth,own=null,band=null}={}){
  const r=BAY_RULES,rect=bayRect(pose,halfLength,halfWidth),tol=r.tolerance;
  // BF14: verso le corsie conta il corpo disegnato (più largo della sagoma), anche in curva e agli incroci.
- const drawn=bayRect(pose,Math.max(halfLength,r.stall/2),Math.max(halfWidth,r.drawnHalf*halfWidth/r.halfWidth)+.05);// the painted stall
+ const drawnHalf=Math.max(halfWidth,r.drawnHalf*halfWidth/r.halfWidth);
+ const drawn=bayRect(pose,Math.max(halfLength,r.stall/2),drawnHalf+.05);// the painted stall
+ const body=band?bayRect(pose,halfLength,drawnHalf):null;
  for(const s of nearSegments(bays.net,pose.x,pose.y)){
   if(s.forward||s.backward){
-   if(s!==own&&rectSegment(drawn,s.ax,s.ay,s.bx,s.by)<roadTrafficLaneOffset(s.width)+r.drawnHalf+r.laneGap-tol)return 'corsia';
+   if(s!==own&&rectSegment(s===band?body:drawn,s.ax,s.ay,s.bx,s.by)<roadTrafficLaneOffset(s.width)+r.drawnHalf+r.laneGap-tol)return 'corsia';
    if(s===own)continue;
   }
   if(!s.walk)continue;
@@ -241,11 +245,27 @@ export function insideParkingStrip(strip,x,y,margin=0){
  const dx=x-strip.ax,dy=y-strip.ay,d=dx*strip.ux+dy*strip.uy,o=(-dx*strip.uy+dy*strip.ux)*strip.side;
  return d>=strip.from-margin&&d<=strip.to+margin&&o>=strip.inner-margin&&o<=strip.outer+margin;
 }
+/* Il tratto carrabile nella cui fascia di sosta sta la posa: sull'asse degli stalli (bayOffset),
+ * parallela, dentro il tratto. null se la posa non è nella fascia di nessun tratto vicino. */
+function bandSegment(bays,pose){
+ for(const s of nearSegments(bays.net,pose.x,pose.y)){
+  if(s.chord||!(s.forward||s.backward)||!(s.len>0))continue;
+  const c=bayOffset(s.width);if(c==null)continue;
+  const ux=(s.bx-s.ax)/s.len,uy=(s.by-s.ay)/s.len,dx=pose.x-s.ax,dy=pose.y-s.ay,d=dx*ux+dy*uy;
+  if(d<0||d>s.len||Math.abs(Math.abs(dy*ux-dx*uy)-c)>BAY_RULES.tolerance)continue;
+  if(Math.abs(Math.sin((pose.a||0)-s.angle))>.05)continue;
+  return s;
+ }
+ return null;
+}
 /* Una sagoma qualsiasi (per esempio un food truck) sta nella fascia senza invadere corsie,
- * linea dei pedoni, incroci o ingressi. */
+ * linea dei pedoni, incroci o ingressi. BF14: nella fascia del proprio tratto le linee dipinte
+ * (0,05 m oltre l'auto disegnata) sono quelle già controllate da buildParkingBays; verso quella
+ * corsia si misura il corpo disegnato del mezzo. Prima anche un'auto in uno stallo vero risultava
+ * «corsia» per 3 cm su tutte le strade dove lo stallo sta al minimo (le residenziali). */
 export function fitsParkingBay(bays,pose,shape={}){
  if(!bays)return false;
- return !poseConflict(bays,pose,{halfLength:shape.halfLength,halfWidth:shape.halfWidth});
+ return !poseConflict(bays,pose,{halfLength:shape.halfLength,halfWidth:shape.halfWidth,band:bandSegment(bays,pose)});
 }
 export function stallTaken(stall,vehicles,overlap){
  const pose={x:stall.x,y:stall.y,a:stall.a,body:'car'};
