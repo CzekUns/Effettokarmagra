@@ -389,3 +389,10 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - Documentazione aggiornata in `PIXEL_ART_MODUS.md` e richiamo esplicito in `AGENTS.md` per gli altri agenti. Seconda tavola pedoni solo secondaria; vecchio friggitore e mestieri/PR #33 non approvati come modello artistico.
 - Specificati formato 4 persone × 4 direzioni × 4 frame (384×160, cella 24×40), confronto visivo affiancato e blocco della generazione se il file originale non è accessibile.
 - Intervento **solo di documentazione**: PNG/renderer/routine, deploy, CI e giocabilità invariati; test tecnici non eseguiti perché non sono stati modificati.
+
+### 2026-10-20 — Refactoring visivo dei quattro NPC sulla reference originale dei pedoni
+- **Prima di disegnare:** aperto visivamente il primo sheet esistente `pedoni-4x4frames-24x40-rgba.png` in GitHub, formato 384×160, 4 personaggi, 4 direzioni × 4 pose.
+- **Lavoro:** derivati direttamente tutti i 64 frame dalla tavola originale, rimappando i quattro archetipi nell'ordine friggitore (dal personaggio 3), vigile (dal personaggio 1), lavavetri (dal personaggio 4), contrabbandiere (dal personaggio 2); abiti nuovi e dettagli accessori limitati alla cella nativa 24×40 senza cambiare le proporzioni.
+- **Asset:** nuovo PNG indicizzato con alpha autentico `assets/people/npc-mestieri-prima-reference-384x160.png`, 384×160; 4 mini-sheet individuali `npc-prima-reference-{friggitore,vigile,lavavetri,contrabbandiere}-96x160.png`. I due fogli mestieri precedenti sono ancora disponibili per confronto ma non sono riferimento approvato.
+- **Controlli:** controllati matrice dei frame, paletta originale ampliata con sfumature verdi del lavavetri, trasparenza effettiva e visualizzazione a 3×; codec PNG verificato per celle native e integrazione futura. Non eseguiti screenshot nel gioco e test Android; nessuna sostituzione attiva dei personaggi.
+- **Stato:** branch `art/npc-mestieri-prima-reference` e PR in bozza per giudizio estetico dell'utente, senza modifica di `main` e senza toccare la logica NPC. Il vecchio prototipo PR #33 derivava dal friggitore storico e viene superato dal nuovo metodo.
