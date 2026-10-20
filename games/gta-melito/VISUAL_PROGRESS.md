@@ -662,3 +662,8 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 ### 2026-10-20 — Q17 banco degli ambulanti
 - Nessuna nuova arte. Il pannello acquisti, lo stesso dei negozi Q06, ora si apre anche al banco dei furgoncini, con l'intestazione «AMBULANTE · MELITO». Sulla plancia PC compare la scritta «E · COMPRA · NOME DEL BANCO». Foto: banco «Zeppole e panzerotti» in Via Roma.
 
+### 2026-10-20 — Q21 passeggeri (PROVVISORIO, da approvare)
+- **Auto, Ape e furgoni:** teste e spalle degli occupanti stilizzate, sotto parabrezza e lunotto, con un leggero riflesso del vetro. Il guidatore si vede solo sui mezzi in marcia e sull'auto del giocatore; le auto parcheggiate restano vuote.
+- **Scooter:** passeggero dietro il guidatore, con casco chiaro, giacca diversa e contorno scuro, per leggere due figure distinte. Gli sprite dei mezzi sono invariati.
+- **Cartelli e meta:** «PASSAGGIO?», fumetto del passeggero su due righe (mancia e via), anello giallo tratteggiato sulla meta.
+

@@ -843,3 +843,19 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Browser:** una prova da 20 s, acquisto reale salvato, 0 errori.
 - **Cache:** `game.mjs?v=170`.
 
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q21 passeggeri su auto e scooter
+- **Nuovo `passengers.mjs`:** capienza per mezzo, guidatore escluso: auto 4, scooter/moto 1, Ape 1, furgoni 2, banchi 0. Associazione stabile posto ↔ NPC (`vehicle.seats`, `npc.aboard`), senza doppioni né eccedenze.
+- **Traffico:** occupanti stabili dal seed (circa il 40% delle auto e il 25% degli scooter), con teste viste attraverso i vetri.
+- **Scooter:** il passeggero dietro il guidatore è disegnato in `motorcycles.mjs`, opzione `pillion`.
+- **`game.mjs`:**
+  - autostoppisti (un passante anonimo su 5) con cartello «PASSAGGIO?»;
+  - a mezzo fermo `E · DAI UN PASSAGGIO`, poi `FAI SCENDERE` e solo dopo l'uscita del giocatore;
+  - meta reale con anello in strada e punto sulla minimappa;
+  - discesa dalla portiera con ritorno al marciapiede tramite il recupero;
+  - mancia di 4 € salvata se il passeggero arriva;
+  - HUD «N A BORDO».
+- **Cache:** `motorcycles.mjs?v=007`, `passengers.mjs?v=001`, `game.mjs?v=172`.
+- **Test:** `q21-passengers.test.mjs` (9 test); adattati `bf11-pc-board` e `steering-wheel` (banco HUD). Suite completa una volta alla fine.
+- **Browser** (prova breve, carico ~4): salita, discesa e uscita in auto, scooter con passeggero, capienza piena, 0 errori JS. Primo piano di auto, Ape e scooter guardato.
+- **Limiti:** grafica provvisoria da far approvare a Simone; i passeggeri del traffico non scendono mai; touch non provato a parte; telefono reale non disponibile.
+
