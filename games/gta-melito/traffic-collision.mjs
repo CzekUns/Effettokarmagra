@@ -1,3 +1,4 @@
+import {vs,ps} from './world-scale.mjs?v=001';
 // Small world-space bins avoid scanning every NPC for each steering decision.
 export function makeCollisionIndex(items,cell=16){
  const bins=new Map(),index={bins,cell};
@@ -30,12 +31,16 @@ export function nearbyColliders(index,x,y,radius=8){
  * reference car (box ≈ 0,66 × width and 0,78 × length of the drawn body). Car width stays
  * 3,4: two-way service streets keep their lanes only 4,6 apart. Food-truck awnings are not
  * part of the solid body. */
+// BF14: every box is VEHICLE_SCALE of the measured one, like the drawn sprites (world-scale.mjs).
+const box=(halfLength,halfWidth)=>Object.freeze({halfLength:vs(halfLength),halfWidth:vs(halfWidth)});
 const MODEL_SHAPES=Object.freeze([
- ['ape-car',Object.freeze({halfLength:2.3,halfWidth:.95})],
- ['ape-',Object.freeze({halfLength:2.5,halfWidth:1.3})],
- ['food-',Object.freeze({halfLength:3.35,halfWidth:1.45})]
+ ['ape-car',box(2.3,.95)],
+ ['ape-',box(2.5,1.3)],
+ ['food-',box(3.35,1.45)]
 ]);
-const CAR_SHAPE=Object.freeze({halfLength:3.15,halfWidth:1.7}),BIKE_SHAPE=Object.freeze({halfLength:2.8,halfWidth:1.05});
+const CAR_SHAPE=box(3.15,1.7),BIKE_SHAPE=box(2.8,1.05);
+// BF14: room kept around a walker (its body shrinks with PERSON_SCALE).
+export const PEDESTRIAN_PAD=ps(.8);
 export function vehicleShape(v){
  if(v?.vehicleType==='motorcycle')return BIKE_SHAPE;
  const model=v?.model;
@@ -72,7 +77,7 @@ export function vehiclesOverlap(a,b,pad=.05){
  }
  return true;
 }
-export function vehicleHitsPedestrian(car,ped,pad=.8){
+export function vehicleHitsPedestrian(car,ped,pad=PEDESTRIAN_PAD){
  const d=vehicleShape(car);
  const dx=ped.x-car.x,dy=ped.y-car.y,ca=Math.cos(car.a),sa=Math.sin(car.a);
  const forward=dx*ca+dy*sa,side=-dx*sa+dy*ca;
@@ -81,7 +86,7 @@ export function vehicleHitsPedestrian(car,ped,pad=.8){
 /* BF02: a vehicle still in its parking bay stands beside the pavement; pedestrians walk past it at
  * BAY_PEDESTRIAN_PAD from its side (parking-bays.mjs keeps 0,45 m). Moved by a knock or a driver,
  * it is an ordinary obstacle again. */
-export const BAY_PEDESTRIAN_PAD=.4;
+export const BAY_PEDESTRIAN_PAD=ps(.4);
 export function inParkingBay(vehicle){
  const bay=vehicle?.parkingBay;
  return !!bay&&Math.abs(vehicle.x-bay.x)<.3&&Math.abs(vehicle.y-bay.y)<.3;
@@ -89,7 +94,7 @@ export function inParkingBay(vehicle){
 function touches(pose,body,other){
  const otherBody=other.body||'car';
  return body==='car'?(otherBody==='car'?vehiclesOverlap(pose,other):vehicleHitsPedestrian(pose,other)):
-  otherBody==='car'&&vehicleHitsPedestrian(other,pose,inParkingBay(other)?BAY_PEDESTRIAN_PAD:.8);
+  otherBody==='car'&&vehicleHitsPedestrian(other,pose,inParkingBay(other)?BAY_PEDESTRIAN_PAD:PEDESTRIAN_PAD);
 }
 export function collidesWithTraffic(pose,body,index,self=null){
  for(const other of nearbyColliders(index,pose.x,pose.y,8)){

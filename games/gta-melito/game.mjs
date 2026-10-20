@@ -4,64 +4,65 @@
  * Aim: identifiable Melito di Napoli in original top-down pixel art 2.5D.
  * Preserve OSM geometry, gameplay and camera controls. 
  */
-import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
+import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=044';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition,balanceTraffic,createGateVehicle} from './roads.mjs?v=154';
-import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=009';
-import {drawBorderGates,borderGateList,borderRing,distanceToBorder,GATE_RULES} from './border-gates.mjs?v=001';
-import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=006';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition,balanceTraffic,createGateVehicle} from './roads.mjs?v=155';
+import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=010';
+import {drawBorderGates,borderGateList,borderRing,distanceToBorder,GATE_RULES} from './border-gates.mjs?v=002';
+import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=007';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock,npcWeekday} from './npc-agenda.mjs?v=002';
-import {createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols} from './market.mjs?v=001';
+import {createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols} from './market.mjs?v=002';
 import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=002';
 import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote,vendorShops} from './local-shops.mjs?v=002';
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
 import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=004';
 import {createSocial,stepSocial} from './npc-social.mjs?v=003';
-import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=002';
-import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=002';
+import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=003';
+import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=003';
 import {trafficTargetAt} from './traffic-rush.mjs?v=001';
-import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
-import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker} from './traffic-collision.mjs?v=128';
-import {buildParkingBays,bayOffset,fitsParkingBay,nearestFreeStalls,parkInStall,insideParkingStrip,drawParkingBays} from './parking-bays.mjs?v=001';
-import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
-import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=002';
-import {prepareSignalPosts,drawStopLines,drawSignals,signalGlows} from './traffic-light-art.mjs?v=002';
-import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=002';
-import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
+import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=002';
+import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker} from './traffic-collision.mjs?v=129';
+import {buildParkingBays,bayOffset,fitsParkingBay,nearestFreeStalls,parkInStall,insideParkingStrip,drawParkingBays} from './parking-bays.mjs?v=002';
+import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=002';
+import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=003';
+import {prepareSignalPosts,drawStopLines,drawSignals,signalGlows} from './traffic-light-art.mjs?v=003';
+import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=003';
+import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=091';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=002';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=131';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=132';
 import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
 import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS,CAR_PARKED_SPRITE_IDS,APE_CAR_IDS} from './car-sprites.mjs?v=109';
-import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
-import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
-import {loadFryerSprite} from './friggitore-sprites.mjs?v=001';
-import {loadProfessionSprites} from './profession-sprites.mjs?v=001';
-import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=005';
-import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
+import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=002';
+import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=002';
+import {loadFryerSprite} from './friggitore-sprites.mjs?v=002';
+import {loadProfessionSprites} from './profession-sprites.mjs?v=002';
+import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=006';
+import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=044';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
-import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=101';
+import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=102';
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=098';
 import {handlingProfile,applyGrip} from './vehicle-handling.mjs?v=003';
-import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=006';
-import {nearestEnterableVehicle} from './vehicle-entry.mjs?v=003';
+import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=007';
+import {nearestEnterableVehicle} from './vehicle-entry.mjs?v=004';
 import {PARKED_BIKE_TARGET,PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP,motorcycleParkingRoadOrder,parkedBikeLabel} from './motorcycle-parking.mjs?v=001';
 import {guideCar} from './driving-assist.mjs?v=099';
 import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
-import {canDriveProbe} from './road-clearance.mjs?v=099';
-import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
-import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=008';
-import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=004';
+import {canDriveProbe} from './road-clearance.mjs?v=100';
+import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=121';
+import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=009';
+import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=005';
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
-import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=001';
+import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=002';
 import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=001';
 import {createCarRadio} from './car-radio.mjs?v=003';
+import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
 const $=id=>document.getElementById(id);
 // Q09: last radio status, read by the city sound to duck engines while a station plays.
 let radioStatus='off';
@@ -128,6 +129,8 @@ carRadio.setVolume(cityAudio.radioLevel);
 const FORCE_MARKET=new URLSearchParams(globalThis.location?.search||'').get('mercato')==='1';
 const FORCED_WEATHER=(()=>{const w=new URLSearchParams(globalThis.location?.search||'').get('meteo');return ['pioggia','nuvoloso','sereno'].includes(w)?w:null;})();
 const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+// BF14: the world scale in use (read by the PAUSE › NOVITÀ entry and by the tests).
+state.worldScale=Object.freeze({vehicle:VEHICLE_SCALE,person:PERSON_SCALE});
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
 const WALK=new Set([...DRIVE,'pedestrian','footway','path','steps']);
 const colors=['#8f8271','#a29076','#797970','#ae947b','#938c7b','#7b8581','#a58c85'];
@@ -248,7 +251,7 @@ function createMelitoMarket(){
  const walkable=(x,y)=>validWalk(x,y)&&inside([x,y],border);
  const carriageway=(x,y,margin=0)=>{const r=nearest(x,y,30,state.roads,true);return !!r&&r.distance<visualRoadWidth(r.road)/2+margin||inParkingBay(x,y,margin);};
  const obstacles=[...state.props.map(q=>q.kind<5?{x:q.x,y:q.y,r:3,walkR:.8,crown:4.6}:{x:q.x,y:q.y,r:1.7,walkR:1.1}),
-  ...(state.doors||[]).map(d=>({x:d.x,y:d.y,r:2.6})),...state.cars.map(v=>({x:v.x,y:v.y,r:3.4,walkR:2.4,crown:3.2})),
+  ...(state.doors||[]).map(d=>({x:d.x,y:d.y,r:2.6})),...state.cars.map(v=>({x:v.x,y:v.y,r:vs(3.4),walkR:vs(2.4),crown:vs(3.2)})),
   ...(state.signalPosts||[]).map(q=>({x:q.x,y:q.y,r:1.4}))];
  return createMarket({roads:state.roads,walkable,carriageway,obstacles,roadHalf:road=>visualRoadWidth(road)/2});
 }
@@ -898,8 +901,9 @@ function offStreetExcess(x,y,a,vehicle){
  const dirx=Math.cos(a),diry=Math.sin(a),bike=isMotorcycle(vehicle);
  // Q16: an Ape probes the street with its own body (same proportions as the car probes), so it fits lanes a car does not.
  const ape=isApe(vehicle),k=ape?vehicleShape(vehicle):null;
- const forwards=bike?[-2.25,0,2.25]:ape?[-k.halfLength*.83,0,k.halfLength*1.08]:[-2.6,0,3.4];
- const sides=bike?[-.85,.85]:ape?[-k.halfWidth,k.halfWidth]:[-1.7,1.7];
+ // BF14: probes at VEHICLE_SCALE of the measured body, like the sprite and the collision box.
+ const forwards=bike?[-2.25,0,2.25].map(vs):ape?[-k.halfLength*.83,0,k.halfLength*1.08]:[-2.6,0,3.4].map(vs);
+ const sides=bike?[-.85,.85].map(vs):ape?[-k.halfWidth,k.halfWidth]:[-1.7,1.7].map(vs);
  let excess=0;
  for(const forward of forwards)for(const side of sides){
   const px=x+dirx*forward-diry*side,py=y+diry*forward+dirx*side;
@@ -1175,12 +1179,13 @@ function boardPrompt(label){
 function drawLine(p){c.beginPath();c.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)c.lineTo(p[i],p[i+1]);}
 function poly(p){drawLine(p);c.closePath();}
 function drawCar(x,y,a,type,drive=false,model=null,vehicle=null){
+ // BF14: every vehicle is drawn VEHICLE_SCALE smaller around its centre (world-scale.mjs).
+ c.save();c.translate(x,y);c.scale(VEHICLE_SCALE,VEHICLE_SCALE);c.translate(-x,-y);
  if(isMotorcycle(vehicle)){
   drawMotorcycle(c,x,y,a,model,{rider:drive||!!vehicle.rider,focused:drive,
    jacket:drive?'#b7343b':vehicle.kind%3===0?'#406b87':'#86896e'});
-  return;
- }
- if(!drawCarSprite(c,x,y,a,model,drive))drawCityCar(c,x,y,a,type,drive,state.clock);
+ }else if(!drawCarSprite(c,x,y,a,model,drive))drawCityCar(c,x,y,a,type,drive,state.clock);
+ c.restore();
 }
 function drawParkedMotorcycleHints(){
  // Only near the walking player: avoid labeling the entire street scene.
@@ -1269,7 +1274,7 @@ function drawRoofReveal(ctx,buildings,roads,dt,bounds){
   const walking=actor.body==='walk';
   const street=nearest(actor.x,actor.y,42,state.roads,false,walking);
   return {...actor,onStreet:!!street&&street.distance<=visualRoadWidth(street.road)/2+SIDEWALK_OUTER,
-   radius:isMotorcycle(actor)?2.4:actor.body==='car'?3.4:1.35};
+   radius:isMotorcycle(actor)?vs(2.4):actor.body==='car'?vs(3.4):ps(1.35)};
  });
  const visible=new Set();
  for(const b of buildings){

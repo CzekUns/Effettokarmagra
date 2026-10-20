@@ -662,3 +662,8 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 ### 2026-10-20 — Q17 banco degli ambulanti
 - Nessuna nuova arte. Il pannello acquisti, lo stesso dei negozi Q06, ora si apre anche al banco dei furgoncini, con l'intestazione «AMBULANTE · MELITO». Sulla plancia PC compare la scritta «E · COMPRA · NOME DEL BANCO». Foto: banco «Zeppole e panzerotti» in Via Roma.
 
+
+### 2026-10-20 — BF14 scala degli asset (Claude)
+- Veicoli disegnati al 75% e persone all'80%; la telecamera è più vicina del 20%. Strade, marciapiedi ed edifici sono invariati.
+- Stalli e strisce bianche ora seguono la larghezza delle auto disegnate: più stretti, più vicini al marciapiede, mai sotto il traffico. Si vede bene sulle residenziali.
+- Da far giudicare a Simone: proporzioni di auto e persone rispetto alle strade, zoom a piedi e in auto. Basta modificare `world-scale.mjs`.

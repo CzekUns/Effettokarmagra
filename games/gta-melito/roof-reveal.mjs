@@ -1,7 +1,7 @@
 /* Roof projection is visual only. OSM footprints and physical collision stay
  * in their mapped positions, while the raised roof extends northwest. */
 import {buildingVolume} from './building-volume.mjs?v=088';
-import {pointInFootprint} from './road-clearance.mjs?v=099';
+import {pointInFootprint} from './road-clearance.mjs?v=100';
 
 export function projectedRoofCovers(building,x,y,radius=0){
  const volume=buildingVolume(building);

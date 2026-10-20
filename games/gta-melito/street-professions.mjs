@@ -3,8 +3,9 @@
  * are artistic placements, NOT surveyed shops, licensed stalls or traffic lights.
  * No new map features, traffic signal claims or synthetic street geometry. */
 import {MARKET_VARIANTS} from './car-sprites.mjs?v=109';
-import {vehicleHitsPedestrian} from './traffic-collision.mjs?v=128';
-import {washerSpots} from './window-washers.mjs?v=002';
+import {vs,ps} from './world-scale.mjs?v=001';
+import {vehicleHitsPedestrian} from './traffic-collision.mjs?v=129';
+import {washerSpots} from './window-washers.mjs?v=003';
 export const TRAFFIC_APES=Object.freeze([
  'ape-azzurra-vuota','ape-azzurra-ferro','ape-verde-vuota','ape-verde-ferro'
 ]);
@@ -35,11 +36,13 @@ const roadChoices=(graph,where,minimum=18)=>graph.edges.map((edge,id)=>({edge,id
  * the bonnet). All 8 'furgone-ambulante' cells open their hatch with the striped awning on the
  * sprite's right: body edge at +1.55..+1.83 m, awning edge at +3.67 m, counter along the van
  * from about -2.6 to +3.2 m (front negative). The fritti van has the same side: edge +2.57 m. */
+// BF14: the sprites are drawn VEHICLE_SCALE smaller (world-scale.mjs), so are these sides.
+const sideOf=(edge,from,to)=>Object.freeze({side:1,edge:vs(edge),along:Object.freeze([vs(from),vs(to)])});
 export const SERVICE_SIDES=Object.freeze({
- 'furgone-ambulante':Object.freeze({side:1,edge:3.67,along:Object.freeze([-2.6,3.2])}),
- 'furgone-fritti':Object.freeze({side:1,edge:2.57,along:Object.freeze([-2.49,3.34])})
+ 'furgone-ambulante':sideOf(3.67,-2.6,3.2),
+ 'furgone-fritti':sideOf(2.57,-2.49,3.34)
 });
-export const FRYER_GAP=.6;
+export const FRYER_GAP=ps(.6);
 export function serviceSide(model){
  return SERVICE_SIDES[MARKET_VARIANTS[model]?.model||model]||null;
 }

@@ -5,9 +5,10 @@
  *   fermano l'auto del giocatore come un muro e si aggirano a piedi.
  * Posizioni deterministiche e inventate (non censite). Un oggetto spostato torna al suo
  * posto solo quando né lui né il suo posto sono in vista: nessun teletrasporto davanti al giocatore. */
+import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
 export const BIN_RADIUS=.55;
 export const BOLLARD_RADIUS=.18;
-export const WALKER_RADIUS=.45;
+export const WALKER_RADIUS=ps(.45);// BF14
 const ROAD_TYPES=new Set(['primary','secondary','tertiary','unclassified','residential','living_street']);
 const BIN_COLORS=[['#2f63a8','#22497d'],['#e0b928','#a8891c'],['#3d8a4a','#2b6335'],['#6d7470','#4d5450']];
 const hash=n=>{let x=(n|0)^0x4d2f6a1b;x=Math.imul(x^x>>>16,2246822519);x=Math.imul(x^x>>>13,3266489917);return (x^x>>>16)>>>0;};
