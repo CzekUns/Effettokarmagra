@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {generateUrbanInfill,roadFootprintDistance,mapFingerprint,footprintsClear} from './urban-infill.mjs';
 import {CAMERA_ZOOM_MAX,CAMERA_ZOOM_MIN,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs';
+import {CAMERA_SCALE_GAIN as G} from './world-scale.mjs';
 import {prepareCityStyles,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityBuildings} from './city-art.mjs';
 import {resolveLandmarks} from './campaign.mjs';
 const map=JSON.parse(await readFile(new URL('./data/melito-map.json',import.meta.url),'utf8'));
@@ -65,21 +66,21 @@ test('existing urban painting API accepts generated roofs and paved ground',()=>
  assert.doesNotThrow(()=>drawTerrain(ctx,[500,900,850,1200],5,ground));
 });
 test('automatic camera starts at the maximum on foot and progressively pulls back in cars',()=>{
- assert.equal(CAMERA_ZOOM_MAX,6.6);
- assert.equal(targetCameraZoom({inVehicle:false}),6.6);
- assert.ok(Math.abs(targetCameraZoom({inVehicle:false,moving:true,running:true})-6.105)<1e-9);
+ assert.equal(CAMERA_ZOOM_MAX,6.6*G);// BF14: closer camera for the smaller bodies
+ assert.equal(targetCameraZoom({inVehicle:false}),6.6*G);
+ assert.ok(Math.abs(targetCameraZoom({inVehicle:false,moving:true,running:true})-6.105*G)<1e-9);
  const idle=targetCameraZoom({inVehicle:true,speed:0}),city=targetCameraZoom({inVehicle:true,speed:11});
  const fast=targetCameraZoom({inVehicle:true,speed:40});
- assert.ok(idle<CAMERA_ZOOM_MAX&&idle>6);
+ assert.ok(idle<CAMERA_ZOOM_MAX&&idle>6*G);
  assert.ok(city<idle&&city>fast);
- assert.ok(Math.abs(idle-4.69*1.4)<1e-9,'stationary car gains another 40% without hitting the maximum clamp');
- assert.ok(Math.abs(city-(4.69-2.072*11/40)*1.4)<1e-9,'city-speed car gains another 40%');
- assert.ok(Math.abs(fast-2.618*1.4)<1e-9,'fast car gains another 40%');
- assert.ok(fast>=CAMERA_ZOOM_MIN&&fast<4);
+ assert.ok(Math.abs(idle-4.69*1.4*G)<1e-9,'stationary car gains another 40% without hitting the maximum clamp');
+ assert.ok(Math.abs(city-(4.69-2.072*11/40)*1.4*G)<1e-9,'city-speed car gains another 40%');
+ assert.ok(Math.abs(fast-2.618*1.4*G)<1e-9,'fast car gains another 40%');
+ assert.ok(fast>=CAMERA_ZOOM_MIN&&fast<4*G);
  assert.ok(targetCameraZoom({inVehicle:true,speed:-28})===idle,
   'the game passes the magnitude of vehicle speed explicitly');
- assert.equal(targetCameraZoom({inVehicle:false},1.35),6.6,'always clamp to maximum');
- assert.ok(targetCameraZoom({inVehicle:false},.7)<6,'manual zoom bias persists');
+ assert.equal(targetCameraZoom({inVehicle:false},1.35),6.6*G,'always clamp to maximum');
+ assert.ok(targetCameraZoom({inVehicle:false},.7)<6*G,'manual zoom bias persists');
  assert.match(describeCameraZoom({inVehicle:true,speed:22}),/IN CORSA/);
 });
 test('vehicle stays near trailing third while driving',()=>{

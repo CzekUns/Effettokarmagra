@@ -16,7 +16,8 @@ test('automatic car tour audits every drivable OSM way and clears mapped buildin
  assert.equal(report.roadWays,map.roads.filter(r=>DRIVE_ROAD_TYPES.has(r.t)&&r.p.length>=4).length);
  assert.ok(report.roadsVisited>500,'the sweep must cover the whole municipal road grid');
  assert.ok(report.samples>11000,'the tour must test car footprints along complete ways');
- assert.ok(report.blockedPairs>50,'the scan should catch current OSM road/building overlap');
+ // BF14: the smaller car body touches fewer mapped buildings (86 → 50 pairs); the scan must still find them.
+ assert.ok(report.blockedPairs>30,'the scan should catch current OSM road/building overlap');
  assert.ok(report.overlappingProbes>0);
  assert.equal(report.unresolvedProbes,0,'road surface priority clears every building overlap');
  assert.deepEqual(map.buildings.map(b=>b.p),before,'the tour cannot mutate OSM geometry');
@@ -47,7 +48,7 @@ test('car road clearance fits narrow roads while roofs remain intact over them',
   assert.ok(!closest||closest.distance>=visualRoadWidth(closest.road)/2+4.4,
    'street prop '+prop.roadId+' overlaps a drivable road');
  }
- assert.ok(game.includes("visuals.mjs?v=090"),'street prop change must bypass the browser cache');
+ assert.ok(Number((game.match(/visuals\.mjs\?v=(\d+)/)||[])[1])>=90,'street prop change must bypass the browser cache');
 });
 
 test('car may cross the painted sidewalk but not drive through a building or beyond its edge',()=>{

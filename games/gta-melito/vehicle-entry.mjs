@@ -3,6 +3,8 @@
  * Prefer a nearby scooter to a slightly closer parked car, but never select
  * a remote scooter when the player is already standing right by a car.
  */
+// BF14: the reach stays as it was (an interaction comfort, not a body size): with the smaller cars the
+// starting Panda in its stall (9,3 m from the start) is within reach again.
 export const MOTORCYCLE_ENTRY_RADIUS=8.5;
 export const CAR_ENTRY_RADIUS=9.5;
 export function nearestEnterableVehicle(vehicles,player){

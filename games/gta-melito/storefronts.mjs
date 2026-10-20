@@ -1,4 +1,4 @@
-import {visualRoadWidth} from './road-widths.mjs?v=043';
+import {visualRoadWidth} from './road-widths.mjs?v=044';
 /* Small storefronts tied to real OpenStreetMap named POIs.
  * Position is projected to the nearest suitable OSM street. Store awnings are stylized.
  */

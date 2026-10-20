@@ -544,5 +544,193 @@ Nuovi sprite top-down 2.5D: friggitore in camice bianco, vigile urbano, lavavetr
 ### 2026-10-20 — Strada viva: Ape, food truck e mestieri NPC (branch di sviluppo)
 Aggiunto il renderer per l'atlante originale `npc-mestieri-4chars-4dir-4frames-24x40.png` (friggitore, vigile, lavavetri, contrabbandiere), collegato agli attori reali della simulazione; gli asset `ape-food-16-rgba.png` già presenti alimentano Ape AI senza tendalino aperto e food truck in sosta. Nuovi ancoraggi commerciali deterministici sulla cartografia, con controlli geometrici; non sono esercizi commerciali o semafori verificati sul campo. Il numero di passanti comuni è stato ridotto mentre aumenta la varietà delle mansioni. Aggiornato `index.html` a `game.mjs?v=154`, import di `city-art.mjs?v=129` e `roads.mjs?v=146`. Non sono state prodotte fotografie/screenshot prima-dopo né controlli manuali di rendering browser/telefono in questa sessione: per completare il QA occorre aprire il gioco e confrontare i cinque siti previsti sul percorso. 
 
-### 2026-10-20 — Quattro NPC nuovamente disegnati sul *primo* atlante dei pedoni
-Nuova tavola in `assets/people/npc-mestieri-prima-reference-384x160.png` (384×160, 64 pose: quattro mestieri × quattro direzioni × quattro frame). Le **pose e le corporature provengono effettivamente** da `pedoni-4x4frames-24x40-rgba.png`: la figura chiara diventa il friggitore, la figura blu il vigile, l'impermeabile giallo il lavavetri verde con secchio/tergivetro, e la figura marrone il contrabbandiere con marsupio sotto ascella. I pixel stilistici non sono reinventati su un corpo differente. Revisionato lo schema cromatico del lavavetri per renderlo verde senza alterare lo shading originale. Stato: proposta visiva per approvazione, nessuna installazione in game, vecchi asset invariati.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF02 fascia di sosta tra corsia e marciapiede
+- **Cosa si vede:** lungo le strade carrabili compare una fascia di sosta continua con stalli a linee bianche (sosta libera) lunghi 7,2 m. Sulle strade larghe (primarie, trunk, secondarie, terziarie) la fascia sta tutta sull'asfalto accanto al bordo; sulle residenziali entra nel bordo chiaro del marciapiede come un **golfo di sosta**, con il cordolo che ne segue il contorno e raccordi inclinati alle estremità. Le auto, gli scooter e i food truck in sosta stanno dentro gli stalli: non più a cavallo della corsia né sul marciapiede.
+- **Dove non c'è posto** (strade di servizio, vicoli, piazze fatte di tratti cortissimi, accanto a incroci e strisce, davanti a negozi e banca) la fascia non viene disegnata e non ci sono veicoli in sosta.
+- **Livelli:** la fascia è dipinta nelle tessere statiche subito dopo l'asfalto e prima di edifici e tetti, quindi non copre mai un tetto; viene ridipinta anche nel riquadro di "tetto svelato". Nessun asset PNG nuovo: solo forme e linee nel canvas.
+- **Prova visiva (Chrome headless, 1280×720, zoom a piedi):** A/B prima/dopo su Via Roma (partenza: la Panda iniziale prima stava 1,36 m dentro la corsia, ora è nello stallo con lo scooter accanto), Piazza Santo Stefano, Corso Europa e una residenziale (Via Papa Giovanni XXIII). Confronto affiancato allegato alla PR.
+- **Limiti:** la sagoma disegnata delle auto (≈4,5–5 m) resta più larga della sagoma di collisione (3,4 m), quindi sulle residenziali un'auto in sosta e una che passa possono sfiorarsi graficamente senza toccarsi; non provato su telefono reale.
+### 2026-10-20 — Friggitore al banco del suo furgone (BF04)
+
+**Grafica:** il friggitore in camice bianco sta ora subito fuori dalla tendina a strisce del suo food truck, a metà del banco e rivolto verso di esso; i furgoni sono girati in modo che banco e tendina guardino il marciapiede su entrambi i lati della strada. Prima il friggitore compariva a 8–9 m, spesso dietro il furgone o dal lato della carreggiata.
+
+**Verifiche:** foto Chrome headless ravvicinate prima/dopo di tutti e 5 i furgoni (Piazza Santo Stefano, Piazza Immacolata, Corso Europa, Largo Cinque Via, Via Roma) e misure nel gioco reale. Non provato su un telefono reale.
+### 2026-10-20 — Pedali touch in ordine FRENO, ACCELERA, RETRO (BF06)
+
+**Interfaccia:** nella colonna di guida a destra il pulsante rosso FRENO è ora in alto, il verde ACCELERA al centro e RETRO in basso; misure, colori e ombre invariati.
+
+**Verifiche:** foto Chrome headless sul telefono in orizzontale prima/dopo (stessa scena), con prova dei tre tasti a tocco vero e controllo che non coprano minimappa, missioni e volante. Non provato su un telefono reale.
+
+
+### 2026-10-20 — Claude — BF07 semafori di gioco, linee d'arresto e frecce degli NPC
+**Stile:**
+- palo e lanterna disegnati in pixel art procedurale con la stessa grammatica dei lampioni di `visuals.mjs`: base scura, palo sottile che sale verso l'alto dello schermo, ombra corta verso sud-est;
+- lanterna nera con bordo chiaro e tre luci (rosso in alto), spente in tinte scure;
+- la luce accesa ha un bordo luminoso di un pixel, così si legge anche con lo zoom largo dell'auto;
+- di notte alone colorato additivo (`paintGlows`) e riflesso sull'asfalto davanti alla linea d'arresto;
+- linea d'arresto bianca solo sulla corsia percorsa;
+- frecce ambra lampeggianti sugli spigoli del lato della svolta.
+- Nessun asset PNG nuovo.
+
+**Onestà:** i semafori sono **simulati** (nessun nodo OSM `traffic_signals`) e lo dichiarano codice, README e scheda PAUSA.
+
+**Verifiche:** foto Chrome headless dell'incrocio di Largo Cinque Via e Corso Europa:
+- di giorno, verde e rosso;
+- di notte con pioggia (`?ora=21:30`);
+- su telefono 844×390;
+- coda al rosso con un'auto alla linea e una freccia accesa (Corso Europa, nodo 552).
+
+I pali stanno sui marciapiedi e non coprono minimappa né comandi. Non provato su telefono reale.
+
+
+### 2026-10-20 — Claude — BF08 lavavetri al finestrino ai semafori di gioco
+**Sprite:** è quello già presente nell'atlante dei mestieri (colonne 8–11). Nessuna nuova arte; la tavola resta «da rivedere» secondo PIXEL_ART_MODUS.
+- Durante il lavaggio il lavavetri è fermo sul frame d'appoggio, rivolto all'auto: nessun «camminare sul posto».
+- Il movimento del lavaggio è un piccolo tergivetro disegnato sul parabrezza (manico scuro, gomma azzurra) che va avanti e indietro sul lato guida, con tre gocce chiare che brillano.
+- Quando sta davanti all'auto (più in basso sullo schermo) si disegna sopra di lei; quando sta dietro, l'auto lo copre in parte, come vuole la vista 2.5D.
+
+**Verifiche:** foto Chrome headless del lavavetri al finestrino:
+- di un'utilitaria NPC ferma al rosso in Via Signorelli;
+- dell'auto del giocatore in Corso Europa, su PC e su telefono 844×390.
+
+Il lavavetri resta sul lato guida e il tergivetro si vede sul parabrezza. Non copre comandi né minimappa. Non provato su telefono reale.
+### 2026-10-20 — Varchi di confine: strade tagliate dritte e imbocchi che sfumano (BF09)
+
+**Grafica:**
+- Le strade non finiscono più con mezzo cerchio sopra l'area nera: il taglio è dritto, lungo il confine comunale.
+- A ogni strada che prosegue in un altro comune, un imbocco a trapezio continua asfalto, marciapiedi e cordolo per 16 m, li stringe un poco e li fa sparire nel buio. Sulle strade larghe a doppio senso si vede anche la mezzeria che si perde.
+- Le auto NPC che escono svaniscono dentro l'imbocco, insieme ai fari; quelle che entrano emergono dal buio.
+
+**Verifiche:** foto Chrome headless prima e dopo su una trunk (SP 500), una residential (Via Hugo Pratt) e una service (Via Visconti), su PC, telefono 844×390 e alle 21:30 con la pioggia. Ci sono anche le foto di un'uscita e di un ingresso in movimento. Non provato su Android reale.
+### 2026-10-20 — Volumi separati nel menu PAUSA (BF10)
+
+**Interfaccia:** nella scheda PAUSA, sotto i comandi, un blocco audio con **SUONI: ON/OFF** (generale) e due cornici scure con nome, **−**, percentuale e **＋**: **EFFETTI / AMBIENTE** e **RADIO / MUSICA**. Stessi colori, bordi e altezza minima (38 px) dei pulsanti della pausa sul telefono; su PC le due cornici hanno lo stesso stile (gli altri pulsanti della pausa su PC restano quelli del browser, come prima).
+
+**Verifiche:** foto Chrome headless del menu pausa su PC 1280×720 e telefono 844×390 in orizzontale, clic e tocchi veri su tutti i pulsanti, nessuna sovrapposizione tra pulsanti, nessun elemento fuori dalla scheda, ogni pulsante riceve davvero il tocco (non coperto da volante o pedali). Non provato su un telefono reale.
+### 2026-10-20 — Apertura da PC: solo la plancia di gioco (BF11)
+
+**Interfaccia:** su PC la pagina si apre direttamente sulla plancia, a tutta finestra e senza cornice né scorrimento. Sopra la mappa restano solo:
+- in alto a sinistra un piccolo pulsante Ⅱ rotondo, accanto all'etichetta della via;
+- in alto a destra la minimappa;
+- in basso a destra MISSIONI;
+- al centro, solo vicino a qualcosa da fare, l'indicazione «E · ENTRA IN AUTO / COMPRA / RACCOGLI…» nello stesso riquadro scuro con bordo oro dell'indicatore missione;
+- in fondo una minuscola attribuzione «© OpenStreetMap · ISTAT · menu PAUSA: Esc / P».
+
+Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA, diviso in 5 sezioni con titoletti spaziati nello stile del gioco.
+
+**Verifiche:** foto Chrome headless prima/dopo a 1280×720, 1366×768 e 1920×1080, menu pausa (inizio e fondo), indicazione del tasto E e telefono 844×390 in guida e in pausa, invariato. Non provato su un PC con schermo touch né su un telefono reale.
+
+## 2026-10-20 — BF12 recinti e galleria di vetro (Claude)
+- **Mura perimetrali** in pixel art, con ombra a terra, faccia rialzata, copertina chiara e giunti:
+  - muro intonacato per i recinti privati;
+  - muretto con ringhiera in ferro per la villa comunale.
+
+  Si vedono anche di notte, perché la luce di Q04 le scurisce come il resto della città.
+- **Cancelli:** due pilastri con cappello e battenti aperti verso l'interno. Nei recinti privati c'è una sbarra bianca e rossa, alzata di giorno e abbassata di notte.
+- **Guardiola placeholder:** cabina chiara con fascia di vetri, tetto piano e porta verde, più la guardia (sprite vigile).
+- **Galleria Atlante:** facciate a vetrata continua con montanti, traversi e un riflesso diagonale; tetto rosato con atrio vetrato, come sulla foto aerea.
+- **Verifiche:** foto Chrome headless di villa, Municipio (cancelli e lato nord), recinto di fronte al mercato e galleria, di giorno e alle 23:30 con pioggia, su PC e su telefono 844×390. Telefono reale non provato.
+
+### 2026-10-20 — BF13 sovramappa satellitare di confronto (Claude)
+- **Novità:** PAUSA › STRUMENTI › «SATELLITE» mostra la foto aerea Esri World Imagery allineata alla città, sopra la scena, con opacità 25/50/75/100%.
+  - Al 50% si vedono insieme il gioco e la foto: si nota subito dove mancano parchi, campi, recinti, edifici e ponti.
+  - Al 100% si può ricalcare.
+- **Dove compare:** è uno strumento di lavoro, non grafica di gioco. Parte sempre spento e l'attribuzione resta in alto al centro mentre è acceso.
+- **Prove:** screenshot di controllo (fuori dal repo) su PC e telefono in 3 zone del centro.
+- **Cosa emerge dall'audit:** i segnaposto dell'infill coprono molte aree verdi. Dettagli in `AUDIT_SATELLITE.md`.
+### 2026-10-20 — Q42 mercato del rione 219 (Claude)
+- **Ombrelloni:** pixel art procedurale, 4 px per unità, una cache per variante.
+  - Quadrati a quattro falde, con spicchi a strisce che convergono al pomolo, nervature scure, mantovana smerlata e luce da nord-ovest.
+  - Tondi a otto spicchi (giocattoli multicolori, fiori, bigiotteria); tenda rettangolare a strisce per i casalinghi.
+  - Colori dal foglio `mercato-banchi.csv`; abbigliamento a colori vivaci diversi per banco.
+- **Profondità e trasparenza:** la tela è sollevata sopra il palo (2.5D) e passa sopra persone e veicoli. Quando il giocatore è sotto o accanto sfuma all'80%, come i tetti.
+- **Banchi:** segnaposto semplici con bancone di legno, telo, merce stilizzata a blocchi nei colori del foglio e furgone-negozio per salumi e porchetta. Durante il montaggio ci sono cassette per terra; fuori orario restano i posteggi gialli numerati.
+- **Foto guardate:** montaggio, pieno, vuoto, notte con pioggia, pioggia, telefono, R01 a piedi e in auto.
+## 2026-10-20 — BF12, complesso del Municipio (Claude)
+- **Torre del serbatoio a fungo**, landmark sopra la città, alzata nella stessa direzione dei tetti:
+  - fusto e vasca a scacchi rosso/bianco (colori stimati), con il lato destro in ombra;
+  - cappello chiaro a spicchi, come sulla foto aerea, e ombra lunga verso sud-est;
+  - trasparente sotto e accanto al giocatore; luce rossa di notte.
+- **Rudere dell'ex piscina comunale:** muri bassi in calcestruzzo con macchie, copertura crollata attorno alla vasca e la vasca interrata vuota, con piastrelle azzurre sbiadite, crepe, erbacce e scaletta; con la pioggia, pozzanghere e cerchi.
+- **Verifiche:** foto su PC di giorno, di notte (23:30, con la pioggia casuale di Q08) e sotto pioggia forzata; telefono 844×390; trasparenza con il giocatore sotto la vasca.
+
+
+
+### 2026-10-20 — Q16 Ape Car (Claude)
+- Nuovo `assets/vehicles/ape-classica-16-rgba.png` (224×256, 4×4 da 56×64): Ape Car vista dall'alto in 8 tinte (azzurra, verde, rossa, bianca, grigia, gialla, blu, crema) pulite e vissute; derivato dalle due Ape approvate di `ape-food-16` con ricolorazione della sola carrozzeria. Presentazione: `assets/vehicles/sources/ape-classica-16-sheet.png`. Tinte = interpretazioni, non codici di fabbrica.
+
+### 2026-10-20 — Q17 banco degli ambulanti
+- Nessuna nuova arte. Il pannello acquisti, lo stesso dei negozi Q06, ora si apre anche al banco dei furgoncini, con l'intestazione «AMBULANTE · MELITO». Sulla plancia PC compare la scritta «E · COMPRA · NOME DEL BANCO». Foto: banco «Zeppole e panzerotti» in Via Roma.
+
+
+### 2026-10-20 — Q23 danni visibili (grafica PROVVISORIA, da approvare)
+- **Segni dei danni:** disegnati sopra lo sprite dei veicoli, non sono nuovi sprite.
+  - Graffi: tratti chiari.
+  - Ammaccature: macchie scure con un riflesso.
+  - Vetro incrinato: stella bianca sul parabrezza.
+  - Danno grave: tre sbuffi di fumo grigio dal cofano.
+- **Cartello «OFFICINA · DI GIOCO»** sul marciapiede di Via Roma vicino alla partenza: insegna verde con la chiave inglese, nessun marchio.
+- **Dove vederli:** urta un muro o un'auto in Via Roma vicino alla partenza; l'officina è pochi metri più avanti, intorno a (1240, 1380).
+### 2026-10-20 — Q24 superfici stradali (grafica PROVVISORIA, da approvare)
+- Buche irregolari scure con bordo chiaro e crepe; tombini tondi a grata; rappezzi d'asfalto più scuro.
+- Dossi a strisce gialle e nere di traverso sulla carreggiata; pavé a pietre sfalsate con estremità arrotondate; sterrato marrone con due solchi.
+- Con la pioggia le buche diventano pozzanghere con riflesso e cerchi delle gocce.
+- Dove guardarli: dosso «vicino a chiesa» in Via Lavinaio (1120, 1142); buche e tombini in Vico Orefici (1147, 1218); pavé in Piazza Guglielmo Marconi; sterrato sulle 4 strade `track` OSM.
+### 2026-10-20 — Q18 veicoli di servizio (grafica provvisoria)
+- Nuovo `assets/vehicles/servizio-16-rgba.png` (208×368, 4×4 da 52×92), tavola `sources/servizio-16-sheet.png` e generatore `sources/servizio-16-genera.py`. Vista esattamente dall'alto, muso in alto.
+- **Furgone del corriere:** bianco, bianco con fascia blu, bianco con fascia verde, argento, grigio scuro, blu notte, azzurro, bianco vissuto.
+- **Camion della nettezza urbana:** verde, bianco-verde, bianco-blu, arancio, grigio, verde scuro, bianco-arancio, verde vissuto.
+- Livree inventate, senza marchi né scritte. Pixel art provvisoria: da far approvare a Simone.
+
+
+### 2026-10-20 — Q19 carro attrezzi e autobus urbano (grafica provvisoria)
+- Nuovo `assets/vehicles/servizio2-16-rgba.png` (208×496, 4×4 da 52×124), tavola `sources/servizio2-16-sheet.png` e generatore `sources/servizio2-16-genera.py`. Vista esattamente dall'alto, muso in alto, stessa densità di pixel dei veicoli di servizio Q18.
+- **Carro attrezzi:** giallo, arancio, bianco-rosso, rosso, blu, bianco, grigio-arancio, giallo vissuto.
+- **Autobus urbano corto:** arancio, verde-bianco, blu-bianco, rosso, bianco-azzurro, giallo, grigio-verde, arancio vissuto.
+- Livree inventate, senza scritte, numeri di linea o marchi. Pixel art provvisoria: da far approvare a Simone.
+### 2026-10-20 — Q21 passeggeri (PROVVISORIO, da approvare)
+- **Auto, Ape e furgoni:** teste e spalle degli occupanti stilizzate, sotto parabrezza e lunotto, con un leggero riflesso del vetro. Il guidatore si vede solo sui mezzi in marcia e sull'auto del giocatore; le auto parcheggiate restano vuote.
+- **Scooter:** passeggero dietro il guidatore, con casco chiaro, giacca diversa e contorno scuro, per leggere due figure distinte. Gli sprite dei mezzi sono invariati.
+- **Cartelli e meta:** «PASSAGGIO?», fumetto del passeggero su due righe (mancia e via), anello giallo tratteggiato sulla meta.
+
+### 2026-10-20 — BF14 scala degli asset (Claude)
+- Veicoli disegnati al 75% e persone all'80%; la telecamera è più vicina del 20%. Strade, marciapiedi ed edifici sono invariati.
+- Stalli e strisce bianche ora seguono la larghezza delle auto disegnate: più stretti, più vicini al marciapiede, mai sotto il traffico. Si vede bene sulle residenziali.
+- Da far giudicare a Simone: proporzioni di auto e persone rispetto alle strade, zoom a piedi e in auto. Basta modificare `world-scale.mjs`.
+
+### 2026-10-20 — Q20 routine dei veicoli di servizio (grafica PROVVISORIA, da approvare)
+- **Fermate:** pensilina con vetro e panca, palina gialla «FERMATA» (nessun numero di linea), tutto in primitive canvas.
+- **Autobus:** due varchi scuri sul fianco destro quando le porte sono aperte.
+- **Auto in panne:** quattro frecce e triangolo rosso dietro.
+- **Carro attrezzi:** l'auto soccorsa è disegnata sul pianale, all'88%.
+- **Persone:** autista del corriere e operatore della nettezza urbana con gli sprite esistenti dei pedoni.
+- **Dove guardare:** `?servizio=1&ora=10:00` accelera le routine; le foto di prova sono fuori dal repo.
+### 2026-10-20 — Q25 interni dei negozi (Claude, PROVVISORIO · da approvare)
+- Tre interni in pixel art procedurale con la stessa palette, gli stessi muri e le stesse ombre della banca: **bar** (bancone in legno con macchina del caffè e tazzine, mensole di bottiglie, vetrina dei dolci, tre tavolini con sedie, pavimento in graniglia), **panificio/pasticceria** (banco vetrina con pane e cassa, scaffali del pane a parete, cesti, piastrelle chiare), **minimarket** (scaffali con prodotti generici senza marche, frigoriferi a vetro, frutta, cassa, linoleum). Commesso con lo sprite dei pedoni. Fuori: punto luminoso caldo sul portone, senza scritta sopra l'insegna.
+- **Da far vedere a Simone:** Bar Alexander su Corso Europa (628,1291) e Panificio Pagliuca: avvicinarsi al punto luminoso sul portone, E · ENTRA, poi andare al bancone (PARLA).
+
+
+### 2026-10-20 — Q28 «SLOT DEL VESUVIO» (provvisoria, da approvare)
+Schermata della slot in pixel art disegnata via codice. Griglia logica 192×128, ingrandita senza sfocature. Cornice rosso scuro e oro con luci che si alternano; tre rulli bianchi con simboli 16×16 ingranditi ×2 (limone, caffè, pizza, babà, sfogliatella, Pulcinella, Vesuvio, cornetto rosso), riga vincente rossa e pannello crediti. È un segnaposto di stile: il proprietario può sostituire i simboli con sprite propri lasciando invariate le regole.
+
+### 2026-10-20 — Q29 video poker «POKER DEL GOLFO» (grafica PROVVISORIA, da approvare)
+- Schermata pixel art disegnata in codice: tavolo verde con cornice e luci, tabella delle combinazioni su due colonne (la riga vinta si illumina), 5 carte 30×42 px con rango, seme piccolo e seme grande, corona dorata sulle figure, dorso blu a rombi, nastro dorato «TIENI» sulle carte tenute; pulsanti TIENI 1–5 per il touch.
+- Da vedere: PAUSA › STRUMENTI › PROVA VIDEO POKER, oppure `?minigioco=poker`, su PC e telefono in orizzontale.
+
+## 2026-10-20 — Q32 campetti (grafica PROVVISORIA, da approvare)
+- Campi in erba sintetica a strisce, linee bianche (calcio a 5: area a semicerchio, centro; calcio a 11: aree FIFA), porte con rete, recinzione a rete verde scuro con pali ogni 3 m, cancello socchiuso, fari ai quattro angoli. Disegno procedurale nel livello a terra, sotto i tetti.
+- Dove guardarli: Via delle Palme (550, 1198) e (528, 1276); Corso Europa (1026, 1882).
+
+### 2026-10-20 — Q27 arredi dei bar e cabinati (Claude / `ilconsulentelogistico-hue`) — grafica provvisoria
+- Bar grande 80×60: bancone, vetrina dolci, 4 sgabelli rossi, 2 tavolini con sedie, cabinato slot (tre rulli) e cabinato video poker (carte su panno verde) contro la parete destra, tavolo da biliardo con sponde in legno, sei buche, biglie e stecca. Bar piccolo 64×50: bancone, sgabelli, due tavolini, un cabinato, niente biliardo. Punto luminoso davanti a ogni gioco. Pixel art procedurale con palette e ombre della banca; arredi e giochi inventati.
+- **Non verificato a schermo** (nessuna foto in questa sessione): da far vedere e approvare a Simone.
+
+### 2026-10-20 — Q30 biliardo «BILIARDO DEL RIONE» (grafica PROVVISORIA, da approvare)
+- Tavolo visto dall'alto disegnato in codice su una griglia logica 224×136, ingrandita senza sfocature: cornice di legno con venature e diamanti color perla, sponde verde scuro, panno verde con trama a punti, linea di battuta e punto di acchito, 6 buche nere con bordo.
+- Biglie 7×7 px con contorno scuro, ombra sul panno, ombreggiatura e punto di luce; la 9 è rigata. Stecca con puntale azzurro di gesso, ghiera bianca, fusto chiaro e calcio scuro, che arretra con la potenza. Linea di mira a puntini, biglia fantasma e direzione della biglia colpita in oro. In alto la striscia del punteggio con le biglie imbucate da ciascuno e la freccia del turno.
+- Da vedere: PAUSA › STRUMENTI › PROVA BILIARDO, oppure `?minigioco=biliardo`, su PC e telefono in orizzontale.
+
+## 2026-10-20 — Q33 partita di calcetto (grafica PROVVISORIA, da approvare)
+- Scena a schermo intero vista dall'alto, come nei primi giochi di calcio. Campo a strisce con gli stessi verdi del campetto Q32, linee del calcio a 5, porte con rete a quadretti, recinzione con pali e fari.
+- Calciatori 7×9 pixel con maglia a due colori: ROSSI rosso e bianco, BLU blu e azzurro; portieri giallo e verde. Freccia gialla sul giocatore comandato; palla 3×3 pixel con ombra.
+- Sul telefono: levetta, TIRO, PASSA e CAMBIO; sul PC la riga dei tasti. Dove vederla: «E · GIOCA A CALCETTO» al cancello di un campetto (Via delle Palme (535, 1181) o Corso Europa (1010, 1878)), oppure PAUSA › NOVITÀ › `calcetto`.

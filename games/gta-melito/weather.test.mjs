@@ -87,7 +87,7 @@ test('Q08 puddles lie on the asphalt, never where a roof or wall hides the groun
 
 test('Q08 game wiring: weather each tick, wet asphalt cut around buildings, rain over the night, HUD label',async()=>{
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
- assert.match(game,/state\.weather=weatherAt\(state\.npcClockMinutes,\{forced:FORCED_WEATHER\}\);/);
+ assert.match(game,/state\.weather=weatherAt\(state\.npcClockMinutes,\{forced:(?:state\.preview\?\.weather\|\|)?FORCED_WEATHER\}\);/);
  assert.match(game,/get\('meteo'\)/,'?meteo= for repeatable checks');
  assert.match(game,/const light=combineWeather\(daylightAt\(state\.npcClockMinutes\),state\.weather\)/);
  assert.match(game,/g\.globalCompositeOperation='destination-out'/,'wet mask minus buildings');

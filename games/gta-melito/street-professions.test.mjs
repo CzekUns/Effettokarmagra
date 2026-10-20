@@ -1,7 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {FOOD_STALLS,TRAFFIC_APES,trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs';
+import {FOOD_STALLS,TRAFFIC_APES,trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors,SERVICE_SIDES,FRYER_GAP,serviceSide,fryerServicePose} from './street-professions.mjs';
+import {vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs';
+import {buildRoadGraph,stepAgents} from './roads.mjs';
 import {PROFESSION_TYPES,PROFESSION_ATLAS_PATH} from './profession-sprites.mjs';
 import {MARKET_VARIANTS} from './car-sprites.mjs';
 import {nearestEnterableVehicle} from './vehicle-entry.mjs';
@@ -39,7 +41,6 @@ test('five named areas can host staffed, deterministic stalls without overlappin
   assert.equal(pair.fryer.profession,'friggitore');
   assert.equal(pair.fryer.stationary,true);
   assert.equal(pair.fryer.body,'walk');
-  assert.ok(Math.hypot(pair.vehicle.x-pair.fryer.x,pair.vehicle.y-pair.fryer.y)>5.8);
   assert.equal(nearestEnterableVehicle([pair.vehicle],pair.fryer),null,'active stalls are not stealable');
  }
 });
@@ -62,4 +63,57 @@ test('approved RGBA profession atlas is 384x160 with all four identities',async(
  assert.equal(bytes.readUInt32BE(16),384);
  assert.equal(bytes.readUInt32BE(20),160);
  assert.deepEqual(PROFESSION_TYPES,['friggitore','vigile','lavavetri','contrabbandiere']);
+});
+
+// BF04: coordinate locali del furgone come le disegna car-sprites.mjs (destra sprite = (-sin a, cos a)).
+const local=(v,p)=>{const dx=p.x-v.x,dy=p.y-v.y;return {lx:dx*-Math.sin(v.a)+dy*Math.cos(v.a),ly:-(dx*Math.cos(v.a)+dy*Math.sin(v.a))};};
+test('BF04 every food stall model has a measured service side; the fryer stands just outside its counter, facing it',()=>{
+ for(const model of [...FOOD_STALLS.map(s=>s.model),'furgone-fritti']){
+  const s=serviceSide(model);assert.ok(s,'service side for '+model);
+  for(const a of [0,.7,Math.PI/2,2.4,-1.9]){
+   const van={x:100,y:-40,a,model},p=fryerServicePose(van),q=local(van,p);
+   assert.ok(Math.abs(q.lx-s.side*(s.edge+FRYER_GAP))<1e-9,'0,6 m beyond the counter edge, on the service side');
+   assert.ok(q.ly>=s.along[0]&&q.ly<=s.along[1],'along the counter, not ahead of or behind the van');
+   const toVan=Math.atan2(van.y-p.y,van.x-p.x)-p.a,lateral=Math.cos(Math.atan2(Math.sin(toVan),Math.cos(toVan)));
+   assert.ok(lateral>.95||Math.abs(Math.atan2(-Math.cos(a)*s.side,Math.sin(a)*s.side)-p.a)<1e-9,'faces the counter');
+   assert.equal(vehicleHitsPedestrian(van,p,.8),false,'outside the van body');
+   const shape=vehicleShape(van);assert.ok(Math.abs(q.lx)>shape.halfWidth+.8);
+  }
+ }
+ assert.deepEqual(Object.keys(SERVICE_SIDES),['furgone-ambulante','furgone-fritti']);
+});
+test('BF04 placed stalls: counter towards the pavement on both sides of the street, fryer next to it',()=>{
+ // Due vie, una per lato: il furgone sul lato -1 deve girarsi per avere il banco verso il marciapiede.
+ const graph=littleTown();
+ const vendors=placeStreetFoodVendors(graph,[],{vehicleOK:()=>true,walkerOK:()=>true});
+ assert.equal(vendors.length,FOOD_STALLS.length);
+ for(const {vehicle,fryer} of vendors){
+  const centreY=FOOD_STALLS.find(f=>f.name===vehicle.vendorDistrict).y;
+  const kerbSide=Math.sign(vehicle.y-centreY),q=local(vehicle,fryer),s=serviceSide(vehicle.model);
+  assert.ok(Math.sign(fryer.y-vehicle.y)===kerbSide,'the fryer is between the van and the pavement, never towards the traffic');
+  assert.ok(Math.abs(q.lx-s.side*(s.edge+FRYER_GAP))<.31+1e-9,'close to the counter edge (0,6-0,9 m)');
+  assert.ok(Math.hypot(fryer.x-vehicle.x,fryer.y-vehicle.y)<5.2,'metres, not the old 7-9 m');
+  assert.deepEqual(fryer.post,{x:fryer.x,y:fryer.y,a:fryer.a},'post keeps place and facing');
+ }
+ const onlyFar=placeStreetFoodVendors(graph,[],{vehicleOK:v=>v.y<FOOD_STALLS.find(f=>f.name===v.vendorDistrict).y,walkerOK:()=>true});
+ assert.equal(onlyFar.length,FOOD_STALLS.length,'vans fit on the other side too');
+ for(const {vehicle,fryer} of onlyFar){
+  assert.ok(Math.abs(Math.cos(vehicle.a)+1)<1e-9,'on the far side the van points the other way');
+  assert.ok(fryer.y<vehicle.y,'and its counter still faces the pavement');
+ }
+});
+test('BF04 no valid spot at the counter: no fryer and no van (never a fryer in the road)',()=>{
+ const graph=littleTown();
+ const vendors=placeStreetFoodVendors(graph,[],{vehicleOK:()=>true,walkerOK:()=>false});
+ assert.deepEqual(vendors,[]);
+});
+test('BF04 after a non-lethal knock the fryer walks back to its post and faces the counter again',()=>{
+ const g=buildRoadGraph([{id:1,n:'Corso Europa',t:'residential',w:6,p:[0,0,200,0]}]);
+ const van={x:100,y:9,a:0,model:'food-panini',vehicleType:'car',body:'car'};
+ const p=fryerServicePose(van);
+ const fryer={...p,stationary:true,profession:'friggitore',body:'walk',speed:0,braking:true,post:{x:p.x,y:p.y,a:p.a},home:{x:p.x,y:p.y}};
+ fryer.x+=1.5;fryer.y+=1;fryer.a=2;
+ for(let i=0;i<120;i++)stepAgents(g,[fryer],.05,null,{parked:[van],validRecovery:()=>true});
+ assert.ok(Math.hypot(fryer.x-p.x,fryer.y-p.y)<.13,'back at the counter');
+ assert.equal(fryer.a,p.a,'facing it');
 });

@@ -12,7 +12,11 @@ Ambito: solo `games/gta-melito/`. Questo è il gioco GTA Melito di Uns Arcade, *
 
 ## Eccezione di priorità temporanea — bugfix BF01–BF06 (20 ottobre 2026)
 
-In seguito a problemi di collisioni, spawn/parcheggi e guida riferiti dall'utente, il collaboratore `ilconsulentelogistico-hue` esegue prima la coda ordinata **[BUGFIX_TODO.md](./BUGFIX_TODO.md)**, registrata nell'[issue #32](https://github.com/CzekUns/Effettokarmagra/issues/32). **Una BF per PR** con test/log; non prendere una nuova Q di `TODO.md` finché BF01–BF06 non sono integrate, poi riprendere **Q13**. Questa regola prevale temporaneamente sul principio «prima Q aperta», senza spuntare o perdere Q13–Q24. Se esiste già una PR Q in corso, non cancellarla: coordinarne lo stato prima di lavorare sugli stessi file. L'assegnazione all'account GitHub non attiva l'AI esterna.
+In seguito a problemi di collisioni, spawn/parcheggi e guida riferiti dall'utente, il collaboratore `ilconsulentelogistico-hue` esegue prima la coda ordinata **[BUGFIX_TODO.md](./BUGFIX_TODO.md)**, registrata nell'[issue #32](https://github.com/CzekUns/Effettokarmagra/issues/32). **Una BF per PR** con test/log; non prendere una nuova Q di `TODO.md` finché BF01–BF06 non sono integrate, poi riprendere **Q13** e proseguire fino a **Q41** secondo la roadmap aggiornata. Questa regola prevale temporaneamente sul principio «prima Q aperta», senza spuntare o perdere Q13–Q41. Se esiste già una PR Q in corso, non cancellarla: coordinarne lo stato prima di lavorare sugli stessi file. L'assegnazione all'account GitHub non attiva l'AI esterna.
+
+## Ampliamento gameplay Q25–Q41 — nuove attività richieste (20 ottobre 2026)
+
+Sono state aggiunte in `TODO.md` **17 nuove Q dopo la Q24**, su ingressi e interni negozi piccoli (circa 1/4–1/6 della superficie della banca), acquisti al bancone, slot/video poker arcade con crediti virtuali senza conversione in denaro reale, biliardo, goriziana, calcetto 5v5, gare automobilistiche di finzione, garage, tuning e smartphone PAUSA/Start con Drive e Rider. Rimangono **[ ]**, si sviluppano **solo dopo BF01–BF06 e Q13–Q24**, una PR per Q. Non creare minigiochi o schermate con stile differente; mantenere la stessa prospettiva, scala del protagonista e controlli della banca/mappa. Per nuovi PNG personaggi la reference obbligatoria è il primo sheet pedoni secondo `PIXEL_ART_MODUS.md`. Distinguere sempre luoghi reali OSM e arredi/attività inventati. I controlli di debug/pausa esistenti devono rimanere disponibili nella futura app **Impostazioni → Sviluppatore**.
 
 ## Passaggio di mano obbligatorio — QUALSIASI intervento
 
@@ -30,6 +34,8 @@ Il log può essere breve (5–10 righe), ma deve dire chiaramente **cosa è stat
 
 ## Coerenza grafica fra strada e interni — regola permanente
 
+**NOVITÀ grafiche da approvare (BF15, 20 ottobre 2026).** Ogni elemento grafico provvisorio aggiunto va registrato in [NOVITA_DA_APPROVARE.md](./NOVITA_DA_APPROVARE.md) e in `novita.mjs` (menu PAUSA › NOVITÀ · DA APPROVARE, con VAI A VEDERE); la grafica definitiva la decide il committente. Il merger indica al committente quali novità visualizzare.
+
 **Un solo gioco, un solo stile visivo.** Ogni interno accessibile (banche e futuri negozi, case, uffici) mantiene la stessa **pixel art 2.5D dall'alto, scala del personaggio, orientamento, palette urbana, ombre e materiali** della mappa esterna. Usare il **medesimo sprite/renderer e le stesse animazioni del protagonista**, senza ridisegnarlo in uno stile distinto quando attraversa una porta. Gli interni possono usare una telecamera separata e stanze in sezione con muri bassi, ma non devono diventare schermate frontali, ambienti fantasy/Zelda o mini-giochi visivamente estranei. **La telecamera interna segue il personaggio con lo stesso zoom in unità-mondo della camminata esterna e un leggero incremento (+8%, `BANK_FOOT_ZOOM_MULTIPLIER=1.08`), senza adattare automaticamente tutta la stanza allo schermo; il movimento permette di scoprirla progressivamente.** La camera va limitata ai bordi della scena. Conservare movimento touch/PC, collisioni con arredi e uscita verso il mondo originale. Prima di consegnare testare proporzioni e leggibilità su telefono e desktop. Documentare nel WORK_LOG.
 
 ## Incidenti arcade non letali e recupero routine — regola di gameplay
@@ -38,7 +44,7 @@ Urti fra auto, moto e pedoni, compreso il protagonista a piedi o in veicolo, pos
 
 ## Guida touch: volante e pedali separati — regola permanente
 
-In auto e moto, sul lato sinistro della visuale deve comparire **il volante fisico ruotabile con il dito**, al posto della levetta di camminata. Rilasciato il volante, la sterzata torna progressivamente al centro. Sul lato destro, mantenere **ACCELERA sopra FRENO sopra RETRO** come tre pulsanti compatti e indipendenti, utilizzabili insieme allo sterzo (multi-touch). RETRO fa arretrare auto e moto solo mentre è premuto e non richiede altri comandi; il sistema non deve accelerare in avanti quando ACCELERA e RETRO sono entrambi premuti. Girare il volante senza gas NON deve accelerare; il tasto FRENO deve decelerare senza azionare automaticamente la retromarcia. Lo spazio rimane freno a mano da tastiera. A piedi e negli interni ripristinare levetta analogica e pulsante CORRI. Non reintrodurre accelerazione automatica con la sterzata. Fonti di riferimento: `steering-wheel.mjs`, `driving-controls.mjs`, `motorcycles.mjs`, `game.mjs`, `index.html`; regressioni coperte dai test dedicati.
+In auto e moto, sul lato sinistro della visuale deve comparire **il volante fisico ruotabile con il dito**, al posto della levetta di camminata. Rilasciato il volante, la sterzata torna progressivamente al centro. Sul lato destro, mantenere **FRENO sopra ACCELERA sopra RETRO** (ordine richiesto dal committente con BF06, 20/10/2026) come tre pulsanti compatti e indipendenti, utilizzabili insieme allo sterzo (multi-touch). RETRO fa arretrare auto e moto solo mentre è premuto e non richiede altri comandi; il sistema non deve accelerare in avanti quando ACCELERA e RETRO sono entrambi premuti. Girare il volante senza gas NON deve accelerare; il tasto FRENO deve decelerare senza azionare automaticamente la retromarcia. Lo spazio rimane freno a mano da tastiera. A piedi e negli interni ripristinare levetta analogica e pulsante CORRI. Non reintrodurre accelerazione automatica con la sterzata. Fonti di riferimento: `steering-wheel.mjs`, `driving-controls.mjs`, `motorcycles.mjs`, `game.mjs`, `index.html`; regressioni coperte dai test dedicati.
 
 ## Pixel art modus — guida obbligatoria per ogni asset
 
@@ -59,6 +65,7 @@ Per ogni nuovo veicolo segui rigorosamente [VEHICLE_ART_GUIDE.md](./VEHICLE_ART_
 4. **Niente regressioni**: non rompere camminata, veicoli, missioni, salvataggio, collisioni, traffico, zoom adattivo, minimappa, controllo touch, performance su telefono e GitHub Pages. Lo zoom attuale parte da 5× a piedi e si allarga progressivamente in auto: conservarlo. Il confronto “CONFRONTA CON PRIMA” per le strade deve restare funzionante.
 5. **Consegnare modifiche**: fare codice/asset/commit reali in GitHub, verificare con Node 22 e screenshot in browser (desktop + mobile); test verdi NON dimostrano da soli una buona resa grafica. Inserire confronti prima/dopo e descrizione onesta del progresso.
 6. **Portata**: non toccare altre cartelle di giochi senza necessità; evitare refactoring non connessi all'obiettivo estetico.
+7. **Foto aerea come riferimento (BF13, 20/10/2026)**: per i dettagli urbani consultare la foto aerea Esri come riferimento (sovramappa in PAUSA › STRUMENTI, audit in `AUDIT_SATELLITE.md`); nel repo solo coordinate stimate, mai immagini.
 
 ## Prima attività operativa per Work
 

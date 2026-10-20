@@ -7,9 +7,9 @@
  * Se lo scooter manca (rubato o portato via) se ne accorge, aspetta un po' e va a piedi su un
  * percorso di marciapiedi; al giro dopo riprende lo scooter se è tornato vicino a casa.
  * Nessun teletrasporto: ogni spostamento è continuo, anche nelle curve. */
-import {lanePosition} from './roads.mjs?v=145';
-import {trafficMoveBlocked,nearbyColliders,vehicleHitsPedestrian} from './traffic-collision.mjs?v=126';
-import {makeResidentAgenda,residentDepartureWindow} from './npc-agenda.mjs?v=001';
+import {lanePosition} from './roads.mjs?v=161';
+import {trafficMoveBlocked,nearbyColliders,vehicleHitsPedestrian} from './traffic-collision.mjs?v=131';
+import {makeResidentAgenda,residentDepartureWindow} from './npc-agenda.mjs?v=002';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export const COMMUTE_RULES=Object.freeze({walkSpeed:1.05,rideSpeed:9.5,rideAccel:5,parkSpeed:2.4,
  stay:[22,40],waitForBike:45,bikeNear:6,bikeHome:12,mountReach:.35});
@@ -139,8 +139,20 @@ function slideBike(c,from,to,dt,world){
 // Guida lungo il percorso, sulla corsia di destra. A ogni incrocio (o dopo un urto) lo scooter
 // va dritto dal punto in cui si trova all'inizio della corsia successiva: come una svolta vera,
 // alla sua velocità, senza salti.
+// Q22: freccia dello scooter prima delle svolte, con la stessa regola delle auto (junctions.mjs):
+// negli ultimi 30 m prima dell'incrocio e mentre lo attraversa; destra = angolo di svolta > 0.
+export function commuteTurnSignal(graph,ride){
+ if(!ride?.path?.length)return null;
+ const kind=(a,b)=>{if(!a||!b)return null;const turn=Math.atan2(Math.sin(b.angle-a.angle),Math.cos(b.angle-a.angle));
+  return Math.abs(turn)<=.35||Math.abs(turn)>=2.8?null:turn>0?'right':'left';};
+ const cur=graph.edges[ride.path[ride.cursor]];
+ if(ride.connector&&ride.cursor>0)return kind(graph.edges[ride.path[ride.cursor-1]],cur);
+ if(!cur||ride.cursor>=ride.path.length-1||(1-ride.t)*cur.len>30)return null;
+ return kind(cur,graph.edges[ride.path[ride.cursor+1]]);
+}
 function ride(c,dt,world){
  const p=c.plan,b=c.bike,r=p.ride,graph=world.graph;
+ b.turnSignal=null;
  if(b.impactTime>0){b.speed=0;r.connector=null;r.reblend=true;return false;}
  const vmax=COMMUTE_RULES.rideSpeed*(world.wet?.85:1);
  const speed=Math.min(vmax,(b.speed||0)+COMMUTE_RULES.rideAccel*dt);
@@ -168,6 +180,7 @@ function ride(c,dt,world){
   const dir=Math.hypot(x-b.x,y-b.y)>.005?Math.atan2(y-b.y,x-b.x):b.a;
   if(!moveBike(c,{x,y,a:dir},world))continue;
   r.cursor=cursor;r.t=t;r.connector=connector;b.speed=speed*factor;
+  b.turnSignal=commuteTurnSignal(graph,r);
   return !connector&&r.cursor===r.path.length-1&&r.t>=r.goalT-1e-9;
  }
  b.speed=0;return false;
@@ -222,6 +235,8 @@ function walkRoute(c,goalDoor,world){
 /* world: {graph, index, valid(x,y), clockMinutes, playerVehicle, say(agent,text), wet} */
 export function stepCommuter(c,dt,input){
  const world={...input,ownBike:c.bike};
+ // Q22: la freccia resta accesa solo mentre si guida (ride la ricalcola a ogni passo).
+ if(c.plan.phase!=='RIDE'&&c.plan.phase!=='RIDE_BACK')c.bike.turnSignal=null;
  const p=c.plan,npc=c.npc,elapsed=clamp(Number(dt)||0,0,.1);
  if(npc.impactTime>0)return p.phase;
  if(npc.needsRoutineRecovery){npc.needsRoutineRecovery=false;npc.recoverySeconds=0;p.wp=0;}

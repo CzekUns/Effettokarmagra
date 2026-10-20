@@ -1,0 +1,7 @@
+emittente,stream,prova_server_14_40,prova_server_14_56,tipo,bitrate_kbps,nome_nel_flusso,cors,browser_primo_suono_ms,browser_riproduzione_avanza,url_ufficiale_confermato,permesso_esplicito_terzi,note
+Radio Marte,https://stream1.xdevel.com/audio0s975753-313/stream/icecast.audio,200,200,audio/mpeg,,Radio Marte,*,primo della serie (gia in diretta),si,si (pagina radiomarte.it),no,
+Kiss Kiss Napoli,https://kisskiss.fluidstream.eu/KKNapoli.aac,200,200,audio/aac,64,Radio Kiss Kiss Napoli,*,1085,si (2.57 s in 2.5 s),si (streams.js del player ufficiale),no,
+Radio CRC,https://stream9.xdevel.com/audio2s975936-745/stream/icecast.audio,200,200,audio/mpeg,,no name,*,543,si (2.53 s in 2.5 s),no (nessun player web pubblico),no,fornitore Xdevel come l'app ufficiale
+Radio Nuova San Giorgio,https://nr8.newradio.it:19675/stream?ext=.mp3,200,200,audio/mpeg,96,STUDIO,*,1035,si (2.51 s in 2.5 s),si (player play5.newradio.it/player/index/3070),no,il vecchio URL ice15 suonava Radio Italia Charleroy
+Radio Norba,https://stream3.xdevel.com/audio0s975885-1008/stream/icecast.audio,200,200,audio/aacp,96,Radionorba,*,1555,si (2.50 s in 2.5 s),in parte (fornitore Xdevel dell'app ufficiale),no,
+Radio Napoli,https://kisskiss.fluidstream.eu/RadioNapoli.aac,200,200,audio/aac,64,Radio Napoli,*,535,si (2.49 s in 2.5 s),si (players.fluidstream.it/RadioNapoli),no,prima ice08.fluidstream.net (stessa emittente)

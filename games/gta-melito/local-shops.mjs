@@ -10,22 +10,69 @@ export const OFFERS=Object.freeze({
  sfogliatella:{name:'Sfogliatella',price:2,effect:'carica',seconds:150},
  pane:{name:'Pane cafone',price:2,effect:'carica',seconds:120},
  acqua:{name:'Bottiglia d’acqua',price:1,effect:'carica',seconds:60},
+ // Q26: al bancone dei locali con interno (bar e minimarket).
+ spremuta:{name:'Spremuta d’arancia',price:2,effect:'carica',seconds:120},
+ snack:{name:'Snack salato',price:1,effect:'carica',seconds:60},
  cartolina:{name:'Cartolina di Melito',price:3,effect:'ricordo'},
- taglio:{name:'Taglio di capelli',price:12,effect:'rispetto',respect:3}
+ taglio:{name:'Taglio di capelli',price:12,effect:'rispetto',respect:3},
+ // Q17: cibo di strada dei friggitori ambulanti (nomi dei venditori e prezzi INVENTATI).
+ frittatina:{name:'Frittatina di pasta',price:2,effect:'carica',seconds:150},
+ crocche:{name:'Crocchè di patate',price:1,effect:'carica',seconds:90},
+ zeppola:{name:'Zeppola fritta',price:1,effect:'carica',seconds:90},
+ panzerotto:{name:'Panzerotto',price:2,effect:'carica',seconds:150},
+ portafoglio:{name:'Pizza a portafoglio',price:2,effect:'carica',seconds:180},
+ pizzetta:{name:'Pizzetta fritta',price:1,effect:'carica',seconds:90},
+ panino:{name:'Panino salsiccia e friarielli',price:4,effect:'carica',seconds:240},
+ hotdog:{name:'Hot dog',price:3,effect:'carica',seconds:180},
+ peremusso:{name:'’O pere e ’o musso',price:4,effect:'carica',seconds:200}
 });
-const BY_KIND={bar:['caffe','cornetto'],cafe:['caffe','cornetto'],pastry:['sfogliatella','caffe'],
- bakery:['pane','sfogliatella'],supermarket:['acqua','pane'],convenience:['acqua'],
- stationery:['cartolina'],hairdresser:['taglio']};
+const BY_KIND={bar:['caffe','cornetto','spremuta'],cafe:['caffe','cornetto','spremuta'],pastry:['sfogliatella','caffe'],
+ bakery:['pane','sfogliatella'],supermarket:['acqua','pane','snack'],convenience:['acqua','snack'],
+ stationery:['cartolina'],hairdresser:['taglio'],
+ 'street-fritti':['frittatina','crocche','zeppola'],'street-zeppole':['zeppola','panzerotto','frittatina'],
+ 'street-pere-musso':['peremusso'],'street-panini':['panino','frittatina'],'street-hotdog':['hotdog'],
+ 'street-cornetti':['cornetto','caffe'],'street-portafoglio':['portafoglio','crocche'],
+ 'street-pizzette':['pizzetta','crocche','frittatina'],'street-misto':['frittatina','crocche','pizzetta']};
+/* Q17: ogni furgoncino del cibo di strada (sprite food-* e furgone-fritti) vende al banco con il
+ * suo friggitore (BF04). Il nome del venditore è di fantasia, come i prodotti e i prezzi. */
+export const VENDOR_KINDS=Object.freeze({
+ 'furgone-fritti':{kind:'street-fritti',name:'Friggitoria ambulante'},
+ 'food-zeppole-panzerotti':{kind:'street-zeppole',name:'Zeppole e panzerotti'},
+ 'food-pere-e-musso':{kind:'street-pere-musso',name:'’O pere e ’o musso'},
+ 'food-panini':{kind:'street-panini',name:'Panini ambulante'},
+ 'food-hot-dog':{kind:'street-hotdog',name:'Hot dog ambulante'},
+ 'food-cornetti':{kind:'street-cornetti',name:'Cornetti caldi'},
+ 'food-pizza-portafoglio':{kind:'street-portafoglio',name:'Pizza a portafoglio'},
+ 'food-pizzette-fritte':{kind:'street-pizzette',name:'Pizzette fritte'},
+ 'food-misto':{kind:'street-misto',name:'Fritto misto ambulante'}
+});
+// Q17: il banco di un furgoncino è un punto vendita accanto al suo friggitore (al suo posto di lavoro).
+export function vendorShops(foodVendors){
+ return (foodVendors||[]).flatMap(({vehicle,fryer})=>{
+  const sale=VENDOR_KINDS[vehicle?.model];
+  if(!sale||!fryer?.post)return [];
+  return [{x:fryer.post.x,y:fryer.post.y,kind:sale.kind,name:sale.name,vendor:true,fryer,vehicle}];
+ });
+}
+// Si compra solo se il friggitore è al banco (non spinto via da un urto o in fuga).
+export function vendorOpen(shop){
+ if(!shop?.vendor)return true;
+ const f=shop.fryer;
+ return !!f&&!(f.impactTime>0)&&Math.hypot(f.x-shop.x,f.y-shop.y)<2.5;
+}
 export const SHOP_RADIUS=5;
 export const BOOST_FACTOR=1.15;
 export function offersFor(kind){return (BY_KIND[kind]||[]).map(id=>({id,...OFFERS[id]}));}
-export function shopNote(){return 'Nome reale da OpenStreetMap · prodotti e prezzi inventati per il gioco';}
+export function shopNote(shop=null){
+ return shop?.vendor?'Ambulante di fantasia · prodotti e prezzi inventati per il gioco':
+  'Nome reale da OpenStreetMap · prodotti e prezzi inventati per il gioco';
+}
 // Il punto vendita più vicino, solo a piedi e solo se vende qualcosa.
 export function nearestShop(shops,player,radius=SHOP_RADIUS){
  if(!player||player.car>=0)return null;
  let best=null;
  for(const shop of shops||[]){
-  if(!offersFor(shop.kind).length)continue;
+  if(!offersFor(shop.kind).length||!vendorOpen(shop))continue;
   const d=Math.hypot(shop.x-player.x,shop.y-player.y);
   if(d<=radius&&(!best||d<best.d))best={shop,d};
  }

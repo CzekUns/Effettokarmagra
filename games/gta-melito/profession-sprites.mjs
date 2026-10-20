@@ -1,8 +1,9 @@
-/* Four professions from the approved 384x160 RGBA atlas.
+/* Four professions from the 384x160 atlas derived from the primary pedestrian reference (approved 2026-10-20).
  * Columns 0-3 fryer, 4-7 vigile, 8-11 lavavetri, 12-15 contrabbandiere.
  * Rows: up, down, left, right; 24x40 per frame, feet at world anchor. */
-import {pedestrianDirection} from './pedestrian-sprites.mjs?v=001';
-export const PROFESSION_ATLAS_PATH='./assets/people/npc-mestieri-4chars-4dir-4frames-24x40.png';
+import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
+import {pedestrianDirection} from './pedestrian-sprites.mjs?v=002';
+export const PROFESSION_ATLAS_PATH='./assets/people/npc-mestieri-prima-reference-384x160.png';
 export const PROFESSION_TYPES=Object.freeze(['friggitore','vigile','lavavetri','contrabbandiere']);
 let image=null;
 export function loadProfessionSprites(){
@@ -22,7 +23,7 @@ export function drawProfessionSprite(ctx,x,y,angle,profession,clock=0,moving=fal
  const row=pedestrianDirection(angle);
  const phase=((Math.floor(clock*Math.max(3,Math.abs(speed)*3)+(seed||0)*.013)%4)+4)%4;
  const frame=moving?phase:0;
- const width=3.25,height=4.7;
- ctx.drawImage(image,(type*4+frame)*24,row*40,24,40,x-width/2,y-height+.8,width,height);
+ const width=ps(3.25),height=ps(4.7);// BF14: people at PERSON_SCALE (world-scale.mjs)
+ ctx.drawImage(image,(type*4+frame)*24,row*40,24,40,x-width/2,y-height+ps(.8),width,height);
  return true;
 }

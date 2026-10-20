@@ -4,6 +4,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {CAMERA_SCALE_GAIN} from './world-scale.mjs';
 const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
 const ids=[...new Set([...html.matchAll(/id="([^"]+)"/g)].map(m=>m[1]))];
 const events=new Map();
@@ -54,7 +55,7 @@ test('browser entry boots and first NPC mission is interactable on Via Roma',asy
  assert.ok(Number(els.get('road-count').textContent)>400);
  assert.ok(Number(els.get('building-count').textContent)>1600);
  assert.ok(Number(els.get('inferred-count').textContent)>=250,'missing inferred buildings');
- assert.ok(els.get('camera-mode').textContent.includes('6.6'));
+ assert.ok(els.get('camera-mode').textContent.includes((6.6*CAMERA_SCALE_GAIN).toFixed(1)));// BF14 closer camera
  els.get('zoom-auto').fire('click');
  assert.match(els.get('mission-money').textContent,/0/);
  windowHandlers.get('keydown')({key:'f',repeat:false,preventDefault(){}});

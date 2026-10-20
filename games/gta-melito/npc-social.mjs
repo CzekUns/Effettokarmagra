@@ -19,6 +19,8 @@ export function knows(a,b){
 }
 export function canSocialize(agent,graph,clock){
  if(!agent||agent.body!=='walk'||agent.indoors||agent.commuter||agent.impactTime>0||agent.needsRoutineRecovery||agent.corner)return false;
+ // Q13: nobody stops to chat while dodging a vehicle, crossing or waiting at the kerb.
+ if(agent.dodge>0||agent.crossing||agent.lookAt||agent.kerbWait||agent.frozen||agent.serviceHold)return false;
  // Fermo da tempo in fondo a un marciapiede senza uscita: aspetta di essere ricollocato fuori vista.
  if(agent.stalled>4&&!(agent.wait>0))return false;
  if(agent.social&&(agent.social.hold||clock<agent.social.until))return false;
@@ -60,7 +62,7 @@ export function stepSocial(social,dt,ctx){
  social.clock+=elapsed;
  for(const group of [...social.groups]){
   const c=centre(group);
-  const hurt=group.members.some(m=>m.impactTime>0||m.needsRoutineRecovery||m.indoors);
+  const hurt=group.members.some(m=>m.impactTime>0||m.needsRoutineRecovery||m.indoors||m.dodge>0);
   const car=(ctx.vehicles||[]).some(v=>Math.abs(v.speed||0)>SOCIAL_RULES.dangerSpeed&&Math.hypot(v.x-c.x,v.y-c.y)<SOCIAL_RULES.dangerRange);
   const horn=ctx.alarm&&social.clock-(ctx.alarm.t??-1e9)<.5&&Math.hypot(ctx.alarm.x-c.x,ctx.alarm.y-c.y)<SOCIAL_RULES.hornRange;
   if(hurt||car||horn){release(social,ctx,group,'pericolo');out.push({type:'broken',size:group.members.length});continue;}

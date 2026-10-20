@@ -126,17 +126,6 @@ Il primo sheet è la **fonte di verità artistica** per silhouette, proporzioni 
 
 Ritagli singoli: [friggitore](./assets/people/npc-friggitore-4dir-4frames.png), [vigile](./assets/people/npc-vigile-4dir-4frames.png), [lavavetri](./assets/people/npc-lavavetri-4dir-4frames.png), [contrabbandiere](./assets/people/npc-contrabbandiere-4dir-4frames.png). Ogni ritaglio è `96×160` con 4 frame orizzontali e quattro direzioni verticali; l'atlante principale è trasparente, i frame hanno il medesimo pivot ai piedi e non perdono mani o oggetti al bordo. **Sono asset grafici predisposti, non NPC già attivi nel mondo**: un'implementazione successiva dovrà collegare loader, renderer, distribuzione sul territorio, animazione e routine contestuali senza modificare le collisioni per adattarle al disegno. Non rimuovere il vecchio friggitore già integrato prima della sostituzione verificata.
 
-
-### Nuova tavola quattro mestieri ricostruita dal primo sheet — 20 ottobre 2026
-
-[**Visualizza lo spritesheet dei quattro mestieri, derivato dal primo atlante ufficiale**](./assets/people/npc-mestieri-prima-reference-384x160.png).
-
-Questo è il rifacimento delle **quattro figure nello stile della reference madre**, non una nuova generazione libera:
-- **Celle**: 24×40 px, 16 colonne × 4 righe, 384×160 totale; direzioni su/giù/sinistra/destra, quattro fasi di camminata per direzione.
-- **Personaggi per gruppo di colonne**: 0–3 friggitore con camice bianco (deriva dalla terza figura originale); 4–7 vigile urbano blu (dalla prima); 8–11 lavavetri con giacca verde e secchio (dalla quarta); 12–15 contrabbandiere con borsello a tracolla sotto l'ascella (dalla seconda).
-- **Metodo**: sono preservati i pixel sorgente che costituiscono le pose, con ri-colorazione selettiva degli abiti e piccoli dettagli disegnati sulla griglia nativa; la **reference primaria è** [pedoni-4x4frames-24x40-rgba.png](./assets/people/pedoni-4x4frames-24x40-rgba.png). Non confondere il vecchio foglio mestieri discordante con questo nuovo.
-- **Stato**: **bozza su PR dedicata, in attesa di conferma estetica dell'utente**; non sostituire vecchi NPC o attivare routine prima del collaudo. La PR #33 era basata sul friggitore storico e viene superata dal nuovo lavoro.
-
 ## 4. VEICOLI — automobili, moto, Ape, furgoni
 
 ### Standard predefinito sheet veicoli: 16 sprite, 8 per modello

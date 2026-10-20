@@ -5,9 +5,10 @@
  *   fermano l'auto del giocatore come un muro e si aggirano a piedi.
  * Posizioni deterministiche e inventate (non censite). Un oggetto spostato torna al suo
  * posto solo quando né lui né il suo posto sono in vista: nessun teletrasporto davanti al giocatore. */
+import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
 export const BIN_RADIUS=.55;
 export const BOLLARD_RADIUS=.18;
-export const WALKER_RADIUS=.45;
+export const WALKER_RADIUS=ps(.45);// BF14
 const ROAD_TYPES=new Set(['primary','secondary','tertiary','unclassified','residential','living_street']);
 const BIN_COLORS=[['#2f63a8','#22497d'],['#e0b928','#a8891c'],['#3d8a4a','#2b6335'],['#6d7470','#4d5450']];
 const hash=n=>{let x=(n|0)^0x4d2f6a1b;x=Math.imul(x^x>>>16,2246822519);x=Math.imul(x^x>>>13,3266489917);return (x^x>>>16)>>>0;};
@@ -78,6 +79,8 @@ function moveInGrid(objects,bin,oldX,oldY){
  const list=objects.grid.get(a);if(list){const i=list.indexOf(bin);if(i>=0)list.splice(i,1);}
  if(!objects.grid.has(b))objects.grid.set(b,[]);objects.grid.get(b).push(bin);
 }
+// Q20: un bidone spostato a mano (l'operatore della nettezza urbana): posizione e griglia insieme.
+export function moveStreetObject(objects,obj,x,y){const ox=obj.x,oy=obj.y;obj.x=x;obj.y=y;moveInGrid(objects,obj,ox,oy);}
 // Cerchio contro rettangolo orientato del veicolo (stesse misure di traffic-collision).
 export function circleHitsVehicle(x,y,r,v,shape){
  const ca=Math.cos(v.a),sa=Math.sin(v.a),dx=x-v.x,dy=y-v.y;
