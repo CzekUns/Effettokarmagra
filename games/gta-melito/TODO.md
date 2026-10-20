@@ -1,6 +1,10 @@
 # GTA Melito — TODO di sviluppo NPC e vita cittadina
 Aggiornato: 2026-10-19 · Ambito: `games/gta-melito/` · Stato: coda attiva, Q01 completata; Q02 e successive aperte.
 
+## BUGFIX PRIORITARI — BF01–BF06 PRIMA DELLE Q ANCORA APERTE (20-10-2026)
+
+**Coda urgente assegnata al collaboratore:** [BUGFIX_TODO.md](./BUGFIX_TODO.md) — [issue #32](https://github.com/CzekUns/Effettokarmagra/issues/32). In seguito alle osservazioni del collaudo, il collaboratore `ilconsulentelogistico-hue` deve completare **BF01 → BF06**, una PR per ciascun bugfix, **prima di riprendere Q13**. Le 12 funzionalità Q13–Q24 qui sotto rimangono tutte aperte e nell'ordine originale. I BF vengono spuntati solo dopo codice integrato e verifiche; assegnare un issue non avvia autonomamente l'agente esterno. La vecchia istruzione «prendi sempre la prima Q [ ]» vale **solo quando la lista BF è terminata**.
+
 ## CODA OPERATIVA UNICA — UNA TASK ALLA VOLTA, CON PR
 
 **Fonte di verità dello sviluppatore incaricato:** questa lista `Q01…Q24` (ed eventuali successive voci Q aggiunte) è ordinata e prevale sulle checklist tematiche P0–P7 riportate sotto (che restano come specifiche e backlog di dettaglio). Il collaboratore prende **solo la prima Q non completata**, lavora su quella in un branch separato e presenta una PR; non passa alla successiva finché quella corrente non è integrata. Il revisore controlla e unisce le PR sicure. Le task programmate singolarmente sono sostituite da questa coda unica: non devono essere eseguite parallelamente.
