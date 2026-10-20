@@ -7,6 +7,7 @@ import {handlingProfile,TRUCK_HANDLING,VAN_HANDLING,CAR_HANDLING,stepVehicle} fr
 import {vehicleShape,vehiclesOverlap} from './traffic-collision.mjs';
 import {nearestEnterableVehicle} from './vehicle-entry.mjs';
 import {BAY_RULES} from './parking-bays.mjs';
+import {VEHICLE_SCALE} from './world-scale.mjs'; // BF14: every body is VEHICLE_SCALE of the measured one
 
 // Minimal PNG reader (RGBA 8-bit, non-interlaced) to check the real alpha of every cell.
 async function readRGBA(path){
@@ -52,11 +53,11 @@ test('Q18 bodies: van fits a stall, truck longer; both pass a car parked in its 
  const van=vehicleShape({model:'corriere-azzurro'}),truck=vehicleShape({model:'nettezza-bianco-verde'}),car=vehicleShape({model:'panda-modern-white'});
  assert.ok(van.halfLength>car.halfLength&&van.halfLength*2<=BAY_RULES.stall,'a van fits one 7,2 m stall');
  assert.ok(truck.halfLength>van.halfLength&&truck.halfWidth>=car.halfWidth);
- for(const s of [van,truck])assert.ok(s.halfWidth<=1.7+.25-.05,'its lane edge stays clear of the bay gap');
+ for(const s of [van,truck])assert.ok(s.halfWidth<=(1.7+.25-.05)*VEHICLE_SCALE+1e-9,'its lane edge stays clear of the bay gap');
  assert.ok(truck.halfWidth*2<4.6,'two trucks still cross on a 4,6 m lane gap');
  // nose to tail in one lane: the truck body is really longer than a car's
- assert.equal(vehiclesOverlap({x:0,y:0,a:0,model:'nettezza-verde'},{x:8,y:0,a:0,model:'panda-modern-white'}),true);
- assert.equal(vehiclesOverlap({x:0,y:0,a:0,model:'panda-modern-white'},{x:8,y:0,a:0,model:'panda-modern-white'}),false);
+ assert.equal(vehiclesOverlap({x:0,y:0,a:0,model:'nettezza-verde'},{x:8*VEHICLE_SCALE,y:0,a:0,model:'panda-modern-white'}),true);
+ assert.equal(vehiclesOverlap({x:0,y:0,a:0,model:'panda-modern-white'},{x:8*VEHICLE_SCALE,y:0,a:0,model:'panda-modern-white'}),false);
 });
 
 test('Q18 handling: the van drives like a van, the refuse truck is slow, brakes long and turns wide',()=>{

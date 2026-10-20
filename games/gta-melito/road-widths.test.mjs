@@ -1,7 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {vs} from './world-scale.mjs?v=001';
 import {readFile} from 'node:fs/promises';
-import {ROAD_WIDTH_MULTIPLIER,visualRoadWidth,roadTrafficLaneOffset,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
+import {ROAD_WIDTH_MULTIPLIER,visualRoadWidth,roadTrafficLaneOffset,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=044';
 import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs';
 import {buildStreetProps,drawCrosswalks} from './visuals.mjs';
 import {drawCityStreets} from './city-art.mjs';
@@ -35,7 +36,8 @@ test('traffic graph, pedestrian placement and lane offsets use the new street wi
  const agents=createAgents(graph,28,77,'car'),people=createAgents(graph,20,42,'walk');
  for(let tick=0;tick<90;tick++){stepAgents(graph,agents,.04);stepAgents(graph,people,.04);}
  assert.ok(agents.every(a=>Number.isFinite(a.x)&&Number.isFinite(a.y)));
- assert.ok(roadTrafficLaneOffset(15.4)>3.0);
+ // BF14: the lane follows the smaller vehicles (VEHICLE_SCALE), the street keeps its width.
+ assert.ok(roadTrafficLaneOffset(15.4)>vs(3.0));
  assert.ok(roadTrafficLaneOffset(15.4)<15.4/2-2);
  const props=buildStreetProps([{
   id:101,n:'Example',t:'residential',w:7,p:[0,0,150,0]
@@ -102,7 +104,7 @@ test('every consumer imports the same versioned road-width module for A/B',async
  const jsFiles=['game.mjs','city-art.mjs','visuals.mjs','roads.mjs','storefronts.mjs'];
  for(const file of jsFiles){
   const text=await readFile(new URL('./'+file,import.meta.url),'utf8');
-  assert.ok(text.includes("'./road-widths.mjs?v=043'"),file+' requires versioned singleton');
+  assert.ok(text.includes("'./road-widths.mjs?v=044'"),file+' requires versioned singleton');
  }
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8');
  assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=138,'game.mjs deve essere almeno alla v=138');

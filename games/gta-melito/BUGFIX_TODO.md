@@ -125,3 +125,20 @@ I bug sono segnalazioni del committente sulla versione giocabile, non diagnosi o
   - 23 voci: 18 attive e 5 «in arrivo» (BF14, transenne, Q18 ×2, Q21), che si accendono quando l'elemento c'è.
   - Prova breve in Chrome headless su PC: menu, VAI A VEDERE sul semaforo (ore 21:30) e sulla torre (12:00), ritorno con posto e ora ripristinati, COPIA GIUDIZI; 0 errori JS.
   - Telefono non provato in questa tornata (regola dei test brevi).
+### [ ] BF14 — Asset più piccoli e zoom maggiore: parcheggi che non invadono la carreggiata — P1
+**Segnalazione del committente (20/10/2026), testuale:** «i parcheggi a volte erroneamente finiscono per strada, proprio le linee degli spot, ma in generale vanno ad occupare troppa carreggiata. quindi decisione: o allarghiamo di nuovo tutta la mappa oppure rimpiccioliamo un po gli assets (aumentando poi lo zoom a questo punto) forse meglio la seconda?» Decisione: rimpicciolire gli asset e aumentare lo zoom.
+**Correzione:** un solo punto di scala, `world-scale.mjs`:
+- `VEHICLE_SCALE=0,75`: sprite, sagome di collisione, sonde della strada, corsie, stalli e distanze di coda;
+- `PERSON_SCALE=0,8`: sprite e raggi dei pedoni, banchi del mercato;
+- `CAMERA_SCALE_GAIN=1,2`: zoom.
+Strade, marciapiedi ed edifici OSM sono invariati. Stalli e linee bianche si misurano sulle auto COME DISEGNATE, non più sulla sagoma di collisione, che è più stretta, anche verso le corsie degli altri tratti (curve e incroci).
+**Accettazione:** nessuna linea di stallo sotto le auto in marcia né sulle corsie vicine; traffico, parcheggi, mercato, lavavetri, varchi e recinti funzionanti; nessuna compenetrazione; salita e discesa dai mezzi; touch invariato.
+- **Stato 2026-10-20:** corretto in PR (in revisione).
+  - Misurato in Chrome headless sulla mappa reale, PRIMA → DOPO:
+    - fasce con la linea interna sotto le auto in marcia della propria strada: 850 su 1.083 → 0 su 1.167; margine peggiore −0,78 m → +0,32 m;
+    - fasce sulle corsie di altri tratti: 209 → 0; margine peggiore −1,08 m → +0,23 m;
+    - stalli: 7.138 → 10.110, perché ora c'è più posto.
+  - Prova di stress di 60 s a 44,6 FPS: 0 compenetrazioni, 0 NPC fermi in vista, fughe 3/3.
+  - Salita in auto dalla partenza con E, guida e discesa: corrette. La Panda di partenza ora è a portata.
+  - Suite completa verde.
+  - Da giudicare a occhio: proporzioni di veicoli e persone e zoom.

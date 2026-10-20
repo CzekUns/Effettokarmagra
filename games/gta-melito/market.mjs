@@ -7,9 +7,10 @@
  * Venditori e clienti usano gli sprite esistenti dei pedoni e vivono in market.people, fuori da
  * state.people: li muove solo questo modulo (griglia di 1 m dentro l'area, percorsi lungo i
  * marciapiedi delle quattro vie all'esterno). Compaiono e spariscono solo fuori vista. */
-import {easeRoofReveal} from './roof-reveal.mjs?v=120';
+import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
+import {easeRoofReveal} from './roof-reveal.mjs?v=121';
 import {NPC_DAY_MINUTES,npcDay,npcWeekday} from './npc-agenda.mjs?v=002';
-import {addToCollisionIndex,moveInCollisionIndex} from './traffic-collision.mjs?v=130';
+import {addToCollisionIndex,moveInCollisionIndex} from './traffic-collision.mjs?v=131';
 
 // Stessi dati di data/market-area.json (il test lo verifica): il gioco non legge quel file a runtime.
 export const MARKET_AREA=Object.freeze({
@@ -27,7 +28,7 @@ export const MARKET_RULES=Object.freeze({
  setup:[390,450],        // 6:30–7:30 montaggio
  open:[450,810],         // 7:30–13:30 mercato
  teardown:[810,870],     // 13:30–14:30 smontaggio
- scale:1.9,            // misure reali del CSV × scala di gioco (auto e persone sono disegnate più grandi del vero)
+ scale:1.9*PERSON_SCALE, // misure reali del CSV × scala di gioco; BF14: segue la scala delle persone (world-scale.mjs)
  gap:.9,maxCustomers:16,customerSpeed:[1.5,2],vendorSpeed:2.6,buy:[5,15],visits:[1,3],
  buildMinutes:[12,18],arrive:[0,28],leave:[5,42],vendorEarly:45, // il venditore arriva fino a 45 minuti prima di montare
  approach:[38,105],

@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {vs} from './world-scale.mjs';
 import {readFile} from 'node:fs/promises';
 import {buildRoadGraph,stepAgents} from './roads.mjs';
 import {createRoutineResidents} from './resident-routines.mjs';
@@ -55,7 +56,7 @@ test('Q02 resident walks around a scooter parked on its pavement instead of wait
  }
  assert.equal(finished,true,'the full outing completes despite the obstacle');
  assert.ok(seen.has('ACTING')&&seen.has('RETURNING'));
- assert.ok(sidestep>=1.8,'it really stepped aside, clear of the scooter footprint');
+ assert.ok(sidestep>=vs(1.8),'it really stepped aside, clear of the scooter footprint');// BF14: smaller scooter
  assert.ok(Math.abs(plan.lateral||0)<.01,'and returned to its usual line');
  assert.ok(Math.hypot(npc.x-start.x,npc.y-start.y)<.01,'back home on the same spot');
 });

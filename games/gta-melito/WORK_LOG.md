@@ -956,3 +956,34 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Browser** (prova breve, carico ~4): salita, discesa e uscita in auto, scooter con passeggero, capienza piena, 0 errori JS. Primo piano di auto, Ape e scooter guardato.
 - **Limiti:** grafica provvisoria da far approvare a Simone; i passeggeri del traffico non scendono mai; touch non provato a parte; telefono reale non disponibile.
 
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF14 asset più piccoli, zoom maggiore, parcheggi fuori dalle corsie
+- **Prima.** Le auto erano disegnate larghe 5,1–5,5 m, con una sagoma di collisione di 3,4 m. Gli stalli BF02 erano calcolati sulla sagoma, non sul disegno. Su una residenziale (larga 15,4) la corsia stava a 3,54 m dal centro e lo stallo a 7,19 m: il disegno dell'auto in sosta arrivava fino a 4,44 m dal centro, mentre quello dell'auto in marcia occupava da 0,89 a 6,19 m.
+  - Le linee bianche interne passavano sotto il traffico in 850 fasce su 1.083.
+  - In 209 fasce lo stallo entrava nelle corsie di altri tratti, nelle curve e agli incroci.
+- **Scelta.** Seconda opzione del committente: rimpicciolire gli asset e aumentare lo zoom, con un solo punto di regolazione in `world-scale.mjs`.
+  - Veicoli `VEHICLE_SCALE=0,75`. Con 0,75 un'auto disegnata in marcia e una in sosta stanno affiancate su una residenziale senza invadere la corsia né la linea dei pedoni; il limite era 0,787.
+  - Persone `PERSON_SCALE=0,8`: restano proporzionate alle auto.
+  - Telecamera `CAMERA_SCALE_GAIN=1,2`, così a schermo le dimensioni restano simili.
+- **Cosa usa la scala:**
+  - `drawCar` scala ogni veicolo attorno al centro, compresi i passeggeri di Q21, che sono disegnati dentro `drawCar`;
+  - sprite delle persone (pedoni, extra, mestieri, friggitore, persona di riserva);
+  - sagome di collisione e margini dei pedoni (`traffic-collision.mjs`);
+  - sonde di `offStreetExcess` e del giro in auto (`road-clearance.mjs`);
+  - corsie (`roadTrafficLaneOffset`) e corsia ristretta Q15;
+  - stalli BF02: dimensioni, `drawnHalf` per il disegno, controllo «corsia» anche sullo stallo dipinto;
+  - distanze di coda e di nascita del traffico; fari e fanali; lati di servizio dei furgoni BF04; `minLane` dei lavavetri; discesa dallo scooter; raggio dei pedoni negli oggetti di strada; scala dei banchi del mercato; zoom.
+  - Il raggio per salire sui mezzi resta 9,5/8,5 m (comodità, non ingombro): la Panda di partenza, a 9,3 m, ora è a portata; prima era a 10 m, fuori portata.
+- **Cache.** Versioni rialzate a cascata per tutti i moduli toccati; `game.mjs?v=174`, `road-widths.mjs?v=044`, unica per tutti i consumatori del confronto A/B.
+- **Test.** Una ventina di test esistenti avevano misure scritte a mano (corsia 3,542, sagoma 3,15/1,7, zoom 6,6): ora usano `vs()`, `ps()` e `CAMERA_SCALE_GAIN`. Suite completa verde.
+- **Dopo (Chrome headless, mappa reale):**
+  - fasce sotto il traffico della propria strada: 0, margine minimo +0,32 m;
+  - fasce sulle corsie di altri tratti: 0, margine minimo +0,23 m;
+  - stalli: 10.110;
+  - stress di 60 s a 44,6 FPS: 0 compenetrazioni, 0 NPC fermi;
+  - salita, guida e discesa corrette;
+  - foto prima/dopo in Via Roma e in una residenziale.
+- **Limiti:**
+  - l'aspetto finale (proporzioni, zoom) va giudicato da Simone;
+  - i furgoni ambulanti disegnati sono più larghi di un'auto e possono ancora sfiorare la corsia con il tendone;
+  - non provato su telefono reale;
+  - l'interno della banca usa la stessa scala persona.

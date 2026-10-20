@@ -1,9 +1,12 @@
-import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
+import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=044';
 import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=008';
-import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=130';
+import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=131';
 import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=005';
+import {vs,ps} from './world-scale.mjs?v=001';
+// BF14: following distance between two cars on the same edge (centre to centre).
+const QUEUE=Object.freeze({stop:vs(6.3)+1,window:vs(7)});
 import {buildJunctions,chooseSignals,junctionDecision,pruneReservations,pedestrianMayCross,clockSecondsFromMinutes,crosswalkYield} from './junctions.mjs?v=003';
-import {findBorderGates,gateMouthClear,borderRing,GATE_RULES} from './border-gates.mjs?v=001';
+import {findBorderGates,gateMouthClear,borderRing,GATE_RULES} from './border-gates.mjs?v=002';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
  * Simulates moving traffic through intersections with legal one-way exits. */
@@ -107,7 +110,7 @@ function liveCarEdges(nodes,edges){
 export function laneOffsetOf(edge){return edge.laneOffset??roadTrafficLaneOffset(edge.streetWidth);}
 // The lane never goes below the offset at which two cars in opposite directions still pass each other
 // (minimum), and the last metres before each junction are left to the junction geometry (corners).
-export function fitLanesToBuildings(graph,clear,{halfWidth=1.7,margin=.25,step=3,minimum=1.75,ends=5}={}){
+export function fitLanesToBuildings(graph,clear,{halfWidth=vs(1.7),margin=.25,step=3,minimum=vs(1.75),ends=5}={}){
  let narrowed=0;
  for(const e of graph.edges){
   if(!e.car||e.len<=2*ends)continue;
@@ -151,9 +154,9 @@ export function createAgents(graph,count,seed=10,kind='car',avoid=[],settings={}
    if(kind==='car'&&isBusModel(at.model)&&!BUS_ROADS.has(edge.roadType))continue;
    if(collidesWithTraffic(at,kind,occupied))continue;
    if(kind==='walk'&&[...nearbyColliders(occupied,at.x,at.y,2)].some(other=>
-    other.body==='walk'&&Math.hypot(at.x-other.x,at.y-other.y)<1.5))continue;
+    other.body==='walk'&&Math.hypot(at.x-other.x,at.y-other.y)<ps(1.5)))continue;
    if(kind==='car'&&[...nearbyColliders(occupied,at.x,at.y,10)].some(other=>
-    (other.body||'car')==='car'&&Math.hypot(at.x-other.x,at.y-other.y)<9))continue;
+    (other.body||'car')==='car'&&Math.hypot(at.x-other.x,at.y-other.y)<vs(9)))continue;
    if(kind==='car'&&!carSpawnClear(graph,edgeIndex,t,at,occupied,junctionGap,settings))continue;
    const role=kind==='walk'?['commuter','errand','stroller'][hash(seed+i*31)%3]:
     ['through','local','courier'][hash(seed+i*31)%3];
@@ -494,7 +497,8 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
    }
    if(other.body!=='car'||other.edge!==agent.edge)continue;
    const ahead=(other.t-agent.t)*edge.len;
-   if(ahead>0&&ahead<12){const v=cruise*clamp((ahead-5)/7,0,1);if(v<speed){speed=v;agent.follows=other;}}
+   // BF14: queue gap and slow-down window follow the (smaller) vehicles: about 1 m between bumpers.
+   if(ahead>0&&ahead<QUEUE.stop+QUEUE.window){const v=cruise*clamp((ahead-QUEUE.stop)/QUEUE.window,0,1);if(v<speed){speed=v;agent.follows=other;}}
   }
   agent.yieldPed=yieldPed;agent.yieldWait=yieldPed&&!(agent.v>.5)?(agent.yieldWait||0)+elapsed:0;
   // BF07: stop line of the next junction (red light, right of way, junction or exit not free).
@@ -834,7 +838,7 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
      if(agent.home&&(agent.respawnFails||0)<2&&Math.hypot(at.x-agent.home.x,at.y-agent.home.y)>agent.home.radius*.65)continue;
      if(at.x>=view[0]-15&&at.x<=view[2]+15&&at.y>=view[1]-15&&at.y<=view[3]+15)continue;
      if(collidesWithTraffic(at,'car',index,agent)||[...nearbyColliders(index,at.x,at.y,10)].some(other=>
-       other!==agent&&(other.body||'car')==='car'&&Math.hypot(at.x-other.x,at.y-other.y)<9))continue;
+       other!==agent&&(other.body||'car')==='car'&&Math.hypot(at.x-other.x,at.y-other.y)<vs(9)))continue;
      Object.assign(agent,at,{edge:edgeId,t,seed:agent.seed+attempt+1,wait:0,stalled:0,
       prevX:at.x,prevY:at.y,prevA:at.a,braking:false,respawnFails:0,blockedBy:null,backoff:0});
      break;
@@ -856,7 +860,7 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
     if(at.x>=world.view[0]-15&&at.x<=world.view[2]+15&&at.y>=world.view[1]-15&&at.y<=world.view[3]+15)continue;
     if(collidesWithTraffic(at,'walk',index,agent))continue;
     if([...nearbyColliders(index,at.x,at.y,2)].some(other=>
-      other!==agent&&other.body==='walk'&&Math.hypot(at.x-other.x,at.y-other.y)<1.5))continue;
+      other!==agent&&other.body==='walk'&&Math.hypot(at.x-other.x,at.y-other.y)<ps(1.5)))continue;
     Object.assign(agent,at,{edge:edgeId,t,seed:agent.seed+attempt+1,wait:0,stalled:0,
      corner:null,prevX:at.x,prevY:at.y,prevA:at.a,braking:false});
     break;

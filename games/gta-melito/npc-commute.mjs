@@ -8,8 +8,8 @@
  * percorso di marciapiedi; al giro dopo riprende lo scooter se è tornato vicino a casa.
  * Nessun teletrasporto: ogni spostamento è continuo, anche nelle curve. */
 import {lanePosition} from './roads.mjs?v=161';
-import {trafficMoveBlocked,nearbyColliders,vehicleHitsPedestrian} from './traffic-collision.mjs?v=130';
-import {makeResidentAgenda,residentDepartureWindow} from './npc-agenda.mjs?v=001';
+import {trafficMoveBlocked,nearbyColliders,vehicleHitsPedestrian} from './traffic-collision.mjs?v=131';
+import {makeResidentAgenda,residentDepartureWindow} from './npc-agenda.mjs?v=002';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export const COMMUTE_RULES=Object.freeze({walkSpeed:1.05,rideSpeed:9.5,rideAccel:5,parkSpeed:2.4,
  stay:[22,40],waitForBike:45,bikeNear:6,bikeHome:12,mountReach:.35});

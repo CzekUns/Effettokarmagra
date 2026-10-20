@@ -2,14 +2,15 @@
  * in ./HANDOFF_WORK_REALISMO.md (see also ./AGENTS.md).
  * Do not claim hypothetical materials or pixel geometry as photo-verified.
  */
-import {visualRoadWidth} from './road-widths.mjs?v=043';
+import {visualRoadWidth} from './road-widths.mjs?v=044';
 import {SIDEWALK_OUTER,SIDEWALK_SHADOW,SIDEWALK_KERB} from './sidewalk.mjs?v=099';
 import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-volume.mjs?v=088';
 import {material} from './arcade-materials.mjs?v=095';
-import {drawPedestrianSprite} from './pedestrian-sprites.mjs?v=001';
-import {drawFryerSprite} from './friggitore-sprites.mjs?v=001';
-import {drawProfessionSprite} from './profession-sprites.mjs?v=001';
-import {drawExtraPedestrianSprite,EXTRA_PEDESTRIAN_NPC_START_KIND} from './extra-pedestrian-sprites.mjs?v=001';
+import {drawPedestrianSprite} from './pedestrian-sprites.mjs?v=002';
+import {PERSON_SCALE} from './world-scale.mjs?v=001';
+import {drawFryerSprite} from './friggitore-sprites.mjs?v=002';
+import {drawProfessionSprite} from './profession-sprites.mjs?v=002';
+import {drawExtraPedestrianSprite,EXTRA_PEDESTRIAN_NPC_START_KIND} from './extra-pedestrian-sprites.mjs?v=002';
 import {drawRuinPool} from './municipio-landmarks.mjs?v=001';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
@@ -631,7 +632,9 @@ function historicalRoofTone(art){
 // +X is forward. Keep the whole sprite close to its collision point and
 // distinguish head, shoulders, waist, swinging arms and separate shoes even
 // at the compact, nearest-neighbor canvas resolution used on phones.
-function drawPixelPerson(c,{skin,hair,coat,pants,trim,variant=0},step){
+// BF14: the drawn fallback person follows PERSON_SCALE like the sprites (world-scale.mjs).
+function drawPixelPerson(c,look,step){c.save();c.scale(PERSON_SCALE,PERSON_SCALE);drawPixelPersonBody(c,look,step);c.restore();}
+function drawPixelPersonBody(c,{skin,hair,coat,pants,trim,variant=0},step){
  const swing=step*.46;
  c.fillStyle='#1726228c';c.beginPath();c.ellipse(-.35,.65,2.65,1.8,-.12,0,TAU);c.fill();
  // Shoes and legs emerge from behind the jacket; left and right alternate.

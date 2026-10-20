@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {vs,ps} from './world-scale.mjs';
 import {readFile} from 'node:fs/promises';
 import {buildRoadGraph,createAgents,stepAgents} from './roads.mjs';
 import {roadTrafficLaneOffset,visualRoadWidth} from './road-widths.mjs';
@@ -27,10 +28,11 @@ test('BF02 bay offset: between lane and pedestrians where there is room, nothing
  for(const t of ['residential','unclassified','tertiary','secondary','primary','trunk']){
   const w=visualRoadWidth({t,w:{residential:7,unclassified:7,tertiary:9,secondary:11,primary:13,trunk:16}[t]}),c=bayOffset(w);
   assert.ok(c!==null,t+' has a parking strip');
-  assert.ok(c-1.7-(roadTrafficLaneOffset(w)+1.7)>=BAY_RULES.laneGap-1e-9,t+': clear of the swept lane');
-  assert.ok(w/2+1.7-(c+1.7)>=BAY_RULES.pedestrianGap-1e-9,t+': clear of the pedestrian line');
+  // BF14: measured on the bodies as drawn (BAY_RULES.drawnHalf), the collision box stays inside.
+  assert.ok(c-BAY_RULES.drawnHalf-(roadTrafficLaneOffset(w)+BAY_RULES.drawnHalf)>=BAY_RULES.laneGap-1e-9,t+': clear of the swept lane');
+  assert.ok(w/2+1.7-(c+BAY_RULES.halfWidth)>=BAY_RULES.pedestrianGap-1e-9,t+': clear of the pedestrian line');
  }
- assert.ok(bayOffset(visualRoadWidth({t:'primary',w:13}))+1.7<=visualRoadWidth({t:'primary',w:13})/2,'on wide roads the car stays on the asphalt');
+ assert.ok(bayOffset(visualRoadWidth({t:'primary',w:13}))+BAY_RULES.halfWidth<=visualRoadWidth({t:'primary',w:13})/2,'on wide roads the car stays on the asphalt');
  for(const [t,w] of [['service',5],['living_street',6],['track',3]])assert.equal(bayOffset(visualRoadWidth({t,w})),null,t+': no room, no parking');
  assert.ok(BAY_PEDESTRIAN_PAD<BAY_RULES.pedestrianGap,'pedestrians pass a bay car without being blocked');
 });
@@ -119,7 +121,7 @@ test('BF02 traffic drives past full parking strips and pedestrians walk past the
  }
  // the same car moved out of its bay onto the pavement is an ordinary obstacle again
  const s=bays.stalls.find(q=>q.y>1&&q.x>20&&q.x<280),line=g.edges[0].streetWidth/2+1.7;
- const walker={x:s.x-4,y:line,a:0,body:'walk'},next={x:s.x-3.5,y:line,a:0};
+ const walker={x:s.x-vs(4),y:line,a:0,body:'walk'},next={x:s.x-vs(3.5),y:line,a:0};// BF14: beside the smaller car
  const car=parkInStall({model:'panda-modern-white',body:'car'},s);
  assert.equal(trafficMoveBlocked(walker,next,'walk',makeCollisionIndex([car]),walker),false,'a pedestrian walks past a car in its bay');
  car.y+=.6;
@@ -127,7 +129,7 @@ test('BF02 traffic drives past full parking strips and pedestrians walk past the
 });
 
 test('BF02 food trucks stand in the strip too (real map, all five districts)',()=>{
- const g=realGraph,shape={halfLength:3.35,halfWidth:1.45};
+ const g=realGraph,shape={halfLength:vs(3.35),halfWidth:vs(1.45)};// BF14: food-truck box at the world scale
  const vendors=placeStreetFoodVendors(g,[],{vehicleOffset:bayOffset,vehicleOK:v=>fitsParkingBay(realBays,v,shape),walkerOK:()=>true});
  assert.equal(vendors.length,5);
  for(const {vehicle} of vendors){

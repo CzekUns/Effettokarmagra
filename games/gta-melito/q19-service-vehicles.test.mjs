@@ -5,6 +5,7 @@ import {inflateSync} from 'node:zlib';
 import {SERVICE2_ATLAS_PATH,SERVICE2_ATLAS_CELL,SERVICE2_VARIANTS,TOW_TRUCK_IDS,BUS_IDS,CAR_TRAFFIC_SPRITE_IDS,CAR_PARKED_SPRITE_IDS} from './car-sprites.mjs';
 import {handlingProfile,TOW_HANDLING,BUS_HANDLING,TRUCK_HANDLING,CAR_HANDLING,stepVehicle} from './vehicle-handling.mjs';
 import {vehicleShape,vehiclesOverlap} from './traffic-collision.mjs';
+import {VEHICLE_SCALE} from './world-scale.mjs'; // BF14: every body is VEHICLE_SCALE of the measured one
 import {nearestEnterableVehicle} from './vehicle-entry.mjs';
 import {buildRoadGraph,createAgents,chooseTurn,BUS_ROADS,isBusModel} from './roads.mjs';
 
@@ -51,10 +52,10 @@ test('Q19 bodies: tow truck between van and refuse truck, bus the longest; all k
  const tow=vehicleShape({model:'attrezzi-giallo'}),bus=vehicleShape({model:'autobus-arancio'});
  const van=vehicleShape({model:'corriere-bianco'}),truck=vehicleShape({model:'nettezza-verde'}),car=vehicleShape({model:'panda-modern-white'});
  assert.ok(tow.halfLength>van.halfLength&&tow.halfLength<truck.halfLength);
- assert.ok(bus.halfLength>truck.halfLength&&bus.halfLength*2>12,'the bus body is really long');
+ assert.ok(bus.halfLength>truck.halfLength&&bus.halfLength*2>12*VEHICLE_SCALE,'the bus body is really long');
  for(const s of [tow,bus]){assert.ok(s.halfWidth<=1.7+.25-.05,'lane edge clear of the bay gap');assert.ok(s.halfWidth*2<4.6,'two still cross on a 4,6 m gap');}
- assert.equal(vehiclesOverlap({x:0,y:0,a:0,model:'autobus-rosso'},{x:9,y:0,a:0,model:'panda-modern-white'}),true,'a car 9 m from the bus centre still touches it');
- assert.equal(vehiclesOverlap({x:0,y:0,a:0,model:'panda-modern-white'},{x:9,y:0,a:0,model:'panda-modern-white'}),false);
+ assert.equal(vehiclesOverlap({x:0,y:0,a:0,model:'autobus-rosso'},{x:9*VEHICLE_SCALE,y:0,a:0,model:'panda-modern-white'}),true,'a car 9 m (scaled) from the bus centre still touches it');
+ assert.equal(vehiclesOverlap({x:0,y:0,a:0,model:'panda-modern-white'},{x:9*VEHICLE_SCALE,y:0,a:0,model:'panda-modern-white'}),false);
 });
 
 test('Q19 handling: tow truck quicker than the refuse truck, bus the slowest and widest turning',()=>{

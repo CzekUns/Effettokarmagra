@@ -8,6 +8,7 @@ export const MOTORCYCLE_COLORS=Object.freeze(['white','red','black','blue']);
 export const MOTORCYCLE_IDS=Object.freeze(MOTORCYCLE_MODELS.flatMap(m=>MOTORCYCLE_COLORS.map(c=>`moto-${m}-${c}`)));
 export const MOTORCYCLE_CELL=Object.freeze({width:40,height:68,columns:4,rows:4});
 import {stepVehicle,MOTORCYCLE_HANDLING} from './vehicle-handling.mjs?v=005';
+import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
 export const isMotorcycle=v=>v?.vehicleType==='motorcycle';
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 let atlas=null;
@@ -32,7 +33,7 @@ export function chooseMotorcycleDismount(vehicle,valid,blocked=()=>false){
  if(!vehicle||Math.abs(vehicle.speed||0)>2.3)return null;
  const a=vehicle.a,sideX=-Math.sin(a),sideY=Math.cos(a),fx=Math.cos(a),fy=Math.sin(a);
  // Prefer left, then right, then behind. Never teleport into a wall.
- const candidates=[[1,3.0],[-1,3.0],[1,4.0],[-1,4.0],[0,-3.4]];
+ const candidates=[[1,vs(3.0)],[-1,vs(3.0)],[1,vs(4.0)],[-1,vs(4.0)],[0,vs(-3.4)]];// BF14: smaller scooter
  for(const [side,d] of candidates){
   const x=vehicle.x+sideX*side*(side?d:0)+(!side?fx*d:0);
   const y=vehicle.y+sideY*side*(side?d:0)+(!side?fy*d:0);

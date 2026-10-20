@@ -2,6 +2,7 @@
  * Tutto è una funzione pura dei minuti: la stessa ora dà sempre la stessa luce,
  * le transizioni sono graduali e l'orologio si ferma con pausa e banca.
  * Colori e orari sono una resa arcade, non dati astronomici di Melito. */
+import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
 const DAY=24*60;
 const modulo=(n,m)=>((n%m)+m)%m;
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -90,7 +91,7 @@ export function paintGlows(c,glows){
 // Il cono parte dal muso e si allunga davanti di circa 2 semiassi (15 m auto, 10 m moto).
 export function headlightLights(vehicle,level){
  if(!(level>0))return [];
- const moto=vehicle.vehicleType==='motorcycle',front=moto?2.4:3.2,half=moto?5.2:7.8,stretch=moto?1.7:1.9;
+ const moto=vehicle.vehicleType==='motorcycle',front=vs(moto?2.4:3.2),half=moto?5.2:7.8,stretch=moto?1.7:1.9;// BF14: nose of the smaller body
  const ca=Math.cos(vehicle.a),sa=Math.sin(vehicle.a),reach=front+half*.9;
  return [{x:vehicle.x+ca*reach,y:vehicle.y+sa*reach,r:half/stretch,stretch,angle:vehicle.a,strength:level}];
 }
@@ -98,7 +99,7 @@ export function headlightLights(vehicle,level){
 export function vehicleLamps(vehicle,level){
  if(!(level>0))return [];
  const moto=vehicle.vehicleType==='motorcycle',ca=Math.cos(vehicle.a),sa=Math.sin(vehicle.a);
- const front=moto?2.3:3.05,rear=moto?2.4:3.1,side=moto?[0]:[-1.15,1.15],out=[];
+ const front=vs(moto?2.3:3.05),rear=vs(moto?2.4:3.1),side=moto?[0]:[vs(-1.15),vs(1.15)],out=[];// BF14
  for(const k of side){
   out.push({x:vehicle.x+ca*front-sa*k,y:vehicle.y+sa*front+ca*k,r:1.5,color:'255,246,214',strength:level,alpha:.85});
   out.push({x:vehicle.x-ca*rear-sa*k,y:vehicle.y-sa*rear+ca*k,r:1.05,color:'255,52,36',strength:level,alpha:.8});

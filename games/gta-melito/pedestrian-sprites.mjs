@@ -3,6 +3,7 @@
  * Visual-only layer: actor position, pathfinding and collision stay unchanged.
  * Canvas fallback remains in city-art while the atlas is pending/unavailable.
  */
+import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
 export const PEOPLE_ATLAS_PATH='./assets/people/pedoni-4x4frames-24x40-rgba.png';
 export const PEOPLE_ATLAS_CELL=Object.freeze({width:24,height:40,columns:16,rows:4});
 export const PEOPLE_SPRITE_TYPES=Object.freeze(['man-blue','woman-red','elder-beige','rider-yellow']);
@@ -32,8 +33,8 @@ export function drawPedestrianSprite(ctx,x,y,angle,kind=0,clock=0,moving=true,sp
  const sy=dir*PEOPLE_ATLAS_CELL.height;
  // Render-size tuned to the existing cars (~5.3 x 8.6 world units);
  // shadow is part of the supplied sprite, feet near collision centre.
- const width=3.25,height=4.7;
+ const width=ps(3.25),height=ps(4.7);// BF14: people at PERSON_SCALE (world-scale.mjs)
  ctx.drawImage(atlas,sx,sy,PEOPLE_ATLAS_CELL.width,PEOPLE_ATLAS_CELL.height,
-  x-width/2,y-height+.8,width,height);
+  x-width/2,y-height+ps(.8),width,height);
  return true;
 }

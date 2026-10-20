@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {vs} from './world-scale.mjs';
 import {readFile} from 'node:fs/promises';
 import {MOTORCYCLE_ATLAS_PATH,MOTORCYCLE_IDS,MOTORCYCLE_MODELS,MOTORCYCLE_COLORS,
  MOTORCYCLE_CELL,motorcycleVariant,isMotorcycle,loadMotorcycleSprites,motorcycleSpriteReady,
@@ -65,7 +66,7 @@ test('cannot dismount a moving motorcycle or into an occupied wall',()=>{
  assert.equal(chooseMotorcycleDismount(bike,()=>false),null);
  assert.equal(chooseMotorcycleDismount(bike,()=>true,()=>true),null);
  const spot=chooseMotorcycleDismount(bike,(x,y)=>y<10.1,(x,y)=>x===10&&y===10);
- assert.deepEqual(spot,{x:10,y:7});
+ assert.deepEqual(spot,{x:10,y:10-vs(3)});// BF14: smaller scooter, the rider steps off closer
 });
 
 test('bike collision footprint differs from car; motorbike rider can be avoided by NPCs',()=>{

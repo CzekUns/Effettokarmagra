@@ -65,6 +65,7 @@ test('Q16 game wiring: Apes parked and in traffic, own body for walls and kerbs,
  // Q18 extends the own-body rule to the courier van and the refuse truck (ownBody).
  assert.match(game,/const ownBody=v=>!isMotorcycle\(v\)&&\/\^\(ape-\|[^/]*\/\.test\(v\?\.model\|\|''\);/);
  assert.match(game,/const bodyShape=v=>vehicleShape\(isMotorcycle\(v\)\?\{vehicleType:'motorcycle'\}:ownBody\(v\)\?v:\{vehicleType:'car'\}\);/);
- assert.match(game,/const forwards=bike\?\[-2\.25,0,2\.25\]:own\?\[-k\.halfLength\*\.83,0,k\.halfLength\*1\.08\]:\[-2\.6,0,3\.4\];/,'cars keep their probes');
+ // BF14: the same probes, scaled with the vehicles (world-scale.mjs).
+ assert.match(game,/const forwards=bike\?\[-2\.25,0,2\.25\]\.map\(vs\):own\?\[-k\.halfLength\*\.83,0,k\.halfLength\*1\.08\]:\[-2\.6,0,3\.4\]\.map\(vs\);/,'cars keep their probes');
  assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=169);
 });

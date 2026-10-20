@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {vs,ps} from './world-scale.mjs';
 import {readFile} from 'node:fs/promises';
 import {buildRoadGraph,stepAgents} from './roads.mjs';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement,restoreResidentRoutine} from './resident-routines.mjs';
@@ -140,7 +141,8 @@ test('Q03 a car parked across the shop door: the resident waits, then does its e
  const [npc]=residents(1),plan=npc.residentRoutine,door=plan.targetDoor;
  const car={x:door.x,y:door.y-.4,a:0,body:'car',vehicleType:'car',speed:0};
  const run=runCycle(npc,{parked:[car]},9000,p=>{
-  if(!p.indoors)assert.ok(Math.abs(p.x-car.x)>3.15+.8-1e-6||Math.abs(p.y-car.y)>1.7+.8-1e-6,'never inside the car footprint');
+  // BF14: footprint and walker margin at the world scale (world-scale.mjs).
+  if(!p.indoors)assert.ok(Math.abs(p.x-car.x)>vs(3.15)+ps(.8)-1e-6||Math.abs(p.y-car.y)>vs(1.7)+ps(.8)-1e-6,'never inside the car footprint');
  });
  assert.equal(run.finished,true,'the outing completes anyway');
  assert.equal(run.entered.length,1,'only its home door was entered');

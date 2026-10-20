@@ -1,4 +1,5 @@
-import {visualRoadWidth} from './road-widths.mjs?v=043';
+import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
+import {visualRoadWidth} from './road-widths.mjs?v=044';
 import {SIDEWALK_DRIVE} from './sidewalk.mjs?v=099';
 
 export const DRIVE_ROAD_TYPES=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
@@ -64,7 +65,7 @@ function makeBuildingIndex(buildings,cell){
 export function auditDrivingTour(roads,buildings,{spacing=6,cell=140}={}){
  const grid=makeBuildingIndex(buildings,cell),seenRoads=new Set(),blockedPairs=new Set(),osmPairs=new Set(),placeholderPairs=new Set();
  let roadWays=0,samples=0,overlappingProbes=0,clearedByRoadPriority=0;const unresolved=[];
- const offsets=[[-2.6,-1.7],[-2.6,1.7],[0,-1.7],[0,1.7],[3.4,-1.7],[3.4,1.7]];
+ const offsets=[[-2.6,-1.7],[-2.6,1.7],[0,-1.7],[0,1.7],[3.4,-1.7],[3.4,1.7]].map(([f,l])=>[vs(f),vs(l)]);// BF14
  for(const road of roads){
   if(!DRIVE_ROAD_TYPES.has(road.t)||!road.p||road.p.length<4)continue;
   roadWays++;

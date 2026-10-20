@@ -3,12 +3,16 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {buildRoadGraph,createAgents,stepAgents,stepAgent,chooseTurn} from './roads.mjs';
 import {drawCityPeople} from './city-art.mjs';
-import {makeCollisionIndex,nearbyColliders,moveInCollisionIndex,vehiclesOverlap,vehicleHitsPedestrian,collidesWithTraffic,trafficMoveBlocked} from './traffic-collision.mjs';
+import {makeCollisionIndex,nearbyColliders,moveInCollisionIndex,vehiclesOverlap,vehicleHitsPedestrian,collidesWithTraffic,trafficMoveBlocked,PEDESTRIAN_PAD} from './traffic-collision.mjs';
+import {roadTrafficLaneOffset} from './road-widths.mjs?v=044';
+import {vs} from './world-scale.mjs';
 
 const graph=buildRoadGraph([
  {id:1,n:'Est',t:'residential',w:7,p:[0,0,100,0]},
  {id:2,n:'Nord',t:'residential',w:7,p:[50,-50,50,50]}
 ]);
+// BF14: lane of the test street at the world scale (it was 3,542 before the smaller vehicles).
+const LANE=roadTrafficLaneOffset(graph.edges[0].streetWidth);
 const car=(edge,t,x,y,a)=>({edge,t,x,y,a,speed:12,seed:17,side:1,wait:0,body:'car'});
 
 test('the nearby index moves an NPC between cells without scanning the whole city',()=>{
@@ -22,11 +26,11 @@ test('the nearby index moves an NPC between cells without scanning the whole cit
 
 test('car shape collides with cars and pedestrians but clears a parallel traffic lane',()=>{
  const a={x:0,y:0,a:0};
- assert.ok(vehiclesOverlap(a,{x:5,y:0,a:0}));
- assert.ok(!vehiclesOverlap(a,{x:0,y:3.6,a:0}));
- assert.ok(vehicleHitsPedestrian(a,{x:3.5,y:0}));
- assert.ok(!vehicleHitsPedestrian(a,{x:0,y:3.1}));
- const index=makeCollisionIndex([{x:5,y:0,a:0,body:'car'},{x:2,y:0,body:'walk'}]);
+ assert.ok(vehiclesOverlap(a,{x:vs(5),y:0,a:0}));
+ assert.ok(!vehiclesOverlap(a,{x:0,y:vs(3.6),a:0}));
+ assert.ok(vehicleHitsPedestrian(a,{x:vs(3.5),y:0}));
+ assert.ok(!vehicleHitsPedestrian(a,{x:0,y:vs(3.1)}));
+ const index=makeCollisionIndex([{x:vs(5),y:0,a:0,body:'car'},{x:vs(2),y:0,body:'walk'}]);
  assert.ok(collidesWithTraffic(a,'car',index));
 });
 test('a lane jump cannot pass through the player car between two clear poses',()=>{
@@ -57,7 +61,7 @@ test('an AI car stops at a one-way endpoint instead of teleporting to another st
   {id:41,t:'residential',o:true,w:7,p:[0,0,20,0]},
   {id:42,t:'residential',o:true,w:7,p:[100,0,120,0]}
  ]);
- const ai=car(g.trafficStarts[0],.99,19.8,3.542,0);
+ const ai=car(g.trafficStarts[0],.99,19.8,LANE,0);
  for(let i=0;i<30;i++)stepAgent(g,ai,.05);
  assert.equal(ai.edge,g.trafficStarts[0]);
  assert.ok(ai.x>=19.8&&ai.x<=20);
@@ -105,15 +109,15 @@ test('NPC profiles and motorcycles are assigned before collision-aware spawning'
 });
 
 test('NPC cars queue before a parked car and separate at a crossing',()=>{
- const parked={x:35,y:3.542,a:0,body:'car'};
- const follower=car(graph.trafficStarts[0],.2,20,3.542,0);
+ const parked={x:35,y:LANE,a:0,body:'car'};
+ const follower=car(graph.trafficStarts[0],.2,20,LANE,0);
  for(let i=0;i<50;i++){
   stepAgents(graph,[follower],.05,null,{parked:[parked]});
   assert.ok(!vehiclesOverlap(follower,parked),'NPC cannot enter parked car');
  }
- assert.ok(follower.x>20&&follower.x<30,'NPC approaches and brakes before obstacle');
- const east=car(graph.trafficStarts[0],.4,40,3.542,0);
- const north=car(graph.trafficStarts[2],.4,46.458,-10,Math.PI/2);
+ assert.ok(follower.x>20&&follower.x<35-vs(5),'NPC approaches and brakes before obstacle');
+ const east=car(graph.trafficStarts[0],.4,40,LANE,0);
+ const north=car(graph.trafficStarts[2],.4,50-LANE,-10,Math.PI/2);
  // BF05: gli NPC ripartono da fermi con spinta progressiva: servono più di 3 s per attraversare.
  for(let i=0;i<140;i++){
   stepAgents(graph,[east,north],.05);
@@ -122,11 +126,11 @@ test('NPC cars queue before a parked car and separate at a crossing',()=>{
  assert.ok(east.x>60&&north.y>10,'both cars eventually cross');
 });
 test('a traffic deadlock is recycled only outside the visible camera',()=>{
- const parked={x:35,y:3.542,a:0,body:'car'};
- const stuck=car(graph.trafficStarts[0],.2,20,3.542,0);
+ const parked={x:35,y:LANE,a:0,body:'car'};
+ const stuck=car(graph.trafficStarts[0],.2,20,LANE,0);
  for(let i=0;i<220;i++)stepAgents(graph,[stuck],.05,null,
   {parked:[parked],view:[10,-15,50,20]});
- assert.ok(stuck.x<30,'a visible queued car must not teleport');
+ assert.ok(stuck.x<35-vs(5),'a visible queued car must not teleport');
  for(let i=0;i<220;i++)stepAgents(graph,[stuck],.05,null,
   {parked:[parked],view:[-100,-100,-70,-70]});
  assert.ok(stuck.x>40||stuck.edge!==graph.trafficStarts[0],
@@ -139,11 +143,11 @@ test('pedestrian walks on the sidewalk and yields before a car; traffic yields t
  const traffic={x:24,y:9.4,a:0,body:'car'};
  for(let i=0;i<50;i++){
   stepAgents(graph,[walker],.05,null,{traffic:[traffic]});
-  assert.ok(!vehicleHitsPedestrian(traffic,walker,.8));
+  assert.ok(!vehicleHitsPedestrian(traffic,walker,PEDESTRIAN_PAD));
  }
  assert.ok(walker.x>20&&walker.x<22);
- const driver=car(graph.trafficStarts[0],.2,20,3.542,0);
- const player={x:35,y:3.542,a:0,car:-1};
+ const driver=car(graph.trafficStarts[0],.2,20,LANE,0);
+ const player={x:35,y:LANE,a:0,car:-1};
  for(let i=0;i<50;i++)stepAgents(graph,[driver],.05,player);
  assert.ok(driver.x<32,'driver stops for the player pedestrian');
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');

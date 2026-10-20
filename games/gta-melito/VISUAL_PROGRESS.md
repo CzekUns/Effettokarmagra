@@ -693,3 +693,7 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 - **Scooter:** passeggero dietro il guidatore, con casco chiaro, giacca diversa e contorno scuro, per leggere due figure distinte. Gli sprite dei mezzi sono invariati.
 - **Cartelli e meta:** «PASSAGGIO?», fumetto del passeggero su due righe (mancia e via), anello giallo tratteggiato sulla meta.
 
+### 2026-10-20 — BF14 scala degli asset (Claude)
+- Veicoli disegnati al 75% e persone all'80%; la telecamera è più vicina del 20%. Strade, marciapiedi ed edifici sono invariati.
+- Stalli e strisce bianche ora seguono la larghezza delle auto disegnate: più stretti, più vicini al marciapiede, mai sotto il traffico. Si vede bene sulle residenziali.
+- Da far giudicare a Simone: proporzioni di auto e persone rispetto alle strade, zoom a piedi e in auto. Basta modificare `world-scale.mjs`.

@@ -7,6 +7,7 @@ export const ROAD_WIDTH_MULTIPLIER=Object.freeze({
  living_street:2.12,service:2.0,track:1.55,
  pedestrian:1.35,footway:1.2,path:1.18,steps:1.1,cycleway:1.15
 });
+import {VEHICLE_SCALE} from './world-scale.mjs?v=001';
 let mode='wide';
 export function getRoadWidthMode(){return mode;}
 export function setRoadWidthMode(value){
@@ -22,6 +23,8 @@ export function visualRoadWidth(road){
  const mult=ROAD_WIDTH_MULTIPLIER[road.t]??1.9;
  return Math.round(w*mult*10)/10;
 }
+// BF14: lanes come closer to the centre line with the smaller vehicles (world-scale.mjs), so a parked
+// car beside them no longer covers the moving traffic. The street keeps its width.
 export function roadTrafficLaneOffset(width){
- return Math.min(4.0,Math.max(.65,width*.23));
+ return Math.min(4.0,Math.max(.65,width*.23))*VEHICLE_SCALE;
 }

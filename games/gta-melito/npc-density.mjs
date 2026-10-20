@@ -9,7 +9,7 @@
  * - se ce ne sono troppi (es. a notte fonda) uno di quelli fuori vista se ne va lontano.
  * Le posizioni sono quelle dei marciapiedi del grafo stradale OSM, controllate con canStand. */
 import {lanePosition} from './roads.mjs?v=161';
-import {collidesWithTraffic,nearbyColliders} from './traffic-collision.mjs?v=130';
+import {collidesWithTraffic,nearbyColliders} from './traffic-collision.mjs?v=131';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const hash=n=>{let x=(n|0)^0x9e3779b9;x=Math.imul(x^x>>>16,0x85ebca6b);x=Math.imul(x^x>>>13,0xc2b2ae35);return (x^x>>>16)>>>0;};
