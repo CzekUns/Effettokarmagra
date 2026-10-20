@@ -139,3 +139,23 @@ I tasti touch usano pointer capture e movimento analogico proporzionale; in auto
 Il renderer ora scala il canvas con nearest-neighbor a risoluzione ridotta. `game.mjs` ridisegna l’asfalto sopra edifici e volumi OSM quando le impronte cartografiche invadono la carreggiata. La collisione auto usa la superficie delle strade percorribili come autorità e lascia transitare il veicolo dove un footprint OSM incrocia il corridoio stradale. I props di marciapiede passano un filtro geometrico anche presso gli incroci e sono esclusi se l’ingombro grafico raggiunge l’asfalto. Questo maschera la sovrapposizione nel gioco, senza cancellare o correggere l’originale OSM; le collisioni pedonali restano sui poligoni.
 
 `road-clearance.mjs` e `driving-tour.test.mjs` verificano tutti i tracciati in auto a campioni regolari con la stessa sagoma a sei punti usata dalla collisione. L’audit ha rilevato 86 coppie way/edificio OSM sovrapposte, tutte risolte dalla precedenza stradale; nessun placeholder è coinvolto. Il rapporto non certifica lo stato reale della strada: per correggere i dati OSM servirebbe una verifica sul posto o una fonte cartografica primaria più precisa.
+
+
+## Handoff sessione — ingresso nella banca (20 ottobre 2026)
+
+### Funzione realizzata e pubblicata
+- Aggiunto `bank-interior.mjs`: individua i POI con `k === 'bank'`, colloca il punto d'ingresso su uno spazio pedonale libero vicino a una strada e mostra un cerchio luminoso all'esterno.
+- Quando il personaggio è a piedi sul punto, il comando contestuale diventa **ENTRA IN BANCA**. Si entra con E o con il comando touch.
+- L'interno è una scena dedicata con pavimento, bancone, sedute e ATM; all'interno si può camminare. E, Escape o **ESCI DALLA BANCA** riportano all'esatta posizione esterna salvata. L'HUD di strada viene nascosto durante la scena.
+- L'identità e la posizione della banca provengono dai POI OSM. La stanza è un interno di gioco stilizzato, non un rilievo dell'edificio. Al momento la mappa OSM contiene il Banco BPM come banca; altri indirizzi potranno essere aggiunti in seguito.
+- Merge su `main`: PR #24, commit `c3314469e86151082714ecbc7e1d6f230a694ea5`. Registro visuale aggiornato con commit `6d2266ff60723e0edd6faaa8699a68a8915b328b`.
+- Test locali al merge: **139/139 passati**, inclusi resolver del POI Banco BPM, mock di disegno Canvas e smoke test browser. CI e deploy Pages risultavano riusciti.
+- URL pubblicato verificato al caricamento: https://czekuns.github.io/Effettokarmagra/games/gta-melito/?v=129. La pagina e gli script si caricavano senza errori JavaScript del gioco. **Non è stata verificata manualmente l'interazione col cerchio in un browser né su telefono**: farlo prima di dichiarare completato il QA touch.
+
+### Ripresa consigliata
+1. Aprire il link pubblicato e provare sul posto l'avvicinamento a piedi, la comparsa di **ENTRA IN BANCA**, entrata, movimento interno e ritorno alle coordinate salvate; ripetere su telefono.
+2. L'utente ha chiesto anche routine AI meno elementari, meno pedoni e molte moto NPC usando i nuovi modelli; trasparenza/occlusione dei palazzi anche quando si cammina (il personaggio sembrava sui tetti); e ingresso/uscita della banca come sopra. Ispezionare lo stato attuale di codice, issue/PR e modelli presenti prima di segnare come concluse le prime due richieste.
+3. In una conversazione recente l'utente ha segnalato che la pagina di test restituiva 404 e ha poi autorizzato il merge su `main` mantenendo il backup. Verificare branch, URL di test, commit e deploy correnti: questa nota non certifica che la pagina test sia stata riparata.
+4. L'utente ha inoltre chiesto versioni stabile/test separate e un rapporto dei test. Conservare una URL stabile e una URL di test funzionante quando si lavora su nuove tranche; annotare cosa è coperto da test automatici e cosa è stato controllato visivamente.
+5. Per asset e NPC, rispettare le convenzioni visive già richieste: fogli sprite coerenti con lo stile del gioco, quattro personaggi per foglio; per veicoli dello stesso tipo, foglio da 16 celle con 8 varianti per ciascun modello. Controllare prima l'eventuale documentazione Pixel Art Modus e i modelli già caricati.
+
