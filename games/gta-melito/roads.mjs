@@ -1,6 +1,6 @@
 import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
 import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=005';
-import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation} from './traffic-collision.mjs?v=127';
+import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=127';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
  * Simulates moving traffic through intersections with legal one-way exits. */
@@ -67,8 +67,22 @@ export function buildRoadGraph(roads){
   }
  }
  const junctions=nodes.filter(n=>n.out.filter(e=>edges[e].car).length>=3).length;
- const throughStarts=trafficStarts.filter(id=>hasThroughExit({nodes,edges},id));
- return {nodes,edges,trafficStarts,throughStarts,walkStarts,junctions};
+ const liveCar=liveCarEdges(nodes,edges);
+ const throughStarts=trafficStarts.filter(id=>liveCar[id]&&hasThroughExit({nodes,edges,liveCar},id));
+ return {nodes,edges,trafficStarts,throughStarts,walkStarts,junctions,liveCar};
+}
+// BF03: car edges from which traffic can keep driving for ever (a U-turn at a two-way dead end
+// counts). An edge whose every route ends at a one-way terminal is a trap: in Melito a chain of
+// one-way segments can lead there, so no NPC is spawned on it or turns into it.
+function liveCarEdges(nodes,edges){
+ const incoming=nodes.map(()=>[]),left=new Int32Array(edges.length),live=new Uint8Array(edges.length),dead=[];
+ edges.forEach((e,id)=>{if(!e.car)return;incoming[e.to].push(id);live[id]=1;
+  left[id]=nodes[e.to].out.filter(next=>edges[next].car).length;if(!left[id])dead.push(id);});
+ while(dead.length){
+  const id=dead.pop();live[id]=0;
+  for(const before of incoming[edges[id].from])if(live[before]&&--left[before]===0)dead.push(before);
+ }
+ return live;
 }
 function position(graph,edgeIndex,t,body='walk',side=1){
  const e=graph.edges[edgeIndex],a=graph.nodes[e.from],b=graph.nodes[e.to];
@@ -80,23 +94,28 @@ export function createAgents(graph,count,seed=10,kind='car',avoid=[],settings={}
  // An NPC should not materialize on a one-way terminal or a spur whose only
  // legal exit is an immediate U-turn. Keep such links in the road graph for
  // the player and for unavoidable routes, but prefer through streets for AI.
+ // BF03: throughStarts also leave out the one-way chains that only end at a terminal.
  const through=kind==='car'?(graph.throughStarts||graph.trafficStarts.filter(id=>hasThroughExit(graph,id))):[];
  const options=kind==='car'?(through.length?through:graph.trafficStarts):graph.walkStarts;
  const agents=[],occupied=makeCollisionIndex(avoid);
  if(!options.length)return agents;
+ const junctionGap=kind==='car'?junctionClearance(graph):null;
  for(let i=0;i<count;i++){
-  for(let attempt=0;attempt<24;attempt++){
+  for(let attempt=0;attempt<40;attempt++){
    const edgeIndex=options[hash(seed+i*65537+attempt*7349)%options.length];
    const edge=graph.edges[edgeIndex];
    if(kind==='car'&&edge.roadType==='service'&&i%3!==0&&attempt<12)continue;
    const t=.05+rand(seed+i*7+13+attempt*181)*.85,side=i%2?1:-1;
    const vehicleType=kind==='car'&&settings.motorcycleEvery&&i%settings.motorcycleEvery===2?'motorcycle':'car';
    const at={...position(graph,edgeIndex,t,kind,side),...(kind==='car'?{vehicleType}:{})};
+   // BF03: the model is known before the checks, so the whole body of an Ape or a van is tested.
+   if(kind==='car'&&settings.model)at.model=settings.model(i,vehicleType);
    if(collidesWithTraffic(at,kind,occupied))continue;
    if(kind==='walk'&&[...nearbyColliders(occupied,at.x,at.y,2)].some(other=>
     other.body==='walk'&&Math.hypot(at.x-other.x,at.y-other.y)<1.5))continue;
    if(kind==='car'&&[...nearbyColliders(occupied,at.x,at.y,10)].some(other=>
     (other.body||'car')==='car'&&Math.hypot(at.x-other.x,at.y-other.y)<9))continue;
+   if(kind==='car'&&!carSpawnClear(graph,edgeIndex,t,at,occupied,junctionGap,settings))continue;
    const role=kind==='walk'?['commuter','errand','stroller'][hash(seed+i*31)%3]:
     ['through','local','courier'][hash(seed+i*31)%3];
    const agent={...at,edge:edgeIndex,t,speed:kind==='car'?(vehicleType==='motorcycle'?9:7)+rand(i*13+seed)*7:
@@ -120,14 +139,45 @@ export function createAgents(graph,count,seed=10,kind='car',avoid=[],settings={}
  }
  return agents;
 }
+// BF03: half the width of the widest car street meeting at each junction node (0 elsewhere): a car
+// is born with its whole body before that box, not across the crossing.
+function junctionClearance(graph){
+ const near=graph.nodes.map(()=>new Set()),width=new Float64Array(graph.nodes.length);
+ for(const e of graph.edges){
+  if(!e.car)continue;
+  near[e.from].add(e.to);near[e.to].add(e.from);
+  width[e.from]=Math.max(width[e.from],e.streetWidth);width[e.to]=Math.max(width[e.to],e.streetWidth);
+ }
+ return near.map((set,id)=>set.size>=3?width[id]/2:0);
+}
+// BF03: the whole body clear of the junctions, of vehicles (with a margin), of the player and of
+// walls; an NPC is never born inside an obstacle and then left standing in its lane.
+function carSpawnClear(graph,edgeIndex,t,at,occupied,junctionGap,settings){
+ const edge=graph.edges[edgeIndex],shape=vehicleShape(at),reach=shape.halfLength+1.5;
+ if(junctionGap[edge.from]&&t*edge.len<reach+junctionGap[edge.from])return false;
+ if(junctionGap[edge.to]&&(1-t)*edge.len<reach+junctionGap[edge.to])return false;
+ for(const other of nearbyColliders(occupied,at.x,at.y,12))
+  if((other.body||'car')==='car'?vehiclesOverlap(at,other,.5):vehicleHitsPedestrian(at,other,1.5))return false;
+ for(const spot of settings.keepClear||[])if(Math.hypot(at.x-spot.x,at.y-spot.y)<spot.r)return false;
+ if(settings.clear){
+  const c=Math.cos(at.a),s=Math.sin(at.a);
+  for(const [f,l] of [[1,1],[1,-1],[-1,1],[-1,-1],[0,1],[0,-1]])
+   if(!settings.clear(at.x+c*shape.halfLength*f-s*shape.halfWidth*l,at.y+s*shape.halfLength*f+c*shape.halfWidth*l))return false;
+ }
+ return true;
+}
 function hasThroughExit(graph,id){
  const edge=graph.edges[id];
- return graph.nodes[edge.to].out.some(next=>graph.edges[next].car&&graph.edges[next].to!==edge.from);
+ // BF03: an exit into a trap does not count, or a car would drive up to it only to turn back.
+ return graph.nodes[edge.to].out.some(next=>graph.edges[next].car&&graph.edges[next].to!==edge.from&&
+  (!graph.liveCar||graph.liveCar[next]));
 }
 export function chooseTurn(graph,nodeId,oldEdge,agent,allowed){
  const node=graph.nodes[nodeId],incoming=graph.edges[oldEdge];
- const exits=node.out.filter(id=>allowed(graph.edges[id],id));
+ let exits=node.out.filter(id=>allowed(graph.edges[id],id));
  if(!exits.length)return null;
+ // BF03: a car never turns into a street that only leads to a one-way terminal, when it has a choice.
+ if(agent.body==='car'&&graph.liveCar){const live=exits.filter(id=>graph.liveCar[id]);if(live.length)exits=live;}
  // Q12: an agent with a planned path follows it; everyone else keeps the usual wandering.
  if(agent.path){const k=agent.path.indexOf(oldEdge),want=k>=0?agent.path[k+1]:undefined;if(want!==undefined&&exits.includes(want))return want;}
  let pool=exits.filter(id=>graph.edges[id].to!==incoming.from);
@@ -225,8 +275,8 @@ function backOff(graph,agent,elapsed,index){
  const t=Math.max(0,agent.t-step/e.len),lane=position(graph,agent.edge,t,'car');
  const pose={x:lane.x,y:lane.y,a:agent.a,vehicleType:agent.vehicleType,model:agent.model};
  if(t<agent.t-1e-9&&!(index&&trafficMoveBlocked(agent,pose,'car',index,agent))){
-  agent.x=pose.x;agent.y=pose.y;agent.t=t;agent.backoff-=step;agent.braking=false;
- }else agent.backoff=0;
+  agent.x=pose.x;agent.y=pose.y;agent.t=t;agent.backoff-=step;agent.braking=false;agent.cannotYield=false;
+ }else{agent.cannotYield=agent.backoff>=2.5;agent.backoff=0;}
  if(agent.backoff<=1e-6){agent.backoff=0;agent.wait=Math.max(agent.wait||0,1.5);agent.blockedBy=null;agent.braking=true;}
 }
 // BF01: a vehicle overlapping another one (after a shove or a spawn) slides out of it a little at a
@@ -376,6 +426,19 @@ export function restoreAgentRoutine(graph,agent,dt,world={},index=null){
  }
  return true;
 }
+// BF03: the cars whose "blocked by" links close a ring (two at a crossing, up to four around a
+// junction) wait for each other for ever. The one with the highest seed backs up; if it has no room
+// behind it, the next one tries.
+export function yieldsInGridlock(agent){
+ const ring=[agent];
+ for(let other=agent.blockedBy;other!==agent;other=other.blockedBy){
+  if(!other||other.body!=='car'||ring.length>=4)return false;
+  ring.push(other);
+ }
+ let pool=ring.filter(car=>!car.cannotYield);
+ if(!pool.length){for(const car of ring)car.cannotYield=false;pool=ring;}
+ return pool.includes(agent)&&pool.every(car=>car===agent||(agent.seed|0)>(car.seed|0));
+}
 export function stepAgents(graph,agents,dt,player=null,world={}){
  const playerBody=player&&Number.isFinite(player.x)&&Number.isFinite(player.y)?
   {x:player.x,y:player.y,a:player.a||0,body:player.car>=0?'car':'walk',vehicleType:player.vehicleType||'car'}:null;
@@ -418,9 +481,8 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
   if(agent.body==='car'){
    // BF01: two cars blocking each other (typically across a junction) for over 2,5 s: the one with
    // the higher seed yields and backs up a couple of metres; the other one can then pass.
-   const other=agent.blockedBy;
-   if(other&&agent.stalled>2.5&&!(agent.backoff>0)&&other.blockedBy===agent&&other.body==='car'&&
-      agent.edge!=null&&(agent.seed|0)>(other.seed|0))agent.backoff=2.5;
+   // BF03: the same for three or four cars blocking one another in a ring around a junction.
+   if(agent.blockedBy&&agent.stalled>2.5&&!(agent.backoff>0)&&agent.edge!=null&&yieldsInGridlock(agent))agent.backoff=2.5;
    // Retire a genuine deadlock only when both the old and replacement car
    // are outside the camera. The player never sees a vehicle teleport.
    const view=world.view;
