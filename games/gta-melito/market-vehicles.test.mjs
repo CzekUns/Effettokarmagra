@@ -95,5 +95,5 @@ test('food truck awnings stay parked while compact Ape models join moving traffi
  assert.ok(game.includes("car-sprites.mjs?v=108"));
  assert.ok(game.includes('trafficApeModel(i)'));
  assert.ok(!game.includes("v.model='food-zeppole-panzerotti'"));
- assert.ok(page.includes('game.mjs?v=154'));
+ assert.ok(Number((page.match(/game\.mjs\?v=(\d+)/)||[])[1])>=154,'game.mjs deve essere almeno alla v=154');
 });

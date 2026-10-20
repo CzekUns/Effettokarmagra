@@ -6,7 +6,7 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=146';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=147';
 import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=001';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=005';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
@@ -29,7 +29,7 @@ import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
 import {loadFryerSprite} from './friggitore-sprites.mjs?v=001';
 import {loadProfessionSprites} from './profession-sprites.mjs?v=001';
-import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=001';
+import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=002';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
