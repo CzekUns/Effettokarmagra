@@ -40,6 +40,7 @@ Piccolo gioco arcade originale ispirato alla visuale dall'alto dei GTA degli ann
 - Rendering 2D Canvas con caricamento e disegno solo degli elementi vicini al giocatore.
 - Per motivi di prestazioni e fedeltà, le **forme** dei palazzi vengono dai dati OSM, mentre le facciate e gli elementi sul tetto sono resi con un'estetica rétro originale. Il database OSM può essere incompleto; non garantiamo che contenga *ogni* negozio, strada privata o edificio.
 - Le auto del traffico ora percorrono il grafo OSM e possono svoltare agli incroci; precedenze, semafori, collisioni complesse e pianificazione di destinazioni sono ancora semplificati. Missioni, polizia, danni e gameplay GTA completo restano da costruire.
+- **Incroci e semafori (BF07, 20/10/2026):** le auto e le moto del traffico si fermano alla linea d'arresto, non impegnano l'incrocio se all'uscita non c'è posto, danno la precedenza alla strada di rango maggiore (a parità, a chi arriva da destra; chi gira a sinistra cede a chi arriva di fronte), passano una alla volta sulle traiettorie in conflitto e lampeggiano la freccia prima di svoltare. **Semafori simulati, di gioco, non rilevati:** l'istantanea OSM non contiene nodi `highway=traffic_signals`, quindi gli 8 semafori sono posizionati con una regola sugli incroci principali (`junctions.mjs`, `SIGNALS_SIMULATED`) e **non** corrispondono ai semafori reali di Melito; lo dice anche la scheda PAUSA. Ciclo di 30 s legato all'orologio di gioco; i pedoni che vanno dritti attraversano con il verde della propria via.
 
 ## Fonti e licenze
 
