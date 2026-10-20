@@ -5,7 +5,7 @@
  * sugli incroci principali, NON semafori rilevati né attribuiti alla città reale. */
 import {roadTrafficLaneOffset} from './road-widths.mjs?v=043';
 import {NPC_MINUTES_PER_SECOND} from './npc-agenda.mjs?v=001';
-import {vehicleShape,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=129';
+import {vehicleShape,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=130';
 
 // Nessun semaforo nei dati: quelli in gioco sono simulati (vedi README e scheda PAUSA).
 export const SIGNALS_SIMULATED=true;

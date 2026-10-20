@@ -38,7 +38,11 @@ const MODEL_SHAPES=Object.freeze([
  // its lane must still pass the cars in the BF02 bays (lane offset + 1,7 + 0,25 gap) and two still cross
  // on a 4,6 m service lane gap; the drawn bodies are wider, like the cars'.
  ['corriere-',Object.freeze({halfLength:3.6,halfWidth:1.85})],
- ['nettezza-',Object.freeze({halfLength:4.8,halfWidth:1.9})]
+ ['nettezza-',Object.freeze({halfLength:4.8,halfWidth:1.9})],
+ // Q19: tow truck (a refuse truck without the compactor overhang) and the short urban bus, both at most
+ // 1,9 wide per side for the same lane reasons; the bus is long, so it drives on main roads only (roads.mjs).
+ ['attrezzi-',Object.freeze({halfLength:4.45,halfWidth:1.85})],
+ ['autobus-',Object.freeze({halfLength:6.3,halfWidth:1.9})]
 ]);
 const CAR_SHAPE=Object.freeze({halfLength:3.15,halfWidth:1.7}),BIKE_SHAPE=Object.freeze({halfLength:2.8,halfWidth:1.05});
 export function vehicleShape(v){

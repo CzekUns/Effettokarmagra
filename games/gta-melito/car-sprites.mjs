@@ -72,6 +72,20 @@ export const SERVICE_VARIANTS=Object.freeze(Object.fromEntries([
 ]));
 export const COURIER_IDS=Object.freeze(COURIER_LIVERIES.map(l=>'corriere-'+l));
 export const REFUSE_TRUCK_IDS=Object.freeze(REFUSE_LIVERIES.map(l=>'nettezza-'+l));
+/* Q19: second 4x4 atlas of service vehicles, same pixel density (~7 px per unit) but taller cells 52x124 so
+ * the bus fits: rows 1-2 a flatbed tow truck (short cab with amber light bar, winch, slatted bed, loading
+ * ramps), rows 3-4 a short urban bus (light roof with two A/C units and hatches, window bands on both sides,
+ * doors on the right). Drawn by code (sources/servizio2-16-genera.py); invented liveries, no logos, no text. */
+export const SERVICE2_ATLAS_PATH='./assets/vehicles/servizio2-16-rgba.png';
+export const SERVICE2_ATLAS_CELL=Object.freeze({width:52,height:124,columns:4,rows:4});
+export const TOW_LIVERIES=Object.freeze(['giallo','arancio','bianco-rosso','rosso','blu','bianco','grigio-arancio','giallo-vissuto']);
+export const BUS_LIVERIES=Object.freeze(['arancio','verde-bianco','blu-bianco','rosso','bianco-azzurro','giallo','grigio-verde','arancio-vissuto']);
+export const SERVICE2_VARIANTS=Object.freeze(Object.fromEntries([
+ ...TOW_LIVERIES.map((livery,i)=>['attrezzi-'+livery,{index:i,model:'attrezzi',livery,atlas:'@service2-atlas'}]),
+ ...BUS_LIVERIES.map((livery,i)=>['autobus-'+livery,{index:8+i,model:'autobus',livery,atlas:'@service2-atlas'}])
+]));
+export const TOW_TRUCK_IDS=Object.freeze(TOW_LIVERIES.map(l=>'attrezzi-'+l));
+export const BUS_IDS=Object.freeze(BUS_LIVERIES.map(l=>'autobus-'+l));
 export const STREET_VENDOR_VEHICLES=Object.freeze(['ape-car-azzurra','furgone-fritti']);
 export const CAR_TRAFFIC_SPRITE_IDS=Object.freeze([...CAR_ATLAS_VARIANT_IDS,...Object.keys(EXTRA_CAR_VARIANTS),...STREET_VENDOR_VEHICLES]);
 export const CAR_PARKED_SPRITE_IDS=Object.freeze([...CAR_TRAFFIC_SPRITE_IDS,...MARKET_VARIANT_IDS]);
@@ -83,6 +97,8 @@ const MODEL_DRAW_SIZE=Object.freeze({
  'ape-mercato':[5.7,6.9],'furgone-ambulante':[7.9,9.3],'ape-classica':[5.7,6.9],
  // Q18: whole 52x92 cell; the van body is then ~5,7 x 9,4 and the refuse truck ~6,3 x 12,4.
  'corriere':[7.43,13.14],'nettezza':[7.43,13.14],
+ // Q19: whole 52x124 cell; the tow truck body is then ~5,7 x 12,3 and the bus ~6,3 x 16,9.
+ 'attrezzi':[7.43,17.71],'autobus':[7.43,17.71],
 });
 
 const cache=new Map();
@@ -90,7 +106,7 @@ let attempted=false;
 export function loadCarSprites(){
  if(attempted||typeof Image==='undefined')return;
  attempted=true;
- for(const [model,path] of Object.entries({...CAR_SPRITES,'@punto-ypsilon-atlas':CAR_ATLAS_PATH,...EXTRA_CAR_ATLASES,'@market-atlas':MARKET_ATLAS_PATH,'@ape-car-atlas':APE_CAR_ATLAS_PATH,'@service-atlas':SERVICE_ATLAS_PATH})){
+ for(const [model,path] of Object.entries({...CAR_SPRITES,'@punto-ypsilon-atlas':CAR_ATLAS_PATH,...EXTRA_CAR_ATLASES,'@market-atlas':MARKET_ATLAS_PATH,'@ape-car-atlas':APE_CAR_ATLAS_PATH,'@service-atlas':SERVICE_ATLAS_PATH,'@service2-atlas':SERVICE2_ATLAS_PATH})){
   const img=new Image();
   // New atlas is natively transparent: never matte-key or mask at runtime.
   cache.set(model,img);
@@ -99,13 +115,14 @@ export function loadCarSprites(){
  }
 }
 function loadedImage(model){
- const key=CAR_ATLAS_VARIANTS[model]?'@punto-ypsilon-atlas':(EXTRA_CAR_VARIANTS[model]?.atlas||MARKET_VARIANTS[model]?.atlas||APE_CAR_VARIANTS[model]?.atlas||SERVICE_VARIANTS[model]?.atlas||model);
+ const key=CAR_ATLAS_VARIANTS[model]?'@punto-ypsilon-atlas':(EXTRA_CAR_VARIANTS[model]?.atlas||MARKET_VARIANTS[model]?.atlas||APE_CAR_VARIANTS[model]?.atlas||SERVICE_VARIANTS[model]?.atlas||SERVICE2_VARIANTS[model]?.atlas||model);
  return cache.get(key);
 }
 export function carSpriteReady(model){
  const img=loadedImage(model);
  if(MARKET_VARIANTS[model]||APE_CAR_VARIANTS[model])return !!(img?.complete&&img.naturalWidth===224&&img.naturalHeight===256);
  if(SERVICE_VARIANTS[model])return !!(img?.complete&&img.naturalWidth===208&&img.naturalHeight===368);
+ if(SERVICE2_VARIANTS[model])return !!(img?.complete&&img.naturalWidth===208&&img.naturalHeight===496);
  if(CAR_ATLAS_VARIANTS[model]||EXTRA_CAR_VARIANTS[model])return !!(img?.complete&&img.naturalWidth===160&&img.naturalHeight===240);
  return !!(img?.complete&&img.naturalWidth>0&&img.naturalHeight>0);
 }
@@ -114,11 +131,11 @@ export function drawCarSprite(ctx,x,y,angle,model,focused=false){
  if(!attempted)loadCarSprites();
  const img=loadedImage(model);
  if(!carSpriteReady(model))return false;
- const variant=CAR_ATLAS_VARIANTS[model]||EXTRA_CAR_VARIANTS[model]||MARKET_VARIANTS[model]||APE_CAR_VARIANTS[model]||SERVICE_VARIANTS[model];
+ const variant=CAR_ATLAS_VARIANTS[model]||EXTRA_CAR_VARIANTS[model]||MARKET_VARIANTS[model]||APE_CAR_VARIANTS[model]||SERVICE_VARIANTS[model]||SERVICE2_VARIANTS[model];
  const [width,length]=MODEL_DRAW_SIZE[variant?.model||model]||(model==='panda-modern-white'?[5.5,8.75]:[5.1,8.55]);
  ctx.save();ctx.translate(x,y);ctx.rotate(angle+Math.PI/2);ctx.imageSmoothingEnabled=false;
  if(variant){
-  const {width:sw,height:sh,columns}=SERVICE_VARIANTS[model]?SERVICE_ATLAS_CELL:MARKET_VARIANTS[model]||APE_CAR_VARIANTS[model]?MARKET_ATLAS_CELL:CAR_ATLAS_CELL;
+  const {width:sw,height:sh,columns}=SERVICE2_VARIANTS[model]?SERVICE2_ATLAS_CELL:SERVICE_VARIANTS[model]?SERVICE_ATLAS_CELL:MARKET_VARIANTS[model]||APE_CAR_VARIANTS[model]?MARKET_ATLAS_CELL:CAR_ATLAS_CELL;
   const sx=(variant.index%columns)*sw,sy=Math.floor(variant.index/columns)*sh;
   ctx.drawImage(img,sx,sy,sw,sh,-width/2,-length/2,width,length);
  }else ctx.drawImage(img,-width/2,-length/2,width,length);

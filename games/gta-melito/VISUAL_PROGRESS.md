@@ -668,3 +668,9 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 - **Camion della nettezza urbana:** verde, bianco-verde, bianco-blu, arancio, grigio, verde scuro, bianco-arancio, verde vissuto.
 - Livree inventate, senza marchi né scritte. Pixel art provvisoria: da far approvare a Simone.
 
+
+### 2026-10-20 — Q19 carro attrezzi e autobus urbano (grafica provvisoria)
+- Nuovo `assets/vehicles/servizio2-16-rgba.png` (208×496, 4×4 da 52×124), tavola `sources/servizio2-16-sheet.png` e generatore `sources/servizio2-16-genera.py`. Vista esattamente dall'alto, muso in alto, stessa densità di pixel dei veicoli di servizio Q18.
+- **Carro attrezzi:** giallo, arancio, bianco-rosso, rosso, blu, bianco, grigio-arancio, giallo vissuto.
+- **Autobus urbano corto:** arancio, verde-bianco, blu-bianco, rosso, bianco-azzurro, giallo, grigio-verde, arancio vissuto.
+- Livree inventate, senza scritte, numeri di linea o marchi. Pixel art provvisoria: da far approvare a Simone.

@@ -1,8 +1,8 @@
 import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
-import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=007';
-import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=129';
-import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=004';
-import {buildJunctions,chooseSignals,junctionDecision,pruneReservations,pedestrianMayCross,clockSecondsFromMinutes} from './junctions.mjs?v=002';
+import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=008';
+import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=130';
+import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=005';
+import {buildJunctions,chooseSignals,junctionDecision,pruneReservations,pedestrianMayCross,clockSecondsFromMinutes} from './junctions.mjs?v=003';
 import {findBorderGates,gateMouthClear,borderRing,GATE_RULES} from './border-gates.mjs?v=001';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
@@ -124,6 +124,7 @@ export function createAgents(graph,count,seed=10,kind='car',avoid=[],settings={}
    const at={...position(graph,edgeIndex,t,kind,side),...(kind==='car'?{vehicleType}:{})};
    // BF03: the model is known before the checks, so the whole body of an Ape or a van is tested.
    if(kind==='car'&&settings.model)at.model=settings.model(i,vehicleType);
+   if(kind==='car'&&isBusModel(at.model)&&!BUS_ROADS.has(edge.roadType))continue;
    if(collidesWithTraffic(at,kind,occupied))continue;
    if(kind==='walk'&&[...nearbyColliders(occupied,at.x,at.y,2)].some(other=>
     other.body==='walk'&&Math.hypot(at.x-other.x,at.y-other.y)<1.5))continue;
@@ -188,12 +189,18 @@ function hasThroughExit(graph,id){
  return graph.nodes[edge.to].out.some(next=>graph.edges[next].car&&graph.edges[next].to!==edge.from&&
   (!graph.liveCar||graph.liveCar[next]));
 }
+/* Q19: the urban bus is long (a 12,6 m body against the cars' 6,3): it is born, turns and is moved
+ * off screen only on the main roads, where lanes and junctions are wide enough for it. */
+export const BUS_ROADS=Object.freeze(new Set(['trunk','trunk_link','primary','primary_link','secondary','secondary_link','tertiary','tertiary_link']));
+export const isBusModel=model=>/^autobus-/.test(model||'');
 export function chooseTurn(graph,nodeId,oldEdge,agent,allowed){
  const node=graph.nodes[nodeId],incoming=graph.edges[oldEdge];
  let exits=node.out.filter(id=>allowed(graph.edges[id],id));
  if(!exits.length)return null;
  // BF03: a car never turns into a street that only leads to a one-way terminal, when it has a choice.
  if(agent.body==='car'&&graph.liveCar){const live=exits.filter(id=>graph.liveCar[id]);if(live.length)exits=live;}
+ // Q19: the bus keeps to the main roads whenever the junction offers one.
+ if(agent.mainOnly){const main=exits.filter(id=>BUS_ROADS.has(graph.edges[id].roadType));if(main.length)exits=main;}
  // Q12: an agent with a planned path follows it; everyone else keeps the usual wandering.
  if(agent.path){const k=agent.path.indexOf(oldEdge),want=k>=0?agent.path[k+1]:undefined;if(want!==undefined&&exits.includes(want))return want;}
  let pool=exits.filter(id=>graph.edges[id].to!==incoming.from);
@@ -268,7 +275,7 @@ function stepSidewalkCorner(agent,distance,index){
  agent.braking=false;
 }
 function nextPose(graph,agent,distance){
- const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1,body:agent.body,routine:agent.routine,home:agent.home,path:agent.path};
+ const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1,body:agent.body,routine:agent.routine,home:agent.home,path:agent.path,mainOnly:isBusModel(agent.model)};
  let hops=0;
  while(distance>.00001&&hops++<8){
   const edge=graph.edges[route.edge];if(!edge)break;
@@ -292,7 +299,7 @@ function nextPose(graph,agent,distance){
 // (chooseTurn on a copy of the route, so the agent's own seed is untouched).
 function nextJunction(graph,agent,maxDist){
  const junctions=graph.intersections;if(!junctions||agent.edge==null)return null;
- const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1,body:agent.body,routine:agent.routine,home:agent.home,path:agent.path};
+ const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1,body:agent.body,routine:agent.routine,home:agent.home,path:agent.path,mainOnly:isBusModel(agent.model)};
  let dist=0;
  for(let hops=0;hops<12;hops++){
   const edge=graph.edges[route.edge];if(!edge)return null;
@@ -752,6 +759,7 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
      (graph.throughStarts?.length?graph.throughStarts:graph.trafficStarts);
     for(let attempt=0;attempt<32;attempt++){
      const edgeId=options[hash(agent.seed+attempt*3253)%options.length];
+     if(isBusModel(agent.model)&&!BUS_ROADS.has(graph.edges[edgeId]?.roadType))continue;
      const t=.15+rand(agent.seed+attempt*1459)*.7;
      const at={...position(graph,edgeId,t,'car'),vehicleType:agent.vehicleType,model:agent.model};
      if(agent.home&&(agent.respawnFails||0)<2&&Math.hypot(at.x-agent.home.x,at.y-agent.home.y)>agent.home.radius*.65)continue;

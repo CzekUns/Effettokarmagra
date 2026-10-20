@@ -83,7 +83,7 @@ test('Q18 game wiring: vans and trucks in traffic and in the stalls (truck only 
  assert.match(game,/i%31===20\?REFUSE_TRUCK_IDS\[/,'refuse trucks in NPC traffic');
  assert.match(game,/serviceFits\(REFUSE_TRUCK_IDS\[/,'a truck parks only where its body fits');
  assert.match(game,/fitsParkingBay\(state\.parkingBays,v,vehicleShape\(v\)\)&&!carBlocked\(v\.x,v\.y,v\.a,-1,v\)&&!state\.cars\.some\(o=>vehiclesOverlap\(v,o\)\)/);
- assert.match(game,/const ownBody=v=>!isMotorcycle\(v\)&&\/\^\(ape-\|corriere-\|nettezza-\)\/\.test/);
+ assert.match(game,/const ownBody=v=>!isMotorcycle\(v\)&&\/\^\(ape-\|corriere-\|nettezza-[^)]*\)\/\.test/,'van and truck keep their own body (Q19 may add more models)');
  assert.match(sprites,/'@service-atlas':SERVICE_ATLAS_PATH/);
  assert.match(sprites,/'corriere':\[7\.43,13\.14\],'nettezza':\[7\.43,13\.14\]/);
  assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=171);
