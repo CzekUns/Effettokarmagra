@@ -1,5 +1,7 @@
 # GTA Melito — NOVITÀ grafiche PROVVISORIE da approvare
 
+**Stato aggiornato 20 ottobre 2026:** il committente ha **approvato l'uso dei nuovi asset nel gioco**, compresi gli sprite dei quattro mestieri realizzati sulla prima reference pedoni, integrati con la PR #34. La sezione NOVITÀ resta disponibile per segnalare rifiniture grafiche e collaudi successivi; la precedente dicitura «DA APPROVARE» non blocca più l'uso degli asset già importati. L'approvazione d'uso non equivale a convalida delle funzioni non provate su Android.
+
 **Per il merger e per il committente.** Questi elementi grafici e visivi sono stati aggiunti da Claude (account GitHub `ilconsulentelogistico-hue`) e sono **PROVVISORI**: li approva o li boccia il committente (Simone). La grafica definitiva può rifarla il proprietario, nello stile originale (`PIXEL_ART_MODUS.md`, `VEHICLE_ART_GUIDE.md`).
 
 **Nel gioco:** menu PAUSA › **NOVITÀ · DA APPROVARE** (BF15).
