@@ -25,7 +25,7 @@ test('BF11 the page opens on the game board: nothing around the stage, everythin
   assert.equal(html.replace(pause,'').search(pattern),-1,what+' is no longer around the board');
  }
  const sections=[...pause.matchAll(/<section class="pause-section (pause-[a-z]+)"[^>]*><h3 id="[^"]+">([^<]+)<\/h3>/g)].map(m=>[m[1],m[2]]);
- assert.deepEqual(sections.map(s=>s[0]),['pause-status','pause-commands','pause-play','pause-tools','pause-credits']);
+ assert.deepEqual(sections.map(s=>s[0]).filter(id=>id!=='pause-novita'),['pause-status','pause-commands','pause-play','pause-tools','pause-credits'],'BF15 aggiunge solo NOVITÀ tra gioco e strumenti');
  assert.ok(pause.indexOf('class="pause-shortcuts"')>pause.indexOf('pause-play'),'map, zoom and sound shortcuts in their own section');
 });
 

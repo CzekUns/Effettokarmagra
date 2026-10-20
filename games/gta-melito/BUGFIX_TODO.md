@@ -108,3 +108,20 @@ I bug sono segnalazioni del committente sulla versione giocabile, non diagnosi o
 - audit di tutta Melito in `AUDIT_SATELLITE.md` e `audit-satellite.csv` (50 segnalazioni, priorità, Q/BF suggerite), con solo coordinate e descrizioni.
 **Accettazione:** allineamento verificato su almeno 3 zone con lo scarto in metri; costo nullo a sovramappa spenta; prove su PC e telefono; almeno 40 segnalazioni concrete.
 - **Stato 2026-10-20:** corretto in PR (in revisione) — sovramappa provata in Chrome headless su PC e telefono 844×390; conversione uguale a `osm.mjs` entro 0,06 m; scarto foto/sagome OSM 1,7–3,8 m in 3 zone; 0 richieste da spenta; 50 segnalazioni. Non provato su telefono reale.
+
+### [ ] BF15 — Menu NOVITÀ: elementi grafici provvisori da approvare — P1
+**Segnalazione (committente, 20/10/2026, testuale):** «le tue pixel art vanno verificate, poi il proprietario genererà pixel art specifiche rispettando i criteri di stile originali, quindi quello che fai tu esteticamente deve essere vagliato dall'utente (rientra nelle cose che il merger mi deve dire di visualizzare) magari anche una sezione nel menu pausa con le novità così vedo gli elementi grafici nuovi e li giudico e posso nello specifico cercare le tue aggiunte».
+**Correzione:**
+- nel menu PAUSA la sezione «NOVITÀ · DA APPROVARE» elenca gli elementi grafici provvisori di Claude, con lavoro, PR e cosa guardare;
+- VAI A VEDERE porta il giocatore a piedi davanti a un esempio vero, con ora, meteo o mercato adatti; TORNA DOVE ERI riporta indietro;
+- MI PIACE / DA RIFARE si salvano solo nel browser e COPIA GIUDIZI li prepara come testo;
+- l'elenco per il merger è in `NOVITA_DA_APPROVARE.md`, la regola permanente in `AGENTS.md`.
+**Accettazione:**
+- ogni novità grafica provvisoria è presente nel menu e nel documento;
+- VAI A VEDERE non porta mai dentro muri, edifici o veicoli;
+- il ritorno ripristina posto, mezzo, ora e foto aerea;
+- funziona su PC e telefono.
+- **Stato 2026-10-20:** corretto in PR (in revisione).
+  - 23 voci: 18 attive e 5 «in arrivo» (BF14, transenne, Q18 ×2, Q21), che si accendono quando l'elemento c'è.
+  - Prova breve in Chrome headless su PC: menu, VAI A VEDERE sul semaforo (ore 21:30) e sulla torre (12:00), ritorno con posto e ora ripristinati, COPIA GIUDIZI; 0 errori JS.
+  - Telefono non provato in questa tornata (regola dei test brevi).

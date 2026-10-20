@@ -62,6 +62,7 @@ import {placeBuildings} from './building-placement.mjs?v=123';
 import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=001';
 import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=001';
 import {createCarRadio} from './car-radio.mjs?v=003';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=001';
 const $=id=>document.getElementById(id);
 // Q09: last radio status, read by the city sound to duck engines while a station plays.
 let radioStatus='off';
@@ -255,7 +256,7 @@ function createMelitoMarket(){
 function stepMelitoMarket(dt){
  if(!state.market)return;
  const p=state.player,car=p.car>=0?state.cars[p.car]:null;
- stepMarket(state.market,dt,{minutes:state.npcClockMinutes,force:FORCE_MARKET,view:visibleBounds(),
+ stepMarket(state.market,dt,{minutes:state.npcClockMinutes,force:FORCE_MARKET||!!state.preview?.market,view:visibleBounds(),
   player:{x:car?car.x:p.x,y:car?car.y:p.y,onFoot:!car},index:state.dynamicCollision,
   say:(agent,text)=>cityEventBubble(state.events,agent,text),
   advanceImpact:(agent,step)=>advanceNonlethalImpact(agent,step,canKnockbackMove)});
@@ -483,7 +484,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  state.propsGrid=makeIndex(state.props);
  state.shops=prepareStorefronts(map.pois||[],state.roads);
  state.puddles=placePuddles(state.roads,{drivable:r=>DRIVE.has(r.t),roadWidth:visualRoadWidth,covered:coveredByBuilding});
- state.weather=weatherAt(state.npcClockMinutes,{forced:FORCED_WEATHER});wetTiles.clear();
+ state.weather=weatherAt(state.npcClockMinutes,{forced:state.preview?.weather||FORCED_WEATHER});wetTiles.clear();
  state.shopGrid=makeIndex(state.shops);
  initCampaign(map);
  state.dynamicCollision=null;
@@ -972,7 +973,7 @@ function tick(dt){
  }
  // Q02: in banca gli NPC non vengono simulati, quindi anche il loro orologio resta fermo.
  state.npcClockMinutes=advanceNpcClock(state.npcClockMinutes,dt,{interior:!!state.bankInterior});
- state.weather=weatherAt(state.npcClockMinutes,{forced:FORCED_WEATHER});
+ state.weather=weatherAt(state.npcClockMinutes,{forced:state.preview?.weather||FORCED_WEATHER});
  animateSteeringWheel(dt);
  if(state.bankInterior){
   const axes=moveAxes(),local=state.bankInterior.player;
@@ -1609,6 +1610,51 @@ function honk(){
  if(state.reactions)state.reactions.alarm={x:p.x,y:p.y,t:state.reactions.clock};
 }
 // BF13: la sovramappa nasce solo alla prima accensione e riparte sempre spenta (niente preferenze).
+// BF15: NOVITÀ · DA APPROVARE — porta il giocatore a piedi davanti a un esempio vero (ora, meteo e
+// mercato adatti) e poi lo riporta dov'era. Ritorno = posizione, mezzo, orologio e foto aerea di prima.
+let novitaJudgements=loadJudgements(globalThis.localStorage);
+function novitaStandOK(x,y){
+ return canStand(x,y)&&!(state.market&&marketBlocksWalker(state.market,x,y,.3))&&
+  !(state.dynamicCollision&&collidesWithTraffic({x,y,a:0},'walk',state.dynamicCollision,null));
+}
+function goToNovita(entry){
+ if(!state.ready)return false;
+ const target=novitaTarget(entry,state);
+ if(!target){$('street').textContent='NOVITÀ · ESEMPIO NON TROVATO IN QUESTA MAPPA';return false;}
+ const [min,max]=entry.distanza||[6,26];
+ const stand=findStandingPoint(target,{walkable:novitaStandOK},{min,max});
+ if(!stand){$('street').textContent='NOVITÀ · NESSUN POSTO LIBERO VICINO ALL’ESEMPIO';return false;}
+ const p=state.player;
+ if(state.shopOpen)closeShop();
+ if(state.bankInterior){const inside=state.bankInterior;state.bankInterior=null;p.x=inside.outside.x;p.y=inside.outside.y;p.a=inside.outside.a;}
+ // il ritorno è sempre il punto di prima del primo salto
+ if(!state.preview)state.preview={back:{x:p.x,y:p.y,a:p.a,car:p.car,minutes:state.npcClockMinutes,
+  satellite:!!state.satellite?.enabled,opacity:state.satellite?.opacity}};
+ if(p.car>=0){const v=state.cars[p.car];if(v){v.speed=0;v.turnGuide=null;v.recoil=0;}p.car=-1;p.vehicleType=null;carRadio.leaveVehicle();}
+ p.impactTime=0;p.impactVX=0;p.impactVY=0;p.impactLock=0;
+ p.x=stand.x;p.y=stand.y;p.a=stand.a;state.camera.x=stand.x;state.camera.y=stand.y;
+ if(Number.isFinite(entry.ora))state.npcClockMinutes=minutesAtHour(state.npcClockMinutes,entry.ora);
+ state.preview.weather=entry.meteo||null;state.preview.market=!!entry.mercato;
+ if(entry.satellite){satelliteOverlay()?.setEnabled(true);state.satellite?.setOpacity(entry.satellite);satelliteLabel();}
+ state.weather=weatherAt(state.npcClockMinutes,{forced:state.preview.weather||FORCED_WEATHER});
+ for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;resetDrivingControls();updateHud();
+ $('street').textContent='NOVITÀ · '+entry.nome.toUpperCase()+' · PER TORNARE: PAUSA › TORNA DOVE ERI';
+ return true;
+}
+function backFromNovita(){
+ const preview=state.preview;if(!preview)return false;
+ const p=state.player,back=preview.back,car=back.car>=0?state.cars[back.car]:null;
+ if(state.shopOpen)closeShop();state.bankInterior=null;
+ p.impactTime=0;p.impactVX=0;p.impactVY=0;p.impactLock=0;
+ if(car){p.car=back.car;p.vehicleType=isMotorcycle(car)?'motorcycle':'car';p.x=car.x;p.y=car.y;p.a=car.a;if(!isMotorcycle(car))carRadio.enterVehicle();}
+ else{p.car=-1;p.vehicleType=null;p.x=back.x;p.y=back.y;p.a=back.a;}
+ state.npcClockMinutes=back.minutes;state.preview=null;
+ if(state.satellite){if(!back.satellite)state.satellite.setEnabled(false);else if(Number.isFinite(back.opacity))state.satellite.setOpacity(back.opacity);satelliteLabel();}
+ state.weather=weatherAt(state.npcClockMinutes,{forced:FORCED_WEATHER});
+ state.camera.x=p.x;state.camera.y=p.y;
+ for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;resetDrivingControls();updateHud();
+ return true;
+}
 function satelliteOverlay(){
  if(!state.satellite&&state.map?.projection)state.satellite=createSatelliteOverlay({projection:state.map.projection});
  return state.satellite;
@@ -1762,8 +1808,23 @@ function bind(){
  stickPad.addEventListener('pointermove',e=>{if(stickPad.hasPointerCapture?.(e.pointerId))updateStick(e);});
  for(const name of ['pointerup','pointercancel','lostpointercapture'])stickPad.addEventListener(name,resetStick);
  const pause=$('pause-menu'),pauseButton=$('pause-toggle');
- const openPause=()=>{carRadio.duck(true);Object.keys(pressed).forEach(k=>pressed[k]=false);stick.x=0;stick.y=0;resetDrivingControls();pause.hidden=false;pauseButton.setAttribute('aria-expanded','true');$('pause-details').textContent='MEZZO: '+$('vehicle').textContent+'  ·  CAMERA: '+$('camera-mode').textContent+'  ·  STRADE: '+$('road-count').textContent+'  ·  EDIFICI OSM: '+$('building-count').textContent+'  ·  PLACEHOLDER: '+$('inferred-count').textContent+'  ·  INCROCI: '+$('junction-count').textContent+'  ·  '+$('road-width-current').textContent+' unità';};
+ const openPause=()=>{carRadio.duck(true);refreshNovita();$('novita-copy').textContent='COPIA GIUDIZI';Object.keys(pressed).forEach(k=>pressed[k]=false);stick.x=0;stick.y=0;resetDrivingControls();pause.hidden=false;pauseButton.setAttribute('aria-expanded','true');$('pause-details').textContent='MEZZO: '+$('vehicle').textContent+'  ·  CAMERA: '+$('camera-mode').textContent+'  ·  STRADE: '+$('road-count').textContent+'  ·  EDIFICI OSM: '+$('building-count').textContent+'  ·  PLACEHOLDER: '+$('inferred-count').textContent+'  ·  INCROCI: '+$('junction-count').textContent+'  ·  '+$('road-width-current').textContent+' unità';};
  const closePause=()=>{carRadio.duck(false);pause.hidden=true;pauseButton.setAttribute('aria-expanded','false');};
+ // BF15: la lista NOVITÀ si ridisegna a ogni apertura (le voci «in arrivo» si attivano quando ci sono).
+ function refreshNovita(){
+  renderNovita($('novita-list'),{state,judgements:novitaJudgements,
+   onGo:entry=>{if(goToNovita(entry))closePause();},
+   onJudge:(id,value)=>{novitaJudgements=toggleJudgement(novitaJudgements,id,value);saveJudgements(globalThis.localStorage,novitaJudgements);refreshNovita();}});
+  const done=Object.keys(novitaJudgements).length,total=NOVITA.filter(e=>!e.futura).length;
+  $('novita-count').textContent=done+' giudicate su '+total;
+  $('novita-back').hidden=!state.preview;
+ }
+ $('novita-back').addEventListener('click',()=>{if(backFromNovita())closePause();});
+ $('novita-copy').addEventListener('click',()=>{
+  const text=judgementSummary(novitaJudgements),box=$('novita-export');
+  box.value=text;box.hidden=false;box.select?.();
+  try{navigator.clipboard?.writeText(text).then(()=>{$('novita-copy').textContent='COPIATO ✓';},()=>{});}catch(_){}
+ });
  pauseButton.addEventListener('click',()=>pause.hidden?openPause():closePause());
  $('pause-close').addEventListener('click',closePause);
  $('pause-satellite').addEventListener('click',()=>{satelliteOverlay()?.toggle();satelliteLabel();});
