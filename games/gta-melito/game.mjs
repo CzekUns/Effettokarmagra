@@ -18,14 +18,15 @@ import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,pur
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
 import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=006';
-import {createSocial,stepSocial} from './npc-social.mjs?v=003';
+import {createSocial,stepSocial} from './npc-social.mjs?v=004';
 import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=005';
 import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=005';
 import {trafficTargetAt} from './traffic-rush.mjs?v=001';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=002';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker,addToCollisionIndex} from './traffic-collision.mjs?v=131';
 import {buildParkingBays,bayOffset,fitsParkingBay,nearestFreeStalls,parkInStall,insideParkingStrip,drawParkingBays} from './parking-bays.mjs?v=002';
-import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=002';
+import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker,moveStreetObject} from './street-objects.mjs?v=002';
+import {createServiceRoutines,stepServiceRoutines,drawBusStops,drawBusDoors,drawWarningTriangle,towedCarPose} from './service-routines.mjs?v=001';
 import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=003';
 import {prepareSignalPosts,drawStopLines,drawSignals,signalGlows} from './traffic-light-art.mjs?v=004';
 import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=004';
@@ -572,7 +573,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
   if(state.cars.length>=Math.min(PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP+parkedBikeCount))break;
  }
  state.traffic=createTraffic(START_MINUTE);prepareSignals();
- state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();state.service=createServices();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
@@ -756,12 +757,16 @@ function prepareSignals(){
 const signalSeconds=()=>clockSecondsFromMinutes(state.npcClockMinutes);
 // BF07: freccia degli NPC che svoltano: due luci ambra sul lato della svolta, lampeggio ~1,5 Hz.
 function drawBlinker(x,y,a,v){
- if(!v.turnSignal||Math.floor((state.clock+(v.seed%7)*.07)*3)%2)return;
- const moto=isMotorcycle(v),sh=vehicleShape(v),side=v.turnSignal==='right'?1:-1;
+ if(!(v.turnSignal||v.hazard)||Math.floor((state.clock+((v.seed|0)%7)*.07)*3)%2)return;
+ const moto=isMotorcycle(v),sh=vehicleShape(v);
  // Sugli spigoli della sagoma di collisione, che sta dentro la carrozzeria disegnata.
- const ca=Math.cos(a),sa=Math.sin(a),along=sh.halfLength*(moto?.85:.92),out=(moto?.55:sh.halfWidth*.95)*side;
+ // Q20: quattro frecce (hazard) per i mezzi di servizio fermi al lavoro e le auto in panne.
+ const ca=Math.cos(a),sa=Math.sin(a),along=sh.halfLength*(moto?.85:.92);
  c.fillStyle='#ffb320';
- for(const f of [1,-1])c.fillRect(x+ca*along*f-sa*out-.32,y+sa*along*f+ca*out-.32,.64,.64);
+ for(const side of v.hazard?[1,-1]:[v.turnSignal==='right'?1:-1]){
+  const out=(moto?.55:sh.halfWidth*.95)*side;
+  for(const f of [1,-1])c.fillRect(x+ca*along*f-sa*out-.32,y+sa*along*f+ca*out-.32,.64,.64);
+ }
 }
 function trafficModel(i,type){
  return type==='motorcycle'?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:
@@ -773,6 +778,49 @@ function trafficModel(i,type){
   CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];
 }
 const TRAFFIC_COUNT=140;
+// Q20: the work of the four service vehicles, all simulated. ?servizio=1 shortens the waits (tests).
+const SERVICE_TEST=/[?&]servizio=1(?:&|$)/.test(globalThis.location?.search||'');
+function createServices(){
+ return createServiceRoutines(state.graph,{test:SERVICE_TEST,canStand,
+  walkPosition:(e,t,side)=>lanePosition(state.graph,e,t,'walk',side),carPosition:(e,t)=>lanePosition(state.graph,e,t,'car')});
+}
+function serviceContext(view,playerVehicle){
+ const vehicles=[...state.cars,...state.traffic],live=v=>Math.abs(v.x)<1e5;
+ return {graph:state.graph,traffic:state.traffic,parked:state.cars,people:state.people,doors:state.doors||[],
+  objects:state.streetObjects,view,playerVehicle,clockMinutes:state.npcClockMinutes,canStand,onRoad:onCarriageway,
+  // stalli liberi vicini: solo gli stalli nel riquadro e i mezzi lì intorno (non tutta la città a ogni richiesta)
+  freeStalls:(x,y,r)=>{
+   const stalls=(state.parkingBays?.stalls||[]).filter(st=>Math.abs(st.x-x)<=r&&Math.abs(st.y-y)<=r&&Math.hypot(st.x-x,st.y-y)<=r)
+    .sort((p,q)=>Math.hypot(p.x-x,p.y-y)-Math.hypot(q.x-x,q.y-y));
+   if(!stalls.length)return [];
+   const near=vehicles.filter(v=>live(v)&&Math.abs(v.x-x)<r+12&&Math.abs(v.y-y)<r+12);
+   return stalls.filter(st=>!near.some(v=>vehiclesOverlap({x:st.x,y:st.y,a:st.a,body:'car'},v))).slice(0,8);
+  },
+  stallTaken:(stall,agent)=>vehicles.some(v=>v!==agent&&live(v)&&vehiclesOverlap({x:stall.x,y:stall.y,a:stall.a,body:'car'},v)),
+  // la sosta del corriere è breve: il furgone non deve invadere la corsia (controllo con la larghezza di un'auto)
+  fits:(pose,v)=>{const sh=vehicleShape({...v,...pose});return !!state.parkingBays&&fitsParkingBay(state.parkingBays,pose,{halfLength:sh.halfLength,halfWidth:Math.min(sh.halfWidth,1.7)});},
+  blocked:(agent,pose)=>!!state.dynamicCollision&&trafficMoveBlocked(agent,{...pose,vehicleType:'car',model:agent.model},'car',state.dynamicCollision,agent),
+  shape:v=>vehicleShape(v),carPosition:(e,t)=>lanePosition(state.graph,e,t,'car'),
+  planRoute:(a,b)=>planRoute(state.graph,a,b,'car'),
+  moveObject:(obj,x,y)=>{if(state.streetObjects)moveStreetObject(state.streetObjects,obj,x,y);},
+  parkInStall,freeStallOutOfView:car=>freeStallOutOfView(car,view),
+  // l'ingresso del palazzo accanto alla sosta del corriere (porta inventata, come i portoni dei residenti Q03)
+  findEntrance:(x,y,nx,ny)=>{const d=probeDoor({x,y},{x:nx,y:ny},buildingAt,canStand,{source:DOOR_SOURCE.INVENTED,label:'ingresso'});return d.valid?d:null;},
+  say:(agent,text)=>state.events&&cityEventBubble(state.events,agent,text)};
+}
+// Q20: where a towed car reappears later: a free stall well outside the camera.
+function freeStallOutOfView(car,view){
+ const stalls=state.parkingBays?.stalls||[];if(!stalls.length)return null;
+ const vehicles=[...state.cars,...state.traffic].filter(v=>v!==car&&Math.abs(v.x)<1e5),start=hash(Math.floor(state.clock*10)+7)%stalls.length;
+ for(let k=0;k<Math.min(stalls.length,400);k++){
+  const st=stalls[(start+k*7919)%stalls.length];
+  if(view&&st.x>view[0]-40&&st.x<view[2]+40&&st.y>view[1]-40&&st.y<view[3]+40)continue;
+  const pose={x:st.x,y:st.y,a:st.a,body:'car',model:car.model,vehicleType:car.vehicleType};
+  if(!fitsParkingBay(state.parkingBays,pose,vehicleShape(pose))||vehicles.some(v=>vehiclesOverlap(pose,v)))continue;
+  return st;
+ }
+ return null;
+}
 function createTraffic(minutes){
  // Q13: as many vehicles as the hour wants (140 on a normal day, more at 8:00 and 20:00, half at night).
  const p=state.player,traffic=createAgents(state.graph,trafficTargetAt(minutes,TRAFFIC_COUNT),189,'car',state.cars,{motorcycleEvery:4,model:trafficModel,
@@ -822,6 +870,8 @@ function updateTraffic(dt){
  stepAgents(state.graph,state.traffic,elapsed,state.player,{parked:state.cars,people:state.people,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes,
   crossings:state.reactions?.crossRequests});
  balanceTraffic(state.graph,state.traffic,state.trafficTarget,{view},newGateVehicle);
+ // Q20: courier deliveries, refuse collection, tow jobs and bus stops (service-routines.mjs).
+ stepServiceRoutines(state.service,elapsed,serviceContext(view,playerVehicle));
  impactTraffic(elapsed);
  // BF08: lavavetri ai semafori, dopo il traffico dello stesso passo (le auto sono appena ferme o ripartite).
  const pc=state.player.car>=0?state.cars[state.player.car]:null;
@@ -1245,7 +1295,7 @@ function compareRoadWidths(){
  // street furniture, crosswalks and building-side storefront placements.
  state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y),laneClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createEnclosures();createWorkshop();createParkingBays();createRoadSurfaces();
  state.traffic=createTraffic(state.npcClockMinutes);prepareSignals();
- state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();state.service=createServices();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
  state.propsGrid=makeIndex(state.props);
@@ -1644,6 +1694,8 @@ function draw(dt=0){
  drawSkidMarks([x0,y0,x1,y1]);
  drawStreetObjects(c,state.streetObjects,[x0,y0,x1,y1],state.zoom);
  drawWorkshop(c,state.workshop,[x0,y0,x1,y1]);
+ // Q20: pensiline e paline «FERMATA» simulate (grafica PROVVISORIA).
+ if(state.service)drawBusStops(c,state.service.stops,[x0,y0,x1,y1]);
  drawEnclosureGates(c,state.enclosures,[x0,y0,x1,y1],state.zoom,{...enclosureTime(),clock:state.clock});
  drawMarketStalls(c,state.market,[x0,y0,x1,y1],state.clock);
  if(state.weather?.wetness>.12)for(const b of buildings)if(b.art?.ruinPool)drawRuinPoolPuddles(c,b,state.weather.wetness,state.clock);
@@ -1654,6 +1706,8 @@ function draw(dt=0){
  for(const q of inFront)q.indoors=true;
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  if(state.market)drawCityPeople(c,state.market.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
+ // Q20: autista del corriere e operatore della nettezza urbana (figure di servizio, non NPC della città).
+ if(state.service?.figures.length)drawCityPeople(c,state.service.figures,state.graph,state.clock,[x0,y0,x1,y1],1);
  for(const q of inFront)q.indoors=false;
  if(weather&&weather.rain>.3)for(const person of [...state.people,...(state.market?.people||[]).filter(q=>!q.sheltered)]){
   if(person.indoors||person.x<x0||person.x>x1||person.y<y0||person.y>y1)continue;
@@ -1668,9 +1722,15 @@ function draw(dt=0){
   const fade=ai.gateFade??1;if(fade<=.01)continue;
   if(fade<1){c.save();c.globalAlpha=fade;drawCar(x,y,a,ai.kind,false,ai.model,ai);drawBlinker(x,y,a,ai);c.restore();}
   else{drawCar(x,y,a,ai.kind,false,ai.model,ai);drawBlinker(x,y,a,ai);}
+  // Q20: porte dell'autobus aperte alla fermata; l'auto soccorsa sul pianale del carro attrezzi.
+  if(ai.busDoors>0)drawBusDoors(c,x,y,a,ai,vehicleShape(ai));
+  if(ai.towed){const tp=towedCarPose(x,y,a,vehicleShape(ai));c.save();c.translate(tp.x,tp.y);c.scale(.88,.88);c.translate(-tp.x,-tp.y);
+   drawCar(tp.x,tp.y,tp.a,ai.towed.type,false,ai.towed.model,ai.towed);c.restore();}
  }
  // Q22: lo scooter del pendolare (un mezzo della lista dei parcheggiati) mette la freccia prima delle svolte.
- state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1){drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);if(v.turnSignal)drawBlinker(v.x,v.y,v.a,v);}});
+ state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1){drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);if(v.turnSignal)drawBlinker(v.x,v.y,v.a,v);
+  // Q20: auto in panne in attesa del carro attrezzi: quattro frecce e triangolo.
+  if(v.broken&&i!==p.car){drawBlinker(v.x,v.y,v.a,v);drawWarningTriangle(c,v,vehicleShape(v));}}});
  drawPlayer();
  // Q42: ombrelloni del mercato sopra persone e veicoli; sfumano col giocatore sotto (R01, come i tetti).
  if(state.market){

@@ -20,7 +20,7 @@ export function knows(a,b){
 export function canSocialize(agent,graph,clock){
  if(!agent||agent.body!=='walk'||agent.indoors||agent.commuter||agent.impactTime>0||agent.needsRoutineRecovery||agent.corner)return false;
  // Q13: nobody stops to chat while dodging a vehicle, crossing or waiting at the kerb.
- if(agent.dodge>0||agent.crossing||agent.lookAt||agent.kerbWait||agent.frozen)return false;
+ if(agent.dodge>0||agent.crossing||agent.lookAt||agent.kerbWait||agent.frozen||agent.serviceHold)return false;
  // Fermo da tempo in fondo a un marciapiede senza uscita: aspetta di essere ricollocato fuori vista.
  if(agent.stalled>4&&!(agent.wait>0))return false;
  if(agent.social&&(agent.social.hold||clock<agent.social.until))return false;

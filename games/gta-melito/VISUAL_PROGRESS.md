@@ -697,3 +697,11 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 - Veicoli disegnati al 75% e persone all'80%; la telecamera è più vicina del 20%. Strade, marciapiedi ed edifici sono invariati.
 - Stalli e strisce bianche ora seguono la larghezza delle auto disegnate: più stretti, più vicini al marciapiede, mai sotto il traffico. Si vede bene sulle residenziali.
 - Da far giudicare a Simone: proporzioni di auto e persone rispetto alle strade, zoom a piedi e in auto. Basta modificare `world-scale.mjs`.
+
+### 2026-10-20 — Q20 routine dei veicoli di servizio (grafica PROVVISORIA, da approvare)
+- **Fermate:** pensilina con vetro e panca, palina gialla «FERMATA» (nessun numero di linea), tutto in primitive canvas.
+- **Autobus:** due varchi scuri sul fianco destro quando le porte sono aperte.
+- **Auto in panne:** quattro frecce e triangolo rosso dietro.
+- **Carro attrezzi:** l'auto soccorsa è disegnata sul pianale, all'88%.
+- **Persone:** autista del corriere e operatore della nettezza urbana con gli sprite esistenti dei pedoni.
+- **Dove guardare:** `?servizio=1&ora=10:00` accelera le routine; le foto di prova sono fuori dal repo.
