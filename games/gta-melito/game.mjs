@@ -452,8 +452,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
   state.cars.push(parkInStall({type:k%5,vehicleType:k%3===1?'motorcycle':'car',model:k%3===1?MOTORCYCLE_IDS[(k+Math.floor(k/3)*5)%MOTORCYCLE_IDS.length]:k===2?'ape-car-azzurra':k===5?'furgone-fritti':k%8===1?'panda-fire-red':CAR_PARKED_SPRITE_IDS[(k*7)%CAR_PARKED_SPRITE_IDS.length]},stall));k++;
   if(state.cars.length>=Math.min(PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP+parkedBikeCount))break;
  }
- state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
- state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:trafficApeModel(i)||CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
+ state.traffic=createTraffic();
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
@@ -597,6 +596,19 @@ function impactTraffic(dt){
   }
   if(isPlayerCar)source.impactProbe=null;
  }
+}
+// BF03: only vehicles really on their way, each with its own model from the start, so the spawn
+// checks use its whole body: clear of parked vehicles, of the player (on foot or at the wheel),
+// of walls and of the junctions (roads.mjs), never on a street that only ends at a one-way terminal.
+function trafficModel(i,type){
+ return type==='motorcycle'?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:
+  trafficApeModel(i)||CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];
+}
+function createTraffic(){
+ const p=state.player,traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4,model:trafficModel,
+  keepClear:[{x:p.x,y:p.y,r:14}],clear:(x,y)=>!buildingAt(x,y)});
+ for(const v of traffic)v.rider=isMotorcycle(v);
+ return traffic;
 }
 function updateTraffic(dt){
  state.trafficClock+=dt;
@@ -929,8 +941,7 @@ function compareRoadWidths(){
  // Every consumer shares the same module instance, including roads/traffic,
  // street furniture, crosswalks and building-side storefront placements.
  state.graph=buildRoadGraph(state.roads);state.streetObjects=null;createParkingBays();
- state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
- state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:trafficApeModel(i)||CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
+ state.traffic=createTraffic();
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
