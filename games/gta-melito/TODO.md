@@ -1,5 +1,5 @@
 # GTA Melito — TODO di sviluppo NPC e vita cittadina
-Aggiornato: 2026-10-19 · Ambito: `games/gta-melito/` · Stato: coda attiva, Q01 completata; Q02 e successive aperte.
+Aggiornato: 2026-10-20 · Ambito: `games/gta-melito/` · Stato: Q01–Q12 integrate, Q13–Q24 aperte; BF01–BF06 prioritari.
 
 ## BUGFIX PRIORITARI — BF01–BF06 PRIMA DELLE Q ANCORA APERTE (20-10-2026)
 
@@ -7,7 +7,7 @@ Aggiornato: 2026-10-19 · Ambito: `games/gta-melito/` · Stato: coda attiva, Q01
 
 ## CODA OPERATIVA UNICA — UNA TASK ALLA VOLTA, CON PR
 
-**Fonte di verità dello sviluppatore incaricato:** questa lista `Q01…Q24` (ed eventuali successive voci Q aggiunte) è ordinata e prevale sulle checklist tematiche P0–P7 riportate sotto (che restano come specifiche e backlog di dettaglio). Il collaboratore prende **solo la prima Q non completata**, lavora su quella in un branch separato e presenta una PR; non passa alla successiva finché quella corrente non è integrata. Il revisore controlla e unisce le PR sicure. Le task programmate singolarmente sono sostituite da questa coda unica: non devono essere eseguite parallelamente.
+**Fonte di verità dello sviluppatore incaricato:** questa lista `Q01…Q24` (ed eventuali successive voci Q aggiunte) è ordinata e prevale sulle checklist tematiche P0–P7 riportate sotto (che restano come specifiche e backlog di dettaglio). **Dopo aver concluso BF01–BF06**, il collaboratore prende **solo la prima Q non completata**, lavora su quella in un branch separato e presenta una PR; non passa alla successiva finché quella corrente non è integrata. Il revisore controlla e unisce le PR sicure. Le task programmate singolarmente sono sostituite da questa coda unica: non devono essere eseguite parallelamente.
 
 **Ruoli dal 19 ottobre 2026:** lo sviluppo delle Q è affidato all'account GitHub `ilconsulentelogistico-hue` tramite [issue #28](https://github.com/CzekUns/Effettokarmagra/issues/28) e **PR una per Q**. ChatGPT principale segue revisione, eventuale merge e miglioramenti indipendenti dalle Q correnti. Nessun push diretto sul `main` per le Q da parte del collaboratore. L'assegnazione su GitHub non avvia l'agente esterno: deve essere eseguito sul suo account.
 
