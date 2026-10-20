@@ -709,3 +709,6 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 - Tre interni in pixel art procedurale con la stessa palette, gli stessi muri e le stesse ombre della banca: **bar** (bancone in legno con macchina del caffè e tazzine, mensole di bottiglie, vetrina dei dolci, tre tavolini con sedie, pavimento in graniglia), **panificio/pasticceria** (banco vetrina con pane e cassa, scaffali del pane a parete, cesti, piastrelle chiare), **minimarket** (scaffali con prodotti generici senza marche, frigoriferi a vetro, frutta, cassa, linoleum). Commesso con lo sprite dei pedoni. Fuori: punto luminoso caldo sul portone, senza scritta sopra l'insegna.
 - **Da far vedere a Simone:** Bar Alexander su Corso Europa (628,1291) e Panificio Pagliuca: avvicinarsi al punto luminoso sul portone, E · ENTRA, poi andare al bancone (PARLA).
 
+
+### 2026-10-20 — Q28 «SLOT DEL VESUVIO» (provvisoria, da approvare)
+Schermata della slot in pixel art disegnata via codice. Griglia logica 192×128, ingrandita senza sfocature. Cornice rosso scuro e oro con luci che si alternano; tre rulli bianchi con simboli 16×16 ingranditi ×2 (limone, caffè, pizza, babà, sfogliatella, Pulcinella, Vesuvio, cornetto rosso), riga vincente rossa e pannello crediti. È un segnaposto di stile: il proprietario può sostituire i simboli con sprite propri lasciando invariate le regole.

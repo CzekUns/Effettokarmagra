@@ -347,6 +347,16 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  .car-radio button,.car-radio a{height:28px;min-width:27px;padding:2px;font-size:10px}
  .radio-info strong{font-size:10px}.radio-info small{font-size:8px}
 }
+/* Q28: slot machine arcade di prova sopra la plancia, pixel art ingrandita senza sfocature. */
+.slot-panel{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:#0b0807d9}
+.slot-panel[hidden]{display:none}
+.slot-card{background:#2a1612;border:2px solid #e9b949;box-shadow:0 0 0 4px #1b1410;padding:10px;max-width:min(96vw,640px);max-height:96vh;overflow:auto;text-align:center;color:#f4e6c4}
+#slot-canvas{width:min(92vw,576px,calc((96vh - 150px)*1.5));aspect-ratio:3/2;image-rendering:pixelated;image-rendering:crisp-edges;display:block;margin:0 auto}
+.slot-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:8px 0}
+.slot-controls button{background:#4a221b;border:1px solid #e9b949;color:#f4e6c4;font-weight:bold;font-size:12px;min-height:44px;min-width:64px;padding:8px 12px}
+.slot-controls .slot-spin{background:#c8322a;font-size:15px;min-width:110px}
+.slot-controls button:disabled{opacity:.45}
+.slot-rules,.slot-note{font-size:10px;margin:4px 0;color:#d8c9a8}.slot-note{color:#9fb59a}
 </style>
 </head><body><main class="app">
 <div class="stage" id="stage">
@@ -436,6 +446,8 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
   <button id="road-width-compare" type="button" aria-pressed="false">CONFRONTA CON PRIMA</button>
  </div>
  <div class="pause-audio pause-satellite" role="group" aria-label="Foto aerea di confronto"><button id="pause-satellite" type="button" aria-pressed="false" aria-label="Mostra o nascondi la foto aerea Esri sopra la mappa">SATELLITE: OFF</button><div class="pause-volume" role="group" aria-label="Opacità della foto aerea"><span class="pause-volume-name">OPACITÀ FOTO</span><button id="pause-satellite-down" type="button" aria-label="Riduci l'opacità della foto aerea">−</button><output id="pause-satellite-level" aria-live="polite">50%</output><button id="pause-satellite-up" type="button" aria-label="Aumenta l'opacità della foto aerea">＋</button></div></div>
+ <div class="pause-audio" role="group" aria-label="Minigiochi di prova"><button id="pause-slot" type="button" aria-label="Apri la slot machine di prova con crediti virtuali">PROVA SLOT</button></div>
+ <p class="pause-info">PROVA SLOT: slot machine arcade di fantasia (Q28), solo crediti virtuali di gioco che non si comprano e non valgono denaro. In attesa del cabinato nei bar (Q27).</p>
  <p class="pause-info">FOTO AEREA DI CONFRONTO: la foto Esri World Imagery sopra la mappa del gioco, per vedere dove mancano dettagli. Si scarica solo mentre è accesa e riparte sempre spenta.</p>
  </section>
  <section class="pause-section pause-credits" aria-labelledby="pause-h-credits"><h3 id="pause-h-credits">CREDITI E LICENZE</h3>

@@ -1021,3 +1021,12 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - Cache: `game.mjs?v=183`, `local-shops.mjs?v=003`, `shop-interiors.mjs?v=002`, `campaign.mjs?v=003`.
 - Test: nuovo `q26-acquisti-dentro.test.mjs` (6); reso tollerante un controllo di cablaggio della Q17. Browser breve su PC e telefono: acquisto dentro riuscito e salvato, nessuna vendita dall'esterno, 0 errori JS.
 - Non eseguito: Android reale; acquisto con fondi insufficienti nel browser (verificato in Node).
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q28 slot machine arcade (nucleo del minigioco)
+- **Nuovo:** `minigame-slot.mjs`, «SLOT DEL VESUVIO». Pixel art disegnata via codice con cornice a luci, 3 rulli e 8 simboli napoletani di fantasia; giro di 1,25 s con i rulli che si fermano in sequenza; risultati a schermo; regole sempre visibili. Controlli da tastiera (SPAZIO/INVIO, ←/→, ESC) e touch.
+- **Crediti solo virtuali**, separati dagli euro della Q06. Non si comprano e non c'è ricarica a pagamento. A crediti finiti si «ricomincia da 50» gratis. Nessuna chiamata di rete né collegamento a scommesse.
+- **Generatore con seme** (mulberry32, seme salvato e numero del giro). Il saldo si salva prima dell'animazione, quindi un reload non duplica nulla. Ritorno medio di circa 0,9 crediti per credito.
+- **Nel gioco:** sotto la slot il mondo resta in pausa e la radio si abbassa. Si apre da PAUSA › STRUMENTI › «PROVA SLOT» o con `?minigioco=slot`. L'aggancio per il cabinato della Q27 è `openSlotGame()`.
+- **Cache:** `game.mjs?v=182`, `minigame-slot.mjs?v=001`.
+- **Test:** `q28-slot.test.mjs` (7 test). Browser breve su PC e telefono: giro, saldo, pausa, uscita, 0 errori JS.
+- **Limiti:** grafica provvisoria da approvare; cabinato del bar in attesa della Q27; nessun suono; Android reale non provato.
