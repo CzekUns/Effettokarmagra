@@ -607,3 +607,15 @@ Il lavavetri resta sul lato guida e il tergivetro si vede sul parabrezza. Non co
 **Interfaccia:** nella scheda PAUSA, sotto i comandi, un blocco audio con **SUONI: ON/OFF** (generale) e due cornici scure con nome, **−**, percentuale e **＋**: **EFFETTI / AMBIENTE** e **RADIO / MUSICA**. Stessi colori, bordi e altezza minima (38 px) dei pulsanti della pausa sul telefono; su PC le due cornici hanno lo stesso stile (gli altri pulsanti della pausa su PC restano quelli del browser, come prima).
 
 **Verifiche:** foto Chrome headless del menu pausa su PC 1280×720 e telefono 844×390 in orizzontale, clic e tocchi veri su tutti i pulsanti, nessuna sovrapposizione tra pulsanti, nessun elemento fuori dalla scheda, ogni pulsante riceve davvero il tocco (non coperto da volante o pedali). Non provato su un telefono reale.
+### 2026-10-20 — Apertura da PC: solo la plancia di gioco (BF11)
+
+**Interfaccia:** su PC la pagina si apre direttamente sulla plancia, a tutta finestra e senza cornice né scorrimento. Sopra la mappa restano solo:
+- in alto a sinistra un piccolo pulsante Ⅱ rotondo, accanto all'etichetta della via;
+- in alto a destra la minimappa;
+- in basso a destra MISSIONI;
+- al centro, solo vicino a qualcosa da fare, l'indicazione «E · ENTRA IN AUTO / COMPRA / RACCOGLI…» nello stesso riquadro scuro con bordo oro dell'indicatore missione;
+- in fondo una minuscola attribuzione «© OpenStreetMap · ISTAT · menu PAUSA: Esc / P».
+
+Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA, diviso in 5 sezioni con titoletti spaziati nello stile del gioco.
+
+**Verifiche:** foto Chrome headless prima/dopo a 1280×720, 1366×768 e 1920×1080, menu pausa (inizio e fondo), indicazione del tasto E e telefono 844×390 in guida e in pausa, invariato. Non provato su un PC con schermo touch né su un telefono reale.

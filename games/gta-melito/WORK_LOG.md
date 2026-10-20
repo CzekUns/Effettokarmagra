@@ -621,3 +621,41 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** nuovo `bf10-audio.test.mjs` (7 test: marce e cali al cambio sulla Punto, rumore crescente per marcia e velocità e gas/rilascio, variatore dello scooter e RETRO, famiglie diverse e voci del traffico, migrazione e persistenza separata dei volumi, SUONI OFF su effetti e radio e volume applicato all'elemento audio, cablaggio); aggiornati 2 controlli Q09 (4 anelli di rumore invece di 3; preferenze salvate nel nuovo formato). Suite **306/306**.
 - **Browser (Chrome headless, richieste esterne bloccate):** accelerazione registrata su Via Roma (rettilineo di 632 m, strada sgombra) con ACCELERA tenuto: Panda 0→100 km/h in 3,8 s, massima 140 km/h, 4 cambi a 32/55/79/107 km/h con tono 118→89, 120→92, 123→97, 128→104 Hz e voce che cala a 0,83–0,89; rumore massimo per marcia 0,003 / 0,010 / 0,021 / 0,040 / 0,069; in rilascio filtro da ~1.900 a 1.210 Hz e rumore 0,049. Ape: 3 marce, cambi a 19 e 38 km/h (152→113, 160→122 Hz), massima 61 km/h. Traffico vicino: voci auto in 1ª e 2ª, Ape, furgone, moto e scooter. Menu pausa su PC 1280×720 e telefono 844×390: clic/tocchi veri, 0 sovrapposizioni, ogni pulsante riceve il tocco, RADIO + porta l'elemento audio da 0,52 a 0,72, SUONI OFF lo porta a 0 e il mix degli effetti a 0, SUONI ON li riporta; valori uguali dopo la ricarica; Invio da tastiera funziona; nessun comando di guida resta premuto dopo la pausa. Nessun errore JS (solo favicon 404).
 - **Limiti:** l'audio non è stato ascoltato davvero (Chrome headless): sono verificati solo i parametri calcolati e applicati. Lo SPAZIO non attiva i pulsanti della pausa perché il gioco lo usa come freno a mano (comportamento già esistente, Invio sì). Su PC gli altri pulsanti della pausa hanno ancora lo stile del browser (preesistente). Lo smartphone della Q37 non esiste: i volumi sono nel menu pausa attuale. Non provato su telefono reale.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF11 apertura da PC: solo plancia di gioco, il resto nel menu pausa
+- **Richiesta del committente (testuale):** «un altro fix è l'apertura da pc. deve mostrare solo la plancia di gioco, non tutto quello che c'è attorno, tutto il resto va nel menu pausa».
+- **Prima (Chrome headless, base integrazione BF01–BF06):** su PC la plancia era una finestra dentro la pagina. Sopra c'erano titolo, barra di stato e barra del confronto strade; sotto i pulsanti, due paragrafi di istruzioni e i crediti. La pagina scorreva: 998 px di altezza a 1280×720, 1244 a 1920×1080, 1032 a 1366×768. Plancia di 1248×504 a 1280×720 e 1468×750 a 1920×1080.
+- **Correzione `index.html`:**
+  - header, `.hud`, `.road-width-bar`, istruzioni e footer spostati DENTRO il menu PAUSA, in 5 sezioni: STATO · INFO, COMANDI, MAPPA · ZOOM · SUONI (le scorciatoie di prima, immutate), STRUMENTI · CONFRONTO STRADE, CREDITI E LICENZE. Gli ID non cambiano, quindi `game.mjs` aggiorna ora, luogo, mezzo, camera e conteggi come prima;
+  - nuovo blocco CSS solo PC: `(min-width:761px) and (pointer:fine)` o `(pointer:none)`. Plancia a 100dvh senza bordo, nessuno scorrimento, nessun pulsante sotto la plancia, pulsante Ⅱ rotondo in alto a sinistra, etichetta della via spostata accanto;
+  - indicazione `#pc-prompt` «E · …» solo quando un'azione è davvero a portata: oggetto perduto, negozio, banca, mezzo libero vicino, uscita dalla banca;
+  - piccola attribuzione «© OpenStreetMap · ISTAT · menu PAUSA: Esc / P» in fondo alla plancia;
+  - su PC il riepilogo `#pause-details` e il doppio CONFRONTA STRADE sono nascosti, perché le stesse voci sono già nelle sezioni;
+  - le regole delle schede del menu valgono ora anche su PC. Prima erano scritte solo nel blocco telefono, e su PC il menu era senza stile.
+- **Telefono invariato:** il blocco telefono continua a nascondere header/barre/istruzioni/crediti e ora nasconde anche le nuove sezioni e i titoletti, quindi il menu START resta quello di prima.
+- **Correzione `game.mjs`:** il tasto P apre e chiude la pausa come Esc, ma non con un negozio aperto, dove i tasti servono per comprare. `boardPrompt()` aggiorna l'indicazione dentro `updateHud`. Cache `game.mjs?v=160`.
+- **Test:** nuovo `bf11-pc-board.test.mjs` con 5 test, tutti falliscono sulla base:
+  - niente attorno alla plancia;
+  - sezioni e contenuti nel menu;
+  - tutti gli ID usati da `game.mjs` esistono;
+  - blocco PC;
+  - telefono invariato;
+  - tasti Esc/P e indicazione E.
+  Suite **304/304**.
+- **Prove Chrome headless dopo, a 1280×720, 1920×1080 e 1366×768:**
+  - pagina grande quanto la finestra (nessuna barra), plancia e canvas a 0,0 a tutta finestra, rapporto pixel uguale in orizzontale e verticale (0,659–0,660, nessuna deformazione);
+  - header/barre/istruzioni/crediti/pulsanti invisibili all'apertura;
+  - indicazione «E · ENTRA IN AUTO» accanto all'auto, nascosta lontano;
+  - Esc apre la pausa con le 5 sezioni visibili e l'orologio fermo (stesso minuto dopo 1,2 s); Esc chiude; P apre e chiude; Ⅱ apre; RIPRENDI chiude;
+  - CONFRONTA CON PRIMA dal menu porta a «PRIMA · 7,0» e torna indietro;
+  - in auto, aprendo la pausa: mezzo «AUTO · … KM/H», ora uguale all'orologio NPC, via VIA ROMA;
+  - ridimensionata la finestra al 78%×86%: plancia e canvas seguono, nessuna barra;
+  - unico errore, il favicon 404 già noto.
+- **Telefono 844×390 con tocchi veri:**
+  - stesso layout BF06: FRENO y=172, ACCELERA 242, RETRO 312, volante, levetta, Ⅱ, nessuna indicazione PC né attribuzione;
+  - ACCELERA porta l'auto a 11,3;
+  - START apre il menu con solo le scorciatoie e il riepilogo, come prima; RIPRENDI chiude.
+- **Limiti:**
+  - non provato su un PC con schermo touch né su un tablet in verticale, che mantiene il layout di prima;
+  - sul telefono crediti e istruzioni restano non visibili, come prima di BF11;
+  - con lo smartphone della Q37 queste voci andranno nelle app (nota sotto la Q37);
+  - non provato su telefono reale.
