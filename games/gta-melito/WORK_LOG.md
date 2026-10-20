@@ -1012,3 +1012,12 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Cache:** `game.mjs?v=181`, `shop-interiors.mjs?v=001`.
 - **Limiti:** grafica provvisoria; nessun cliente NPC dentro; COMPRA ancora fuori fino alla Q26; Android reale non provato.
 
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q26 acquisti dentro i negozi
+- I negozi con interno (Q25) vendono solo al bancone o alla cassa: fuori, all'insegna e al portone, c'è «ENTRA · NOME»; dentro, davanti al bancone, c'è «COMPRA · BANCONE», che apre il pannello Q06 con lo stesso catalogo, saldo, bonus e salvataggio. Nuovi prodotti: spremuta (bar) e snack (minimarket).
+- `shop-interiors.mjs`: `outdoorShops` (negozi che vendono ancora fuori) ed `entranceAtSign` (l'insegna di un negozio con interno porta all'ENTRA).
+- `game.mjs`: `nearestCounter` usa `state.outdoorShops`; `footShopTarget` riconosce l'insegna; il bancone apre `openShop(inner.shop)`; il pannello si chiude lontano dal bancone e all'uscita.
+- Invariati: negozi senza interno, furgoncini Q17, banca.
+- Cache: `game.mjs?v=183`, `local-shops.mjs?v=003`, `shop-interiors.mjs?v=002`, `campaign.mjs?v=003`.
+- Test: nuovo `q26-acquisti-dentro.test.mjs` (6); reso tollerante un controllo di cablaggio della Q17. Browser breve su PC e telefono: acquisto dentro riuscito e salvato, nessuna vendita dall'esterno, 0 errori JS.
+- Non eseguito: Android reale; acquisto con fondi insufficienti nel browser (verificato in Node).

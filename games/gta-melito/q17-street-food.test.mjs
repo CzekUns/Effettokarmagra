@@ -46,7 +46,7 @@ test('Q17 buying a frittatina takes the money, is refused without funds and surv
 test('Q17 game wiring: counters from the placed food trucks, closest counter, vendor label and prompt',async()=>{
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  assert.match(game,/state\.vendorShops=vendorShops\(state\.foodVendors\);/);
- assert.match(game,/function nearestCounter\(p\)\{\n const shop=nearestShop\(state\.shops,p\),stall=nearestShop\(state\.vendorShops,p\);/);
+ assert.match(game,/function nearestCounter\(p\)\{\n const shop=nearestShop\((?:state\.outdoorShops\|\|)?state\.shops,p\),stall=nearestShop\(state\.vendorShops,p\);/);
  assert.match(game,/shop\.vendor\?'AMBULANTE'/);
  assert.match(game,/\$\('shop-note'\)\.textContent=shopNote\(shop\);/);
  assert.match(game,/shopNear\.vendor\?'COMPRA · '\+shopNear\.name\.toUpperCase\(\)/);
