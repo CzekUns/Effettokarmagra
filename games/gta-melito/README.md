@@ -210,3 +210,14 @@ Le strade carrabili che OpenStreetMap continua oltre il confine ISTAT vengono ta
   È la base per collegare in futuro le mappe dei comuni vicini.
 - **Numero di mezzi.** `balanceTraffic` (`roads.mjs`) porta il traffico al numero `state.trafficTarget` (oggi 140), sempre passando dai varchi. Le ore di punta (Q13) possono quindi cambiare il numero di mezzi senza far comparire auto in vista.
 - **Giocatore.** Il giocatore non attraversa il confine: resta come prima.
+
+## Recinti, cancelli e guardiole (BF12)
+
+`enclosures.mjs` disegna le mura perimetrali, i cancelli e le guardiole dei recinti elencati in `data/enclosures.json`: villa comunale, complesso Municipio con Carabinieri e piscina comunale, recinto di fronte all'area mercatale (forse il «Parco GB», da verificare). La galleria Atlante, edificio di vetro, è riconosciuta come «probabile».
+- **Perimetro:** dove OSM ha il perimetro, il gioco lo segue (villa comunale: muro e due cancelli OSM). Altrove il perimetro è **ricalcato a vista** e marcato `verificato:false`.
+- **Mura:** non stanno mai sulla carreggiata né sul marciapiede disegnati, ma appena oltre.
+- **Cancelli:** ogni strada o vialetto che attraversa il perimetro ha un'apertura, quindi nessuna strada resta chiusa.
+- **Notte:** dalle 22 alle 6 le sbarre dei recinti privati sono abbassate per il giocatore e si alzano per i mezzi NPC; i pedoni passano sempre.
+- **Mancanti:** il «Parco Prima Casa» non è disegnato perché non è stato localizzato. Le fonti sono in `RECINTI_MELITO.md`.
+
+Riferimento visivo: Esri World Imagery (consultata il 20/10/2026), usata solo per stime a vista delle coordinate; nessuna immagine satellitare è inclusa nel repository.

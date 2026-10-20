@@ -679,3 +679,40 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Verifiche disponibili nei PR:** il collaboratore dichiara suite Node **302/302** sul primo ramo e **340/340** sul secondo, con verifiche Chrome headless; l'operatore merge ha confrontato contenuti, liste file, compatibilità GitHub e commit ma **non ha rieseguito** localmente Node, Chrome o Android. Nessuna conferma di deploy Pages da queste sole risposte.
 - **Limiti:** le PR singole #35–#40 e #42–#47 erano ancora aperte come alternative ridondanti al momento del merge; l'autore si è impegnato a chiuderle. La PR #34 (sprite, autore diverso) non è stata unita perché GitHub la segnalava non mergeable. In BF01 il collaboratore segnala ancora un raro caso di incastro presso lo spawn.
 - **Da fare:** collaudo fisico su telefono e verifica deploy, registrare con onestà le checkbox BF dopo QA, controllare #34 separatamente e proseguire con la coda restante Q13–Q42 senza duplicare i pacchetti già uniti.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF12 recinti: mura, cancelli, guardiole e galleria Atlante di vetro
+- **Segnalazione del committente:** villa comunale, complesso Municipio/Carabinieri/piscina, «parco GB» di fronte all'area mercatale, parco Prima Casa e galleria Atlante. Il gioco non aveva recinti.
+- **Fonti** (dettagli e affidabilità in `RECINTI_MELITO.md`):
+  - API OSM 0.6, perché Overpass non risponde dal server: 9 riquadri, 33.308 nodi, 4.533 vie. In OSM ci sono 16 muri e un solo perimetro completo, quello della villa comunale (way 567826231, con i cancelli 5464543101/5464543102).
+  - Foto aerea Esri World Imagery, usata solo per ricalcare a vista: nessuna immagine nel repository.
+  - Ricerca web: solo annunci. Il «Parco GB» sarebbe in Corso Europa 374, a circa 440 m dal mercato, quindi non confermato.
+- **`enclosures.mjs`:**
+  - Il perimetro OSM o ricalcato diventa un contorno su griglia di 1 m, tolte la carreggiata e il marciapiede disegnati delle strade che delimitano l'isolato (strade pubbliche e strade con nome).
+  - Ogni strada, vialetto o servizio che attraversa il perimetro ha un'apertura. Il muro si apre anche sulle corsie pedonali vicine ai cancelli.
+  - Sbarre nei recinti privati: abbassate di notte (22–6) per il giocatore, alzate per i mezzi NPC entro 11 m.
+  - Guardiola placeholder con guardia (sprite vigile).
+  - Collisione dei veicoli basata sulla profondità di contatto: chi tocca un muro può sempre staccarsene o scivolare lungo, ma non entrarci.
+  - Preparazione in 80–130 ms in Node, ripetuta anche al cambio di larghezza strade.
+- **`game.mjs`:**
+  - carica `data/enclosures.json`, che è facoltativo;
+  - prepara i recinti prima delle baie BF02 e dei pedoni;
+  - `validWalk` esclude le mura;
+  - `carBlocked` e `canKnockbackMove` rispettano mura e sbarre;
+  - disegna le mura nelle tile statiche, sotto i tetti e nella trasparenza dei tetti; cancelli, sbarre e guardiole nel livello dinamico.
+- **`city-art.mjs`:** profilo «vetro» per la galleria Atlante, con facciate a vetrate, montanti e riflessi, tetto rosato e atrio vetrato. Il poligono OSM non cambia.
+- **Cache:** `game.mjs?v=163`, `city-art.mjs?v=130`, `enclosures.mjs?v=001` (nuovo).
+- **Test:** nuovo `bf12-enclosures.test.mjs` con 8 test: dati, recinti preparati, mura mai su strade o marciapiedi e nessuna strada tagliata, mura che bloccano e uscita sempre possibile, sbarra giorno/notte/NPC, nessun intrappolato, vetro, cablaggio. Ho reso compatibile il controllo di ordine di BF02. Suite **348/348**.
+- **Browser** (Chrome headless, server di produzione molto carico, carico medio 14–30):
+  - 3 minuti tra i recinti: 0 pedoni dentro le mura, 0 pedoni fermi vicino alle mura, 0 auto ferme vicino alle mura, 0 errori JavaScript;
+  - fotogramma: mediana 16,7 ms in entrambi i rami, 95° percentile 83 ms in entrambi i rami (dovuto al carico, uguale con e senza i recinti);
+  - prova di stress BF01: 0 compenetrazioni e 0 NPC fermi, sia prima sia dopo. Resta in entrambi lo stesso caso noto di auto incastrata vicino alla partenza (#35);
+  - sbarra del Municipio con tasti veri: di giorno l'auto entra per 81 m (50 FPS); alle 23:30 si ferma 4,1 m prima del cancello (25 FPS);
+  - foto PC di giorno e di notte con pioggia, foto telefono 844×390.
+- **Limiti:**
+  - parco Prima Casa non localizzato;
+  - funzioni degli edifici del complesso Municipio non verificate;
+  - piscina in rovina non disegnata;
+  - niente ponti;
+  - porte dei residenti dentro i recinti scartate;
+  - la guardia è un placeholder;
+  - non provato su telefono reale.
+
