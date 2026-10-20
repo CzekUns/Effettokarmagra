@@ -462,3 +462,9 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Cache:** `vehicle-handling.mjs?v=002`, `driving-controls.mjs?v=097`, `motorcycles.mjs?v=005`, `roads.mjs?v=147`, `npc-commute.mjs?v=002`, `bank-interior.mjs?v=007`, `game.mjs?v=155`.
 - **Non eseguiti / limiti:** telefono reale; valori di guida da rifinire a sensazione; audio del motore (Q09) ancora legato solo alla velocità, non alla marcia.
 - **Da fare:** revisione della PR BF05; BF06 a seguire.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF06 pedali touch: FRENO sopra, ACCELERA sotto
+- **Fatto:** invertiti freno e acceleratore nella colonna touch di guida: dall'alto **FRENO → ACCELERA → RETRO**, come richiesto in `BUGFIX_TODO.md` (BF06). Il BF resta `[ ]` fino a merge/QA.
+- **Come:** `index.html` (ordine dei tre pulsanti nel blocco `.pedals`, commento CSS e istruzioni per il telefono); `AGENTS.md` e `README.md` aggiornati al nuovo ordine; `steering-wheel.test.mjs` aggiornato e nuovo test BF06 (ordine DOM = ordine a schermo, ID/testi/aria-label/colori invariati, nessun riordino CSS, collegamenti `accelerator/brake/reverse` invariati). Nessun modulo `.mjs` cambiato, quindi nessuna versione cache da alzare.
+- **Test:** suite Node 22 **265/265**.
+- **Browser (Chrome headless, telefono 844×390 touch, prima/dopo):** prima ACCELERA y=172, FRENO 242; dopo FRENO 172, ACCELERA 242, RETRO 312. Con tocchi veri: ACCELERA porta l'auto a 38,3, FRENO la ferma a 0 senza retromarcia, RETRO −12 solo mentre premuto; due dita insieme su volante e ACCELERA funzionano; la pausa non lascia ACCELERA premuto; in banca i pedali spariscono e risalendo in auto l'ordine resta giusto; nessuna sovrapposizione con minimappa, missioni, volante, pausa, radio e pulsante azione; nessun errore JS.
+- **Non eseguiti / limiti:** telefono Android reale.

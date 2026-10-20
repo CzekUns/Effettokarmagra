@@ -555,3 +555,8 @@ Aggiunto il renderer per l'atlante originale `npc-mestieri-4chars-4dir-4frames-2
 **Grafica:** il friggitore in camice bianco sta ora subito fuori dalla tendina a strisce del suo food truck, a metà del banco e rivolto verso di esso; i furgoni sono girati in modo che banco e tendina guardino il marciapiede su entrambi i lati della strada. Prima il friggitore compariva a 8–9 m, spesso dietro il furgone o dal lato della carreggiata.
 
 **Verifiche:** foto Chrome headless ravvicinate prima/dopo di tutti e 5 i furgoni (Piazza Santo Stefano, Piazza Immacolata, Corso Europa, Largo Cinque Via, Via Roma) e misure nel gioco reale. Non provato su un telefono reale.
+### 2026-10-20 — Pedali touch in ordine FRENO, ACCELERA, RETRO (BF06)
+
+**Interfaccia:** nella colonna di guida a destra il pulsante rosso FRENO è ora in alto, il verde ACCELERA al centro e RETRO in basso; misure, colori e ombre invariati.
+
+**Verifiche:** foto Chrome headless sul telefono in orizzontale prima/dopo (stessa scena), con prova dei tre tasti a tocco vero e controllo che non coprano minimappa, missioni e volante. Non provato su un telefono reale.
