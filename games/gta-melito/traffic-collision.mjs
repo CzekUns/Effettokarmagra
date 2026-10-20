@@ -33,7 +33,12 @@ export function nearbyColliders(index,x,y,radius=8){
 const MODEL_SHAPES=Object.freeze([
  ['ape-car',Object.freeze({halfLength:2.3,halfWidth:.95})],
  ['ape-',Object.freeze({halfLength:2.5,halfWidth:1.3})],
- ['food-',Object.freeze({halfLength:3.35,halfWidth:1.45})]
+ ['food-',Object.freeze({halfLength:3.35,halfWidth:1.45})],
+ // Q18: courier van (fits a 7,2 m stall) and refuse truck. Both at most 1,9 wide per side: a vehicle in
+ // its lane must still pass the cars in the BF02 bays (lane offset + 1,7 + 0,25 gap) and two still cross
+ // on a 4,6 m service lane gap; the drawn bodies are wider, like the cars'.
+ ['corriere-',Object.freeze({halfLength:3.6,halfWidth:1.85})],
+ ['nettezza-',Object.freeze({halfLength:4.8,halfWidth:1.9})]
 ]);
 const CAR_SHAPE=Object.freeze({halfLength:3.15,halfWidth:1.7}),BIKE_SHAPE=Object.freeze({halfLength:2.8,halfWidth:1.05});
 export function vehicleShape(v){

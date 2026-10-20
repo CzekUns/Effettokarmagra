@@ -26,6 +26,8 @@ export const MOTO_HANDLING=freeze({...MOTORCYCLE_HANDLING,kind:'moto',accel:17.5
 // Q16: un triciclo corto gira molto più stretto di un'auto, anche a passo d'uomo (steer/steerLow).
 export const APE_HANDLING=freeze({...CAR_HANDLING,kind:'ape',launch:.38,launchSpeed:3,gears:[.3,.6],accel:6,brake:34,top:17,reverse:6,reverseAccel:5,corner:7,steer:2.9,steerLow:4.5,grip:5.8,maxSlip:.6});
 export const VAN_HANDLING=freeze({...CAR_HANDLING,kind:'furgone',launch:.4,gears:[.24,.46,.7],accel:8,brake:38,top:26,reverse:8,reverseAccel:6,corner:8,steer:2.05,steerMin:1,grip:6.4,maxSlip:.7});
+// Q18: refuse truck — heavy and slow, brakes long, steers wide (NPCs follow the lanes, the player feels the size).
+export const TRUCK_HANDLING=freeze({...CAR_HANDLING,kind:'camion',launch:.34,launchSpeed:3,gears:[.18,.36,.56,.78],accel:5.5,brake:30,top:21,reverse:6,reverseAccel:4.5,corner:6,steer:1.65,steerMin:.8,steerLow:6,grip:5.6,maxSlip:.5});
 const CAR_MODELS={
  'punto-188':{accel:14,top:41,brake:50},
  'ypsilon-2003':{accel:13.2,top:40,grip:7.4},
@@ -42,7 +44,8 @@ export function handlingProfile(vehicle){
  if(vehicle?.vehicleType==='motorcycle')return model.startsWith('moto-scooter')?SCOOTER_HANDLING:model.startsWith('moto-moto')?MOTO_HANDLING:MOTORCYCLE_HANDLING;
  // Ape (traffico e mercato) e furgoni ambulanti / del fritto.
  if(model.startsWith('ape-'))return APE_HANDLING;
- if(model.startsWith('furgone')||model.startsWith('food-'))return VAN_HANDLING;
+ if(model.startsWith('nettezza-'))return TRUCK_HANDLING;
+ if(model.startsWith('furgone')||model.startsWith('food-')||model.startsWith('corriere-'))return VAN_HANDLING;
  for(const [key,profile] of carProfiles)if(model.startsWith(key))return profile;
  return CAR_HANDLING;
 }
