@@ -6,8 +6,8 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition,balanceTraffic,createGateVehicle} from './roads.mjs?v=152';
-import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=007';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition,balanceTraffic,createGateVehicle} from './roads.mjs?v=153';
+import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=008';
 import {drawBorderGates,borderGateList,borderRing,distanceToBorder,GATE_RULES} from './border-gates.mjs?v=001';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=006';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
@@ -17,7 +17,10 @@ import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,pur
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
 import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=003';
-import {createSocial,stepSocial} from './npc-social.mjs?v=002';
+import {createSocial,stepSocial} from './npc-social.mjs?v=003';
+import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=001';
+import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=001';
+import {trafficTargetAt} from './traffic-rush.mjs?v=001';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker} from './traffic-collision.mjs?v=128';
 import {buildParkingBays,bayOffset,fitsParkingBay,nearestFreeStalls,parkInStall,insideParkingStrip,drawParkingBays} from './parking-bays.mjs?v=001';
@@ -320,6 +323,32 @@ function stepCommuters(dt){
    playerVehicle:p.car>=0?state.cars[p.car]:null,say:(agent,text)=>cityEventBubble(state.events,agent,text),wet:(state.weather?.wetness||0)>.5});
  }
 }
+// Q13: reactions of passers-by and traffic, and the same passers-by gathered where the city is alive.
+function createCityLife(){
+ state.reactions=createReactions(1313);state.density=createDensity(1717);
+ state.walkWeights=prepareWalkWeights(state.graph,{shops:state.shops||[]});
+ // Pavement lines that run through building footprints for more than 8% of the tract (measured every
+ // 3 m, once per tract and side, on demand). A single corner clipping a facade does not count: on
+ // Via Roma (511 m) one sample in 170 is inside a building.
+ const graph=state.graph,known=new Int8Array(graph.edges.length*2).fill(-1);
+ graph.isWalkBlocked=(id,side)=>{
+  const k=id*2+(side>0?1:0);
+  if(known[k]<0){
+   const e=graph.edges[id],steps=Math.max(2,Math.ceil(e.len/3));let bad=0;
+   if(DRIVE.has(e.roadType))for(let i=1;i<steps;i++){const q=lanePosition(graph,id,.06+.88*i/steps,'walk',side);if(!canStand(q.x,q.y))bad++;}
+   known[k]=bad/(steps-1)>.08?1:0;
+  }
+  return known[k]===1;
+ };
+}
+function canStand(x,y){
+ return validWalk(x,y)&&inside([x,y],toRing(state.map.border))&&
+  !(state.streetObjects&&bollardBlocksWalker(state.streetObjects,x,y));
+}
+function onCarriageway(x,y){
+ const r=nearest(x,y,30,state.roads,true);
+ return !!r&&r.distance<visualRoadWidth(r.road)/2+.3||inParkingBay(x,y,.2);
+}
 // Q03: errands of named OSM shops worth a short visit on foot.
 const VISIT_KINDS=new Set(['bakery','pastry','bar','cafe','supermarket','pharmacy','hairdresser','stationery','hardware','clothes','butcher','houseware']);
 function createCityPedestrians(){
@@ -330,8 +359,10 @@ function createCityPedestrians(){
   const door=probeDoor(origin,normal,buildingAt,walkOK,{viewerOnly:true,...extra});
   return door.valid&&doorFacesViewer(door)?door:null;
  };
+ // Q13: a resident's street-side home and pavement never lie on a carriageway (before, one Q01 home
+ // near a junction stood in the middle of a side street while waiting to go out).
  const residents=createRoutineResidents(state.graph,10,405,
-  {x:state.spawn[0],y:state.spawn[1]},[...state.cars,...state.traffic],walkOK,{doorAt});
+  {x:state.spawn[0],y:state.spawn[1]},[...state.cars,...state.traffic],(x,y)=>walkOK(x,y)&&!onCarriageway(x,y),{doorAt});
  // Nearest named shops first; a few spare ones in case a home door is not found.
  const shops=[],closest=(state.shops||[]).filter(shop=>VISIT_KINDS.has(shop.kind))
   .map(shop=>({shop,distance:Math.hypot(shop.x-state.spawn[0],shop.y-state.spawn[1])}))
@@ -476,8 +507,8 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
   state.cars.push(parkInStall({type:k%5,vehicleType:k%3===1?'motorcycle':'car',model:k%3===1?MOTORCYCLE_IDS[(k+Math.floor(k/3)*5)%MOTORCYCLE_IDS.length]:k===2?'ape-car-azzurra':k===5?'furgone-fritti':k%8===1?'panda-fire-red':CAR_PARKED_SPRITE_IDS[(k*7)%CAR_PARKED_SPRITE_IDS.length]},stall));k++;
   if(state.cars.length>=Math.min(PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP+parkedBikeCount))break;
  }
- state.traffic=createTraffic();prepareSignals();
- state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
+ state.traffic=createTraffic(START_MINUTE);prepareSignals();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
@@ -655,13 +686,14 @@ function trafficModel(i,type){
   trafficApeModel(i)||CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];
 }
 const TRAFFIC_COUNT=140;
-function createTraffic(){
- const p=state.player,traffic=createAgents(state.graph,TRAFFIC_COUNT,189,'car',state.cars,{motorcycleEvery:4,model:trafficModel,
+function createTraffic(minutes){
+ // Q13: as many vehicles as the hour wants (140 on a normal day, more at 8:00 and 20:00, half at night).
+ const p=state.player,traffic=createAgents(state.graph,trafficTargetAt(minutes,TRAFFIC_COUNT),189,'car',state.cars,{motorcycleEvery:4,model:trafficModel,
   keepClear:[{x:p.x,y:p.y,r:14}],clear:(x,y)=>!buildingAt(x,y)});
  for(const v of traffic)v.rider=isMotorcycle(v);
  // BF09: how many vehicles drive around now; balanceTraffic brings in or lets out the difference
- // through the border gates (Q13 can follow the rush hours by changing it).
- state.trafficTarget=TRAFFIC_COUNT;state.trafficMade=TRAFFIC_COUNT;
+ // through the border gates. Q13: updateTraffic follows the hour curve (trafficTargetAt).
+ state.trafficTarget=traffic.length;state.trafficMade=traffic.length;
  return traffic;
 }
 // BF09: a new vehicle that comes in from a border gate (same mix of models and scooters).
@@ -681,7 +713,22 @@ function updateTraffic(dt){
  }
  const halfW=canvas.clientWidth/(2*state.zoom),halfH=canvas.clientHeight/(2*state.zoom);
  const view=[state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH];
- stepAgents(state.graph,state.people,elapsed,state.player,{parked:state.cars,traffic:state.traffic,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes});
+ const p=state.player,playerVehicle=p.car>=0?state.cars[p.car]:null;
+ // Q13: passers-by far from the player wait still (no cost); fewer or more around the player by zone and hour,
+ // always moved outside the camera.
+ stepDensity(state.density,elapsed,{people:state.people,graph:state.graph,weights:state.walkWeights,view,
+  camera:state.camera,minutes:state.npcClockMinutes,canStand,index:state.dynamicCollision,doors:state.doors});
+ // moving vehicles: traffic, ridden scooters, the player's vehicle and any parked one shoved into motion
+ const moving=[...state.traffic,...(state.commuters||[]).filter(c=>c.bike.rider).map(c=>c.bike),
+  ...state.cars.filter(v=>v===playerVehicle||Math.abs(v.speed||0)>1.5)];
+ const life={graph:state.graph,people:state.people,vehicles:moving,
+  parked:state.cars,shops:state.shops||[],canStand,onRoad:onCarriageway,playerVehicle,focus:p,focusRadius:150,dt:elapsed,
+  say:(agent,text)=>state.events&&cityEventBubble(state.events,agent,text)};
+ stepAgents(state.graph,state.people.filter(a=>!a.frozen),elapsed,state.player,{parked:state.cars,traffic:state.traffic,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes,
+  kerbWait:agent=>kerbWait(state.reactions,agent,state.graph,life)});
+ // Q13: rush hours. The hour curve sets how many vehicles drive; BF09 balanceTraffic is the one place
+ // that adds and removes them, through the border gates.
+ state.trafficTarget=trafficTargetAt(state.npcClockMinutes,TRAFFIC_COUNT);
  stepAgents(state.graph,state.traffic,elapsed,state.player,{parked:state.cars,people:state.people,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes});
  balanceTraffic(state.graph,state.traffic,state.trafficTarget,{view},newGateVehicle);
  impactTraffic(elapsed);
@@ -690,6 +737,15 @@ function updateTraffic(dt){
  const washCtx={graph:state.graph,signalSeconds:signalSeconds(),traffic:state.traffic,playerCar:pc&&!isMotorcycle(pc)?pc:null,
   index:state.dynamicCollision,say:(agent,text)=>cityEventBubble(state.events,agent,text)};
  for(const w of state.people)if(w.washer)stepWasher(w,elapsed,washCtx);
+ stepReactions(state.reactions,elapsed,life);
+ // Q13: an NPC car blocked by the player or by a pedestrian on the road sounds its horn (with limits).
+ const honker=pickBlockedHorn(state.reactions,state.traffic,{player:p,playerVehicle,onRoad:onCarriageway});
+ if(honker){
+  state.hornAlarm={x:honker.x,y:honker.y,t:state.social?.clock??0};
+  state.reactions.alarm={x:honker.x,y:honker.y,t:state.reactions.clock};
+  const d=Math.hypot(honker.x-p.x,honker.y-p.y);
+  cityAudio.horn(honker.vehicleType==='motorcycle'?'moto':'auto',clamp((honker.x-p.x)/40,-1,1),(1-d/60)*.8);
+ }
  for(const agent of [...state.people,...state.traffic])if(Math.hypot(agent.x-agent.prevX,agent.y-agent.prevY)>15){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
  }
@@ -1013,8 +1069,8 @@ function compareRoadWidths(){
  // Every consumer shares the same module instance, including roads/traffic,
  // street furniture, crosswalks and building-side storefront placements.
  state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createEnclosures();createParkingBays();
- state.traffic=createTraffic();prepareSignals();
- state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
+ state.traffic=createTraffic(state.npcClockMinutes);prepareSignals();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
  state.propsGrid=makeIndex(state.props);
@@ -1475,16 +1531,14 @@ function updateCityAudio(){
   traffic:traffic.map(v=>({x:v.x,y:v.y,vehicleType:v.vehicleType,model:v.model||'',speed:v.braking?0:(Number.isFinite(v.v)?v.v:v.speed)})),
   night:(state.light?.darkness||0)/NIGHT_DARKNESS,rain:state.weather?.rain||0,
   skid:car&&car.speed>8?Math.min(1,Math.abs(car.slip||0)/.45):0});
- if(!paused&&!state.bankInterior){
-  const honker=cityAudio.npcHorns(traffic,p,state.clock);
-  if(honker)state.hornAlarm={x:honker.x,y:honker.y,t:state.social?.clock??0};
- }
+ // Q13: NPC horns are decided by the traffic step (pickBlockedHorn in updateTraffic).
 }
 // Q09/Q11: the player's horn is heard, and chatting pedestrians nearby break up.
 function honk(){
  const p=state.player;if(p.car<0)return;
  cityAudio.horn(isMotorcycle(state.cars[p.car])?'moto':'auto');
  state.hornAlarm={x:p.x,y:p.y,t:state.social?.clock??0};
+ if(state.reactions)state.reactions.alarm={x:p.x,y:p.y,t:state.reactions.clock};
 }
 // BF13: la sovramappa nasce solo alla prima accensione e riparte sempre spenta (niente preferenze).
 function satelliteOverlay(){

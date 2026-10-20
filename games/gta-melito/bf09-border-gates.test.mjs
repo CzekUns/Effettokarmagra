@@ -134,7 +134,7 @@ test('BF09 game wiring: gates on load and on the width switch, straight cut, mou
  assert.match(game,/g\.save\(\);if\(nearBorder\(x0,y0,x1,y1\)\)\{borderPath\(g\);g\.clip\(\);\}/,'wet asphalt cut too');
  assert.match(game,/const fade=ai\.gateFade\?\?1;if\(fade<=\.01\)continue;/);
  assert.match(game,/balanceTraffic\(state\.graph,state\.traffic,state\.trafficTarget,\{view\},newGateVehicle\)/);
- assert.match(game,/state\.trafficTarget=TRAFFIC_COUNT/);
+ assert.match(game,/state\.trafficTarget=(?:TRAFFIC_COUNT|traffic\.length;|trafficTargetAt\(state\.npcClockMinutes,TRAFFIC_COUNT\))/,'Q13: the hour curve sets the target');
  for(const src of [game,commute])assert.ok(Number((src.match(/from '\.\/roads\.mjs\?v=(\d+)'/)||[])[1])>=149,'roads.mjs almeno v=149');
  assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=159);
 });
