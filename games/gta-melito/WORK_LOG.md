@@ -1133,3 +1133,11 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
   - niente intervallo, falli o rigori;
   - Android vero non provato;
   - palla e freccia ingrandite dopo le foto, controllate solo con un disegno di prova in Node.
+
+
+### 2026-10-20 — ChatGPT/GitHub — Merge pacchetto finale #72: BF14 e Q18–Q41
+- **Effettivamente unita a `main`** [PR #72](https://github.com/CzekUns/Effettokarmagra/pull/72), autore `ilconsulentelogistico-hue`, 26 commit, 114 file tutti sotto `games/gta-melito/`. GitHub ha confermato `merged:true`; commit merge `6bb676489bbe22d51196512121434eaf1dc5316c`.
+- **Contenuto del pacchetto:** Q18–Q41 (mezzi servizio, routine, passeggeri, incroci, danni, superfici, negozi con interni/acquisti, bar e minigiochi, calcetto, gare di gioco, garage/officina, smartphone/Drive/Rider), BF14 scala veicoli e pedoni con zoom e allineamento delle baie. La Q42 mercato era già sul main tramite #54.
+- **Verifiche prima del merge:** confrontato GitHub `main…gta-melito-pacchetto-finale` (`ahead:26, behind:0`, mergeable), elenco file (nessuna modifica a giochi esterni), head SHA attesa. L'autore dichiara test Node **578/578** e smoke Chrome headless PC/mobile, ma **non sono stati rieseguiti** indipendentemente e non esistono check CI disponibili sul commit. Non verificati deployment Pages né Android vero.
+- **Stato reale:** prime versioni integrate, **non approvazione generale di grafica e giocabilità**. Molte Q del TODO restano intenzionalmente `[ ]` in attesa di prova browser dedicata, collaudo utente e rifiniture; non trasformarle automaticamente in `[x]`. La sezione NOVITÀ del menu PAUSA serve alla valutazione degli asset provvisori.
+- **PR residue:** le PR singole #58–#71 relative allo stesso pacchetto sono alternative da chiudere dopo verifica dei duplicati (autore prevede di farlo). Non fondere automaticamente la PR #34, bozza dello spritesheet, né la #73 dedicata a Ninomon.
