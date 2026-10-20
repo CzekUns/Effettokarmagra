@@ -10,6 +10,10 @@ Ambito: solo `games/gta-melito/`. Questo è il gioco GTA Melito di Uns Arcade, *
 - Non confondere **assegnazione dell'issue** con avvio dell'agente: l'AI dell'altro account deve ricevere istruzioni e operare realmente. Nessun agente deve dichiarare svolta un'attività delegata senza codice/test/PR verificabili.
 - Se la revisione richiede modifiche, preferire commenti o commit sul branch della PR; **mai** duplicare lo sviluppo della stessa Q su `main` in parallelo.
 
+## Eccezione di priorità temporanea — bugfix BF01–BF06 (20 ottobre 2026)
+
+In seguito a problemi di collisioni, spawn/parcheggi e guida riferiti dall'utente, il collaboratore `ilconsulentelogistico-hue` esegue prima la coda ordinata **[BUGFIX_TODO.md](./BUGFIX_TODO.md)**, registrata nell'[issue #32](https://github.com/CzekUns/Effettokarmagra/issues/32). **Una BF per PR** con test/log; non prendere una nuova Q di `TODO.md` finché BF01–BF06 non sono integrate, poi riprendere **Q13**. Questa regola prevale temporaneamente sul principio «prima Q aperta», senza spuntare o perdere Q13–Q24. Se esiste già una PR Q in corso, non cancellarla: coordinarne lo stato prima di lavorare sugli stessi file. L'assegnazione all'account GitHub non attiva l'AI esterna.
+
 ## Passaggio di mano obbligatorio — QUALSIASI intervento
 
 **Regola permanente per tutti: persone, agenti AI, ChatGPT e Work.** Chi lavora in questo gioco deve consultare l'ultima voce di [WORK_LOG.md](./WORK_LOG.md) **prima** di iniziare e lasciare una nuova voce **prima di consegnare o terminare la sessione**. Questa regola vale per codice, grafica, asset, AI, missioni, mappa, bug, refactoring e documentazione, non soltanto per i lavori estetici.
