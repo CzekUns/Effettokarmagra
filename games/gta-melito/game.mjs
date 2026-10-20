@@ -6,8 +6,8 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=146';
-import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=001';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=147';
+import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=002';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=005';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
@@ -34,9 +34,9 @@ import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=100';
-import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=096';
-import {handlingProfile,applyGrip} from './vehicle-handling.mjs?v=001';
-import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=004';
+import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=097';
+import {handlingProfile,applyGrip} from './vehicle-handling.mjs?v=002';
+import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=005';
 import {nearestEnterableVehicle,starterMotorcycleCandidates} from './vehicle-entry.mjs?v=003';
 import {PARKED_BIKE_TARGET,PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP,motorcycleParkingRoadOrder,motorcycleParkingCandidates,parkedBikeLabel} from './motorcycle-parking.mjs?v=001';
 import {guideCar} from './driving-assist.mjs?v=099';
@@ -44,7 +44,7 @@ import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
-import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=006';
+import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=007';
 import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=002';
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';

@@ -114,7 +114,8 @@ test('NPC cars queue before a parked car and separate at a crossing',()=>{
  assert.ok(follower.x>20&&follower.x<30,'NPC approaches and brakes before obstacle');
  const east=car(graph.trafficStarts[0],.4,40,3.542,0);
  const north=car(graph.trafficStarts[2],.4,46.458,-10,Math.PI/2);
- for(let i=0;i<60;i++){
+ // BF05: gli NPC ripartono da fermi con spinta progressiva: servono più di 3 s per attraversare.
+ for(let i=0;i<140;i++){
   stepAgents(graph,[east,north],.05);
   assert.ok(!vehiclesOverlap(east,north),'crossing traffic yields to other cars');
  }
