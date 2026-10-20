@@ -342,6 +342,12 @@ function walkPlans(graph,agent,edge){
   const plan=sidewalkTurn(graph,agent.edge,id,agent.side||1);
   if(plan)plans.set(id,plan);
  }
+ // Q13: never into a pavement whose line runs through a building (OSM footprints over the
+ // sidewalk offset), as long as another way on is free.
+ if(graph.isWalkBlocked&&plans.size>1){
+  const free=[...plans].filter(([id,plan])=>!graph.isWalkBlocked(id,plan.side));
+  if(free.length&&free.length<plans.size)for(const [id,plan] of [...plans])if(graph.isWalkBlocked(id,plan.side))plans.delete(id);
+ }
  return {plans,route:{seed:agent.seed,body:'walk',routine:agent.routine,home:agent.home,path:agent.path}};
 }
 export {position as lanePosition,sidewalkTurn,nextPose as previewNextPose};
@@ -403,11 +409,26 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
   // Following distance is checked only for traffic on this nearby segment.
   const near=index?nearbyColliders(index,agent.x,agent.y,18):others;
   agent.follows=null;
+  // Q13: a pedestrian crossing or standing on the lane ahead: brake gently and stop before it
+  // (before, the car only halted when it was about to touch the person).
+  const hx=Math.cos(agent.a),hy=Math.sin(agent.a),body=vehicleShape(agent);let yieldPed=null;
   for(const other of near){
-   if(other===agent||other.body!=='car'||other.edge!==agent.edge)continue;
+   if(other===agent)continue;
+   if(other.body==='walk'){
+    if(other.indoors)continue;
+    const dx=other.x-agent.x,dy=other.y-agent.y,ahead=dx*hx+dy*hy,side=Math.abs(dy*hx-dx*hy);
+    // workers at their post (vendors, washers) stand at the kerb: no braking for them while turning
+    const onLane=other.crossing||other.dodge>0||other.isPlayer||ahead<9&&!other.stationary;
+    if(onLane&&ahead>0&&ahead<16&&side<body.halfWidth+(other.crossing?1.2:.9)){
+     speed=Math.min(speed,cruise*clamp((ahead-body.halfLength-1.6)/7,0,1));yieldPed=other;
+    }
+    continue;
+   }
+   if(other.body!=='car'||other.edge!==agent.edge)continue;
    const ahead=(other.t-agent.t)*edge.len;
    if(ahead>0&&ahead<12){const v=cruise*clamp((ahead-5)/7,0,1);if(v<speed){speed=v;agent.follows=other;}}
   }
+  agent.yieldPed=yieldPed;agent.yieldWait=yieldPed&&!(agent.v>.5)?(agent.yieldWait||0)+elapsed:0;
   // BF07: stop line of the next junction (red light, right of way, junction or exit not free).
   if(Number.isFinite(agent.jLimit)){limit=Math.max(0,agent.jLimit);speed=Math.min(speed,Math.sqrt(2*4.5*limit));}
   speed=npcSpeedStep(profile,agent.v,speed,elapsed);
@@ -440,9 +461,11 @@ function routinePosition(graph,agent,nearHome=false,index=null){
   const a=graph.nodes[e.from],b=graph.nodes[e.to];
   const dx=b.x-a.x,dy=b.y-a.y,denom=dx*dx+dy*dy;
   const base=nearHome&&home?home:agent;
-  // Fast bounding-box rejection before the more expensive projection.
-  if(Math.abs(a.x-base.x)>80&&Math.abs(b.x-base.x)>80||
-     Math.abs(a.y-base.y)>80&&Math.abs(b.y-base.y)>80)continue;
+  // Fast bounding-box rejection before the more expensive projection. Q13: the box of the whole
+  // segment (before, both ends had to be within 80 m: on a long OSM edge such as Via Roma, 511 m,
+  // a pedestrian knocked or jumping aside in the middle found no lane and stayed in recovery).
+  if(base.x<Math.min(a.x,b.x)-80||base.x>Math.max(a.x,b.x)+80||
+     base.y<Math.min(a.y,b.y)-80||base.y>Math.max(a.y,b.y)+80)continue;
   const t=clamp(denom?((base.x-a.x)*dx+(base.y-a.y)*dy)/denom:0,.06,.94);
   const pose=position(graph,edgeId,t,agent.body,agent.side||1);
   if(nearHome&&home&&Math.hypot(pose.x-home.x,pose.y-home.y)>Math.min(28,home.radius*.4))continue;
@@ -628,7 +651,7 @@ export function balanceTraffic(graph,traffic,target,world={},make=null,{maxAdd=2
 }
 export function stepAgents(graph,agents,dt,player=null,world={}){
  const playerBody=player&&Number.isFinite(player.x)&&Number.isFinite(player.y)?
-  {x:player.x,y:player.y,a:player.a||0,body:player.car>=0?'car':'walk',vehicleType:player.vehicleType||'car'}:null;
+  {x:player.x,y:player.y,a:player.a||0,body:player.car>=0?'car':'walk',vehicleType:player.vehicleType||'car',isPlayer:true}:null;
  const index=makeCollisionIndex([...agents,...(world.parked||[]),...(world.traffic||[]),...(world.people||[]),playerBody]);
  // BF07: the next junction of every car, the cars approaching each junction, and the clock of the
  // (simulated) traffic lights: game clock when given, otherwise the simulated time.
@@ -663,6 +686,10 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
   if(agent.body==='car'&&unstickVehicle(agent,index,world,dt)){
    agent.stalled=0;if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);continue;
   }
+  // Q13: a pedestrian jumping out of a vehicle's way, crossing mid-block or turning to look at an
+  // oncoming vehicle is moved by npc-reactions.mjs; at a kerb it may wait for a gap in the traffic.
+  if(agent.dodge>0||agent.crossing||agent.lookAt){agent.stalled=0;continue;}
+  if(agent.body==='walk'&&world.kerbWait&&world.kerbWait(agent)){agent.stalled=0;continue;}
   // Vendors and junction-side washers hold an actual foot position, but after
   // nonlethal impacts they step back towards it instead of snapping on screen.
   if(agent.stationary){

@@ -63,6 +63,7 @@ Per ogni nuovo veicolo segui rigorosamente [VEHICLE_ART_GUIDE.md](./VEHICLE_ART_
 4. **Niente regressioni**: non rompere camminata, veicoli, missioni, salvataggio, collisioni, traffico, zoom adattivo, minimappa, controllo touch, performance su telefono e GitHub Pages. Lo zoom attuale parte da 5× a piedi e si allarga progressivamente in auto: conservarlo. Il confronto “CONFRONTA CON PRIMA” per le strade deve restare funzionante.
 5. **Consegnare modifiche**: fare codice/asset/commit reali in GitHub, verificare con Node 22 e screenshot in browser (desktop + mobile); test verdi NON dimostrano da soli una buona resa grafica. Inserire confronti prima/dopo e descrizione onesta del progresso.
 6. **Portata**: non toccare altre cartelle di giochi senza necessità; evitare refactoring non connessi all'obiettivo estetico.
+7. **Foto aerea come riferimento (BF13, 20/10/2026)**: per i dettagli urbani consultare la foto aerea Esri come riferimento (sovramappa in PAUSA › STRUMENTI, audit in `AUDIT_SATELLITE.md`); nel repo solo coordinate stimate, mai immagini.
 
 ## Prima attività operativa per Work
 

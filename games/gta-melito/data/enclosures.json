@@ -1,0 +1,275 @@
+{
+ "schema": 1,
+ "descrizione": "BF12 — recinti di Melito con mura, cancelli e guardiole, più gli edifici di vetro. Coordinate di gioco (metri proiettati come data/melito-map.json). Dati OSM © OpenStreetMap contributors (ODbL), estratti dall'API OSM 0.6 il 20/10/2026. Riferimento visivo: Esri World Imagery (consultata il 20/10/2026), usata solo per stime a vista: nessuna immagine è inclusa nel repository.",
+ "regole": {
+  "notte": "22:00–6:00: sbarre dei recinti privati abbassate per il giocatore (si alzano per i mezzi NPC dei residenti); i pedoni passano sempre dai cancelli",
+  "mura": "seguono la linea OSM dove esiste, ma mai sulla strada e sul marciapiede disegnati (più larghi del vero): stanno appena oltre il marciapiede"
+ },
+ "recinti": [
+  {
+   "id": "villa-comunale",
+   "nome": "Villa Comunale di Melito di Napoli",
+   "tipo": "pubblico",
+   "materiale": "cancellata",
+   "perimetro": {
+    "tipo": "osm",
+    "fonte": "OSM way 567826231 (barrier=wall, leisure=park)",
+    "punti": [
+     [
+      1284.8,
+      1195.9
+     ],
+     [
+      1307.1,
+      1197.7
+     ],
+     [
+      1309.6,
+      1154.2
+     ],
+     [
+      1306.0,
+      1147.4
+     ],
+     [
+      1316.3,
+      1146.6
+     ],
+     [
+      1327.0,
+      1145.9
+     ],
+     [
+      1330.3,
+      1145.6
+     ],
+     [
+      1341.0,
+      1140.3
+     ],
+     [
+      1348.5,
+      1142.0
+     ],
+     [
+      1357.3,
+      1149.0
+     ],
+     [
+      1351.9,
+      1210.0
+     ],
+     [
+      1350.6,
+      1225.2
+     ],
+     [
+      1316.3,
+      1217.8
+     ],
+     [
+      1302.8,
+      1214.9
+     ],
+     [
+      1291.3,
+      1212.5
+     ],
+     [
+      1284.1,
+      1211.0
+     ]
+    ]
+   },
+   "cancelli": [
+    {
+     "x": 1316.3,
+     "y": 1146.6,
+     "tipo": "pedonale",
+     "fonte": "OSM node 5464543102 (barrier=gate)"
+    },
+    {
+     "x": 1351.9,
+     "y": 1210.0,
+     "tipo": "pedonale",
+     "fonte": "OSM node 5464543101 (barrier=gate)"
+    }
+   ],
+   "guardiola": false,
+   "fonte": "OpenStreetMap: way 567826231 e nodi 5464543101/5464543102; foto aerea Esri World Imagery (20/10/2026) con area verde e vialetti coerenti",
+   "verificato": true,
+   "metodo": "perimetro e cancelli OSM",
+   "note": "Parco pubblico: i cancelli sono pedonali, i veicoli non entrano."
+  },
+  {
+   "id": "complesso-municipio",
+   "nome": "Complesso Municipio – Carabinieri – piscina comunale",
+   "tipo": "privato",
+   "materiale": "muro",
+   "perimetro": {
+    "tipo": "ricalco",
+    "fonte": "ricalco a vista su foto aerea Esri World Imagery (20/10/2026): isolato verde tra Via Madrid (nord), Via Budapest (ovest), Via Salvatore Di Giacomo (est) e la strada di servizio del Municipio (sud); il muro reale è nascosto dagli alberi, si segue il bordo dell'isolato; il lato sud passa a sud della strada interna di servizio del Municipio",
+    "punti": [
+     [
+      1198,
+      790
+     ],
+     [
+      1378,
+      790
+     ],
+     [
+      1354,
+      884
+     ],
+     [
+      1354,
+      999
+     ],
+     [
+      1262,
+      999
+     ],
+     [
+      1258,
+      991
+     ],
+     [
+      1198,
+      990
+     ]
+    ]
+   },
+   "cancelli": [],
+   "guardiola": true,
+   "fonte": "OSM: nodo 5515667279 «Municipio di Melito di Napoli», edificio 733703600; edificio tondo OSM 733703519 su Via Madrid; Melitonline, 23/02/2025, «Completata la bonifica del rudere dell'ex piscina comunale di via Madrid»; elenchi pubblici (reteimprese, virgilio): Carabinieri Tenenza in Via Salvatore Di Giacomo 38, Municipio in Via Salvatore Di Giacomo 7; stima da foto aerea Esri World Imagery (consultata 20/10/2026): isolato verde recintato con il Municipio, l'edificio tondo con la torre del serbatoio a fungo, un edificio a tetto piatto e un lotto demolito",
+   "verificato": false,
+   "metodo": "ricalco a vista + bordo dell'isolato (alberi sopra le mura)",
+   "note": "Il tipo «privato» qui significa accesso controllato (sbarra notturna e guardiola), non proprietà privata. Carabinieri: la Tenenza è in Via Salvatore Di Giacomo 38 secondo elenchi pubblici, ma l'edificio non è identificato con certezza: nessuna insegna nel gioco. Piscina e serbatoio: vedi la sezione «landmark»."
+  },
+  {
+   "id": "recinto-fronte-mercato",
+   "nome": "Recinto di fronte all'area mercatale (forse il «Parco GB», da verificare)",
+   "tipo": "privato",
+   "materiale": "muro",
+   "perimetro": {
+    "tipo": "ricalco",
+    "fonte": "ricalco a vista su foto aerea Esri World Imagery (20/10/2026): isolato a sud di Via Ginevra, tra il campo incolto a ovest, Via Berlino a est e Via Oslo a sud; lato nord lungo il muro OSM 404895514",
+    "punti": [
+     [
+      1102,
+      976
+     ],
+     [
+      1206,
+      972
+     ],
+     [
+      1212,
+      1058
+     ],
+     [
+      1150,
+      1063
+     ],
+     [
+      1102,
+      1063
+     ]
+    ]
+   },
+   "cancelli": [
+    {
+     "x": 1170,
+     "y": 986,
+     "tipo": "carrabile",
+     "fonte": "stima da foto aerea: viale d'accesso interno che parte da Via Ginevra"
+    }
+   ],
+   "guardiola": true,
+   "muriOsm": [
+    {
+     "id": 404895514,
+     "punti": [
+      [
+       1143.7,
+       987.8
+      ],
+      [
+       1204.4,
+       982.8
+      ]
+     ]
+    }
+   ],
+   "fonte": "OSM: muri 404895514 e 574674017 sul lato sud di Via Ginevra, davanti all'isolato del mercato (rione 219); segnalazione del committente («parco GB … se non erro proprio di fronte all'area mercatale»); foto aerea Esri World Imagery (consultata 20/10/2026)",
+   "verificato": false,
+   "metodo": "muri OSM + isolato chiuso dalle strade",
+   "note": "Il varco tra i muri OSM 404895514 e 574674017 è l'imbocco di Via Berlino (strada pubblica), non un cancello: il muro 574674017 appartiene all'isolato a est di Via Berlino. Il cancello sul viale interno e la guardiola sono stime. Annunci immobiliari pubblici collocano un «Parco GB» in Corso Europa 374 con accesso da Via Madonnelle: Corso Europa passa a circa 440 m da qui e Via Madonnelle non è in OSM. Nome e posizione vanno confermati."
+  },
+  {
+   "id": "parco-prima-casa",
+   "nome": "Parco Prima Casa",
+   "tipo": "privato",
+   "materiale": "muro",
+   "perimetro": {
+    "tipo": "non-localizzato",
+    "candidati": "in parte sotto il viadotto della SP500 Asse Perimetrale (tratti in ponte tra (1145,2190) e (1650,1950) in coordinate di gioco)"
+   },
+   "cancelli": [],
+   "guardiola": true,
+   "fonte": "segnalazione del committente; nessun riscontro in OSM né in fonti web pubbliche (ricerca del 20/10/2026)",
+   "verificato": false,
+   "metodo": "—",
+   "note": "Non disegnato: serve una via o un punto sulla mappa. Il gioco non ha ancora i ponti: la superstrada resta una strada al suolo."
+  }
+ ],
+ "vetro": [
+  {
+   "id": 794814541,
+   "nome": "Galleria Atlante (probabile)",
+   "fonte": "OSM way 794814541 (building=commercial) accanto al «Parco Atlante» (OSM 794814538) e all'«Ufficio Postale Melito 2» (OSM node 7434108725); foto aerea Esri World Imagery (consultata 20/10/2026): atrio centrale vetrato a V e torrette tonde vetrate",
+   "verificato": false,
+   "metodo": "ricalco a vista: identificazione dell'edificio, poligono OSM invariato"
+  }
+ ],
+ "landmark": [
+  {
+   "id": "serbatoio-municipio",
+   "tipo": "torre-serbatoio",
+   "nome": "Torre del serbatoio idrico «a scacchi» (a fungo)",
+   "x": 1313.5,
+   "y": 824.5,
+   "altezza": 40,
+   "raggioFusto": 2.3,
+   "raggioVasca": 12,
+   "vascaDa": 0.64,
+   "colori": [
+    "#c3392d",
+    "#f0ebdf"
+   ],
+   "fonte": "posizione e forma: foto aerea Esri World Imagery (consultata 20/10/2026), dove si vedono la vasca a fungo con copertura a spicchi (circa 27 m di diametro) e il fusto al centro dell'edificio tondo OSM 733703519; segnalazione del committente («una torre un po' simbolo, fatta a scacchi»)",
+   "verificato": false,
+   "metodo": "ricalco a vista",
+   "note": "I colori della scacchiera (rosso e bianco) e l'altezza sono STIME: non ho trovato foto pubbliche consultabili. La luce rossa notturna in cima è un dettaglio artistico."
+  },
+  {
+   "id": "ex-piscina-via-madrid",
+   "tipo": "piscina-rudere",
+   "nome": "Ex piscina comunale di via Madrid (rudere, interrata)",
+   "edificio": 733703519,
+   "vasca": {
+    "x": 1313.5,
+    "y": 835.5,
+    "lunghezza": 22,
+    "larghezza": 8,
+    "angolo": 0,
+    "profondita": 2.6
+   },
+   "fonte": "Melitonline, 23/02/2025: «Completata la bonifica del rudere dell'ex piscina comunale di via Madrid» (lavori dal 16/09/2024 al 15/01/2025, rimozione di rifiuti e amianto; la struttura non è mai stata usata come impianto sportivo); edificio tondo OSM 733703519 (building=industrial) su Via Madrid; segnalazione del committente (piscina interrata che ospita il serbatoio)",
+   "verificato": false,
+   "metodo": "fonte giornalistica + foto aerea; vasca stimata",
+   "note": "Forma e posizione della vasca dentro l'edificio sono stimate. Sulla foto aerea l'edificio ha un tetto piano scuro: nel gioco la copertura è disegnata in parte crollata sopra la vasca, per mostrarla. È una scelta grafica, non un rilievo."
+  }
+ ]
+}

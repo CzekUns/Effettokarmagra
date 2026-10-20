@@ -10,6 +10,7 @@ import {drawPedestrianSprite} from './pedestrian-sprites.mjs?v=001';
 import {drawFryerSprite} from './friggitore-sprites.mjs?v=001';
 import {drawProfessionSprite} from './profession-sprites.mjs?v=001';
 import {drawExtraPedestrianSprite,EXTRA_PEDESTRIAN_NPC_START_KIND} from './extra-pedestrian-sprites.mjs?v=001';
+import {drawRuinPool} from './municipio-landmarks.mjs?v=001';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
  * are original artistic interpretations: they do not claim photographic fidelity.
@@ -408,6 +409,8 @@ function drawRaisedWalls(c,b,v,zoom){
   const south=Math.abs(edgeX)>=Math.abs(edgeY),isTall=v.stories>=2;
   c.beginPath();c.moveTo(f.x1,f.y1);c.lineTo(f.x2,f.y2);
   c.lineTo(f.x3,f.y3);c.lineTo(f.x4,f.y4);c.closePath();
+  // BF12: curtain-wall glass (galleria Atlante): reflective panes and mullions, no punched windows.
+  if(a.glass){glassFacade(c,f,len,south,v);continue;}
   c.fillStyle=shiftColor(wall,south?8:-28);c.fill();
   // A crisp light lip separates the upper wall from its shaded face.
   c.lineWidth=.82;c.strokeStyle=shiftColor(wall,38);
@@ -499,6 +502,45 @@ function drawRaisedWalls(c,b,v,zoom){
   c.restore();
  }
 }
+/* BF12: a glazed facade on the current path f1→f2 (roof edge) / f4→f3 (ground): tinted glass,
+ * a soft diagonal reflection, vertical mullions every ~2,2 m and a transom per storey. */
+function glassFacade(c,f,len,south,v){
+ c.fillStyle=south?'#7aa7b1':'#4d7480';c.fill();
+ c.save();c.clip();
+ const g=c.createLinearGradient(f.x1,f.y1,f.x3,f.y3);
+ g.addColorStop(0,'#d8eef266');g.addColorStop(.42,'#ffffff00');g.addColorStop(.62,'#c6e4ea59');g.addColorStop(1,'#ffffff00');
+ c.fillStyle=g;c.fill();
+ c.strokeStyle=south?'#2e4a51':'#203538';c.lineWidth=.22;
+ const n=Math.max(2,Math.round(len/2.2));
+ for(let k=1;k<n;k++){const t=k/n;c.beginPath();c.moveTo(f.x1+(f.x2-f.x1)*t,f.y1+(f.y2-f.y1)*t);c.lineTo(f.x4+(f.x3-f.x4)*t,f.y4+(f.y3-f.y4)*t);c.stroke();}
+ const floors=Math.max(1,Math.min(4,v.stories||2));
+ for(let k=1;k<floors;k++){const t=k/floors;c.beginPath();c.moveTo(f.x1+(f.x4-f.x1)*t,f.y1+(f.y4-f.y1)*t);c.lineTo(f.x2+(f.x3-f.x2)*t,f.y2+(f.y3-f.y2)*t);c.stroke();}
+ c.restore();
+ c.lineWidth=.55;c.strokeStyle='#e2f3f6';c.beginPath();c.moveTo(f.x1,f.y1);c.lineTo(f.x2,f.y2);c.stroke();
+}
+/* BF12: flat roof of the glass gallery as on the aerial photo: rosy sheet roofing with seams and a
+ * wide glazed atrium along the long axis. */
+function glassRoof(c,b,a){
+ c.save();poly(c,b.p);c.clip();
+ c.fillStyle='#c4917f';c.fillRect(a.x0,a.y0,a.w,a.h);
+ c.strokeStyle='#9e6e60';c.lineWidth=.2;c.beginPath();
+ for(let x=a.x0+2.5;x<a.x1;x+=3.2){c.moveTo(x,a.y0);c.lineTo(x,a.y1);}c.stroke();
+ c.restore();
+ glassAtrium(c,b,a);
+ c.save();poly(c,b.p);c.strokeStyle='#e9d2c4';c.lineWidth=.6;c.stroke();c.restore();
+}
+function glassAtrium(c,b,a){
+ const long=a.w>=a.h,span=Math.max(3,Math.min(a.w,a.h)*.3);
+ c.save();poly(c,b.p);c.clip();
+ c.translate(a.cx,a.cy);if(!long)c.rotate(Math.PI/2);
+ const L=Math.max(a.w,a.h);
+ c.fillStyle='#5e8994';c.fillRect(-L/2,-span/2,L,span);
+ c.fillStyle='#a9d1d988';c.fillRect(-L/2,-span/2,L,span*.32);
+ c.strokeStyle='#2c4549';c.lineWidth=.2;
+ for(let x=-L/2;x<L/2;x+=1.8){c.beginPath();c.moveTo(x,-span/2);c.lineTo(x,span/2);c.stroke();}
+ c.beginPath();c.moveTo(-L/2,0);c.lineTo(L/2,0);c.stroke();
+ c.restore();
+}
 /* Q04: the same glass panes drawRaisedWalls paints on the exposed facades (tile zoom),
  * as world-space quads, so night lighting can switch real windows on and off. */
 export function facadeWindowPanes(b){
@@ -547,6 +589,8 @@ export function drawCityBuildings(c,buildings,zoom){
    }
    continue;
   }
+  // BF12: the former municipal pool (via Madrid) is a ruin with the sunken empty pool, not a block.
+  if(a.ruinPool){drawRuinPool(c,b,{exposedFacade,shiftColor});continue;}
   const v=buildingVolume(b);
   if(!v)continue;
   const seed=a.seed;
@@ -557,7 +601,8 @@ export function drawCityBuildings(c,buildings,zoom){
   c.translate(-v.dx,-v.dy);
   drawRaisedWalls(c,b,v,zoom);
   const tone=a.roofTint||historicalRoofTone(a);
-  if(!specialized(c,b,a)){
+  if(a.glass)glassRoof(c,b,a);
+  else if(!specialized(c,b,a)){
    if(a.roof&&a.area>55)slopedRoof(c,b,a,tone);
    else flatRoof(c,b,a,a.roofTint||
     (a.type==='industrial'?metal[seed%3]:a.type==='apartment'?flat[seed%6]:tone));

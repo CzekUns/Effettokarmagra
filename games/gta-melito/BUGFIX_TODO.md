@@ -77,3 +77,34 @@ I bug sono segnalazioni del committente sulla versione giocabile, non diagnosi o
 **Correzione:** su PC (puntatore fine, finestra più larga di 760 px) la pagina è soltanto la plancia a tutta finestra: canvas con minimappa, etichetta della via, MISSIONI, radio e un piccolo pulsante Ⅱ. Titolo e versione con SALA GIOCHI, barra di stato (ora NPC, luogo, mezzo, camera, conteggi), comandi, confronto larghezza strade, link al rilievo e crediti/licenze passano nel menu PAUSA, diviso in sezioni. Il menu si apre con Esc, P o Ⅱ; si chiude con Esc, P o RIPRENDI. Telefono invariato (BF06).
 **Accettazione:** apertura senza barre di scorrimento a 1280×720, 1366×768 e 1920×1080; tutte le voci raggiungibili dal menu e aggiornate; gioco fermo con la pausa aperta; attribuzione OSM raggiungibile; telefono 844×390 identico.
 - **Stato 2026-10-20:** corretto in PR (in revisione, da spuntare solo dopo merge/QA). `index.html`: header, `.hud`, `.road-width-bar`, istruzioni e footer spostati nel menu PAUSA in 5 sezioni: STATO · INFO, COMANDI, MAPPA · ZOOM · SUONI, STRUMENTI · CONFRONTO STRADE, CREDITI E LICENZE. Stessi ID, quindi `game.mjs` li aggiorna come prima. Blocco CSS solo PC con plancia a 100dvh, pulsante Ⅱ, indicazione «E · …» solo quando c'è davvero un'azione vicina e piccola attribuzione «© OpenStreetMap · ISTAT» sulla plancia. `game.mjs`: il tasto P apre e chiude la pausa come Esc (non con un negozio aperto); `boardPrompt`. Sul telefono il menu pausa resta quello di prima. Nuovo `bf11-pc-board.test.mjs` con 5 test; prove in Chrome headless descritte in `WORK_LOG.md`. Non provato su un PC con schermo touch né su un telefono reale.
+
+### [ ] BF12 — Recinti: mura, cancelli e guardiole (villa comunale, municipio/carabinieri/piscina, parco GB, parco Prima Casa) e galleria Atlante di vetro — P1
+**Segnalazione (committente, 20/10/2026):** «sembra che le "mura private" non sono contemplate: esempio 1 la villa comunale, esempio 2 il complesso municipio/carabinieri/piscina comunale diroccata, esempio 3 il parco GB che si trova se non erro proprio di fronte all'area mercatale, sono strutture private con cancelli o guardiola. poi c'è la galleria atlante che non sono riuscito a vedere, ma è un palazzo di vetro, è nei pressi di uno dei due uffici postali, c'è il parco prima casa che si trova sotto il ponte della superstrada per una parte, anch'esso con mura e guardiola».
+**Correzione:**
+- nuovo `enclosures.mjs` con dati in `data/enclosures.json` e schede in `RECINTI_MELITO.md`. Le mura perimetrali sono in pixel art: muro intonacato, oppure muretto con ringhiera per il parco;
+- cancelli dove una strada o un vialetto attraversa il perimetro, e dove OSM ha `barrier=gate`;
+- sbarra notturna (22–6) nei varchi carrabili dei recinti privati: si alza per i mezzi NPC;
+- guardiola con guardia accanto al cancello principale;
+- le mura fermano pedoni (`validWalk`), veicoli e spinte, con la regola BF01: chi tocca un muro può sempre staccarsene;
+- galleria Atlante con facciate e atrio di vetro.
+**Accettazione:** mura mai su strade o marciapiedi; nessuna strada chiusa; nessun pedone intrappolato; sbarra aperta di giorno e chiusa di notte; nessuna regressione su traffico, pedoni e collisioni; fonti dichiarate e stime marcate.
+- **Stato 2026-10-20:** corretto in PR (in revisione).
+  - **Villa comunale:** perimetro e due cancelli OSM, verificati.
+  - **Complesso Municipio:** perimetro ricalcato a vista sulla foto aerea, 2 varchi carrabili con sbarra e guardiola; da verificare.
+  - **Recinto di fronte all'area mercatale:** forse il «Parco GB»; ricalcato a vista, con il lato nord sul muro OSM 404895514, un cancello stimato e la guardiola; da verificare.
+  - **Galleria Atlante:** probabilmente l'edificio OSM 794814541, accanto all'Ufficio Postale Melito 2; facciate e atrio di vetro.
+  - **Parco Prima Casa:** NON disegnato, perché non è stato localizzato.
+  - **Complesso Municipio, secondo commit (richiesta del committente: «vedi su internet il complesso del municipio/piscina/carabinieri e capisci. la piscina abbandonata è interrata e ospita anche l'acquedotto/serbatoio che è diciamo una torre un po' simbolo, fatta a scacchi»):**
+    - **torre del serbatoio a fungo:** landmark a scacchi rosso/bianco con ombra lunga, trasparenza vicino al giocatore e luce notturna; posizione dalla foto aerea, colori e altezza stimati;
+    - **ex piscina comunale di via Madrid:** rudere con la vasca interrata vuota e crepata e le pozzanghere quando piove; fonte Melitonline 23/02/2025 (bonifica conclusa), vasca stimata;
+    - **Carabinieri:** Tenenza in Via Salvatore Di Giacomo 38 secondo elenchi pubblici, ma edificio non identificato, quindi nessuna insegna.
+  - **Non ancora fatto:** la piscina in rovina non è disegnata; il gioco non ha ponti; le porte dei residenti dentro i recinti non generano residenti; non è stato provato su un telefono reale.
+### [ ] BF13 — Foto aerea Esri come sovramappa di confronto e audit dei dettagli mancanti — P1
+**Segnalazione (committente, 20/10/2026):** «prova a usare sempre esri world imagery per vedere dove servono dettagli, come overmappa di rendering».
+**Correzione:**
+- nuovo `satellite-overlay.mjs`: foto Esri World Imagery allineata alla mappa del gioco, disegnata sopra la scena in trasparenza. È accesa e spenta da PAUSA › STRUMENTI (opacità 25/50/75/100%) o da `?satellite=50`;
+- tile solo in vista, cache LRU di 96 tile, nessuna richiesta da spenta, nessun errore senza rete;
+- attribuzione a schermo mentre è accesa e nei crediti; la scelta non viene salvata;
+- audit di tutta Melito in `AUDIT_SATELLITE.md` e `audit-satellite.csv` (50 segnalazioni, priorità, Q/BF suggerite), con solo coordinate e descrizioni.
+**Accettazione:** allineamento verificato su almeno 3 zone con lo scarto in metri; costo nullo a sovramappa spenta; prove su PC e telefono; almeno 40 segnalazioni concrete.
+- **Stato 2026-10-20:** corretto in PR (in revisione) — sovramappa provata in Chrome headless su PC e telefono 844×390; conversione uguale a `osm.mjs` entro 0,06 m; scarto foto/sagome OSM 1,7–3,8 m in 3 zone; 0 richieste da spenta; 50 segnalazioni. Non provato su telefono reale.

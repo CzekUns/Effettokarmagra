@@ -118,6 +118,6 @@ test('Q11 game wiring: held pedestrians skip their step, events never pick a cha
  assert.match(game,/state\.social=createSocial\(909\)/);
  assert.match(game,/stepSocial\(state\.social,dt,\{people:state\.people,graph:state\.graph,view,vehicles,alarm:state\.hornAlarm/);
  assert.match(game,/state\.hornAlarm=\{x:p\.x,y:p\.y,t:state\.social\?\.clock\?\?0\}/,'the player horn');
- assert.match(game,/if\(honker\)state\.hornAlarm=/,'NPC horns too');
+ assert.match(game,/if\(honker\)\{\s*state\.hornAlarm=/,'NPC horns too (Q13: decided by the traffic step)');
  assert.match(game,/onRoad:\(x,y\)=>\{const r=nearest\(x,y,30,state\.roads,true\);return !!r&&r\.distance<visualRoadWidth\(r\.road\)\/2\+\.3;\}/,'no groups on a carriageway');
 });

@@ -679,3 +679,148 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Verifiche disponibili nei PR:** il collaboratore dichiara suite Node **302/302** sul primo ramo e **340/340** sul secondo, con verifiche Chrome headless; l'operatore merge ha confrontato contenuti, liste file, compatibilità GitHub e commit ma **non ha rieseguito** localmente Node, Chrome o Android. Nessuna conferma di deploy Pages da queste sole risposte.
 - **Limiti:** le PR singole #35–#40 e #42–#47 erano ancora aperte come alternative ridondanti al momento del merge; l'autore si è impegnato a chiuderle. La PR #34 (sprite, autore diverso) non è stata unita perché GitHub la segnalava non mergeable. In BF01 il collaboratore segnala ancora un raro caso di incastro presso lo spawn.
 - **Da fare:** collaudo fisico su telefono e verifica deploy, registrare con onestà le checkbox BF dopo QA, controllare #34 separatamente e proseguire con la coda restante Q13–Q42 senza duplicare i pacchetti già uniti.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF12 recinti: mura, cancelli, guardiole e galleria Atlante di vetro
+- **Segnalazione del committente:** villa comunale, complesso Municipio/Carabinieri/piscina, «parco GB» di fronte all'area mercatale, parco Prima Casa e galleria Atlante. Il gioco non aveva recinti.
+- **Fonti** (dettagli e affidabilità in `RECINTI_MELITO.md`):
+  - API OSM 0.6, perché Overpass non risponde dal server: 9 riquadri, 33.308 nodi, 4.533 vie. In OSM ci sono 16 muri e un solo perimetro completo, quello della villa comunale (way 567826231, con i cancelli 5464543101/5464543102).
+  - Foto aerea Esri World Imagery, usata solo per ricalcare a vista: nessuna immagine nel repository.
+  - Ricerca web: solo annunci. Il «Parco GB» sarebbe in Corso Europa 374, a circa 440 m dal mercato, quindi non confermato.
+- **`enclosures.mjs`:**
+  - Il perimetro OSM o ricalcato diventa un contorno su griglia di 1 m, tolte la carreggiata e il marciapiede disegnati delle strade che delimitano l'isolato (strade pubbliche e strade con nome).
+  - Ogni strada, vialetto o servizio che attraversa il perimetro ha un'apertura. Il muro si apre anche sulle corsie pedonali vicine ai cancelli.
+  - Sbarre nei recinti privati: abbassate di notte (22–6) per il giocatore, alzate per i mezzi NPC entro 11 m.
+  - Guardiola placeholder con guardia (sprite vigile).
+  - Collisione dei veicoli basata sulla profondità di contatto: chi tocca un muro può sempre staccarsene o scivolare lungo, ma non entrarci.
+  - Preparazione in 80–130 ms in Node, ripetuta anche al cambio di larghezza strade.
+- **`game.mjs`:**
+  - carica `data/enclosures.json`, che è facoltativo;
+  - prepara i recinti prima delle baie BF02 e dei pedoni;
+  - `validWalk` esclude le mura;
+  - `carBlocked` e `canKnockbackMove` rispettano mura e sbarre;
+  - disegna le mura nelle tile statiche, sotto i tetti e nella trasparenza dei tetti; cancelli, sbarre e guardiole nel livello dinamico.
+- **`city-art.mjs`:** profilo «vetro» per la galleria Atlante, con facciate a vetrate, montanti e riflessi, tetto rosato e atrio vetrato. Il poligono OSM non cambia.
+- **Cache:** `game.mjs?v=163`, `city-art.mjs?v=130`, `enclosures.mjs?v=001` (nuovo).
+- **Test:** nuovo `bf12-enclosures.test.mjs` con 8 test: dati, recinti preparati, mura mai su strade o marciapiedi e nessuna strada tagliata, mura che bloccano e uscita sempre possibile, sbarra giorno/notte/NPC, nessun intrappolato, vetro, cablaggio. Ho reso compatibile il controllo di ordine di BF02. Suite **348/348**.
+- **Browser** (Chrome headless, server di produzione molto carico, carico medio 14–30):
+  - 3 minuti tra i recinti: 0 pedoni dentro le mura, 0 pedoni fermi vicino alle mura, 0 auto ferme vicino alle mura, 0 errori JavaScript;
+  - fotogramma: mediana 16,7 ms in entrambi i rami, 95° percentile 83 ms in entrambi i rami (dovuto al carico, uguale con e senza i recinti);
+  - prova di stress BF01: 0 compenetrazioni e 0 NPC fermi, sia prima sia dopo. Resta in entrambi lo stesso caso noto di auto incastrata vicino alla partenza (#35);
+  - sbarra del Municipio con tasti veri: di giorno l'auto entra per 81 m (50 FPS); alle 23:30 si ferma 4,1 m prima del cancello (25 FPS);
+  - foto PC di giorno e di notte con pioggia, foto telefono 844×390.
+- **Limiti:**
+  - parco Prima Casa non localizzato;
+  - funzioni degli edifici del complesso Municipio non verificate;
+  - piscina in rovina non disegnata;
+  - niente ponti;
+  - porte dei residenti dentro i recinti scartate;
+  - la guardia è un placeholder;
+  - non provato su telefono reale.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF13 foto aerea Esri come sovramappa di confronto e audit dei dettagli mancanti
+- **Richiesta del committente:** «prova a usare sempre esri world imagery per vedere dove servono dettagli, come overmappa di rendering».
+- **Codice:** nuovo `satellite-overlay.mjs`, con conversione esatta tra coordinate di gioco, WGS84 e tile Web Mercator, scelta dello zoom delle tile dalla camera (z15–19), cache LRU di 96 tile e al massimo 12 richieste in corso. Senza rete nessun errore e nuovo tentativo dopo 20 s.
+  - `game.mjs`: la sovramappa nasce alla prima accensione e si disegna per ultima sopra la scena, in trasparenza: così si vedono insieme il gioco e la foto, e al 100% si ricalca.
+  - `index.html`: in PAUSA › STRUMENTI c'è «SATELLITE: ON/OFF» con opacità − / ＋ (25/50/75/100%); attribuzione a schermo mentre è accesa e nei crediti. `?satellite=50` per le prove. Niente preferenze salvate.
+- **Cache:** `game.mjs?v=164`, `satellite-overlay.mjs?v=001`.
+- **Test:** nuovo `bf13-satellite.test.mjs` con 9 test: conversione uguale a `osm.mjs` entro 0,06 m, Municipio nella tile 18/141435/98357, tile adiacenti senza fessure, zoom dalla camera, 0 richieste da spenta, cache limitata, assenza di rete, opacità e `?satellite=`, cablaggio, foglio audit valido e nessuna tile nel repo. Suite **349/349**.
+- **Browser** (Chrome headless, server molto carico per altri lavori, tile servite da una cache di lavoro fuori dal repo):
+  - PC 1280×720 e telefono 844×390: 0 richieste a sovramappa spenta; da accesa 20–54 tile per 3 zone (Via Roma, Piazza Santo Stefano, Municipio), 0 errori; attribuzione visibile; nessuna sovrapposizione con stick, volante e pedali; 0 errori JS (solo il 404 del favicon).
+  - Allineamento con le sagome OSM: 1,7 / 2,1 / 3,8 m, senza una direzione costante (impronte OSM e tetti in prospettiva).
+  - Costo: la chiamata `draw` della sovramappa richiede 0,1–0,3 ms (mediana). I tempi per fotogramma non sono significativi su questa macchina: 40 ms da spenta e 70–81 ms da accesa, cioè 12–25 FPS, sotto 20 FPS con la sovramappa accesa. Da rimisurare su un dispositivo vero.
+- **Audit:** `AUDIT_SATELLITE.md` e `audit-satellite.csv`, con 50 segnalazioni: 24 da analisi automatica verificate a vista, 2 di sintesi, 24 a vista sulle coppie gioco/foto del centro. Circa 330 tile scaricate una sola volta.
+  - Risultato principale: 135 dei 553 edifici segnaposto stanno su prati, campi o alberi, compreso un campo da calcio in Via delle Palme.
+- **Limiti:** foto di data incerta; alberi che nascondono le mura; usi degli edifici solo ipotizzati; non provato su un telefono reale.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q13 reazioni dei passanti, densità per zona e ora, ore di punta del traffico
+- **Decisione del committente (Simone, 20/10):** si riparte dalla Q13 in ordine anche se i BF sono ancora in PR; aggiunta richiesta: ore di punta del traffico alle 8 e alle 20. Lavoro sopra il pacchetto BF01–BF11 (ramo `pacco`).
+- **Prima (pacco, Chrome headless, giocatore fermo 25 s per zona):** pedoni in camera Via Roma 3 (sera 4), Piazza Santo Stefano 3, Corso Europa 1–2, periferia 0; entro 120 m 0–4; nessuna reazione: un'auto si fermava solo a un passo dal pedone; un residente Q01 aspettava di uscire in mezzo a una traversa (in carreggiata in 92 campioni su 93).
+- **Nuovi moduli:**
+  - `npc-reactions.mjs`: scansarsi a gradi (si gira a guardare, affretta il passo, salta di lato fuori dalla sagoma del mezzo, mai in un muro; poi il recupero esistente lo riporta sul marciapiede; cooldown 4 s, il salto resta permesso se l'urto è imminente); attesa del **varco vero corsia per corsia** al cordolo degli incroci senza semaforo e prima di attraversare; **attraversamento a metà isolato** verso il marciapiede opposto (anche vie larghe e sensi unici, mai tra due auto in sosta); **soste in vetrina** davanti ai negozi con nome; **clacson NPC** solo se a bloccare è il giocatore o un pedone in carreggiata (12 s per auto, 4 s in città, max 3 in 20 s; prima la scelta stava nell'audio e non scattava mai).
+  - `npc-density.mjs`: gli stessi passanti anonimi si spostano dove c'è vita (metri di marciapiede pesati da negozi OSM, Via Roma/Piazza Santo Stefano, gerarchia) e per ora (curva continua, notte bassa, pranzo e sera alti). Lontani dal giocatore (>420 m) restano fermi senza costo; vicino arrivano **solo fuori camera** (fascia 24–64 m oltre il bordo, verso la camera) o **uscendo da un portone Q03 in vista** (la porta si apre, due passi fino al marciapiede); di notte quelli in più se ne vanno fuori vista. Nessun NPC aggiunto o tolto.
+  - `traffic-rush.mjs`: curva oraria `trafficTargetAt(minuti)` → 70 mezzi alle 3, 140 di giorno, 190 alle 8:00 e alle 20:00 (±1 h di salita e discesa, al massimo 2 mezzi per minuto di gioco); in `updateTraffic` imposta `state.trafficTarget` e i mezzi entrano/escono dai varchi BF09 (`balanceTraffic`).
+- **Altre correzioni:** `roads.mjs` le auto NPC frenano morbide e si fermano prima di un pedone sulla corsia (`yieldPed`); `routinePosition` non scartava più i tratti lunghi (un pedone a metà dei 511 m di Via Roma restava in recupero per sempre); i pedoni non entrano nei marciapiedi che passano dentro gli edifici per più dell'8% del tratto (`graph.isWalkBlocked`, prima un passante restava 21 s dentro un palazzo in Via Lavinaio); `npc-social.mjs` niente chiacchiere durante una reazione e il salto scioglie il gruppo; case dei residenti mai in carreggiata.
+- **Cache:** `game.mjs?v=162`, `roads.mjs?v=153`, `npc-commute.mjs?v=008`, `npc-social.mjs?v=003`, nuovi `npc-reactions.mjs?v=001`, `npc-density.mjs?v=001`, `traffic-rush.mjs?v=001`.
+- **Test:** nuovi `q13-reactions.test.mjs` (13: minaccia solo nel corridoio del mezzo e con la velocità vera; reazione a gradi guarda→affretta→salta, mai nel muro, poi rientra; cooldown; attraversamento con varco e auto NPC che frena; auto che si ferma davanti a un pedone e riparte; cordolo dell'incrocio; varco corsia per corsia e pazienza con margine minimo; clacson con i limiti; allarme clacson; lavoratori al posto; pendolari/porte/indoor esclusi; vetrine; cablaggio), `q13-density.test.mjs` (6: curva oraria, zone, arrivi solo fuori camera e graduali, congelati lontani, notte, uscite dai portoni), `q13-rush.test.mjs` (2: curva 70/140/190 senza scalini, cablaggio con i varchi); adattati 4 controlli di cablaggio (BF02, BF03, BF07, BF09, Q11). Suite **361/361** (pacco 340/340).
+- **Browser (Chrome headless, una prova alla volta, server condiviso e carico: i tempi assoluti sono gonfiati; FPS misurati a fine lavoro alle 8:00: Q13 45,6 desktop / 52,6 telefono, pacco 27,8 / 46,1):**
+  - pedoni in camera, giocatore fermo 25 s, 10:00 (21:30): Via Roma 3 → **11,7** (4 → 9,2), Piazza Santo Stefano 3,2 → 5,8 (3,2 → 4), Corso Europa 1,6 → 1,1 (1,6 → 0,5), periferia 0 → 0,4; entro 120 m 3 → 20 in Via Roma e 4 → 16 in piazza; telefono 844×390: Via Roma 2,7 → 9,5;
+  - **0 comparse e 0 sparizioni in camera**, 0 salti di posizione, 0 pedoni nei muri, 0 pedoni fermi in carreggiata (prima 92/93 campioni); 1–6 uscite dai portoni per zona;
+  - reazioni viste in 25 s: attraversamenti 1–11, attese al cordolo 0–2, auto che frenano per un pedone 2–5, clacson NPC 0–2;
+  - ore di punta: 70 mezzi alle 3:00, 190 alle 8:00, 140 alle 13:00, 190 alle 20:00 (desktop e telefono), 0 mezzi comparsi o spariti in camera;
+  - costo per fotogramma (A/B nella stessa sessione, a turni, mediana; A/A pacco/pacco differisce del 15%): 10:00 desktop 5,6 → 3,9 ms; 8:00 desktop 10,2 → 7,6 ms con 186 mezzi invece di 140; 8:00 telefono 7,7 → 5,9; 20:00 telefono 9,3 → 6,1; 3:00 telefono 5,5 → 2,9 (i passanti lontani fermi valgono più dei mezzi in più);
+  - prova di stress BF01 alle 8:00 (90+ s di guida automatica, due giri): compenetrazioni massime **0**, auto NPC ferme in vista 0, 17 urti nel secondo giro, fughe 2/2 e 6/6;
+  - interruzioni con un mezzo lanciato sul marciapiede: chiacchiera Q11 sciolta ("pericolo"), nessuno resta in chiacchiera o in recupero dopo 13 s; oggetto perduto Q05: il proprietario salta durante la ricerca, l'evento si chiude "ritrovato", deviazione chiusa; porta Q03: sulla soglia solo uno sguardo, la soglia si completa, nessuno stato appeso; pendolare Q12: non salta, il ciclo prosegue (TO_BIKE → PULL_OUT → RIDE).
+- **Limiti:** non provato su Android reale; in camera Piazza Santo Stefano, Corso Europa e periferia restano poco popolate (i portoni Q03 esistono solo vicino a Via Roma, gli altri arrivano a piedi da fuori camera); vetrine verificate in Node, non viste nelle zone misurate; ore di punta senza meno auto in sosta (le baie BF02 restano uguali a ogni ora); gli attraversamenti ai semafori restano quelli di BF07; i tempi assoluti sono di un server carico, contano i confronti A/B.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q42 mercato settimanale: banchi segnaposto, ombrelloni, venditori e clienti
+- **Richiesta del committente (20/10):** «puoi anche mettere degli omini e dei placeholder, gli ombrelloni li puoi creare tu, solo per i banchi metti dei placeholder poi eventualmente si creano in pixelart».
+- **Nuovo `market.mjs`, collegato a `game.mjs`:**
+  - **Calendario:** `npc-agenda.mjs` conta i giorni (`npcDay`/`npcWeekday`) e il giorno 0 della partita è un venerdì, visibile nell'HUD.
+  - **Orari:** il venerdì (dato non verificato) montaggio 6:30–7:30, mercato 7:30–13:30, smontaggio 13:30–14:30, tutti graduali. Ogni venditore arriva fino a 45 minuti prima. `?mercato=1` per le prove.
+  - **Banchi:** 14 tipi dal foglio, disposti in 6 file deterministiche. Sulla mappa reale ne entrano 15–16.
+    - Misure reali × 1,9.
+    - Mai su edifici, carreggiata o linea dei pedoni (almeno 2,5 m dal bordo); mai su alberi, panchine, cassonetti, porte o baie. La tela sollevata non copre chiome né auto in sosta.
+    - Davanti a ogni banco restano due posti per i clienti.
+    - Sono segnaposto disegnati qui, messi in sprite una volta montati; `MARKET_ART` è il punto di aggancio per l'arte definitiva.
+    - Fuori orario restano i posteggi gialli numerati.
+  - **Ombrelloni:** pixel art procedurale in cache, nei colori del foglio.
+    - Forme: quadrati a 4 falde con spicchi a strisce che convergono al pomolo, mantovana smerlata, nervature e luce da nord-ovest; tondi a 8 spicchi; tenda rettangolare a strisce.
+    - Hanno ombra, palo e tela sollevata (2.5D); ondeggiano col vento e di più con la pioggia.
+    - **R01:** sfumano come i tetti (`easeRoofReveal`) quando il giocatore, a piedi o in auto, è sotto o accanto al banco.
+  - **Persone:** venditori e clienti usano gli sprite dei pedoni esistenti e vivono in `state.market.people`, fuori da `state.people`.
+    - Venditori: si girano verso il cliente, si muovono un poco dietro il bancone e lanciano voci rare se il giocatore è vicino.
+    - Clienti: fino a 16 che comprano (22 contando chi arriva o se ne va), di più la mattina tardi. Arrivano dai marciapiedi delle 4 vie, si muovono su una griglia di 1 m (A*), comprano a 1–3 banchi per 5–15 s ed escono.
+    - Compaiono e spariscono solo fuori vista; se l'area non si vede si portano subito allo stato dovuto.
+    - Sono nell'indice delle collisioni come pedoni e possono essere urtati (non letale).
+  - **Collisioni:** i banchi fermano il giocatore a piedi, i veicoli (con la regola di BF01: la mossa che esce dalla sovrapposizione è sempre permessa) e le spinte degli urti; gli ombrelloni no.
+- **Cache:** `game.mjs?v=162`, `npc-agenda.mjs?v=002` (in game e market), `market.mjs?v=001`.
+- **Test:**
+  - nuovo `q42-market.test.mjs`, 10 test: calendario, coerenza con CSV e `data/market-area.json`, posizionamento, banchi solidi e regola BF01, R01, percorsi, mattinata fuori vista, clienti in vista senza comparse, montaggio e smontaggio graduali, cablaggio;
+  - aggiornati `mercato-dati.test.mjs` (stato «prima-versione-placeholder») e `steering-wheel.test.mjs` (`updateHud` usa `npcWeekday`);
+  - suite **350/350**.
+- **Browser (Chrome headless, prove una alla volta con `nice`, server carico):**
+  - montaggio dalle 6:10: 0→14 banchi montati tra 6:32 e 7:02, fino a 12 banchi in montaggio contemporaneo;
+  - smontaggio dalle 13:15: graduale dalle 13:38;
+  - 3 minuti di giro a piedi dentro il mercato dalle 9:30: comparse e sparizioni in vista 0, persone dentro banchi o edifici 0, persone bloccate 0, 13 clienti arrivati a piedi, 33 acquisti, fino a 37 persone;
+  - R01 su PC e telefono: ombrellone 1,00 trasparente col giocatore davanti, 0 lontano, 1,00 con l'auto accanto; l'auto non entra nel banco e indietro è libera;
+  - foto alle 6:40, alle 10:30, alle 15:00, alle 21:30 con pioggia, alle 10:30 con pioggia e sul telefono;
+  - FPS alle 10:30 nel mercato: PC 50–60 contro 37–50 senza mercato, telefono 844×390 51–56 contro 55–59, misure molto rumorose per il carico. Durante le prove lunghe in parallelo, prima dell'avviso, gli FPS erano 12–27;
+  - prova di stress BF01, 90 s: compenetrazioni 0, NPC fermi in vista 0. Un incastro del pilota automatico vicino alla partenza, in Via Roma (1135, 1253), con un residente a 1,6 m: è il caso già noto di BF01, lontano dal mercato;
+  - 0 errori JS.
+- **Limiti:**
+  - entrano 15–16 dei 23 banchi indicativi;
+  - vie attorno non chiuse (R06), niente vigile (R11), suoni (R10) e pulizia finale (R14);
+  - la pensilina OSM resta un edificio pieno (R16);
+  - banchi segnaposto in attesa di pixel art, nessuna animazione dedicata di venditori e clienti;
+  - non provato su telefono reale.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF12, secondo commit: complesso del Municipio (torre del serbatoio a scacchi, piscina interrata in rovina, caserma)
+- **Richiesta del committente:** capire il complesso del Municipio. La piscina abbandonata è interrata e ospita il serbatoio, una torre simbolo «fatta a scacchi».
+- **Ricerca web:**
+  - Melitonline, 23/02/2025: bonifica del **rudere dell'ex piscina comunale di via Madrid** conclusa (lavori dal 16/09/2024 al 15/01/2025, rifiuti e amianto). La struttura non è mai stata usata come impianto sportivo; un progetto di centro polivalente con piscina in via Madrid risale a qualche anno fa.
+  - Elenchi pubblici: Carabinieri Tenenza in Via Salvatore Di Giacomo 38, Municipio in Via Salvatore Di Giacomo 7.
+  - Nessuna foto consultabile della torre: Melitonline risponde 403 al download delle immagini.
+- **Foto aerea Esri (z19):**
+  - si riconosce il **serbatoio pensile a fungo**: vasca con copertura a spicchi di circa 27 m, fusto al centro dell'edificio tondo OSM 733703519 (building=industrial) su Via Madrid. Quell'edificio è la piscina;
+  - a sud c'è un edificio a tetto piatto (OSM 733703560) e a est una costruzione piccola (OSM 733703551), forse un accesso: funzioni non verificate.
+- **`municipio-landmarks.mjs` (nuovo):**
+  - torre disegnata sopra la città, con lo stesso sollevamento dei tetti: fusto a scacchi su due colonne, una in luce e una in ombra; vasca a tronco di cono a scacchi; cappello a spicchi; ombra lunga;
+  - trasparenza al 30% quando il giocatore è sotto la vasca o accanto al fusto; luce rossa lampeggiante di notte (dettaglio artistico);
+  - rudere della piscina al posto del blocco: muri bassi spezzati, copertura in parte crollata, vasca interrata (bordo, parete lontana in luce, piastrelle sbiadite e crepate, erbacce, scaletta arrugginita) e pozzanghere con cerchi di pioggia quando l'asfalto è bagnato.
+
+  Poligono OSM invariato: resta un ostacolo, nessuno ci cade dentro.
+- **Dati e documenti:** sezione `landmark` in `data/enclosures.json`, tutto `verificato:false` con le fonti; `RECINTI_MELITO.md` aggiornato. Carabinieri: nessuna insegna, perché l'edificio non è identificato.
+- **Cache:** `game.mjs?v=164`, `city-art.mjs?v=131`, `municipio-landmarks.mjs?v=001` (nuovo).
+- **Test:** nuovo `bf12-municipio.test.mjs` con 4 test: dati sull'edificio vero, vasca dentro il rudere e fuori dal fusto; sollevamento, scacchiera, trasparenza e disegno della torre su un canvas di prova; rudere e pozzanghere solo col bagnato; cablaggio. Suite **352/352**, eseguita con `nice -n 15`.
+- **Browser** (Chrome headless, una prova alla volta con `nice -n 15`, server con carico medio 11–13): complesso di giorno, alle 23:30 e con la pioggia su PC, di giorno su telefono 844×390, più la trasparenza sotto la torre. **FPS 13–27, cioè in parte sotto 20 per il carico**, 0 errori JavaScript. Prova di stress BF01 da 90 s: 0 compenetrazioni, 0 NPC fermi, 0 trappole, 0 errori.
+- **Limiti:**
+  - colori e altezza della torre stimati;
+  - vasca e copertura crollata sono scelte grafiche: sulla foto aerea il tetto c'è;
+  - caserma non identificata;
+  - non provato su telefono reale.
+
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q14 collaudo radio e interfaccia mobile
+- **Stream (curl dal server, 14:40 e 14:56; poi Chrome headless):** tutti e 6 rispondono 200. **Difetto:** il vecchio URL di Nuova San Giorgio (`ice15.fluidstream.net/sangiorgio.aac`) reindirizzava a «Radio Italia Charleroy». Ora si usa lo stream del player ufficiale (`nr8.newradio.it:19675/stream?ext=.mp3`, trovato aprendo `play5.newradio.it/player/index/3070`). Radio Napoli passa all'URL del suo player ufficiale. In browser, dopo il gesto, tutte e 6 vanno in `playing` in 0,5–1,6 s e `currentTime` avanza; R, SHIFT+R, T, discesa e risalita dall'auto, scheda nascosta (si ferma, «TOCCA ▶», riparte con un tocco), RADIO 0% e SUONI OFF verificati.
+- **Nuovo:** `carRadio.duck()`. In PAUSA la radio è muta ma collegata, e alla chiusura torna al volume scelto (prima continuava a suonare nel menu).
+- **Autoplay:** emulata la regola di Chrome contando solo eventi utente veri (`isTrusted`), perché le chiamate puppeteer contano già come gesto. Senza tocco compare «TOCCA ▶ PER ASCOLTARE», con il tocco parte.
+- **Diritti:** nessun permesso esplicito per siti di terzi sui sei siti; la funzione resta di prova. Fonti in `RADIO_DIRITTI.md` e numeri in `radio-collaudo.csv`.
+- **HUD mobile:** 7 viewport in orizzontale con tocco emulato. 0 sovrapposizioni e 0 elementi fuori schermo, a piedi e alla guida; ordine pedali BF06 rispettato. Guida con tocchi veri e multi-touch volante+gas; START apre la pausa; verticale con «RUOTA LO SCHERMO»; desktop BF11 senza scorrimento. FPS 12–35 con il server carico.
+- **Test:** nuovo `q14-radio.test.mjs` (5 test). **Cache:** `car-radio.mjs?v=003`, `game.mjs?v=165`.
+- **Non eseguito:** Android reale (checklist in TODO sotto Q14), ascolto effettivo dell'audio, consenso delle emittenti.

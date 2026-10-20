@@ -619,3 +619,38 @@ Il lavavetri resta sul lato guida e il tergivetro si vede sul parabrezza. Non co
 Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA, diviso in 5 sezioni con titoletti spaziati nello stile del gioco.
 
 **Verifiche:** foto Chrome headless prima/dopo a 1280×720, 1366×768 e 1920×1080, menu pausa (inizio e fondo), indicazione del tasto E e telefono 844×390 in guida e in pausa, invariato. Non provato su un PC con schermo touch né su un telefono reale.
+
+## 2026-10-20 — BF12 recinti e galleria di vetro (Claude)
+- **Mura perimetrali** in pixel art, con ombra a terra, faccia rialzata, copertina chiara e giunti:
+  - muro intonacato per i recinti privati;
+  - muretto con ringhiera in ferro per la villa comunale.
+
+  Si vedono anche di notte, perché la luce di Q04 le scurisce come il resto della città.
+- **Cancelli:** due pilastri con cappello e battenti aperti verso l'interno. Nei recinti privati c'è una sbarra bianca e rossa, alzata di giorno e abbassata di notte.
+- **Guardiola placeholder:** cabina chiara con fascia di vetri, tetto piano e porta verde, più la guardia (sprite vigile).
+- **Galleria Atlante:** facciate a vetrata continua con montanti, traversi e un riflesso diagonale; tetto rosato con atrio vetrato, come sulla foto aerea.
+- **Verifiche:** foto Chrome headless di villa, Municipio (cancelli e lato nord), recinto di fronte al mercato e galleria, di giorno e alle 23:30 con pioggia, su PC e su telefono 844×390. Telefono reale non provato.
+
+### 2026-10-20 — BF13 sovramappa satellitare di confronto (Claude)
+- **Novità:** PAUSA › STRUMENTI › «SATELLITE» mostra la foto aerea Esri World Imagery allineata alla città, sopra la scena, con opacità 25/50/75/100%.
+  - Al 50% si vedono insieme il gioco e la foto: si nota subito dove mancano parchi, campi, recinti, edifici e ponti.
+  - Al 100% si può ricalcare.
+- **Dove compare:** è uno strumento di lavoro, non grafica di gioco. Parte sempre spento e l'attribuzione resta in alto al centro mentre è acceso.
+- **Prove:** screenshot di controllo (fuori dal repo) su PC e telefono in 3 zone del centro.
+- **Cosa emerge dall'audit:** i segnaposto dell'infill coprono molte aree verdi. Dettagli in `AUDIT_SATELLITE.md`.
+### 2026-10-20 — Q42 mercato del rione 219 (Claude)
+- **Ombrelloni:** pixel art procedurale, 4 px per unità, una cache per variante.
+  - Quadrati a quattro falde, con spicchi a strisce che convergono al pomolo, nervature scure, mantovana smerlata e luce da nord-ovest.
+  - Tondi a otto spicchi (giocattoli multicolori, fiori, bigiotteria); tenda rettangolare a strisce per i casalinghi.
+  - Colori dal foglio `mercato-banchi.csv`; abbigliamento a colori vivaci diversi per banco.
+- **Profondità e trasparenza:** la tela è sollevata sopra il palo (2.5D) e passa sopra persone e veicoli. Quando il giocatore è sotto o accanto sfuma all'80%, come i tetti.
+- **Banchi:** segnaposto semplici con bancone di legno, telo, merce stilizzata a blocchi nei colori del foglio e furgone-negozio per salumi e porchetta. Durante il montaggio ci sono cassette per terra; fuori orario restano i posteggi gialli numerati.
+- **Foto guardate:** montaggio, pieno, vuoto, notte con pioggia, pioggia, telefono, R01 a piedi e in auto.
+## 2026-10-20 — BF12, complesso del Municipio (Claude)
+- **Torre del serbatoio a fungo**, landmark sopra la città, alzata nella stessa direzione dei tetti:
+  - fusto e vasca a scacchi rosso/bianco (colori stimati), con il lato destro in ombra;
+  - cappello chiaro a spicchi, come sulla foto aerea, e ombra lunga verso sud-est;
+  - trasparente sotto e accanto al giocatore; luce rossa di notte.
+- **Rudere dell'ex piscina comunale:** muri bassi in calcestruzzo con macchie, copertura crollata attorno alla vasca e la vasca interrata vuota, con piastrelle azzurre sbiadite, crepe, erbacce e scaletta; con la pioggia, pozzanghere e cerchi.
+- **Verifiche:** foto su PC di giorno, di notte (23:30, con la pioggia casuale di Q08) e sotto pioggia forzata; telefono 844×390; trasparenza con il giocatore sotto la vasca.
+

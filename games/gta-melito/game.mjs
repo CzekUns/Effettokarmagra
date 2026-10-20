@@ -6,18 +6,22 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition,balanceTraffic,createGateVehicle} from './roads.mjs?v=152';
-import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=007';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition,balanceTraffic,createGateVehicle} from './roads.mjs?v=153';
+import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=008';
 import {drawBorderGates,borderGateList,borderRing,distanceToBorder,GATE_RULES} from './border-gates.mjs?v=001';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=006';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
-import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
+import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock,npcWeekday} from './npc-agenda.mjs?v=002';
+import {createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols} from './market.mjs?v=001';
 import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=002';
 import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote} from './local-shops.mjs?v=001';
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
 import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=003';
-import {createSocial,stepSocial} from './npc-social.mjs?v=002';
+import {createSocial,stepSocial} from './npc-social.mjs?v=003';
+import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=001';
+import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=001';
+import {trafficTargetAt} from './traffic-rush.mjs?v=001';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker} from './traffic-collision.mjs?v=128';
 import {buildParkingBays,bayOffset,fitsParkingBay,nearestFreeStalls,parkInStall,insideParkingStrip,drawParkingBays} from './parking-bays.mjs?v=001';
@@ -28,7 +32,8 @@ import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=001';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=129';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=131';
+import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
 import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS,CAR_PARKED_SPRITE_IDS} from './car-sprites.mjs?v=108';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
@@ -54,7 +59,9 @@ import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpa
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
-import {createCarRadio} from './car-radio.mjs?v=002';
+import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=001';
+import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=001';
+import {createCarRadio} from './car-radio.mjs?v=003';
 const $=id=>document.getElementById(id);
 // Q09: last radio status, read by the city sound to duck engines while a station plays.
 let radioStatus='off';
@@ -117,6 +124,8 @@ const START_MINUTE=startMinuteFromUrl();
 const cityAudio=createCityAudio({storage:globalThis.localStorage,onRadioLevel:level=>carRadio.setVolume(level)});
 carRadio.setVolume(cityAudio.radioLevel);
 // Q08: ?meteo=pioggia|nuvoloso|sereno fixes the weather for checks; otherwise it follows the clock.
+// Q42: ?mercato=1 fa montare il mercato del rione 219 ogni giorno (per le prove); di norma è il venerdì.
+const FORCE_MARKET=new URLSearchParams(globalThis.location?.search||'').get('mercato')==='1';
 const FORCED_WEATHER=(()=>{const w=new URLSearchParams(globalThis.location?.search||'').get('meteo');return ['pioggia','nuvoloso','sereno'].includes(w)?w:null;})();
 const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
@@ -200,8 +209,18 @@ function coveredByBuilding(x,y){
   (!!state.inferredGrid&&hit(query(state.inferredBuildings,state.inferredGrid,x-2,y-2,x+22,y+22)));
 }
 function validWalk(x,y){
- return x>=0&&y>=0&&x<state.map.projection.width&&y<state.map.projection.height&&!buildingAt(x,y);
+ return x>=0&&y>=0&&x<state.map.projection.width&&y<state.map.projection.height&&!buildingAt(x,y)&&
+  !(state.enclosures&&enclosureWalkBlocked(state.enclosures,x,y));
 }
+// BF12: perimeter walls, gates and guard booths of the enclosures (villa comunale, Municipio…),
+// computed on the current road widths: the walls stand just beyond the painted pavement.
+function createEnclosures(){
+ state.enclosures=state.enclosureData?prepareEnclosures(state.enclosureData,{roads:state.roads,roadWidth:visualRoadWidth,
+  sidewalkOuter:SIDEWALK_OUTER,inBorder:(x,y)=>inside([x,y],toRing(state.map.border))}):null;
+ if(state.enclosures)console.info('Recinti: '+state.enclosures.list.length+' con mura e cancelli'+
+  (state.enclosures.failed.length?', non disegnati: '+state.enclosures.failed.map(f=>f.id+' ('+f.reason+')').join(', '):''));
+}
+const enclosureTime=()=>({minutes:state.npcClockMinutes,traffic:state.traffic});
 function arcLength(p){let sum=0;for(let j=2;j<p.length;j+=2)sum+=Math.hypot(p[j]-p[j-2],p[j+1]-p[j-1]);return sum;}
 function roadPoint(road,fraction){
  const p=road.p,total=arcLength(p);let left=total*fraction;
@@ -221,6 +240,25 @@ function createStreetObjects(){
  return placeStreetObjects(state.roads,{roadWidth:visualRoadWidth,avoid,
   walkable:(x,y)=>validWalk(x,y)&&inside([x,y],border),
   carriageway:(x,y,margin)=>{const r=nearest(x,y,30,state.roads,true);return !!r&&r.distance<visualRoadWidth(r.road)/2+margin||inParkingBay(x,y,margin);}});
+}
+// Q42: mercato del venerdì nel rione 219. Luogo reale (data/market-area.json); giorno, orari, banchi,
+// merci e venditori di fantasia. Banchi fuori da edifici, carreggiate, baie, porte e arredi.
+function createMelitoMarket(){
+ const border=toRing(state.map.border);
+ const walkable=(x,y)=>validWalk(x,y)&&inside([x,y],border);
+ const carriageway=(x,y,margin=0)=>{const r=nearest(x,y,30,state.roads,true);return !!r&&r.distance<visualRoadWidth(r.road)/2+margin||inParkingBay(x,y,margin);};
+ const obstacles=[...state.props.map(q=>q.kind<5?{x:q.x,y:q.y,r:3,walkR:.8,crown:4.6}:{x:q.x,y:q.y,r:1.7,walkR:1.1}),
+  ...(state.doors||[]).map(d=>({x:d.x,y:d.y,r:2.6})),...state.cars.map(v=>({x:v.x,y:v.y,r:3.4,walkR:2.4,crown:3.2})),
+  ...(state.signalPosts||[]).map(q=>({x:q.x,y:q.y,r:1.4}))];
+ return createMarket({roads:state.roads,walkable,carriageway,obstacles,roadHalf:road=>visualRoadWidth(road)/2});
+}
+function stepMelitoMarket(dt){
+ if(!state.market)return;
+ const p=state.player,car=p.car>=0?state.cars[p.car]:null;
+ stepMarket(state.market,dt,{minutes:state.npcClockMinutes,force:FORCE_MARKET,view:visibleBounds(),
+  player:{x:car?car.x:p.x,y:car?car.y:p.y,onFoot:!car},index:state.dynamicCollision,
+  say:(agent,text)=>cityEventBubble(state.events,agent,text),
+  advanceImpact:(agent,step)=>advanceNonlethalImpact(agent,step,canKnockbackMove)});
 }
 // BF02: the parking strip between lane and pavement, rebuilt with the road widths.
 function createParkingBays(){
@@ -308,6 +346,32 @@ function stepCommuters(dt){
    playerVehicle:p.car>=0?state.cars[p.car]:null,say:(agent,text)=>cityEventBubble(state.events,agent,text),wet:(state.weather?.wetness||0)>.5});
  }
 }
+// Q13: reactions of passers-by and traffic, and the same passers-by gathered where the city is alive.
+function createCityLife(){
+ state.reactions=createReactions(1313);state.density=createDensity(1717);
+ state.walkWeights=prepareWalkWeights(state.graph,{shops:state.shops||[]});
+ // Pavement lines that run through building footprints for more than 8% of the tract (measured every
+ // 3 m, once per tract and side, on demand). A single corner clipping a facade does not count: on
+ // Via Roma (511 m) one sample in 170 is inside a building.
+ const graph=state.graph,known=new Int8Array(graph.edges.length*2).fill(-1);
+ graph.isWalkBlocked=(id,side)=>{
+  const k=id*2+(side>0?1:0);
+  if(known[k]<0){
+   const e=graph.edges[id],steps=Math.max(2,Math.ceil(e.len/3));let bad=0;
+   if(DRIVE.has(e.roadType))for(let i=1;i<steps;i++){const q=lanePosition(graph,id,.06+.88*i/steps,'walk',side);if(!canStand(q.x,q.y))bad++;}
+   known[k]=bad/(steps-1)>.08?1:0;
+  }
+  return known[k]===1;
+ };
+}
+function canStand(x,y){
+ return validWalk(x,y)&&inside([x,y],toRing(state.map.border))&&
+  !(state.streetObjects&&bollardBlocksWalker(state.streetObjects,x,y));
+}
+function onCarriageway(x,y){
+ const r=nearest(x,y,30,state.roads,true);
+ return !!r&&r.distance<visualRoadWidth(r.road)/2+.3||inParkingBay(x,y,.2);
+}
 // Q03: errands of named OSM shops worth a short visit on foot.
 const VISIT_KINDS=new Set(['bakery','pastry','bar','cafe','supermarket','pharmacy','hairdresser','stationery','hardware','clothes','butcher','houseware']);
 function createCityPedestrians(){
@@ -318,8 +382,10 @@ function createCityPedestrians(){
   const door=probeDoor(origin,normal,buildingAt,walkOK,{viewerOnly:true,...extra});
   return door.valid&&doorFacesViewer(door)?door:null;
  };
+ // Q13: a resident's street-side home and pavement never lie on a carriageway (before, one Q01 home
+ // near a junction stood in the middle of a side street while waiting to go out).
  const residents=createRoutineResidents(state.graph,10,405,
-  {x:state.spawn[0],y:state.spawn[1]},[...state.cars,...state.traffic],walkOK,{doorAt});
+  {x:state.spawn[0],y:state.spawn[1]},[...state.cars,...state.traffic],(x,y)=>walkOK(x,y)&&!onCarriageway(x,y),{doorAt});
  // Nearest named shops first; a few spare ones in case a home door is not found.
  const shops=[],closest=(state.shops||[]).filter(shop=>VISIT_KINDS.has(shop.kind))
   .map(shop=>({shop,distance:Math.hypot(shop.x-state.spawn[0],shop.y-state.spawn[1])}))
@@ -353,13 +419,19 @@ function createCityPedestrians(){
   [...state.cars,...state.traffic,...routine,...professionals]);
  return [...routine,...professionals,...walkers];
 }
-function prepareMap(map,surveyData=[],infillCache=null,placement=null){
+function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureData=null){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
  staticTiles.clear();roofReveal.clear();tileRoadMode=null;
  state.map=map;
  state.roads=map.roads;state.buildings=placeBuildings(map,placement);
  prepareCityStyles(state.buildings,map.pois||[]);
  const survey=applySurveyDrafts(state.buildings,surveyData);
+ state.enclosureData=enclosureData;state.enclosures=null;
+ // BF12: glass buildings (galleria Atlante) keep their OSM polygon, only the art changes.
+ markGlassBuildings(state.buildings,enclosureData);
+ // BF12: Municipio complex: the ruin of the former pool and the chequered water tower (landmark).
+ markRuinPool(state.buildings,enclosureData);
+ state.waterTowers=prepareWaterTowers(enclosureData);state.towerReveal=new Map();
  const terracotta=applyApprovedArcadeRoofStyle(state.buildings);
  applyPiazzaRoofStudies(state.buildings);
  console.info('Melito visual city scan: '+survey.applied+'/'+survey.total+' buildings styled, '+survey.verified+' photo-verified');
@@ -416,6 +488,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  // BF02: every parked vehicle stands in a stall of the parking strip, never in a lane or on the
  // pavement; where there is no real room there is no parking (fewer vehicles, not worse ones).
  // Bollards of a previous load must not shape the stalls: street objects are placed afterwards.
+ createEnclosures();
  state.cars=[];state.streetObjects=null;createParkingBays();
  const free=(x,y,options)=>nearestFreeStalls(state.parkingBays,x,y,state.cars,vehiclesOverlap,options)[0]||null;
  const starterStall=free(point.x,point.y,{radius:60})||free(point.x,point.y);
@@ -460,15 +533,15 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
   state.cars.push(parkInStall({type:k%5,vehicleType:k%3===1?'motorcycle':'car',model:k%3===1?MOTORCYCLE_IDS[(k+Math.floor(k/3)*5)%MOTORCYCLE_IDS.length]:k===2?'ape-car-azzurra':k===5?'furgone-fritti':k%8===1?'panda-fire-red':CAR_PARKED_SPRITE_IDS[(k*7)%CAR_PARKED_SPRITE_IDS.length]},stall));k++;
   if(state.cars.length>=Math.min(PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP+parkedBikeCount))break;
  }
- state.traffic=createTraffic();prepareSignals();
- state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
+ state.traffic=createTraffic(START_MINUTE);prepareSignals();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
  $('inferred-count').textContent=String(state.inferredBuildings.length);
  $('junction-count').textContent=String(state.graph.junctions);
  $('place').textContent='MELITO DI NAPOLI · MAPPA REALE';
- state.ready=true;hideLoading();state.last=0;canvas.focus({preventScroll:true});prepareMini();refreshCampaign();updateRoadWidthLabel();updateHud();
+ state.ready=true;hideLoading();{const v=satelliteFromUrl(globalThis.location?.search||'');if(v){satelliteOverlay()?.setEnabled(true);state.satellite?.setOpacity(v);}satelliteLabel();}state.last=0;canvas.focus({preventScroll:true});prepareMini();refreshCampaign();updateRoadWidthLabel();updateHud();
 }
 
 /* Campaign v0.3 — map positions always resolved from the downloaded OSM snapshot. */
@@ -563,13 +636,22 @@ function canKnockbackMove(x,y,actor){
  // BF01: the player's car and the parked vehicles are never shoved off the street (onto a
  // pavement or a square), where no move would be allowed any more and the car stayed stuck.
  if(actor&&state.cars.includes(actor)&&offStreetExcess(x,y,actor.a,actor)>offStreetExcess(actor.x,actor.y,actor.a,actor)+1e-6)return false;
+ // BF12: a shoved vehicle stops against an enclosure wall (walkers already stop there: validWalk).
+ if(actor&&state.enclosures&&(actor.body==='car'||state.cars.includes(actor))&&
+  enclosureVehicleContacts(state.enclosures,{x,y,a:actor.a},bodyShape(actor),{barriers:false})>
+  enclosureVehicleContacts(state.enclosures,{x:actor.x,y:actor.y,a:actor.a},bodyShape(actor),{barriers:false})+1e-9)return false;
+ // Q42: nessuna spinta dentro i banchi del mercato (persone e veicoli).
+ if(state.market&&actor){
+  if(actor.body==='car'||state.cars.includes(actor)){if(marketBlocksVehicle(state.market,{x,y,a:actor.a},bodyShape(actor),actor))return false;}
+  else if(marketBlocksWalker(state.market,x,y,.2))return false;
+ }
  return true;
 }
 function impactTraffic(dt){
  // The index limits contacts to adjacent street cells; no quadratic scan
  // over Melito's pedestrians. Include parked cars and player on foot.
  const p=state.player;
- const actors=[...state.people,...state.traffic,...state.cars,...(p.car<0?[p]:[])];
+ const actors=[...state.people,...(state.market?.people||[]),...state.traffic,...state.cars,...(p.car<0?[p]:[])];
  const nearby=makeCollisionIndex(actors);
  const active=[...state.traffic,...(p.car>=0?[state.cars[p.car]]:[])];
  for(const source of active){
@@ -635,13 +717,14 @@ function trafficModel(i,type){
   trafficApeModel(i)||CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];
 }
 const TRAFFIC_COUNT=140;
-function createTraffic(){
- const p=state.player,traffic=createAgents(state.graph,TRAFFIC_COUNT,189,'car',state.cars,{motorcycleEvery:4,model:trafficModel,
+function createTraffic(minutes){
+ // Q13: as many vehicles as the hour wants (140 on a normal day, more at 8:00 and 20:00, half at night).
+ const p=state.player,traffic=createAgents(state.graph,trafficTargetAt(minutes,TRAFFIC_COUNT),189,'car',state.cars,{motorcycleEvery:4,model:trafficModel,
   keepClear:[{x:p.x,y:p.y,r:14}],clear:(x,y)=>!buildingAt(x,y)});
  for(const v of traffic)v.rider=isMotorcycle(v);
  // BF09: how many vehicles drive around now; balanceTraffic brings in or lets out the difference
- // through the border gates (Q13 can follow the rush hours by changing it).
- state.trafficTarget=TRAFFIC_COUNT;state.trafficMade=TRAFFIC_COUNT;
+ // through the border gates. Q13: updateTraffic follows the hour curve (trafficTargetAt).
+ state.trafficTarget=traffic.length;state.trafficMade=traffic.length;
  return traffic;
 }
 // BF09: a new vehicle that comes in from a border gate (same mix of models and scooters).
@@ -661,7 +744,22 @@ function updateTraffic(dt){
  }
  const halfW=canvas.clientWidth/(2*state.zoom),halfH=canvas.clientHeight/(2*state.zoom);
  const view=[state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH];
- stepAgents(state.graph,state.people,elapsed,state.player,{parked:state.cars,traffic:state.traffic,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes});
+ const p=state.player,playerVehicle=p.car>=0?state.cars[p.car]:null;
+ // Q13: passers-by far from the player wait still (no cost); fewer or more around the player by zone and hour,
+ // always moved outside the camera.
+ stepDensity(state.density,elapsed,{people:state.people,graph:state.graph,weights:state.walkWeights,view,
+  camera:state.camera,minutes:state.npcClockMinutes,canStand,index:state.dynamicCollision,doors:state.doors});
+ // moving vehicles: traffic, ridden scooters, the player's vehicle and any parked one shoved into motion
+ const moving=[...state.traffic,...(state.commuters||[]).filter(c=>c.bike.rider).map(c=>c.bike),
+  ...state.cars.filter(v=>v===playerVehicle||Math.abs(v.speed||0)>1.5)];
+ const life={graph:state.graph,people:state.people,vehicles:moving,
+  parked:state.cars,shops:state.shops||[],canStand,onRoad:onCarriageway,playerVehicle,focus:p,focusRadius:150,dt:elapsed,
+  say:(agent,text)=>state.events&&cityEventBubble(state.events,agent,text)};
+ stepAgents(state.graph,state.people.filter(a=>!a.frozen),elapsed,state.player,{parked:state.cars,traffic:state.traffic,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes,
+  kerbWait:agent=>kerbWait(state.reactions,agent,state.graph,life)});
+ // Q13: rush hours. The hour curve sets how many vehicles drive; BF09 balanceTraffic is the one place
+ // that adds and removes them, through the border gates.
+ state.trafficTarget=trafficTargetAt(state.npcClockMinutes,TRAFFIC_COUNT);
  stepAgents(state.graph,state.traffic,elapsed,state.player,{parked:state.cars,people:state.people,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes});
  balanceTraffic(state.graph,state.traffic,state.trafficTarget,{view},newGateVehicle);
  impactTraffic(elapsed);
@@ -670,6 +768,15 @@ function updateTraffic(dt){
  const washCtx={graph:state.graph,signalSeconds:signalSeconds(),traffic:state.traffic,playerCar:pc&&!isMotorcycle(pc)?pc:null,
   index:state.dynamicCollision,say:(agent,text)=>cityEventBubble(state.events,agent,text)};
  for(const w of state.people)if(w.washer)stepWasher(w,elapsed,washCtx);
+ stepReactions(state.reactions,elapsed,life);
+ // Q13: an NPC car blocked by the player or by a pedestrian on the road sounds its horn (with limits).
+ const honker=pickBlockedHorn(state.reactions,state.traffic,{player:p,playerVehicle,onRoad:onCarriageway});
+ if(honker){
+  state.hornAlarm={x:honker.x,y:honker.y,t:state.social?.clock??0};
+  state.reactions.alarm={x:honker.x,y:honker.y,t:state.reactions.clock};
+  const d=Math.hypot(honker.x-p.x,honker.y-p.y);
+  cityAudio.horn(honker.vehicleType==='motorcycle'?'moto':'auto',clamp((honker.x-p.x)/40,-1,1),(1-d/60)*.8);
+ }
  for(const agent of [...state.people,...state.traffic])if(Math.hypot(agent.x-agent.prevX,agent.y-agent.prevY)>15){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
  }
@@ -799,7 +906,15 @@ function carBlocked(x,y,a,which,vehicle=state.cars[which]){
  // always make the move that brings it back towards the road, never one that takes it further.
  if(off>0&&!(Number.isFinite(vehicle?.x)&&off<offStreetExcess(vehicle.x,vehicle.y,vehicle.a,vehicle)-1e-6))return true;
  // Q07: cast-iron bollards stop the car like a wall.
+ // Q42: anche i banchi del mercato (non gli ombrelloni); come BF01, ci si può sempre allontanare.
+ if(state.market&&marketBlocksVehicle(state.market,{x,y,a},bodyShape(vehicle),vehicle))return true;
  if(state.streetObjects&&bollardBlocksVehicle(state.streetObjects,{x,y,a},bodyShape(vehicle)))return true;
+ // BF12: enclosure walls, booths and (at night) the barriers of private gates; like BF01, a vehicle
+ // already touching a wall may always make the move that frees it.
+ if(state.enclosures){
+  const hit=enclosureVehicleContacts(state.enclosures,{x,y,a},bodyShape(vehicle),enclosureTime());
+  if(hit>0&&!(Number.isFinite(vehicle?.x)&&hit<=enclosureVehicleContacts(state.enclosures,{x:vehicle.x,y:vehicle.y,a:vehicle.a},bodyShape(vehicle),enclosureTime())+1e-9))return true;
+ }
  // BF01: touching another vehicle already (after a crash), every move that separates them is
  // allowed: the player can always reverse or steer away instead of staying pinned.
  if(!state.dynamicCollision)return false;
@@ -928,7 +1043,7 @@ function tick(dt){
    advanceNonlethalImpact(p,dt,canKnockbackMove);
   }else if(Math.hypot(dx,dy)>.08){
    const len=Math.hypot(dx,dy),v=(pressed.run?RUN_SPEED:WALK_SPEED)*Math.min(1,len)*boostFactor(state.boost,state.clock),nx=p.x+dx/len*v*dt,ny=p.y+dy/len*v*dt;
-   const post=(x,y)=>state.streetObjects&&bollardBlocksWalker(state.streetObjects,x,y);
+   const post=(x,y)=>state.streetObjects&&bollardBlocksWalker(state.streetObjects,x,y)||marketBlocksWalker(state.market,x,y);
    if(validWalk(nx,p.y)&&inside([nx,p.y],toRing(state.map.border))&&!post(nx,p.y))p.x=nx;
    if(validWalk(p.x,ny)&&inside([p.x,ny],toRing(state.map.border))&&!post(p.x,ny))p.y=ny;
    p.a=Math.atan2(dy,dx);state.distance+=v*dt;
@@ -940,6 +1055,7 @@ function tick(dt){
  updateTraffic(dt);
  stepCommuters(dt);
  stepStreetPhysics(dt);
+ stepMelitoMarket(dt);
  const screen=visibleBounds(),inset=18+4;
  const signal=stepCityEvents(state.events,dt,{people:state.people,graph:state.graph,
   player:{x:p.x,y:p.y,onFoot:p.car<0},view:[screen[0]+inset,screen[1]+inset,screen[2]-inset,screen[3]-inset],
@@ -986,9 +1102,9 @@ function compareRoadWidths(){
  setRoadWidthMode(getRoadWidthMode()==='before'?'wide':'before');
  // Every consumer shares the same module instance, including roads/traffic,
  // street furniture, crosswalks and building-side storefront placements.
- state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createParkingBays();
- state.traffic=createTraffic();prepareSignals();
- state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
+ state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createEnclosures();createParkingBays();
+ state.traffic=createTraffic(state.npcClockMinutes);prepareSignals();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
  state.propsGrid=makeIndex(state.props);
@@ -999,7 +1115,7 @@ function compareRoadWidths(){
 }
 
 function updateHud(){
- const npcClockLabel=$('npc-clock');if(npcClockLabel)npcClockLabel.textContent=formatNpcClock(state.npcClockMinutes)+(state.weather?' · '+state.weather.label:'');
+ const npcClockLabel=$('npc-clock');if(npcClockLabel)npcClockLabel.textContent=npcWeekday(state.npcClockMinutes)+' · '+formatNpcClock(state.npcClockMinutes)+(state.weather?' · '+state.weather.label:'');
  const p=state.player;
  const driving=p.car>=0&&!state.bankInterior;
  // The map container must receive the mode class: otherwise CSS keeps the
@@ -1117,6 +1233,7 @@ function paintStaticScene(ctx,bounds,zoom){
  if(nearBorder(x0,y0,x1,y1,GATE_RULES.mouth+4)){ctx.save();borderPath(ctx);ctx.clip();drawCityStreets(ctx,roads,zoom);ctx.restore();drawGateMouths(ctx,bounds);}
  else drawCityStreets(ctx,roads,zoom);
  if(state.parkingBays)drawParkingBays(ctx,query(state.parkingBays.strips,state.bayGrid,x0,y0,x1,y1),zoom);
+ drawEnclosureWalls(ctx,state.enclosures,bounds,zoom);
  drawCityBuildings(ctx,[...inferred,...buildings],zoom);
  // The road remains below the entire roof, including the authored church art.
  // A small dynamic reveal makes the passage visible while travelling under it.
@@ -1155,6 +1272,7 @@ function drawRoofReveal(ctx,buildings,roads,dt,bounds){
   if(nearBorder(art.x0-22,art.y0-22,art.x1+22,art.y1+22)){ctx.save();borderPath(ctx);ctx.clip();drawCityStreets(ctx,roads,state.zoom);ctx.restore();}
   else drawCityStreets(ctx,roads,state.zoom);
   if(state.parkingBays)drawParkingBays(ctx,query(state.parkingBays.strips,state.bayGrid,art.x0-22,art.y0-22,art.x1+22,art.y1+22),state.zoom);
+  drawEnclosureWalls(ctx,state.enclosures,[art.x0-22,art.y0-22,art.x1+22,art.y1+22],state.zoom);
   ctx.globalAlpha=1-.72*amount;
   drawCityBuildings(ctx,[b],state.zoom);
   ctx.restore();
@@ -1278,6 +1396,7 @@ function draw(dt=0){
   drawPuddles(c,state.puddles||[],[x0,y0,x1,y1],weather.wetness,weather.rain,state.clock);
  }
  drawStopLines(c,state.graph.signals,[x0,y0,x1,y1],state.zoom);
+ drawMarketGround(c,state.market,[x0,y0,x1,y1],state.zoom);
  drawRoofReveal(c,[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],roads,dt,[x0,y0,x1,y1]);
  if(state.zoom>1.75){
   c.font='3.6px monospace';c.fillStyle='#e5d9bc';c.textAlign='center';
@@ -1325,14 +1444,18 @@ function draw(dt=0){
  }
  drawSkidMarks([x0,y0,x1,y1]);
  drawStreetObjects(c,state.streetObjects,[x0,y0,x1,y1],state.zoom);
+ drawEnclosureGates(c,state.enclosures,[x0,y0,x1,y1],state.zoom,{...enclosureTime(),clock:state.clock});
+ drawMarketStalls(c,state.market,[x0,y0,x1,y1],state.clock);
+ if(state.weather?.wetness>.12)for(const b of buildings)if(b.art?.ruinPool)drawRuinPoolPuddles(c,b,state.weather.wetness,state.clock);
  drawLostItem(c,state.events,state.player.car<0?state.player:null,state.clock);
  // BF08: un lavavetri al finestrino si disegna sopra l'auto se le sta davanti (più in basso sullo
  // schermo): per questo disegno è saltato qui (indoors solo durante la chiamata) e ridisegnato dopo le auto.
  const inFront=state.people.filter(q=>q.scripted&&q.washer?.car&&!q.indoors&&q.y>q.washer.car.y);
  for(const q of inFront)q.indoors=true;
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
+ if(state.market)drawCityPeople(c,state.market.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  for(const q of inFront)q.indoors=false;
- if(weather&&weather.rain>.3)for(const person of state.people){
+ if(weather&&weather.rain>.3)for(const person of [...state.people,...(state.market?.people||[]).filter(q=>!q.sheltered)]){
   if(person.indoors||person.x<x0||person.x>x1||person.y<y0||person.y>y1)continue;
   drawUmbrella(c,person.prevX===undefined?person.x:person.prevX+(person.x-person.prevX)*alpha,
    person.prevY===undefined?person.y:person.prevY+(person.y-person.prevY)*alpha,person,weather.rain);
@@ -1348,16 +1471,32 @@ function draw(dt=0){
  }
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);});
  drawPlayer();
+ // Q42: ombrelloni del mercato sopra persone e veicoli; sfumano col giocatore sotto (R01, come i tetti).
+ if(state.market){
+  const pc=p.car>=0?state.cars[p.car]:null;
+  stepParasolReveal(state.market,[pc?{x:pc.x,y:pc.y,radius:3}:{x:p.x,y:p.y,radius:.6}],dt);
+  drawMarketParasols(c,state.market,[x0,y0,x1,y1],state.clock,{rain:weather?.rain||0});
+ }
  if(inFront.length)drawCityPeople(c,inFront,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  drawWasherEffects(c,state.people,state.clock);
  drawSignals(c,state.graph.signals,[x0,y0,x1,y1],signalSeconds(),state.zoom);
+ // BF12: the water tower stands above the city; it fades while the player is under or beside it.
+ for(const t of state.waterTowers||[]){
+  if(t.x<x0-70||t.x>x1+70||t.y<y0-70||t.y>y1+70)continue;
+  const target=towerRevealTarget(t,[p.car>=0?state.cars[p.car]:p]),now=state.towerReveal.get(t.id)??1;
+  const eased=now+(target-now)*Math.min(1,(dt||0)*6);state.towerReveal.set(t.id,eased);
+  drawWaterTower(c,t,{alpha:eased,zoom:state.zoom});
+ }
  if(weather&&weather.cloud>.02)drawCloudShadows(c,[x0,y0,x1,y1],weather.cloud,state.clock);
  // Q04: night falls on the world, while hints and the bank marker stay readable above it.
  drawNightLighting([x0,y0,x1,y1],[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],ratio,cw,ch,dt);
+ for(const t of state.waterTowers||[])drawWaterTowerLight(c,t,{darkness:state.light?.darkness||0,clock:state.clock,alpha:state.towerReveal.get(t.id)??1});
  if(weather&&weather.rain>.02)drawRain(c,state.clock,canvas.width,canvas.height,weather.rain);
  drawCityEventOverlay(c,state.events,state.player.car<0?state.player:null,state.zoom);
  drawParkedMotorcycleHints();
  for(const bank of state.bankEntrances)if(bank.x>=x0&&bank.x<=x1&&bank.y>=y0&&bank.y<=y1)drawBankEntrance(c,bank,state.clock);
+ // BF13: foto aerea di confronto sopra tutta la scena, in trasparenza (spenta: nessun costo).
+ if(state.satellite?.enabled)state.satellite.draw(c,[x0,y0,x1,y1],state.zoom);
 }
 const lightMap=document.createElement('canvas');
 const LAMP_KINDS=new Set([5,6,13]);
@@ -1444,16 +1583,26 @@ function updateCityAudio(){
   traffic:traffic.map(v=>({x:v.x,y:v.y,vehicleType:v.vehicleType,model:v.model||'',speed:v.braking?0:(Number.isFinite(v.v)?v.v:v.speed)})),
   night:(state.light?.darkness||0)/NIGHT_DARKNESS,rain:state.weather?.rain||0,
   skid:car&&car.speed>8?Math.min(1,Math.abs(car.slip||0)/.45):0});
- if(!paused&&!state.bankInterior){
-  const honker=cityAudio.npcHorns(traffic,p,state.clock);
-  if(honker)state.hornAlarm={x:honker.x,y:honker.y,t:state.social?.clock??0};
- }
+ // Q13: NPC horns are decided by the traffic step (pickBlockedHorn in updateTraffic).
 }
 // Q09/Q11: the player's horn is heard, and chatting pedestrians nearby break up.
 function honk(){
  const p=state.player;if(p.car<0)return;
  cityAudio.horn(isMotorcycle(state.cars[p.car])?'moto':'auto');
  state.hornAlarm={x:p.x,y:p.y,t:state.social?.clock??0};
+ if(state.reactions)state.reactions.alarm={x:p.x,y:p.y,t:state.reactions.clock};
+}
+// BF13: la sovramappa nasce solo alla prima accensione e riparte sempre spenta (niente preferenze).
+function satelliteOverlay(){
+ if(!state.satellite&&state.map?.projection)state.satellite=createSatelliteOverlay({projection:state.map.projection});
+ return state.satellite;
+}
+function satelliteLabel(){
+ const o=state.satellite,on=!!o?.enabled;
+ $('pause-satellite').textContent='SATELLITE: '+(on?'ON':'OFF');
+ $('pause-satellite').setAttribute('aria-pressed',String(on));
+ $('pause-satellite-level').textContent=Math.round((o?.opacity??.5)*100)+'%';
+ $('satellite-attribution').hidden=!on;
 }
 function soundLabel(){
  $('pause-sound').textContent='SUONI: '+(cityAudio.muted?'OFF':'ON');
@@ -1501,7 +1650,12 @@ async function load(){
    const req=await fetch('./data/building-placement.json',{cache:'no-cache'});
    if(req.ok)placement=await req.json();
   }catch(error){console.warn('Optional building placement unavailable',error);}
-  prepareMap(map,surveyData,infillCache,placement);
+  let enclosureData=null;
+  try{
+   const req=await fetch('./data/enclosures.json',{cache:'no-cache'});
+   if(req.ok)enclosureData=await req.json();
+  }catch(error){console.warn('Optional enclosures unavailable',error);}
+  prepareMap(map,surveyData,infillCache,placement,enclosureData);
  }catch(e){console.error('GTA Melito map load',e);loading('MAPPA NON DISPONIBILE','Non posso mostrare una Melito inventata: '+e.message+'. Riprova quando la cartografia è disponibile.',true);}
  finally{state.loading=false;}
 }
@@ -1592,10 +1746,12 @@ function bind(){
  stickPad.addEventListener('pointermove',e=>{if(stickPad.hasPointerCapture?.(e.pointerId))updateStick(e);});
  for(const name of ['pointerup','pointercancel','lostpointercapture'])stickPad.addEventListener(name,resetStick);
  const pause=$('pause-menu'),pauseButton=$('pause-toggle');
- const openPause=()=>{Object.keys(pressed).forEach(k=>pressed[k]=false);stick.x=0;stick.y=0;resetDrivingControls();pause.hidden=false;pauseButton.setAttribute('aria-expanded','true');$('pause-details').textContent='MEZZO: '+$('vehicle').textContent+'  ·  CAMERA: '+$('camera-mode').textContent+'  ·  STRADE: '+$('road-count').textContent+'  ·  EDIFICI OSM: '+$('building-count').textContent+'  ·  PLACEHOLDER: '+$('inferred-count').textContent+'  ·  INCROCI: '+$('junction-count').textContent+'  ·  '+$('road-width-current').textContent+' unità';};
- const closePause=()=>{pause.hidden=true;pauseButton.setAttribute('aria-expanded','false');};
+ const openPause=()=>{carRadio.duck(true);Object.keys(pressed).forEach(k=>pressed[k]=false);stick.x=0;stick.y=0;resetDrivingControls();pause.hidden=false;pauseButton.setAttribute('aria-expanded','true');$('pause-details').textContent='MEZZO: '+$('vehicle').textContent+'  ·  CAMERA: '+$('camera-mode').textContent+'  ·  STRADE: '+$('road-count').textContent+'  ·  EDIFICI OSM: '+$('building-count').textContent+'  ·  PLACEHOLDER: '+$('inferred-count').textContent+'  ·  INCROCI: '+$('junction-count').textContent+'  ·  '+$('road-width-current').textContent+' unità';};
+ const closePause=()=>{carRadio.duck(false);pause.hidden=true;pauseButton.setAttribute('aria-expanded','false');};
  pauseButton.addEventListener('click',()=>pause.hidden?openPause():closePause());
  $('pause-close').addEventListener('click',closePause);
+ $('pause-satellite').addEventListener('click',()=>{satelliteOverlay()?.toggle();satelliteLabel();});
+ for(const [id,dir] of [['pause-satellite-down',-1],['pause-satellite-up',1]])$(id).addEventListener('click',()=>{satelliteOverlay()?.stepOpacity(dir);satelliteLabel();});
  $('pause-missions').addEventListener('click',()=>{closePause();if($('mission-panel').hidden)$('mission-panel-toggle').click();});
  $('pause-map').addEventListener('click',()=>{closePause();toggleBigMap();});
  for(const [id,target] of [['pause-zoom-auto','zoom-auto'],['pause-zoom-in','zoom-in'],['pause-zoom-out','zoom-out'],['pause-reset','reset'],['pause-road-compare','road-width-compare']])$(id).addEventListener('click',()=>$(target).click());

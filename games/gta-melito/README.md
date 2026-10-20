@@ -42,12 +42,14 @@ Piccolo gioco arcade originale ispirato alla visuale dall'alto dei GTA degli ann
 - Le auto del traffico ora percorrono il grafo OSM e possono svoltare agli incroci; precedenze, semafori, collisioni complesse e pianificazione di destinazioni sono ancora semplificati. Missioni, polizia, danni e gameplay GTA completo restano da costruire.
 - **Incroci e semafori (BF07, 20/10/2026):** le auto e le moto del traffico si fermano alla linea d'arresto, non impegnano l'incrocio se all'uscita non c'è posto, danno la precedenza alla strada di rango maggiore (a parità, a chi arriva da destra; chi gira a sinistra cede a chi arriva di fronte), passano una alla volta sulle traiettorie in conflitto e lampeggiano la freccia prima di svoltare. **Semafori simulati, di gioco, non rilevati:** l'istantanea OSM non contiene nodi `highway=traffic_signals`, quindi gli 8 semafori sono posizionati con una regola sugli incroci principali (`junctions.mjs`, `SIGNALS_SIMULATED`) e **non** corrispondono ai semafori reali di Melito; lo dice anche la scheda PAUSA. Ciclo di 30 s legato all'orologio di gioco; i pedoni che vanno dritti attraversano con il verde della propria via.
 - **Lavavetri ai semafori (BF08, 20/10/2026):** un lavavetri accanto a 7 dei semafori di gioco. Col rosso, se la prima auto della coda è ferma (anche quella del giocatore; non le moto) e il rosso che resta basta, passa davanti al paraurti sulle strisce, si ferma al finestrino del lato guida, lava il parabrezza 3–6 s e torna sul marciapiede; al giallo o al verde rientra subito e l'auto lo aspetta. Personaggio e posti sono di gioco, come i semafori.
+- **Mercato del venerdì (Q42, 20/10/2026):** nell'isolato del rione 219 (Via Praga, Via Dublino, Via Budapest, Via Ginevra) c'è il mercato settimanale. Il luogo è reale e le fonti sono in [MERCATO_MELITO.md](./MERCATO_MELITO.md); giorno e orari non sono verificati. Banchi (segnaposto), merci, venditori e clienti sono di fantasia, e il gioco lo dichiara anche nel menu PAUSA. Il giorno 0 della partita è un venerdì; `?mercato=1` lo monta ogni giorno.
 
 ## Fonti e licenze
 
 - **OpenStreetMap contributors**, https://www.openstreetmap.org/copyright — Open Database License (ODbL 1.0). I dati stradali ed edilizi derivano dalla community OSM.
 - **ISTAT** e `guglielmo/geojson-italy`, https://github.com/guglielmo/geojson-italy — confine comunale ufficiale riferito al 1 gennaio 2026, dati CC BY. Conservare l'attribuzione in caso di distribuzione.
 - Approccio alla guida 2D ispirato a **Punjab Stories** di Hnjra, https://github.com/harmanhanjra/punjab-stories (MIT, © 2026 Hnjra). Il gioco contiene una nostra implementazione Canvas originale, non una copia delle risorse GTA.
+- **Esri World Imagery** (Esri, Maxar, Earthstar Geographics e la comunità GIS) — foto aerea usata SOLO come riferimento visivo: sovramappa di confronto spenta di default (PAUSA › STRUMENTI › SATELLITE, attribuzione a schermo mentre è accesa) e audit in `AUDIT_SATELLITE.md`. Nel repository non ci sono immagini satellitari, solo coordinate stimate a vista.
 - Non utilizzare Google Maps come sorgente per estrarre o ridisegnare il database cartografico.
 
 ## Dati reali: come funziona l'importazione
@@ -210,3 +212,18 @@ Le strade carrabili che OpenStreetMap continua oltre il confine ISTAT vengono ta
   È la base per collegare in futuro le mappe dei comuni vicini.
 - **Numero di mezzi.** `balanceTraffic` (`roads.mjs`) porta il traffico al numero `state.trafficTarget` (oggi 140), sempre passando dai varchi. Le ore di punta (Q13) possono quindi cambiare il numero di mezzi senza far comparire auto in vista.
 - **Giocatore.** Il giocatore non attraversa il confine: resta come prima.
+
+## Recinti, cancelli e guardiole (BF12)
+
+`enclosures.mjs` disegna le mura perimetrali, i cancelli e le guardiole dei recinti elencati in `data/enclosures.json`: villa comunale, complesso Municipio con Carabinieri e piscina comunale, recinto di fronte all'area mercatale (forse il «Parco GB», da verificare). La galleria Atlante, edificio di vetro, è riconosciuta come «probabile».
+- **Perimetro:** dove OSM ha il perimetro, il gioco lo segue (villa comunale: muro e due cancelli OSM). Altrove il perimetro è **ricalcato a vista** e marcato `verificato:false`.
+- **Mura:** non stanno mai sulla carreggiata né sul marciapiede disegnati, ma appena oltre.
+- **Cancelli:** ogni strada o vialetto che attraversa il perimetro ha un'apertura, quindi nessuna strada resta chiusa.
+- **Notte:** dalle 22 alle 6 le sbarre dei recinti privati sono abbassate per il giocatore e si alzano per i mezzi NPC; i pedoni passano sempre.
+- **Mancanti:** il «Parco Prima Casa» non è disegnato perché non è stato localizzato. Le fonti sono in `RECINTI_MELITO.md`.
+
+- **Complesso del Municipio** (`municipio-landmarks.mjs`):
+  - la **torre del serbatoio idrico a fungo, a scacchi**, simbolo del quartiere, è un landmark. È trasparente quando ci passi vicino e di notte ha una luce rossa. Posizione dalla foto aerea; colori e altezza stimati;
+  - l'**ex piscina comunale di via Madrid** è un rudere con la vasca interrata vuota e crepata.
+
+Riferimento visivo: Esri World Imagery (consultata il 20/10/2026), usata solo per stime a vista delle coordinate; nessuna immagine satellitare è inclusa nel repository.
