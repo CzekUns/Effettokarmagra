@@ -119,3 +119,35 @@ test('BF01 game wiring: player car can always separate, shoved vehicles stop at 
  assert.match(roads,/agent\.backoff=2\.5/);
  assert.match(roads,/\(agent\.respawnFails\|\|0\)<2/,'off-screen respawn relaxes after repeated failures');
 });
+
+test('BF01 the player never stays stuck off the street: shoves stop at the kerb, a car already off may drive back',async()=>{
+ const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
+ assert.match(game,/function offStreetExcess\(x,y,a,vehicle\)\{/);
+ const blocked=game.slice(game.indexOf('function carBlocked('),game.indexOf('function carBlocked(')+700);
+ assert.match(blocked,/off=offStreetExcess\(x,y,a,vehicle\);/);
+ assert.match(blocked,/off<offStreetExcess\(vehicle\.x,vehicle\.y,vehicle\.a,vehicle\)-1e-6\)\)return true;/,'only the moves that get closer to the street');
+ assert.match(game,/function canKnockbackMove\(x,y,actor\)\{[\s\S]{0,1200}state\.cars\.includes\(actor\)&&offStreetExcess\(x,y,actor\.a,actor\)>offStreetExcess\(actor\.x,actor\.y,actor\.a,actor\)/,'a shove never takes a car off the street');
+});
+
+test('BF01 a car the player drives into backs off; one merely waiting behind the player keeps waiting',()=>{
+ const run=push=>{
+  const npc=firstCar(),c=Math.cos(npc.a),s=Math.sin(npc.a);
+  const mine={x:npc.x+c*7,y:npc.y+s*7,a:npc.a,body:'car',speed:0,model:'panda-modern-white'};
+  const start={x:npc.x,y:npc.y};let away=0;
+  for(let i=0;i<120;i++){
+   if(push)npc.yieldToPlayer=1.5; // game.mjs: the player keeps pressing against it
+   stepAgents(graph,[npc],dt,{x:mine.x,y:mine.y,a:mine.a,car:0,vehicleType:'car'},{view,parked:[mine],validRecovery:()=>true});
+   assert.equal(vehiclesOverlap(npc,mine,0),false);
+   away=Math.max(away,-((npc.x-start.x)*c+(npc.y-start.y)*s));
+  }
+  return away;
+ };
+ assert.ok(run(true)>=1.5,'pushed against: it makes room');
+ assert.ok(run(false)<.2,'just queuing behind the player (a red light): it waits');
+});
+
+test('BF01 game wiring: the NPC in the way is asked to yield only while the player drives into it',async()=>{
+ const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
+ assert.match(game,/const way=Math\.abs\(speed\)>\.3&&state\.dynamicCollision&&trafficMoveBlocker\(/);
+ assert.match(game,/if\(way&&way\.body==='car'&&way\.edge!=null\)way\.yieldToPlayer=1\.5;/);
+});

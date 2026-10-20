@@ -6,8 +6,8 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=147';
-import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=002';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=151';
+import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=006';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=005';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
@@ -18,7 +18,7 @@ import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=002';
 import {createSocial,stepSocial} from './npc-social.mjs?v=002';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
-import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked} from './traffic-collision.mjs?v=127';
+import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker} from './traffic-collision.mjs?v=127';
 import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=001';
@@ -553,6 +553,9 @@ function canKnockbackMove(x,y,actor){
   const pose={x,y,a:actor.a,vehicleType:isMotorcycle(actor)?'motorcycle':'car',model:actor.model};
   if(trafficMoveBlocked({...actor,vehicleType:pose.vehicleType},pose,'car',state.dynamicCollision,actor))return false;
  }
+ // BF01: the player's car and the parked vehicles are never shoved off the street (onto a
+ // pavement or a square), where no move would be allowed any more and the car stayed stuck.
+ if(actor&&state.cars.includes(actor)&&offStreetExcess(x,y,actor.a,actor)>offStreetExcess(actor.x,actor.y,actor.a,actor)+1e-6)return false;
  return true;
 }
 function impactTraffic(dt){
@@ -713,19 +716,30 @@ function toggleVehicle(){
  $('stick-knob').style.transform='translate(0,0)';
  resetDrivingControls();updateHud();
 }
-function carBlocked(x,y,a,which,vehicle=state.cars[which]){
+// How far a vehicle body is off the drivable street (0 = fully on it): every probe outside the
+// border, without a street, beyond the drivable kerb or on a building corner adds to it.
+function offStreetExcess(x,y,a,vehicle){
  // Both classes stay within the OSM road; scooters use narrow side probes.
  const dirx=Math.cos(a),diry=Math.sin(a),bike=isMotorcycle(vehicle);
  const forwards=bike?[-2.25,0,2.25]:[-2.6,0,3.4];
  const sides=bike?[-.85,.85]:[-1.7,1.7];
+ let excess=0;
  for(const forward of forwards)for(const side of sides){
   const px=x+dirx*forward-diry*side,py=y+diry*forward+dirx*side;
-  if(!inside([px,py],toRing(state.map.border)))return true;
+  if(!inside([px,py],toRing(state.map.border))){excess+=100;continue;}
   const road=nearest(px,py,25,state.roads,true);
-  const width=road?visualRoadWidth(road.road):0;
-  if(!road||road.distance>width/2+SIDEWALK_DRIVE||!canDriveProbe(road.distance,width,
-   road.distance>width/2-.55&&buildingAt(px,py)))return true;
+  if(!road){excess+=50;continue;}
+  const width=visualRoadWidth(road.road),over=road.distance-(width/2+SIDEWALK_DRIVE);
+  if(over>0)excess+=1+over;
+  else if(!canDriveProbe(road.distance,width,road.distance>width/2-.55&&buildingAt(px,py)))excess+=1;
  }
+ return excess;
+}
+function carBlocked(x,y,a,which,vehicle=state.cars[which]){
+ const bike=isMotorcycle(vehicle),off=offStreetExcess(x,y,a,vehicle);
+ // BF01: a vehicle that ended up off the street (a shove onto the pavement, an old save) may
+ // always make the move that brings it back towards the road, never one that takes it further.
+ if(off>0&&!(Number.isFinite(vehicle?.x)&&off<offStreetExcess(vehicle.x,vehicle.y,vehicle.a,vehicle)-1e-6))return true;
  // Q07: cast-iron bollards stop the car like a wall.
  if(state.streetObjects&&bollardBlocksVehicle(state.streetObjects,{x,y,a},bodyShape(vehicle)))return true;
  // BF01: touching another vehicle already (after a crash), every move that separates them is
@@ -834,11 +848,18 @@ function tick(dt){
     speed*=.65;
   if(!carBlocked(nx,ny,car.a,p.car)){
    car.x=nx;car.y=ny;state.distance+=Math.abs(speed*dt);
-  }else if(car.recoil>0){speed=0;car.recoil=0;car.turnGuide=null;}
-  else{
-   const bounce=reboundCar(car,speed,previousAngle,(x,y,a)=>carBlocked(x,y,a,p.car));
-   car.x=bounce.x;car.y=bounce.y;car.a=bounce.angle;car.travel=bounce.angle;car.slip=0;
-   speed=bounce.speed;car.recoil=bounce.recoil;car.turnGuide=null;car.assistRelease=.25;
+  }else{
+   // BF01: an NPC car standing in the way while the player drives into it is asked to back off.
+   const type=isMotorcycle(car)?'motorcycle':'car';
+   const way=Math.abs(speed)>.3&&state.dynamicCollision&&trafficMoveBlocker({...car,vehicleType:type},
+    {x:nx,y:ny,a:car.a,vehicleType:type,model:car.model},'car',state.dynamicCollision,car);
+   if(way&&way.body==='car'&&way.edge!=null)way.yieldToPlayer=1.5;
+   if(car.recoil>0){speed=0;car.recoil=0;car.turnGuide=null;}
+   else{
+    const bounce=reboundCar(car,speed,previousAngle,(x,y,a)=>carBlocked(x,y,a,p.car));
+    car.x=bounce.x;car.y=bounce.y;car.a=bounce.angle;car.travel=bounce.angle;car.slip=0;
+    speed=bounce.speed;car.recoil=bounce.recoil;car.turnGuide=null;car.assistRelease=.25;
+   }
   }
   car.speed=speed;p.x=car.x;p.y=car.y;p.a=car.a;
   }

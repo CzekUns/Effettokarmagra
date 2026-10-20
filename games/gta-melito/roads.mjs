@@ -254,6 +254,13 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
  // BF01: a knock sets a car's speed to 0; back on its lane it resumes its own cruising speed
  // (before, a struck NPC stayed stopped in the middle of the road for good).
  if(agent.body==='car'&&!(agent.speed>0)&&agent.resumeSpeed>0)agent.speed=agent.resumeSpeed;
+ // BF01: the player keeps driving into this car while it stands still (game.mjs sets yieldToPlayer):
+ // it backs off a couple of metres, so the player is never boxed in by traffic. A car merely
+ // waiting behind the player (a queue, a red light) keeps waiting.
+ if(agent.body==='car'&&agent.yieldToPlayer>0){
+  agent.yieldToPlayer=Math.max(0,agent.yieldToPlayer-elapsed);
+  if(agent.stalled>1&&!(agent.backoff>0)&&agent.edge!=null){agent.backoff=2.5;agent.yieldToPlayer=0;}
+ }
  if(agent.residentRoutine){stepResidentRoutine(graph,agent,elapsed,index,clockMinutes,valid);return;}
  // BF01: the yielding car of a mutual block backs up along its own lane, then waits a moment.
  if(agent.body==='car'&&agent.backoff>0){backOff(graph,agent,elapsed,index);return;}
