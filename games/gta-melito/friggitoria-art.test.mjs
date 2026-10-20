@@ -60,17 +60,20 @@ test('white-coated cook atlas supplies four walking directions and four actual f
  }finally{if(original===undefined)delete globalThis.Image;else globalThis.Image=original;}
 });
 
-test('city runtime places specialty cars and one cook among routine-driven local citizens',async()=>{
+test('city runtime integrates food-truck crews, professions and traffic Ape',async()=>{
  const [game,art,html]=await Promise.all([
   readFile(new URL('./game.mjs',import.meta.url),'utf8'),
   readFile(new URL('./city-art.mjs',import.meta.url),'utf8'),
   readFile(new URL('./index.html',import.meta.url),'utf8')]);
  assert.match(game,/k===2\?'ape-car-azzurra':k===5\?'furgone-fritti'/);
  assert.match(game,/loadFryerSprite\(\)/);
- assert.match(game,/const fryer=people\.filter\(p=>!p\.commuter&&!p\.indoors\)/);
- assert.match(game,/fryer\.isFryer=true/);
- assert.match(art,/if\(p\.isFryer&&drawFryerSprite\(c,x,y,angle,clock,moving,p\.speed,p\.seed\)\)continue/);
+ assert.match(game,/loadProfessionSprites\(\)/);
+ assert.match(game,/placeStreetFoodVendors\(state.graph,state.cars/);
+ assert.match(game,/createStreetProfessionActors\(state.graph,state.foodVendors/);
+ assert.match(game,/trafficApeModel\(i\)/);
+ assert.match(art,/drawProfessionSprite\(c,x,y,angle,p.profession/);
+ assert.match(art,/drawFryerSprite\(c,x,y,angle,clock,moving,p.speed,p.seed\)/);
  assert.match(game,/car-sprites\.mjs\?v=108/);
- assert.match(game,/city-art\.mjs\?v=128/);
- assert.match(html,/game\.mjs\?v=153/);
+ assert.match(game,/city-art\.mjs\?v=129/);
+ assert.match(html,/game\.mjs\?v=154/);
 });
