@@ -196,7 +196,7 @@ test('Q03 game wiring: doors only on visible facades, drawn before people, indoo
  assert.match(game,/door\.valid&&doorFacesViewer\(door\)\?door:null/,'hidden facades are never used');
  assert.match(game,/createRoutineResidents\([^;]+\{doorAt\}\)/);
  assert.match(game,/source:DOOR_SOURCE\.OSM_POI,label:shop\.name/,'OSM shops keep their real name and source');
- assert.match(game,/createAgents\(state\.graph,170-routine\.length/,'residents and visitors are part of the 170 pedestrians');
+ assert.match(game,/Math\.max\(0,112-routine\.length-professionals\.length\)/,'professionals replace ordinary pedestrians while residents and visitors remain');
  assert.ok(game.indexOf('drawDoorFronts(c,doors,state.zoom)')<game.indexOf('drawCityPeople(c,state.people'),'doors under the people');
  assert.match(game,/person\.indoors\|\|person\.x<x0-12/,'an NPC inside does not reveal roofs');
  assert.match(art,/if\(p\.indoors\|\|p\.x<x0-14/,'an NPC inside is not drawn');
