@@ -1,6 +1,7 @@
 import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
 import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=006';
 import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=128';
+import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=002';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
  * Simulates moving traffic through intersections with legal one-way exits. */
@@ -339,14 +340,19 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
    agent.t=1;agent.braking=true;return;
   }
  }
+ let profile=null;
  if(agent.body==='car'){
+  // BF05: crociera adatta al mezzo (Ape e furgoni più lenti) e spinta progressiva come il giocatore.
+  profile=handlingProfile(agent);
+  const cruise=npcCruise(profile,agent.speed);speed=cruise;
   // Following distance is checked only for traffic on this nearby segment.
   const near=index?nearbyColliders(index,agent.x,agent.y,18):others;
   for(const other of near){
    if(other===agent||other.body!=='car'||other.edge!==agent.edge)continue;
    const ahead=(other.t-agent.t)*edge.len;
-   if(ahead>0&&ahead<12)speed=Math.min(speed,agent.speed*clamp((ahead-5)/7,0,1));
+   if(ahead>0&&ahead<12)speed=Math.min(speed,cruise*clamp((ahead-5)/7,0,1));
   }
+  speed=npcSpeedStep(profile,agent.v,speed,elapsed);
  }
  // Try reduced motion before stopping; this lets traffic queue naturally.
  // BF01: remember who blocks the move, so a mutual block at a junction can be untied.
@@ -354,9 +360,13 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
   const next=nextPose(graph,agent,speed*elapsed*factor);
   const blocker=index?trafficMoveBlocker(agent,next,agent.body,index,agent):null;
   if(blocker){agent.blockedBy=blocker;continue;}
-  Object.assign(agent,next);agent.braking=false;agent.blockedBy=null;return;
+  Object.assign(agent,next);agent.braking=false;agent.blockedBy=null;
+  if(profile)agent.v=speed*factor;
+  return;
  }
  agent.braking=true;
+ // Fermo davanti a un ostacolo: si riparte da zero, piano.
+ if(profile)agent.v=0;
 }
 // Recover from an impact without snapping an on-screen NPC to a random
 // highway. Return to a legal nearby lane/sidewalk; once offscreen, the agent

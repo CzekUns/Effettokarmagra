@@ -10,7 +10,11 @@ function drive(axis,seconds=2){
 
 test('walking and running are faster and the car reaches a useful city speed',()=>{
  assert.ok(WALK_SPEED>=8&&RUN_SPEED>WALK_SPEED);
- assert.ok(drive({x:0,y:-1}).speed>CAR_FORWARD_SPEED*.95);
+ // BF05: cambio automatico arcade — niente scatto: dopo 0,25 s si va ancora piano, dopo 2 s a
+ // velocità da città, entro 10 s quasi in punta (prima si arrivava a 38 in 2 s).
+ assert.ok(drive({x:0,y:-1},.25).speed<3,'soft start from a standstill');
+ const city=drive({x:0,y:-1},2).speed;assert.ok(city>12&&city<30,'useful city speed after 2 s: '+city.toFixed(1));
+ const flat=drive({x:0,y:-1},10).speed;assert.ok(flat>CAR_FORWARD_SPEED*.9&&flat<=CAR_FORWARD_SPEED,'near top speed within 10 s');
  assert.ok(drive({x:0,y:1}).speed>=-CAR_REVERSE_SPEED);
 });
 
@@ -19,7 +23,8 @@ test('turning the steering wheel alone does NOT press the accelerator',()=>{
  assert.equal(turn.speed,0,'steering alone must not make the car move');
  assert.equal(turn.angle,0,'a stationary car does not pivot in place');
  const driven=drive({x:.7,y:-1},1);
- assert.ok(driven.speed>20&&driven.angle>.4);
+ // BF05: con lo spunto progressivo in 1 s si arriva a ~9 (prima >20): resta vero che si muove e sterza.
+ assert.ok(driven.speed>6&&driven.angle>.4);
  assert.ok(driven.speed<CAR_FORWARD_SPEED);
 });
 

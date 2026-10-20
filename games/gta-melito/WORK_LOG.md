@@ -436,3 +436,29 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** `street-professions.test.mjs` +4 test (lato di servizio per ogni modello e 5 angoli, banco verso il marciapiede su entrambi i lati della via, nessun friggitore senza posto valido, ritorno al posto con orientamento); tolto il vecchio controllo «più di 5,8 m dal centro», che descriveva il difetto; `market-vehicles` e `friggitoria-art`: controllo di versione reso «almeno v=154». Suite Node 22 **268/268**.
 - **Browser (Chrome headless, mappa reale, 5 furgoni):** prima 8,9–9,4 m dal centro e in 4 casi su 5 dal lato opposto al banco; dopo 4,31–4,44 m dal centro, 0,6 m oltre il bordo del banco, orientamento verso il banco (coseno 0,96–0,99), su punto camminabile, fuori dalla sagoma e più lontano dalla carreggiata del furgone; foto ravvicinate prima/dopo; nessun errore JS.
 - **Non eseguiti / limiti:** telefono reale. Fuori dal BF04 (da BF02/BF03): il furgone di Piazza Santo Stefano sta sull'asfalto della piazza; nella versione precedente a Largo Cinque Via un'auto parcheggiata si sovrapponeva al furgone.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF05 cambio automatico arcade e prestazioni per modello
+- **Fatto:** le auto non «schizzano» più: partenza morbida da fermo, spinta piena dopo i primi metri, calo verso la velocità massima e cambi marcia impliciti (attenuazione breve della spinta, mai salti di velocità); profili diversi per modello; Ape e furgoni più lenti; gli NPC usano la stessa spinta e ripartono piano dopo ogni sosta.
+- **Come:** `vehicle-handling.mjs` (`driveForce`, `gearAt`, `npcCruise`, `npcSpeedStep`, profili `APE_HANDLING`/`VAN_HANDLING` e per modello; RETRO e gas in senso opposto frenano prima di invertire; bagnato: trazione ridotta in partenza, frenata più lunga); `roads.mjs`: velocità delle auto NPC tramite il profilo del modello (`agent.v`), solo nel passo delle auto.
+- **Curve a gas tenuto (Node, 60 fps, unità del gioco; HUD ×3,6 = km/h):**
+
+| modello | 0,25 s | 1 s | 2 s | 5 s | 10 s | max | 0→20 | frenata da 20 |
+|---|---|---|---|---|---|---|---|---|
+| Panda moderna | 1,4 | 9,2 | 19,3 | 34,4 | 39,0 | 39 | 2,1 s | 4,0 m |
+| Panda Fire | 1,0 | 6,7 | 15,0 | 29,3 | 34,8 | 35 | 2,8 s | 4,6 m |
+| Punto | 1,6 | 10,7 | 21,5 | 36,9 | 41,0 | 41 | 1,8 s | 3,8 m |
+| Ypsilon | 1,5 | 9,9 | 20,3 | 35,6 | 40,0 | 40 | 2,0 s | 4,0 m |
+| Uno | 1,0 | 6,3 | 14,5 | 29,2 | 35,4 | 36 | 2,8 s | 4,8 m |
+| Smart | 1,2 | 7,8 | 16,4 | 29,8 | 34,0 | 34 | 2,5 s | 4,0 m |
+| Seicento | 1,2 | 7,4 | 15,9 | 29,9 | 35,0 | 35 | 2,6 s | 4,4 m |
+| Fiat 500 | 1,3 | 8,3 | 17,7 | 32,2 | 37,0 | 37 | 2,3 s | 4,0 m |
+| Ape | 0,6 | 4,0 | 8,7 | 15,4 | 17,0 | 17 | — | 4,4 m |
+| Furgone fritti | 0,8 | 4,9 | 11,6 | 22,3 | 26,0 | 26 | 4,0 s | 5,1 m |
+| Scooter | 1,8 | 9,3 | 16,9 | 25,6 | 27,0 | 27 | 2,6 s | 4,2 m |
+| Moto | 2,7 | 14,4 | 25,3 | 35,8 | 37,0 | 37 | 1,5 s | 3,4 m |
+
+  Prima del BF05 l'auto faceva 0→20 in 0,45 s e arrivava a 38 in 2 s.
+- **Test:** nuovo `transmission.test.mjs` (6 test: partenza morbida e niente salti per tutti i modelli, ordine di spunto, Ape/furgoni più lenti, cambi impliciti, frenate e bagnato, RETRO/gas invertiti, NPC che ripartono piano e Ape lenta, cablaggio). Aggiornati con motivazione: `driving-controls.test.mjs` (prima chiedeva 38 in 2 s, ora partenza morbida, città in 2 s, punta entro 10 s), `traffic-collision.test.mjs` (attraversamento dell'incrocio in 7 s invece di 3, perché si riparte da fermi), versioni in `friggitoria-art`/`market-vehicles` rese «almeno». Suite Node 22 **270/270**.
+- **Browser (Chrome headless, tasti veri):** Panda moderna 0,3 → 20,9 in 2,5 s → 32,8 a 5 s; Uno 30,2 a 5 s; Ape 13,8 a 5 s; RETRO durante la corsa frena e poi arretra; telefono 844×390 con tocco tenuto su ACCELERA 1,1 → 28,7 in 3 s; 140 auto NPC, ripartenze dolci osservate, Ape del traffico a 6,1 di crociera; nessun errore JS.
+- **Cache:** `vehicle-handling.mjs?v=002`, `driving-controls.mjs?v=097`, `motorcycles.mjs?v=005`, `roads.mjs?v=147`, `npc-commute.mjs?v=002`, `bank-interior.mjs?v=007`, `game.mjs?v=155`.
+- **Non eseguiti / limiti:** telefono reale; valori di guida da rifinire a sensazione; audio del motore (Q09) ancora legato solo alla velocità, non alla marcia.
+- **Da fare:** revisione della PR BF05; BF06 a seguire.
