@@ -2,7 +2,7 @@
 **Apertura:** 20 ottobre 2026. **Repository:** `CzekUns/Effettokarmagra`. **Ambito:** solo `games/gta-melito/`.
 
 ## Come usare questa coda
-I bug sono segnalazioni del committente sulla versione giocabile, non diagnosi o correzioni già eseguite. **BF01–BF06 vengono prima delle Q13–Q24 ancora aperte in `TODO.md`**, salvo nuova istruzione del committente. La coda Q non viene cancellata né spuntata per effetto dei bugfix. Una **PR per ogni BF**, branch aggiornato da `main`, test effettivi, descrizione prima/dopo e commit/log in `WORK_LOG.md`; non fare merge autonomamente. Se un BF non passa il collaudo, non marcarlo completato e non saltare al successivo. Il collaboratore riceve le istruzioni attraverso GitHub, ma l'assegnazione da sola non avvia una sessione dell'AI esterna.
+I bug sono segnalazioni del committente sulla versione giocabile, non diagnosi o correzioni già eseguite. **BF01–BF06 vengono prima delle Q13–Q41 ancora aperte in `TODO.md`**, salvo nuova istruzione del committente. La coda Q non viene cancellata né spuntata per effetto dei bugfix. Una **PR per ogni BF**, branch aggiornato da `main`, test effettivi, descrizione prima/dopo e commit/log in `WORK_LOG.md`; non fare merge autonomamente. Se un BF non passa il collaudo, non marcarlo completato e non saltare al successivo. Il collaboratore riceve le istruzioni attraverso GitHub, ma l'assegnazione da sola non avvia una sessione dell'AI esterna.
 
 ### [ ] BF01 — Collisioni tra veicoli NPC e giocatore: niente blocco irreversibile — P0
 **Segnalazione:** molte auto NPC si incastrano; urtandole si incastra anche il giocatore.
