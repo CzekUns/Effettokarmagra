@@ -68,6 +68,7 @@ import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=002';
 import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches} from './football-pitches.mjs?v=001';
+import {GARAGES,nearestGarage,canStoreVehicle,depositVehicle,takeVehicle,vehicleFromEntry,chooseExitSpot,garageMessage,vehicleLabel,ownedEntry,ownedCount,garageById,GARAGE_SLOTS,drawGarage} from './garages.mjs?v=001';
 import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=001';
 import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
@@ -270,6 +271,99 @@ function openFootballMatch(pitch){
  cityEventBubble(state.events,state.player,'Calcetto in arrivo!');
  updateHud();
 }
+// Q35: fictional garages on OSM streets and the archive of owned vehicles (progress.garage).
+function setNotice(text){state.notice={text,until:state.clock+3.5};$('street').textContent=text;}
+function garagePrompt(p,busy){
+ if(busy||!state.progress||state.bankInterior)return '';
+ if(p.car>=0){
+  const v=state.cars[p.car];if(!canStoreVehicle(v)||state.foodVendors?.some(f=>f.vehicle===v))return '';
+  const g=nearestGarage(GARAGES,v,true);if(!g)return '';
+  return 'METTI IN GARAGE';
+ }
+ return nearestGarage(GARAGES,p,false)?'GARAGE':'';
+}
+const streetCarOf=id=>state.cars.find(v=>v.ownedId===id)||null;
+function storeDrivenVehicle(garage){
+ const p=state.player,vehicle=state.cars[p.car],save=state.progress?.garage;
+ if(!vehicle||!save)return false;
+ if(Math.abs(vehicle.speed||0)>2.3){setNotice('FERMATI DAVANTI AL GARAGE');return false;}
+ if(state.foodVendors?.some(f=>f.vehicle===vehicle)){setNotice(garageMessage({ok:false,reason:'non-ammesso'}));return false;}
+ const nx=Math.cos(garage.face),ny=Math.sin(garage.face);
+ const stand=[1.4,0,2.6,4,5.5].map(k=>({x:garage.door.x-nx*k,y:garage.door.y-ny*k})).find(q=>validWalk(q.x,q.y))||{x:garage.door.x,y:garage.door.y};
+ const result=depositVehicle(save,vehicle,garage.id);
+ if(!result.ok){setNotice(garageMessage(result));return false;}
+ // The archive is now its only place: the car leaves the street (no double).
+ state.cars.splice(p.car,1);
+ p.car=-1;p.vehicleType=null;carRadio.leaveVehicle();
+ p.x=stand.x;p.y=stand.y;p.a=garage.face;p.impactTime=0;p.impactVX=0;p.impactVY=0;p.impactLock=0;
+ state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);
+ saveProgress(localStorage,state.progress);
+ setNotice(garageMessage(result)+' · POSTI '+ownedCount(save)+'/'+GARAGE_SLOTS);
+ stick.x=0;stick.y=0;resetDrivingControls();updateHud();
+ return true;
+}
+function garageSpotFree(spot){
+ if(carBlocked(spot.x,spot.y,spot.a,-1,undefined))return false;
+ if(state.cars.some(v=>Math.hypot(v.x-spot.x,v.y-spot.y)<6.2))return false;
+ if(state.traffic.some(v=>Math.hypot(v.x-spot.x,v.y-spot.y)<7.5))return false;
+ if((state.people||[]).some(v=>Math.hypot(v.x-spot.x,v.y-spot.y)<3.6))return false;
+ return Math.hypot(state.player.x-spot.x,state.player.y-spot.y)>=3;
+}
+function takeFromGarage(id){
+ const g=state.garageOpen?.garage,save=state.progress?.garage;if(!g||!save)return;
+ const entry=ownedEntry(save,id);
+ if(!entry||!entry.stored||entry.garage!==g.id){garageFeedback(garageMessage(takeVehicle(save,id,g.id)),true);return;}
+ const spot=chooseExitSpot(g,garageSpotFree);
+ if(!spot){garageFeedback(garageMessage({ok:false,reason:'bloccato'}),true);return;}
+ const result=takeVehicle(save,id,g.id);
+ if(!result.ok){garageFeedback(garageMessage(result),true);return;}
+ state.cars.push(vehicleFromEntry(result.entry,spot));
+ state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);
+ saveProgress(localStorage,state.progress);
+ closeGarage();setNotice(vehicleLabel(result.entry.model)+' · DAVANTI AL GARAGE');
+}
+// A registered car left somewhere in town goes back to this garage (never lost, never doubled).
+function recallToGarage(id){
+ const g=state.garageOpen?.garage,save=state.progress?.garage,entry=ownedEntry(save,id);if(!g||!entry||entry.stored)return;
+ const car=streetCarOf(id),index=car?state.cars.indexOf(car):-1;
+ if(index>=0&&index===state.player.car){garageFeedback('SCENDI PRIMA DALL’AUTO',true);return;}
+ if(index>=0){state.cars.splice(index,1);if(state.player.car>index)state.player.car--;}
+ entry.stored=true;entry.garage=g.id;
+ state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);
+ saveProgress(localStorage,state.progress);garageFeedback('RICHIAMATA IN QUESTO GARAGE');renderGarage();
+}
+function openGarage(garage,tuneId=null){
+ state.garageOpen={garage,tuneId,fromCar:!!tuneId};
+ for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;resetDrivingControls();
+ $('garage-kind').textContent=(garage.kind==='officina'?'GARAGE E OFFICINA':'GARAGE')+' · DI FANTASIA';
+ $('garage-name').textContent=garage.nome.toUpperCase();
+ $('garage-note').textContent=garage.strada+' · luogo inventato. Le auto registrate restano salvate (max '+GARAGE_SLOTS+' posti). Grafica provvisoria.';
+ garageFeedback('');renderGarage();$('garage-panel').hidden=false;
+}
+function garageFeedback(text,err=false){$('garage-feedback').textContent=text;$('garage-feedback').classList.toggle('err',!!err);}
+function garageButton(list,label,right,onClick,poor=false){
+ const button=document.createElement('button');button.type='button';button.className=poor?'poor':'';
+ const a=document.createElement('span');a.textContent=label;const b=document.createElement('span');b.textContent=right;
+ button.append(a,b);button.addEventListener('click',onClick);list.append(button);return button;
+}
+function garageHeading(list,text){const h=document.createElement('p');h.className='shop-note';h.textContent=text;list.append(h);}
+function renderGarage(){
+ const open=state.garageOpen,save=state.progress?.garage;if(!open||!save)return;
+ const money=state.progress.money,list=$('garage-list');list.textContent='';
+ $('garage-balance').textContent='SALDO: € '+money+' · POSTI '+ownedCount(save)+'/'+GARAGE_SLOTS;
+ {
+  if(!save.vehicles.length)garageHeading(list,'NESSUN VEICOLO. Arriva qui in auto e premi E · METTI IN GARAGE.');
+  for(const v of save.vehicles){
+   const here=v.stored&&v.garage===open.garage.id,where=v.stored?(here?'QUI':garageById(v.garage)?.nome.toUpperCase()):'IN STRADA';
+   const tune=(v.tuning?.perf?' +'+v.tuning.perf+'%':'')+(v.tuning?.neon?' NEON':'');
+   garageHeading(list,vehicleLabel(v.model)+tune+' · '+where);
+   if(here)garageButton(list,'PRENDI','ESCE DAVANTI',()=>takeFromGarage(v.id));
+   if(!v.stored)garageButton(list,'RICHIAMA QUI','TORNA IN GARAGE',()=>recallToGarage(v.id));
+  }
+  return;
+ }
+}
+function closeGarage(){state.garageOpen=null;$('garage-panel').hidden=true;canvas.focus?.({preventScroll:true});updateHud();}
 // BF12: perimeter walls, gates and guard booths of the enclosures (villa comunale, Municipio…),
 // computed on the current road widths: the walls stand just beyond the painted pavement.
 // Q34: gare clandestine come evento arcade di FINZIONE (street-race.mjs): 1–2 partenze periferiche.
@@ -1229,6 +1323,7 @@ function dropPassengers(vehicle){
 function toggleVehicle(){
  if(!state.ready)return;
  if(state.shopOpen){closeShop();return;}
+ if(state.garageOpen){closeGarage();return;}
  const p=state.player;
  if(state.bankInterior){
   const interior=state.bankInterior;state.bankInterior=null;
@@ -1265,6 +1360,9 @@ function toggleVehicle(){
   // Q32: at the gate (or inside the lines) of a calcetto pitch.
   const pitch=pitchHotspot(state.pitches,p.x,p.y);
   if(pitch){openFootballMatch(pitch);return;}
+  // Q35: at the shutter of a garage, on foot: the archive of owned vehicles.
+  const garage=state.progress?nearestGarage(GARAGES,p,false):null;
+  if(garage){openGarage(garage);return;}
   const entrance=nearestBankEntrance(state.bankEntrances,p);
   if(entrance){
    const local={x:.5,y:.89,a:-Math.PI/2,moving:false};
@@ -1294,6 +1392,11 @@ function toggleVehicle(){
    if(hitch&&giveLift(vehicle,hitch)){updateHud();return;}
    if(occupantsOf(vehicle).length){dropPassengers(vehicle);updateHud();return;}
   }else if(occupantsOf(vehicle).length){$('street').textContent='FERMATI PER FAR SCENDERE IL PASSEGGERO';return;}
+  // Q35/Q36: driving up to a garage shutter: tuning of an owned car at the officina, else park it inside.
+  const garage=state.progress&&canStoreVehicle(vehicle)?nearestGarage(GARAGES,vehicle,true):null;
+  if(garage){
+   storeDrivenVehicle(garage);return;
+  }
   if(bike&&Math.abs(vehicle.speed||0)>2.3){
    $('street').textContent='FERMATI PRIMA DI SCENDERE DALLA MOTO';return;
   }
@@ -1405,7 +1508,7 @@ function drawSkidMarks([x0,y0,x1,y1]){
 }
 function tick(dt){
  if(!state.ready)return;
- if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||state.shopOpen||state.riderOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()){
+ if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||state.shopOpen||state.garageOpen||state.riderOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()){
   for(const key of Object.keys(pressed))pressed[key]=false;
   stick.x=0;stick.y=0;
   return;
@@ -1647,12 +1750,13 @@ function updateHud(){
  const pitchNear=p.car<0&&!eventAction&&!shopNear?pitchHotspot(state.pitches,p.x,p.y):null;
  // Q34: la partenza vicina è calcolata nel tick (stepStreetRace).
  const raceNear=p.car>=0?state.raceNear:null;
- $('action').textContent=eventAction||(shopDoor?'ENTRA':shopNear?'COMPRA':pitchNear?'GIOCA A CALCETTO':bank?'ENTRA IN BANCA':raceNear?'GARA':repair?'RIPARA · '+repair+' €':p.car>=0?liftAction||'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ const garageNear=garagePrompt(p,eventAction||shopNear||pitchNear);
+ $('action').textContent=eventAction||(shopDoor?'ENTRA':shopNear?'COMPRA':pitchNear?'GIOCA A CALCETTO':garageNear?garageNear:bank?'ENTRA IN BANCA':raceNear?'GARA':repair?'RIPARA · '+repair+' €':p.car>=0?liftAction||'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
  // Q15: on foot with nothing in reach the touch button is shown dimmed (it used to invite to get into a
  // car that was not there; the tap then only said to get closer to a vehicle).
- const idle=p.car<0&&!eventAction&&!shopNear&&!pitchNear&&!shopDoor&&!bank&&!enterable;
+ const idle=p.car<0&&!eventAction&&!shopNear&&!pitchNear&&!garageNear&&!shopDoor&&!bank&&!enterable;
  $('action').classList.toggle('idle',idle);$('action').setAttribute('aria-disabled',idle?'true':'false');
- boardPrompt(p.car>=0?(repair?'RIPARA · '+repair+' € · OFFICINA DI GIOCO':liftAction||''):eventAction||(shopDoor?'ENTRA · '+shopDoor.shop.name.toUpperCase():shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):pitchNear?'GIOCA A CALCETTO':bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
+ boardPrompt(p.car>=0?garageNear||(repair?'RIPARA · '+repair+' € · OFFICINA DI GIOCO':liftAction||''):eventAction||(shopDoor?'ENTRA · '+shopDoor.shop.name.toUpperCase():shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):pitchNear?'GIOCA A CALCETTO':garageNear?garageNear:bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
  if(raceNear)boardPrompt('GARA');
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');
@@ -2046,9 +2150,9 @@ function draw(dt=0){
  // Q22: lo scooter del pendolare (un mezzo della lista dei parcheggiati) mette la freccia prima delle svolte.
  // Q34: partenze, anelli, frecce e avversari delle gare (grafica provvisoria, da approvare).
  drawRaceWorld(c,state.races,[x0,y0,x1,y1],state.zoom,state.clock,v=>drawCar(v.x,v.y,v.a,3,false,v.model,v));
- state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1){drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);if(v.turnSignal)drawBlinker(v.x,v.y,v.a,v);
+ state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1){{drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);if(v.turnSignal)drawBlinker(v.x,v.y,v.a,v);
   // Q20: auto in panne in attesa del carro attrezzi: quattro frecce e triangolo.
-  if(v.broken&&i!==p.car){drawBlinker(v.x,v.y,v.a,v);drawWarningTriangle(c,v,vehicleShape(v));}}});
+  if(v.broken&&i!==p.car){drawBlinker(v.x,v.y,v.a,v);drawWarningTriangle(c,v,vehicleShape(v));}}}});
  drawPlayer();
  // Q42: ombrelloni del mercato sopra persone e veicoli; sfumano col giocatore sotto (R01, come i tetti).
  if(state.market){
@@ -2076,6 +2180,8 @@ function draw(dt=0){
  for(const bank of state.bankEntrances)if(bank.x>=x0&&bank.x<=x1&&bank.y>=y0&&bank.y<=y1)drawBankEntrance(c,bank,state.clock);
  if(state.player.car<0)for(const e of state.shopEntrances||[])if(e.x>=x0&&e.x<=x1&&e.y>=y0&&e.y<=y1)drawShopEntrance(c,e,state.clock);
  drawRiderWorld(c);
+ // Q35: fictional garages (provisional art): shutter, ramp and sign.
+ for(const g of GARAGES)if(g.door.x>=x0-8&&g.door.x<=x1+8&&g.door.y>=y0-8&&g.door.y<=y1+8)drawGarage(c,g,state.clock,Math.hypot(g.door.x-p.x,g.door.y-p.y)<12);
  // BF13: foto aerea di confronto sopra tutta la scena, in trasparenza (spenta: nessun costo).
  // Q34: cronometro, checkpoint e posizione in coordinate schermo.
  if(state.races?.active){c.save();c.setTransform(ratio,0,0,ratio,0,0);drawRaceHud(c,state.races,cw,ch);c.restore();}
@@ -2163,7 +2269,7 @@ function drawMini(){
 function updateCityAudio(){
  if(!cityAudio.started||!state.ready)return;
  const p=state.player,car=p.car>=0?state.cars[p.car]:null;
- const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen();
+ const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen||!!state.garageOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen();
  const traffic=[...state.traffic.filter(v=>v.body==='car'),...(state.commuters||[]).filter(c=>c.bike.rider).map(c=>c.bike)];
  cityAudio.update({paused,interior:!!state.bankInterior||!!state.shopInterior,radioLive:radioStatus==='live',
   player:{x:p.x,y:p.y,inVehicle:!!car,vehicleType:car&&isMotorcycle(car)?'motorcycle':'car',model:car?.model||'',speed:car?car.speed:0,throttle:pressed.up||pressed.accelerate?1:0},
@@ -2197,6 +2303,7 @@ function goToNovita(entry){
  if(!stand){$('street').textContent='NOVITÀ · NESSUN POSTO LIBERO VICINO ALL’ESEMPIO';return false;}
  const p=state.player;
  if(state.shopOpen)closeShop();
+ if(state.garageOpen)closeGarage();
  if(state.bankInterior){const inside=state.bankInterior;state.bankInterior=null;p.x=inside.outside.x;p.y=inside.outside.y;p.a=inside.outside.a;}
  // il ritorno è sempre il punto di prima del primo salto
  if(!state.preview)state.preview={back:{x:p.x,y:p.y,a:p.a,car:p.car,minutes:state.npcClockMinutes,
@@ -2215,7 +2322,7 @@ function goToNovita(entry){
 function backFromNovita(){
  const preview=state.preview;if(!preview)return false;
  const p=state.player,back=preview.back,car=back.car>=0?state.cars[back.car]:null;
- if(state.shopOpen)closeShop();state.bankInterior=null;
+ if(state.shopOpen)closeShop();if(state.garageOpen)closeGarage();state.bankInterior=null;
  p.impactTime=0;p.impactVX=0;p.impactVY=0;p.impactLock=0;
  if(car){p.car=back.car;p.vehicleType=isMotorcycle(car)?'motorcycle':'car';p.x=car.x;p.y=car.y;p.a=car.a;if(!isMotorcycle(car))carRadio.enterVehicle();}
  else{p.car=-1;p.vehicleType=null;p.x=back.x;p.y=back.y;p.a=back.a;}
@@ -2318,6 +2425,10 @@ function bind(){
    return;
   }
   if(e.key.toLowerCase()==='j'&&!e.repeat&&!state.shopOpen){e.preventDefault();openRiderApp();return;}
+  if(state.garageOpen){
+   if((e.key==='Escape'||e.key.toLowerCase()==='e')&&!e.repeat){e.preventDefault();closeGarage();}
+   return;
+  }
   if(state.shopOpen){
    const index=Number(e.key)-1,offer=offersFor(state.shopOpen.kind)[index];
    if(offer&&!e.repeat){e.preventDefault();buyFromShop(offer.id);return;}
@@ -2451,6 +2562,7 @@ function bind(){
  $('map-close').addEventListener('click',toggleBigMap);
  $('dialog-close').addEventListener('click',()=>$('dialog').hidden=true);
  $('shop-close').addEventListener('click',closeShop);
+ $('garage-close').addEventListener('click',closeGarage);
  $('pause-sound').addEventListener('click',()=>{cityAudio.start();cityAudio.toggleMuted();soundLabel();});
  $('pause-volume-down').addEventListener('click',()=>{cityAudio.changeVolume(-.1);soundLabel();});
  $('pause-volume-up').addEventListener('click',()=>{cityAudio.changeVolume(.1);soundLabel();});

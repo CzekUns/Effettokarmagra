@@ -94,6 +94,8 @@ html,body{touch-action:none;overscroll-behavior:none}
 .rider-hud{position:absolute;left:50%;top:44px;transform:translateX(-50%);max-width:min(92vw,520px);padding:5px 10px;background:#141c18e6;border:2px solid #ffd640;color:#ffe9a0;font:900 12px monospace;pointer-events:none;z-index:6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rider-hud.late{border-color:#e0664d;color:#ffc2ad}
 .shop .shop-note{min-height:0;margin:6px 0 0;font-size:10px;color:#a9b8a2}
+.garage .shop-offers{max-height:52vh;overflow-y:auto}
+.garage .shop-offers .shop-note{margin-top:10px;font-weight:900;color:#f4d797}
 .fullmap{position:absolute;inset:0;z-index:7;background:#0e1d19ed;padding:14px;
  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px}
 .fullmap h2{color:#f5d68e;font-size:16px;letter-spacing:.1em;margin:0}
@@ -429,6 +431,14 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
   <div class="name">APP · LAVORO DI FINZIONE</div><h2 id="rider-title">🛵 RIDER MELITO</h2>
   <div id="rider-body"></div>
   <button id="rider-close" aria-label="Chiudi l'app Rider">CHIUDI ✕ (J)</button>
+ </section>
+ <section class="dialog shop garage" id="garage-panel" hidden role="dialog" aria-labelledby="garage-name">
+  <div class="name" id="garage-kind">GARAGE</div><h2 id="garage-name">GARAGE</h2>
+  <p class="shop-balance" id="garage-balance">SALDO: € 0</p>
+  <div class="shop-offers" id="garage-list"></div>
+  <p class="shop-feedback" id="garage-feedback" aria-live="polite"></p>
+  <p class="shop-note" id="garage-note"></p>
+  <button id="garage-close" aria-label="Esci dal garage">ESCI ✕</button>
  </section>
  <section class="dialog" id="dialog" hidden role="dialog" aria-labelledby="dialog-head" aria-live="polite">
   <div class="name" id="dialog-speaker">NICO</div><h2 id="dialog-head">NUOVO MESSAGGIO</h2><p id="dialog-text"></p>
