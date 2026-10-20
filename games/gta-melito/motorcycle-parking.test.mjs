@@ -76,9 +76,9 @@ test('game truly spawns parked motorcycles and gives on-foot player a readable p
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  const page=await readFile(new URL('./index.html',import.meta.url),'utf8');
  assert.match(game,/motorcycleParkingRoadOrder\(possible,point,roadPoint,arcLength,rnd\)/);
- assert.match(game,/motorcycleParkingCandidates\(road,roadPoint,visualRoadWidth\(road\),rnd\)/);
- assert.match(game,/state\.cars\.push\(bike\);parkedBikeCount\+\+/);
- assert.match(game,/state\.cars\.some\(other=>vehiclesOverlap\(bike,other\)\)/);
+ // BF02: each scooter takes a free stall of the parking strip on that road (no more kerb guesses).
+ assert.match(game,/nearestFreeStalls\(state\.parkingBays,at\.x,at\.y,state\.cars,vehiclesOverlap,\{roadId:road\.id/);
+ assert.match(game,/vehicleType:'motorcycle',rider:false\},stall\)\);parkedBikeCount\+\+/);
  assert.match(game,/function drawParkedMotorcycleHints\(/);
  assert.match(game,/parkedBikeLabel\(v\)/,'labels follow actual vehicle type');
  assert.match(game,/drawParkedMotorcycleHints\(\)/);

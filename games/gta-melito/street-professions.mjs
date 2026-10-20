@@ -33,7 +33,7 @@ function clearOf(point,actors,range){
 /* Vehicles must pass the SAME OSM/drivable clearance as other parked cars.
  * The fryer must have a valid, free foot position; otherwise skip that stall.
  * Never sacrifice a lane or doorway just to meet a visual quota. */
-export function placeStreetFoodVendors(graph,parked,{vehicleOK,walkerOK}={}){
+export function placeStreetFoodVendors(graph,parked,{vehicleOK,walkerOK,vehicleOffset=null}={}){
  if(!graph?.edges?.length||!vehicleOK||!walkerOK)return [];
  const placed=[],occupied=[...parked];
  for(const where of FOOD_STALLS){
@@ -42,7 +42,10 @@ export function placeStreetFoodVendors(graph,parked,{vehicleOK,walkerOK}={}){
   for(const {edge,id} of edges){
    if(distance(boundsPoint(graph,id,.5,1,0),where)>310)continue;
    for(const t of [.38,.62,.5])for(const side of [1,-1]){
-    const pose=boundsPoint(graph,id,t,side,edge.streetWidth/2+2.25);
+    // BF02: with parking bays the van stands in the strip between lane and pavement.
+    const lateral=vehicleOffset?vehicleOffset(edge.streetWidth):edge.streetWidth/2+2.25;
+    if(lateral==null)continue;
+    const pose=boundsPoint(graph,id,t,side,lateral);
     const vehicle={...pose,model:where.model,vehicleType:'car',type:6,speed:0,
      vendorStand:true,vendorDistrict:where.name};
     if(!clearOf(vehicle,occupied,12)||!clearOf(vehicle,placed.map(v=>v.vehicle),125)||

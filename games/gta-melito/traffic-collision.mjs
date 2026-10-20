@@ -78,10 +78,18 @@ export function vehicleHitsPedestrian(car,ped,pad=.8){
  const forward=dx*ca+dy*sa,side=-dx*sa+dy*ca;
  return forward>=-d.halfLength-pad&&forward<=d.halfLength+pad&&Math.abs(side)<d.halfWidth+pad;
 }
+/* BF02: a vehicle still in its parking bay stands beside the pavement; pedestrians walk past it at
+ * BAY_PEDESTRIAN_PAD from its side (parking-bays.mjs keeps 0,45 m). Moved by a knock or a driver,
+ * it is an ordinary obstacle again. */
+export const BAY_PEDESTRIAN_PAD=.4;
+export function inParkingBay(vehicle){
+ const bay=vehicle?.parkingBay;
+ return !!bay&&Math.abs(vehicle.x-bay.x)<.3&&Math.abs(vehicle.y-bay.y)<.3;
+}
 function touches(pose,body,other){
  const otherBody=other.body||'car';
  return body==='car'?(otherBody==='car'?vehiclesOverlap(pose,other):vehicleHitsPedestrian(pose,other)):
-  otherBody==='car'&&vehicleHitsPedestrian(other,pose,.8);
+  otherBody==='car'&&vehicleHitsPedestrian(other,pose,inParkingBay(other)?BAY_PEDESTRIAN_PAD:.8);
 }
 export function collidesWithTraffic(pose,body,index,self=null){
  for(const other of nearbyColliders(index,pose.x,pose.y,8)){

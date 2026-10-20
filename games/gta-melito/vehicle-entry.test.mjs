@@ -43,7 +43,8 @@ test('legacy procedural motorcycle removed, and UI shares exact board selection 
  assert.equal(game.split('nearestEnterableVehicle(state.cars,p)').length-1,3,
    'E, touch HUD and near-bike label share the same selection');
  assert.match(game,/p\.car=target\.index/);
- assert.match(game,/starterMotorcycleCandidates\(point,nearCar,visualRoadWidth\(chosen\.q\)\)/);
+ // BF02: the starter scooter takes the free stall of the parking strip closest to the Panda.
+ assert.match(game,/const bikeStall=free\(nearCar\.x,nearCar\.y,\{radius:40\}\)/);
  assert.ok(!art.includes('if(type===5)'), 'old procedural scooter no longer appears among normal car variants');
  assert.match(game,/isMotorcycle\(vehicle\)/);
  assert.match(game,/drawMotorcycle\(c,x,y,a,model/);
