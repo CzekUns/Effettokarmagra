@@ -10,7 +10,7 @@
  * a variatore sale continuo. Uno strato di rumore (rombo, aria, rotolamento) cresce con marcia e
  * velocità. Due volumi separati e salvati: EFFETTI/AMBIENTE (tutto questo modulo) e RADIO/MUSICA
  * (applicato da game.mjs allo stream di car-radio.mjs); SUONI OFF zittisce entrambi. */
-import {handlingProfile,gearAt} from './vehicle-handling.mjs?v=003';
+import {handlingProfile,gearAt} from './vehicle-handling.mjs?v=005';
 export const AUDIO_STORAGE_KEY='gta-melito-audio-v1';
 export const RADIO_DEFAULT_VOLUME=.52;
 export const TRAFFIC_VOICES=4;
@@ -192,6 +192,15 @@ export function createCityAudio({contextFactory=()=>new (globalThis.AudioContext
    return mix;
   },
   // Clacson a due toni (auto) o a un tono più acuto (scooter); pan e volume dalla posizione.
+  // Q24: colpo sordo di buche, dossi, tombini e cordoli (sintetico, breve).
+  thump(level=.5){
+   if(!ctx||!nodes||prefs.muted||!focused)return false;
+   const t=ctx.currentTime,gain=ctx.createGain(),o=ctx.createOscillator(),l=clamp(level,0,1);
+   o.type='sine';o.frequency.setValueAtTime(92,t);o.frequency.exponentialRampToValueAtTime(40,t+.15);
+   gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(.24*l,t+.008);gain.gain.exponentialRampToValueAtTime(.0005,t+.19);
+   o.connect(gain);gain.connect(nodes.master);o.start(t);o.stop(t+.21);
+   return true;
+  },
   horn(kind='auto',pan=0,level=1){
    if(!ctx||!nodes||prefs.muted||!focused)return false;
    const t=ctx.currentTime,gain=ctx.createGain(),tones=kind==='moto'?[610]:[405,510];

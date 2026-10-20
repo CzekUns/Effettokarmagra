@@ -86,6 +86,9 @@ export const NOVITA=Object.freeze([
  {id:'pulsante',nome:'Pulsante azione attenuato sul telefono',lavoro:'Q15',pr:'#57',
   cosa:'Sul telefono, a piedi lontano da veicoli, negozi e porte, il pulsante azione è spento invece di dire «ENTRA IN AUTO».',
   trova:null},
+ {id:'calcetto',nome:'Campetti e partita di calcetto 5 contro 5',lavoro:'Q32 · Q33',pr:'in revisione',
+  cosa:'Campetto con erba a strisce, porte, rete e fari; al cancello «E · GIOCA A CALCETTO» apre la partita vista dall’alto (ROSSI contro BLU, 2 minuti): campo, calciatori in pixel art semplice, maglie e comandi touch sono provvisori.',
+  distanza:[2,3],trova:s=>near((s?.pitches?.list||[]).filter(p=>p.kind==='calcetto').map(p=>p.gate),s)},
  {id:'scala',nome:'Veicoli e persone più piccoli, parcheggi fuori dalle corsie',lavoro:'BF14',pr:'in arrivo',futura:true,
   cosa:'Auto, moto e persone rimpicciolite rispetto alle strade (zoom adeguato), stalli che non occupano più la carreggiata.',
   disponibile:s=>!!s?.worldScale,trova:s=>near((s?.parkingBays?.strips||[]).map(bayPoint),s)},
@@ -100,7 +103,10 @@ export const NOVITA=Object.freeze([
   disponibile:s=>vehicles(s).some(v=>REFUSE_TRUCK.test(v.model||'')),trova:s=>near(vehicles(s).filter(v=>REFUSE_TRUCK.test(v.model||'')),s)},
  {id:'passeggeri',nome:'Passeggeri su auto e scooter',lavoro:'Q21',pr:'in arrivo',futura:true,
   cosa:'Passeggeri visibili in marcia, «E · DAI UN PASSAGGIO».',
-  disponibile:s=>vehicles(s).some(hasPassengers),trova:s=>near(vehicles(s).filter(hasPassengers),s)}
+  disponibile:s=>vehicles(s).some(hasPassengers),trova:s=>near(vehicles(s).filter(hasPassengers),s)},
+ {id:'gare',nome:'Gare clandestine arcade: partenza, anelli, frecce e avversari',lavoro:'Q34',pr:'in revisione',
+  cosa:'Bandiera a scacchi e cerchio alla partenza in periferia, 3 avversari fermi in griglia; in auto «E · GARA»: anelli gialli, frecce sull’asfalto, percorso in minimappa, cronometro e posizione. Evento di finzione, solo nel gioco.',
+  disponibile:s=>!!s?.races?.routes?.length,trova:s=>near((s?.races?.routes||[]).map(r=>r.start),s)}
 ].map(Object.freeze));
 
 /* Una voce è attiva se esiste davvero nel gioco (le voci «in arrivo» solo quando il modulo c'è). */

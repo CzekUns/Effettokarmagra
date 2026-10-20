@@ -662,3 +662,75 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 ### 2026-10-20 — Q17 banco degli ambulanti
 - Nessuna nuova arte. Il pannello acquisti, lo stesso dei negozi Q06, ora si apre anche al banco dei furgoncini, con l'intestazione «AMBULANTE · MELITO». Sulla plancia PC compare la scritta «E · COMPRA · NOME DEL BANCO». Foto: banco «Zeppole e panzerotti» in Via Roma.
 
+
+### 2026-10-20 — Q23 danni visibili (grafica PROVVISORIA, da approvare)
+- **Segni dei danni:** disegnati sopra lo sprite dei veicoli, non sono nuovi sprite.
+  - Graffi: tratti chiari.
+  - Ammaccature: macchie scure con un riflesso.
+  - Vetro incrinato: stella bianca sul parabrezza.
+  - Danno grave: tre sbuffi di fumo grigio dal cofano.
+- **Cartello «OFFICINA · DI GIOCO»** sul marciapiede di Via Roma vicino alla partenza: insegna verde con la chiave inglese, nessun marchio.
+- **Dove vederli:** urta un muro o un'auto in Via Roma vicino alla partenza; l'officina è pochi metri più avanti, intorno a (1240, 1380).
+### 2026-10-20 — Q24 superfici stradali (grafica PROVVISORIA, da approvare)
+- Buche irregolari scure con bordo chiaro e crepe; tombini tondi a grata; rappezzi d'asfalto più scuro.
+- Dossi a strisce gialle e nere di traverso sulla carreggiata; pavé a pietre sfalsate con estremità arrotondate; sterrato marrone con due solchi.
+- Con la pioggia le buche diventano pozzanghere con riflesso e cerchi delle gocce.
+- Dove guardarli: dosso «vicino a chiesa» in Via Lavinaio (1120, 1142); buche e tombini in Vico Orefici (1147, 1218); pavé in Piazza Guglielmo Marconi; sterrato sulle 4 strade `track` OSM.
+### 2026-10-20 — Q18 veicoli di servizio (grafica provvisoria)
+- Nuovo `assets/vehicles/servizio-16-rgba.png` (208×368, 4×4 da 52×92), tavola `sources/servizio-16-sheet.png` e generatore `sources/servizio-16-genera.py`. Vista esattamente dall'alto, muso in alto.
+- **Furgone del corriere:** bianco, bianco con fascia blu, bianco con fascia verde, argento, grigio scuro, blu notte, azzurro, bianco vissuto.
+- **Camion della nettezza urbana:** verde, bianco-verde, bianco-blu, arancio, grigio, verde scuro, bianco-arancio, verde vissuto.
+- Livree inventate, senza marchi né scritte. Pixel art provvisoria: da far approvare a Simone.
+
+
+### 2026-10-20 — Q19 carro attrezzi e autobus urbano (grafica provvisoria)
+- Nuovo `assets/vehicles/servizio2-16-rgba.png` (208×496, 4×4 da 52×124), tavola `sources/servizio2-16-sheet.png` e generatore `sources/servizio2-16-genera.py`. Vista esattamente dall'alto, muso in alto, stessa densità di pixel dei veicoli di servizio Q18.
+- **Carro attrezzi:** giallo, arancio, bianco-rosso, rosso, blu, bianco, grigio-arancio, giallo vissuto.
+- **Autobus urbano corto:** arancio, verde-bianco, blu-bianco, rosso, bianco-azzurro, giallo, grigio-verde, arancio vissuto.
+- Livree inventate, senza scritte, numeri di linea o marchi. Pixel art provvisoria: da far approvare a Simone.
+### 2026-10-20 — Q21 passeggeri (PROVVISORIO, da approvare)
+- **Auto, Ape e furgoni:** teste e spalle degli occupanti stilizzate, sotto parabrezza e lunotto, con un leggero riflesso del vetro. Il guidatore si vede solo sui mezzi in marcia e sull'auto del giocatore; le auto parcheggiate restano vuote.
+- **Scooter:** passeggero dietro il guidatore, con casco chiaro, giacca diversa e contorno scuro, per leggere due figure distinte. Gli sprite dei mezzi sono invariati.
+- **Cartelli e meta:** «PASSAGGIO?», fumetto del passeggero su due righe (mancia e via), anello giallo tratteggiato sulla meta.
+
+### 2026-10-20 — BF14 scala degli asset (Claude)
+- Veicoli disegnati al 75% e persone all'80%; la telecamera è più vicina del 20%. Strade, marciapiedi ed edifici sono invariati.
+- Stalli e strisce bianche ora seguono la larghezza delle auto disegnate: più stretti, più vicini al marciapiede, mai sotto il traffico. Si vede bene sulle residenziali.
+- Da far giudicare a Simone: proporzioni di auto e persone rispetto alle strade, zoom a piedi e in auto. Basta modificare `world-scale.mjs`.
+
+### 2026-10-20 — Q20 routine dei veicoli di servizio (grafica PROVVISORIA, da approvare)
+- **Fermate:** pensilina con vetro e panca, palina gialla «FERMATA» (nessun numero di linea), tutto in primitive canvas.
+- **Autobus:** due varchi scuri sul fianco destro quando le porte sono aperte.
+- **Auto in panne:** quattro frecce e triangolo rosso dietro.
+- **Carro attrezzi:** l'auto soccorsa è disegnata sul pianale, all'88%.
+- **Persone:** autista del corriere e operatore della nettezza urbana con gli sprite esistenti dei pedoni.
+- **Dove guardare:** `?servizio=1&ora=10:00` accelera le routine; le foto di prova sono fuori dal repo.
+### 2026-10-20 — Q25 interni dei negozi (Claude, PROVVISORIO · da approvare)
+- Tre interni in pixel art procedurale con la stessa palette, gli stessi muri e le stesse ombre della banca: **bar** (bancone in legno con macchina del caffè e tazzine, mensole di bottiglie, vetrina dei dolci, tre tavolini con sedie, pavimento in graniglia), **panificio/pasticceria** (banco vetrina con pane e cassa, scaffali del pane a parete, cesti, piastrelle chiare), **minimarket** (scaffali con prodotti generici senza marche, frigoriferi a vetro, frutta, cassa, linoleum). Commesso con lo sprite dei pedoni. Fuori: punto luminoso caldo sul portone, senza scritta sopra l'insegna.
+- **Da far vedere a Simone:** Bar Alexander su Corso Europa (628,1291) e Panificio Pagliuca: avvicinarsi al punto luminoso sul portone, E · ENTRA, poi andare al bancone (PARLA).
+
+
+### 2026-10-20 — Q28 «SLOT DEL VESUVIO» (provvisoria, da approvare)
+Schermata della slot in pixel art disegnata via codice. Griglia logica 192×128, ingrandita senza sfocature. Cornice rosso scuro e oro con luci che si alternano; tre rulli bianchi con simboli 16×16 ingranditi ×2 (limone, caffè, pizza, babà, sfogliatella, Pulcinella, Vesuvio, cornetto rosso), riga vincente rossa e pannello crediti. È un segnaposto di stile: il proprietario può sostituire i simboli con sprite propri lasciando invariate le regole.
+
+### 2026-10-20 — Q29 video poker «POKER DEL GOLFO» (grafica PROVVISORIA, da approvare)
+- Schermata pixel art disegnata in codice: tavolo verde con cornice e luci, tabella delle combinazioni su due colonne (la riga vinta si illumina), 5 carte 30×42 px con rango, seme piccolo e seme grande, corona dorata sulle figure, dorso blu a rombi, nastro dorato «TIENI» sulle carte tenute; pulsanti TIENI 1–5 per il touch.
+- Da vedere: PAUSA › STRUMENTI › PROVA VIDEO POKER, oppure `?minigioco=poker`, su PC e telefono in orizzontale.
+
+## 2026-10-20 — Q32 campetti (grafica PROVVISORIA, da approvare)
+- Campi in erba sintetica a strisce, linee bianche (calcio a 5: area a semicerchio, centro; calcio a 11: aree FIFA), porte con rete, recinzione a rete verde scuro con pali ogni 3 m, cancello socchiuso, fari ai quattro angoli. Disegno procedurale nel livello a terra, sotto i tetti.
+- Dove guardarli: Via delle Palme (550, 1198) e (528, 1276); Corso Europa (1026, 1882).
+
+### 2026-10-20 — Q27 arredi dei bar e cabinati (Claude / `ilconsulentelogistico-hue`) — grafica provvisoria
+- Bar grande 80×60: bancone, vetrina dolci, 4 sgabelli rossi, 2 tavolini con sedie, cabinato slot (tre rulli) e cabinato video poker (carte su panno verde) contro la parete destra, tavolo da biliardo con sponde in legno, sei buche, biglie e stecca. Bar piccolo 64×50: bancone, sgabelli, due tavolini, un cabinato, niente biliardo. Punto luminoso davanti a ogni gioco. Pixel art procedurale con palette e ombre della banca; arredi e giochi inventati.
+- **Non verificato a schermo** (nessuna foto in questa sessione): da far vedere e approvare a Simone.
+
+### 2026-10-20 — Q30 biliardo «BILIARDO DEL RIONE» (grafica PROVVISORIA, da approvare)
+- Tavolo visto dall'alto disegnato in codice su una griglia logica 224×136, ingrandita senza sfocature: cornice di legno con venature e diamanti color perla, sponde verde scuro, panno verde con trama a punti, linea di battuta e punto di acchito, 6 buche nere con bordo.
+- Biglie 7×7 px con contorno scuro, ombra sul panno, ombreggiatura e punto di luce; la 9 è rigata. Stecca con puntale azzurro di gesso, ghiera bianca, fusto chiaro e calcio scuro, che arretra con la potenza. Linea di mira a puntini, biglia fantasma e direzione della biglia colpita in oro. In alto la striscia del punteggio con le biglie imbucate da ciascuno e la freccia del turno.
+- Da vedere: PAUSA › STRUMENTI › PROVA BILIARDO, oppure `?minigioco=biliardo`, su PC e telefono in orizzontale.
+
+## 2026-10-20 — Q33 partita di calcetto (grafica PROVVISORIA, da approvare)
+- Scena a schermo intero vista dall'alto, come nei primi giochi di calcio. Campo a strisce con gli stessi verdi del campetto Q32, linee del calcio a 5, porte con rete a quadretti, recinzione con pali e fari.
+- Calciatori 7×9 pixel con maglia a due colori: ROSSI rosso e bianco, BLU blu e azzurro; portieri giallo e verde. Freccia gialla sul giocatore comandato; palla 3×3 pixel con ombra.
+- Sul telefono: levetta, TIRO, PASSA e CAMBIO; sul PC la riga dei tasti. Dove vederla: «E · GIOCA A CALCETTO» al cancello di un campetto (Via delle Palme (535, 1181) o Corso Europa (1010, 1878)), oppure PAUSA › NOVITÀ › `calcetto`.

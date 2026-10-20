@@ -81,8 +81,9 @@ test('Q06 game wiring: counter opens with the action, pauses the world, money an
  for(const id of ['shop-panel','shop-name','shop-balance','shop-offers','shop-feedback','shop-note','shop-close'])assert.match(html,new RegExp('id="'+id+'"'));
  assert.match(game,/import \{offersFor,nearestShop,buyOffer[^}]*\} from '\.\/local-shops\.mjs\?v=\d+'/);
  assert.match(game,/from '\.\/campaign\.mjs\?v=\d+'/,'campaign.mjs changed: its import carries a cache version');
- assert.ok(game.indexOf('const shop=nearestCounter(p)')>0&&game.indexOf('const shop=nearestCounter(p)')<game.indexOf('const entrance=nearestBankEntrance(state.bankEntrances,p)'),'counter before bank and vehicles');
- assert.match(game,/\|\|state\.shopOpen\)\{/,'the world pauses while shopping');
+ {const at=Math.max(game.indexOf('const shop=nearestCounter(p)'),game.indexOf('const target=footShopTarget(p)'));
+ assert.ok(at>0&&at<game.indexOf('const entrance=nearestBankEntrance(state.bankEntrances,p)'),'counter (or Q25 shop door) before bank and vehicles');}
+ assert.match(game,/\|\|state\.shopOpen(?:\|\|state\.garageOpen)?(\|\|state\.riderOpen)?(?:\|\|is\w+Open\(\))*\)\{/,'the world pauses while shopping (Q39: and in the Rider app)');
  assert.match(game,/if\(result\.ok\)\{\n  saveProgress\(localStorage,state\.progress\);refreshCampaign\(\);/,'saved and HUD money refreshed right away');
  assert.match(game,/\$\('shop-balance'\)\.textContent='SALDO: € '\+money/);
  assert.match(game,/\*boostFactor\(state\.boost,state\.clock\)/,'the walking speed uses the boost');

@@ -83,7 +83,19 @@ html,body{touch-action:none;overscroll-behavior:none}
 .shop .shop-offers button:focus-visible,.shop .shop-offers button:hover{border-color:#f4d797}
 .shop .shop-feedback{min-height:20px;margin:8px 0 0;font-size:12px;color:#c9e7c1}
 .shop .shop-feedback.err{color:#ffb39a}
+.rider-panel{max-height:calc(100% - 24px);overflow:auto}
+.rider-panel h3{margin:10px 0 2px;font-size:12px;color:#ffd640;letter-spacing:.06em}
+.rider-panel p{margin:3px 0;font-size:12px;min-height:0}
+.rider-panel .rider-status{color:#ffb39a;font-weight:900}.rider-panel .rider-status.ok{color:#c9e7c1}
+.rider-panel .rider-offer,.rider-panel .rider-refresh,.rider-panel .rider-cancel{display:block;width:100%;margin:6px 0 0;padding:8px 10px;text-align:left;background:#1d3a30;color:#f6e9cb;border:2px solid #6f8f74;font-weight:900;font-size:11px}
+.rider-panel .rider-offer.poor{opacity:.62;border-style:dashed}.rider-panel .rider-cancel{border-color:#c46a52}
+.rider-panel .rider-offer:hover,.rider-panel .rider-offer:focus-visible{border-color:#ffd640}
+.rider-panel .rider-review{font-size:11px;color:#f1e3bd}.rider-panel .rider-note{font-size:10px;color:#a9b8a2}.rider-panel .rider-feedback{color:#c9e7c1}
+.rider-hud{position:absolute;left:50%;top:44px;transform:translateX(-50%);max-width:min(92vw,520px);padding:5px 10px;background:#141c18e6;border:2px solid #ffd640;color:#ffe9a0;font:900 12px monospace;pointer-events:none;z-index:6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rider-hud.late{border-color:#e0664d;color:#ffc2ad}
 .shop .shop-note{min-height:0;margin:6px 0 0;font-size:10px;color:#a9b8a2}
+.garage .shop-offers{max-height:52vh;overflow-y:auto}
+.garage .shop-offers .shop-note{margin-top:10px;font-weight:900;color:#f4d797}
 .fullmap{position:absolute;inset:0;z-index:7;background:#0e1d19ed;padding:14px;
  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px}
 .fullmap h2{color:#f5d68e;font-size:16px;letter-spacing:.1em;margin:0}
@@ -347,6 +359,66 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  .car-radio button,.car-radio a{height:28px;min-width:27px;padding:2px;font-size:10px}
  .radio-info strong{font-size:10px}.radio-info small{font-size:8px}
 }
+/* Q28: slot machine arcade di prova sopra la plancia, pixel art ingrandita senza sfocature. */
+.slot-panel{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:#0b0807d9}
+.slot-panel[hidden]{display:none}
+.slot-card{background:#2a1612;border:2px solid #e9b949;box-shadow:0 0 0 4px #1b1410;padding:10px;max-width:min(96vw,640px);max-height:96vh;overflow:auto;text-align:center;color:#f4e6c4}
+#slot-canvas{width:min(92vw,576px,calc((96vh - 150px)*1.5));aspect-ratio:3/2;image-rendering:pixelated;image-rendering:crisp-edges;display:block;margin:0 auto}
+.slot-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:8px 0}
+.slot-controls button{background:#4a221b;border:1px solid #e9b949;color:#f4e6c4;font-weight:bold;font-size:12px;min-height:44px;min-width:64px;padding:8px 12px}
+.slot-controls .slot-spin{background:#c8322a;font-size:15px;min-width:110px}
+.slot-controls button:disabled{opacity:.45}
+.slot-rules,.slot-note{font-size:10px;margin:4px 0;color:#d8c9a8}.slot-note{color:#9fb59a}
+/* Q29: video poker, stesso cabinato della slot; tasti TIENI per il touch. */
+#poker-canvas{width:min(92vw,576px,calc((96vh - 200px)*1.5));aspect-ratio:3/2;image-rendering:pixelated;image-rendering:crisp-edges;display:block;margin:0 auto;cursor:pointer}
+/* Q31: goriziana, stesso pannello; il tavolo si tocca e si trascina per mirare (niente scroll della pagina). */
+#goriziana-canvas{width:min(92vw,576px,calc((96vh - 230px)*1.5));aspect-ratio:3/2;image-rendering:pixelated;image-rendering:crisp-edges;display:block;margin:0 auto;touch-action:none;cursor:crosshair}
+.poker-holds{margin:6px 0 0}.poker-holds button{min-width:58px;font-size:11px}.poker-holds button[aria-pressed="true"]{background:#9b6b1d;color:#1b1410}
+/* Q30: biliardo, tavolo grande a sinistra e comandi in colonna a destra (anche sul telefono in orizzontale). */
+.slot-card.pool-card{display:flex;align-items:flex-start;gap:10px;max-width:98vw;text-align:left}
+#pool-canvas{height:min(calc(96vh - 24px),calc((98vw - 270px)*.607),540px);width:auto;aspect-ratio:224/136;flex:none;image-rendering:pixelated;image-rendering:crisp-edges;display:block;touch-action:none;cursor:crosshair}
+.pool-side{width:220px;max-height:calc(96vh - 24px);overflow:auto;display:flex;flex-direction:column;gap:6px}
+.pool-title{margin:0;font-size:13px;color:#e9b949;letter-spacing:.06em}.pool-score{margin:0;font-weight:bold;font-size:14px}.pool-msg{margin:0;min-height:30px;font-size:12px;color:#f2d24b}
+.pool-power{height:10px;border:1px solid #e9b949;background:#1b1410}.pool-power span{display:block;height:100%;width:0;background:linear-gradient(90deg,#3f7a3a,#e9b949,#c8322a)}
+.pool-controls{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0}.pool-controls button{min-width:0;padding:6px 6px}.pool-controls .slot-spin{grid-column:1/-1;font-size:14px}
+.pool-record{margin:0;font-size:10px;color:#d8c9a8}.pool-side .slot-rules,.pool-side .slot-note{margin:0}
+@media (max-height:500px){.pool-title,.pool-score{display:none}.pool-side .slot-rules,.pool-side .slot-note,.pool-record{font-size:9.5px;line-height:1.25}}
+@media (max-width:640px){.slot-card.pool-card{flex-direction:column;align-items:center}#pool-canvas{width:min(94vw,560px);height:auto}.pool-side{width:auto;max-height:none}}
+
+/* Q33: partita di calcetto 5 contro 5, scena a schermo intero sopra la città (in pausa sotto). */
+.football{position:fixed;inset:0;z-index:15;overflow:hidden;background:#1d2b24;color:#f6ebce;touch-action:none;user-select:none;-webkit-user-select:none;font-family:inherit}
+.football[hidden]{display:none}
+.football canvas{position:absolute;left:0;top:0;image-rendering:pixelated;image-rendering:crisp-edges}
+.fb-top{position:absolute;z-index:2;top:max(6px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));display:flex;align-items:center;justify-content:center;pointer-events:none}
+.fb-top #fb-exit{position:absolute;left:0;top:0;pointer-events:auto;min-width:64px;min-height:44px;padding:6px 12px;border:2px solid #d8c48c;background:#17261eeb;color:#ffdf99;font-weight:900;font-size:12px;letter-spacing:.06em;box-shadow:0 3px 8px #0009}
+.fb-score{display:flex;align-items:center;gap:8px;padding:5px 12px;background:#0f1a15e6;border:2px solid #c2ab72;box-shadow:3px 3px #09140fa6;font-size:14px;font-weight:900;letter-spacing:.06em;white-space:nowrap}
+.fb-score b{font-size:17px;color:#ffe6a7;min-width:52px;text-align:center}
+.fb-chip{padding:2px 6px;border:1px solid #0006;color:#fff}.fb-home{background:#d33b33}.fb-away{background:#2d5fc4}
+.fb-clock{margin-left:4px;color:#bfe3c2;min-width:30px;text-align:right}
+.fb-banner{position:absolute;z-index:3;left:50%;top:22%;transform:translateX(-50%);padding:8px 18px;background:#0f1a15e0;border:2px solid #ffe14a;color:#ffe14a;font-size:22px;font-weight:1000;letter-spacing:.1em;white-space:nowrap;pointer-events:none;text-shadow:2px 2px #000}
+.fb-banner[hidden]{display:none}
+.fb-card{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);width:min(460px,calc(100% - 32px));max-height:calc(100% - 70px);overflow:auto;padding:14px 16px;background:linear-gradient(150deg,#25372c,#121e18);border:2px solid #d0b772;box-shadow:5px 6px #050b08;text-align:center}
+.fb-card[hidden]{display:none}
+.fb-card h2{margin:0 0 8px;color:#f2d18a;font-size:18px;letter-spacing:.06em}
+.fb-card p{margin:0 0 12px;font-size:12px;line-height:1.55;color:#e4e8da}
+.fb-card button{min-height:44px;min-width:160px;padding:9px 18px;background:#f2d28a;color:#152a21;border:2px solid #ffe7b2;font-weight:900;font-size:13px}
+.fb-keys{position:absolute;z-index:2;left:50%;bottom:max(6px,env(safe-area-inset-bottom));transform:translateX(-50%);margin:0;padding:4px 10px;background:#0f1a15cc;border:1px solid #536951;font-size:11px;color:#d6dccd;white-space:nowrap;pointer-events:none}
+.fb-stick,.fb-buttons{display:none}
+@media(max-width:760px),(pointer:coarse){
+ .fb-keys{display:none}
+ .fb-stick{display:flex;position:absolute;z-index:3;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));width:clamp(104px,15vw,136px);height:clamp(104px,15vw,136px);border:2px solid #e5d19b8c;border-radius:50%;background:#15241c80;align-items:center;justify-content:center;box-shadow:0 4px 14px #0008;touch-action:none}
+ .fb-knob{width:42%;height:42%;border:2px solid #ffe9ae;background:linear-gradient(145deg,#829273,#34483b);border-radius:50%;box-shadow:0 4px 0 #101913b8;pointer-events:none;transform:translate(0,0)}
+ .fb-buttons{display:flex;position:absolute;z-index:3;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));align-items:flex-end;gap:10px;touch-action:none}
+ .fb-buttons button{border-radius:50%;font-weight:1000;font-size:10px;letter-spacing:.04em;color:#f6ebce;border:2px solid #fff0b4;box-shadow:0 4px 0 #101d17,0 7px 12px #0009;touch-action:none;padding:2px}
+ .fb-buttons #fb-shoot{width:76px;height:76px;background:linear-gradient(160deg,#c94a3d,#7a2b25)}
+ .fb-buttons #fb-pass{width:62px;height:62px;margin-bottom:34px;background:linear-gradient(160deg,#3c7fc9,#1f4a7c)}
+ .fb-buttons #fb-switch{width:52px;height:52px;margin-bottom:8px;background:linear-gradient(160deg,#6f7f5f,#3a4a35);font-size:9px}
+ .fb-buttons button.pressed{transform:translateY(3px);box-shadow:0 1px 0 #101d17}
+ .fb-score{font-size:11px;padding:4px 9px;gap:6px}.fb-score b{font-size:14px;min-width:44px}
+ .fb-banner{font-size:17px;top:20%}
+ .fb-card{padding:10px 12px}.fb-card h2{font-size:15px}.fb-card p{font-size:11px;margin-bottom:8px}
+}
+.football.fb-playing .fb-card{display:none}
 </style>
 </head><body><main class="app">
 <div class="stage" id="stage">
@@ -382,6 +454,8 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  </div>
 
  <div class="waypoint" id="waypoint" hidden aria-live="off"></div>
+ <div class="rider-hud" id="rider-hud" hidden aria-live="off"></div>
+ <div class="drive-banner" id="drive-banner" hidden aria-live="polite"></div>
  <button id="mission-panel-toggle" type="button" aria-controls="mission-panel" aria-expanded="false">🎯 MISSIONI</button>
  <aside class="missions" id="mission-panel" hidden aria-label="Missioni di GTA Melito">
   <div class="m-head"><span class="m-label">STORIA · <span id="mission-progress">1/4</span></span><span>💶 <span id="mission-money">€ 0</span> · ★ <span id="mission-respect">0</span></span></div>
@@ -398,6 +472,19 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
   <p class="shop-feedback" id="shop-feedback" aria-live="polite"></p>
   <p class="shop-note" id="shop-note"></p>
   <button id="shop-close" aria-label="Esci dal negozio">ESCI ✕</button>
+ </section>
+ <section class="dialog shop rider-panel" id="rider-panel" hidden role="dialog" aria-labelledby="rider-title">
+  <div class="name">APP · LAVORO DI FINZIONE</div><h2 id="rider-title">🛵 RIDER MELITO</h2>
+  <div id="rider-body"></div>
+  <button id="rider-close" aria-label="Chiudi l'app Rider">CHIUDI ✕ (J)</button>
+ </section>
+ <section class="dialog shop garage" id="garage-panel" hidden role="dialog" aria-labelledby="garage-name">
+  <div class="name" id="garage-kind">GARAGE</div><h2 id="garage-name">GARAGE</h2>
+  <p class="shop-balance" id="garage-balance">SALDO: € 0</p>
+  <div class="shop-offers" id="garage-list"></div>
+  <p class="shop-feedback" id="garage-feedback" aria-live="polite"></p>
+  <p class="shop-note" id="garage-note"></p>
+  <button id="garage-close" aria-label="Esci dal garage">ESCI ✕</button>
  </section>
  <section class="dialog" id="dialog" hidden role="dialog" aria-labelledby="dialog-head" aria-live="polite">
   <div class="name" id="dialog-speaker">NICO</div><h2 id="dialog-head">NUOVO MESSAGGIO</h2><p id="dialog-text"></p>
@@ -420,7 +507,7 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  <p class="instructions">PC: WASD/frecce a piedi; in auto A/D sterzo, W acceleratore, S retromarcia, SPAZIO freno a mano · E sali/scendi · SHIFT corri · R cambia radio, SHIFT+R precedente, T accendi/spegni. ESC o P: pausa con stato, comandi, mappa, strumenti e crediti. Telefono: a piedi levetta e CORRI, alla guida volante vero a sinistra e, a destra in colonna dall’alto, FRENO, ACCELERA e RETRO; START apre pausa, missioni e impostazioni. In macchina la radio di prova permette di scegliere sei emittenti in diretta; l’audio richiede una connessione e può richiedere un tocco iniziale. Telecamera automatica: massimo zoom a piedi; su veicoli arretra progressivamente con la velocità. ＋/－ personalizzano, AUTO ripristina. Missioni nel pannello dedicato; F per interagire, M per la mappa. Traffico che svolta sulle vere strade, marciapiedi, attraversamenti, tetti tridimensionali e dettagli urbani immaginari in stile pixel art. Strade, incroci e sagome dei palazzi si basano su OpenStreetMap.</p>
  </section>
  <section class="pause-section pause-play" aria-labelledby="pause-h-play"><h3 id="pause-h-play">MAPPA · ZOOM · SUONI</h3>
- <div class="pause-shortcuts"><button id="pause-missions">MISSIONI</button><button id="pause-map">MAPPA COMPLETA</button><button id="pause-zoom-auto">ZOOM AUTO</button><button id="pause-zoom-in">＋ ZOOM</button><button id="pause-zoom-out">－ ZOOM</button><button id="pause-reset">TORNA ALL’INIZIO</button><button id="pause-road-compare">CONFRONTA STRADE</button></div><div class="pause-audio" role="group" aria-label="Audio"><button id="pause-sound" aria-label="Attiva o disattiva tutti i suoni (effetti e radio)" aria-pressed="true">SUONI: ON</button><div class="pause-volume" role="group" aria-label="Volume effetti e ambiente"><span class="pause-volume-name">EFFETTI / AMBIENTE</span><button id="pause-volume-down" aria-label="Abbassa il volume di effetti e ambiente">−</button><output id="pause-fx-level" aria-live="polite">70%</output><button id="pause-volume-up" aria-label="Alza il volume di effetti e ambiente">＋</button></div><div class="pause-volume" role="group" aria-label="Volume radio e musica"><span class="pause-volume-name">RADIO / MUSICA</span><button id="pause-radio-down" aria-label="Abbassa il volume della radio">−</button><output id="pause-radio-level" aria-live="polite">52%</output><button id="pause-radio-up" aria-label="Alza il volume della radio">＋</button></div></div>
+ <div class="pause-shortcuts"><button id="pause-missions">MISSIONI</button><button id="pause-rider" title="App Rider · tasto J">🛵 RIDER</button><button id="pause-map">MAPPA COMPLETA</button><button id="pause-zoom-auto">ZOOM AUTO</button><button id="pause-zoom-in">＋ ZOOM</button><button id="pause-zoom-out">－ ZOOM</button><button id="pause-reset">TORNA ALL’INIZIO</button><button id="pause-road-compare">CONFRONTA STRADE</button></div><div class="pause-audio" role="group" aria-label="Audio"><button id="pause-sound" aria-label="Attiva o disattiva tutti i suoni (effetti e radio)" aria-pressed="true">SUONI: ON</button><div class="pause-volume" role="group" aria-label="Volume effetti e ambiente"><span class="pause-volume-name">EFFETTI / AMBIENTE</span><button id="pause-volume-down" aria-label="Abbassa il volume di effetti e ambiente">−</button><output id="pause-fx-level" aria-live="polite">70%</output><button id="pause-volume-up" aria-label="Alza il volume di effetti e ambiente">＋</button></div><div class="pause-volume" role="group" aria-label="Volume radio e musica"><span class="pause-volume-name">RADIO / MUSICA</span><button id="pause-radio-down" aria-label="Abbassa il volume della radio">−</button><output id="pause-radio-level" aria-live="polite">52%</output><button id="pause-radio-up" aria-label="Alza il volume della radio">＋</button></div></div>
  </section>
  <div class="pause-details" id="pause-details">Carico i dati del gioco…</div>
  <p class="pause-info">Su PC restano disponibili tastiera e tasti WASD/frecce; missioni e mappa completa sono qui.</p><p class="pause-info" id="signal-note">SEMAFORI DI GIOCO, NON RILEVATI: sono posizionati sugli incroci principali per giocare, non sono i semafori reali di Melito.</p><p class="pause-info" id="market-note">MERCATO DEL VENERDÌ · RIONE 219: il luogo è reale, giorno e orari non sono verificati; banchi, merci e venditori sono di fantasia (segnaposto).</p>
@@ -436,6 +523,11 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
   <button id="road-width-compare" type="button" aria-pressed="false">CONFRONTA CON PRIMA</button>
  </div>
  <div class="pause-audio pause-satellite" role="group" aria-label="Foto aerea di confronto"><button id="pause-satellite" type="button" aria-pressed="false" aria-label="Mostra o nascondi la foto aerea Esri sopra la mappa">SATELLITE: OFF</button><div class="pause-volume" role="group" aria-label="Opacità della foto aerea"><span class="pause-volume-name">OPACITÀ FOTO</span><button id="pause-satellite-down" type="button" aria-label="Riduci l'opacità della foto aerea">−</button><output id="pause-satellite-level" aria-live="polite">50%</output><button id="pause-satellite-up" type="button" aria-label="Aumenta l'opacità della foto aerea">＋</button></div></div>
+ <div class="pause-audio" role="group" aria-label="Minigiochi di prova"><button id="pause-slot" type="button" aria-label="Apri la slot machine di prova con crediti virtuali">PROVA SLOT</button><button id="pause-poker" type="button" aria-label="Apri il video poker di prova con crediti virtuali">PROVA VIDEO POKER</button><button id="pause-goriziana" type="button" aria-label="Apri la goriziana di prova, biliardo a nove birilli senza soldi">PROVA GORIZIANA</button><button id="pause-pool" type="button" aria-label="Apri il biliardo arcade di prova, senza denaro né scommesse">PROVA BILIARDO</button></div>
+ <p class="pause-info">PROVA SLOT: slot machine arcade di fantasia (Q28), solo crediti virtuali di gioco che non si comprano e non valgono denaro. In attesa del cabinato nei bar (Q27).</p>
+ <p class="pause-info">PROVA VIDEO POKER: video poker Jacks or Better di fantasia (Q29), crediti virtuali propri, separati da quelli della slot; anche lui in attesa del cabinato (Q27).</p>
+ <p class="pause-info">PROVA GORIZIANA: biliardo all'italiana a nove birilli, tavolo senza buche (Q31), regole semplificate a schermo, partita contro l'IA a 30 punti o 5 tiri a testa; niente soldi né crediti. In attesa del tavolo nei bar grandi (Q27).</p>
+ <p class="pause-info">PROVA BILIARDO: biliardo arcade di fantasia (Q30) visto dall'alto, contro la CPU o a tiro libero, con regole semplificate scritte sul pannello; niente denaro né scommesse, si salvano solo i risultati. Nel gioco vero si giocherà solo dai tavoli disegnati nei bar grandi (Q27).</p>
  <p class="pause-info">FOTO AEREA DI CONFRONTO: la foto Esri World Imagery sopra la mappa del gioco, per vedere dove mancano dettagli. Si scarica solo mentre è accesa e riparte sempre spenta.</p>
  </section>
  <section class="pause-section pause-credits" aria-labelledby="pause-h-credits"><h3 id="pause-h-credits">CREDITI E LICENZE</h3>
@@ -446,4 +538,4 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  <div class="rotate-screen" id="rotate-screen" hidden><div class="rotate-card"><span class="rotate-icon" aria-hidden="true">▰</span><h2>RUOTA LO SCHERMO</h2><p>GTA Melito si gioca in orizzontale. Ruota il telefono per continuare.</p></div></div>
 </div>
 <div class="controls" aria-label="Comandi"><div class="touch-actions" aria-label="Azioni"><button class="control-action" id="action">ENTRA IN VEICOLO</button><button id="sprint" aria-label="Corri a piedi">CORRI</button><div class="pedals" aria-label="Pedali di guida"><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="accelerator" aria-label="Tieni premuto per accelerare">ACCELERA</button><button id="reverse" aria-label="Tieni premuto per andare in retromarcia">RETRO</button></div></div><div class="dpad" aria-hidden="true"></div><div class="buttons"><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-auto" aria-label="Ripristina zoom automatico">AUTO</button><button class="mini" id="zoom-in" aria-label="Regola zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div></div>
-</main><script type="module" src="./game.mjs?v=175"></script></body></html>
+</main><script type="module" src="./game.mjs?v=196"></script></body></html>

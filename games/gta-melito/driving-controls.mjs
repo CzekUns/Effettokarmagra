@@ -5,7 +5,7 @@ export const RUN_SPEED=13;
 export const CAR_FORWARD_SPEED=40;
 export const CAR_REVERSE_SPEED=12;
 
-import {stepVehicle,CAR_HANDLING} from './vehicle-handling.mjs?v=003';
+import {stepVehicle,CAR_HANDLING} from './vehicle-handling.mjs?v=005';
 
 // Q10: same physics, numbers from a handling profile (default = the historical car values).
 export function stepDriving(speed,angle,axis,braking,dt,serviceBrake=false,profile=CAR_HANDLING,wet=0){

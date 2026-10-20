@@ -874,3 +874,262 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Funzionalità ora presenti nel codice main:** #54 BF12 recinti e landmark municipalità, BF13 sovrapposizione satellitare Esri per audit, Q13 comportamento/densità NPC, Q42 mercato placeholder, Q14 collaudo radio; #60 Q16 Ape Car, Q17 banco ambulante e Q15 consolidamento; #61 menu PAUSA «NOVITÀ · DA APPROVARE» per localizzare nuove componenti e raccogliere giudizi grafici.
 - **Verifiche disponibili dall'autore:** #54 Node 397/397 e smoke Chrome desktop/mobile; #60 Node 410/410; #61 Node 418/418 e prova Chrome desktop. In questa sessione l'operatore ha controllato metadati, commit SHA attesi, file variati, dipendenze, compatibilità merge e risposte GitHub; **non ha rieseguito** Node/Chrome/Android né verificato la pubblicazione GitHub Pages. GitHub non espone check CI associati ai tre head SHA; non equivale a CI verde.
 - **Da verificare:** scala/proporzioni e sprite originali con giudizio umano, test su Android vero, radio e disponibilità effettiva; verificare le checkbox TODO solo se i rispettivi criteri sono soddisfatti. Le PR alternative singole #49–#53 e #55–#57 possono essere chiuse come ridondanti senza merge doppio. #34 non era mergeable ed è bozza artistica; #58/#59/#62/#63/#64/#65 sono impilate/contendono file e/o chiedono collaudo/approvazione grafica, non unite in questo giro.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q22 semafori, precedenze, strisce e frecce: chiusi i residui
+- **Scooter del pendolare (Q12):** freccia prima delle svolte, come le auto (`commuteTurnSignal`, `npc-commute.mjs`); disegnata anche sui mezzi della lista parcheggiati (`game.mjs`).
+- **Strisce senza semaforo:** dopo 1 s al cordolo il pedone chiede la precedenza (`npc-reactions.mjs`, `crossRequests`); l'auto NPC che può fermarsi comodamente si ferma prima delle strisce (`crosswalkYield`, `junctions.mjs`, applicato in `stepAgents`); dopo 6 s per lo stesso pedone riparte e non gli cede più; le auto che cedono non chiudono il varco del pedone.
+- **Svolte interne dei pedoni:** all'angolo dell'isolato, senza attraversare la traversa (`innerTurn`, decisione 18 m prima della fine del marciapiede, `roads.mjs`).
+- **Cache:** `game.mjs?v=177`, `roads.mjs?v=158`, `junctions.mjs?v=003`, `npc-reactions.mjs?v=004`, `npc-commute.mjs?v=012`, `traffic-light-art.mjs?v=004`, `window-washers.mjs?v=004`.
+- **Test:** `q22-incroci.test.mjs` (6), suite 416/416; browser 25 s a 45 FPS, 9 svolte interne, 0 errori JS.
+- **Non eseguito:** precedenza alle strisce e freccia del pendolare non osservate a vista nel browser (solo Node); niente prove lunghe (regola test brevi); Android reale non disponibile.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q23 danni progressivi visibili ai veicoli
+- **Fatto:** nuovo `vehicle-damage.mjs`. Danno 0–100 dagli urti non letali in tre stati: integro, ammaccato (da 22), grave (da 62).
+  - Chi è colpito prende il danno pieno, chi colpisce il 55%, muri e paletti il 70%, con un cooldown di 0,35 s.
+  - Segni sopra lo sprite in coordinate normalizzate: graffi, ammaccature e vetro incrinato dopo un frontale forte. Seguono la scala dei veicoli (BF14).
+  - Con danno grave il cofano fa un fumo leggero.
+  - Solo l'auto del giocatore con danno grave perde un po' di prestazioni (spinta ×0,8, velocità massima ×0,85).
+  - Gli NPC tornano integri dopo 20 s fuori vista.
+  - Officina di gioco simulata in Via Roma, vicino alla partenza: «E · RIPARA · N €» con il saldo Q06 salvato. Davanti all'officina niente stalli (keepClear di BF02).
+  - Nell'HUD compare lo stato del mezzo.
+- **Codice:** `game.mjs` (impactTraffic, urto diretto, rimbalzo contro i muri, profilo di guida, drawCar, updateTraffic, toggleVehicle, updateHud, createWorkshop prima delle baie), `car-sprites.mjs` (`carDrawSize`).
+- **Versioni cache:** `game.mjs?v=178`, `car-sprites.mjs?v=110`, `street-professions.mjs?v=006`, `vehicle-damage.mjs?v=001`.
+- **Test:** `q23-damage.test.mjs` (7). Adattati i controlli testuali in `vehicle-handling`, `bf11-pc-board`, `steering-wheel` (banco HUD), `bf12-enclosures` e `parking-bays`.
+- **Browser** (Chrome headless, 49–61 FPS, carico 7–9):
+  - urto vero contro un muro: 14–17 punti;
+  - foto dei tre livelli;
+  - riparazione con il tasto E, saldo da 100 a 60 € salvato;
+  - 0 errori JS.
+- **Limiti:**
+  - scooter e moto senza danni;
+  - danno del mezzo non persistente dopo il ricaricamento;
+  - grafica provvisoria, da approvare;
+  - touch e telefono reale non provati.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q24 buche, dossi e superfici stradali
+- **Cosa:** nuovo `road-surfaces.mjs` con buche, tombini, rappezzi, dossi rallentatori, pavé nelle piazze e sterrato sulle `track`. È tutta finzione arcade dichiarata (`SURFACE_FICTION`), posizionata in modo deterministico su tratti sicuri: lontano da ogni incrocio (≥ 20 m), dalle baie BF02, dal confine e dai bordi della carreggiata. Geometria OSM invariata.
+- **Effetti:**
+  - `roadSurfaceEffect` (ruote del mezzo e cooldown per elemento), `kerbEffect`;
+  - sobbalzo della camera e piccolo «sollevamento» dello sprite del giocatore;
+  - `thump` in `city-audio.mjs`;
+  - aderenza ridotta passata ad `applyGrip` come bagnato in più;
+  - NPC che rallentano prima dei dossi (`edge.bumps` in `roads.mjs`);
+  - `onSurfaceHit` per la Q23.
+- **Mezzi:** tabella `SURFACE_FEEL` per auto, Ape, scooter, moto e mezzi pesanti.
+- **Prove:** 7 test nuovi; suite 417/417; prova Chrome breve (56 FPS, 0 errori).
+- **Versioni:** `game.mjs?v=180`, `roads 161`, `city-audio 005`, `npc-commute 013`, `npc-reactions 005`, `npc-density 005`, `road-surfaces 001`.
+- **Limiti:** grafica provvisoria da approvare; pavé solo sui tratti di strada delle piazze; nessuna prova touch dedicata né su telefono reale.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q18 furgone del corriere e camion della nettezza urbana
+- **Arte:** atlante `servizio-16-rgba.png`, 8 + 8 varianti disegnate via codice, con alpha reale verificata e contorno senza alone. Grafica provvisoria.
+- **Integrazione:**
+  - `car-sprites.mjs`: `SERVICE_VARIANTS`, `COURIER_IDS`, `REFUSE_TRUCK_IDS`, dimensioni di disegno;
+  - `traffic-collision.mjs`: sagome `corriere-` e `nettezza-`;
+  - `vehicle-handling.mjs`: `TRUCK_HANDLING`; il furgone usa VAN;
+  - `game.mjs`: traffico NPC, sosta (camion solo dove sta), corpo e sonde proprie con `ownBody`, che sostituisce `isApe`.
+- **Cache:** `game.mjs?v=171`, `car-sprites 111`, `traffic-collision 129`, `vehicle-handling 004` e i moduli che li importano.
+- **Test:** `q18-service-vehicles.test.mjs`; suite completa 412/412. Browser breve e stress di 60 s senza errori né compenetrazioni.
+- **Limiti:** routine di lavoro rimandate alla Q20; non provato su un telefono reale.
+
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q19 carro attrezzi e autobus urbano
+- **Arte:** atlante `servizio2-16-rgba.png` (4×4 da 52×124), 8 + 8 livree disegnate via codice (`sources/servizio2-16-genera.py`) nello stile della Q18, alpha reale e contorno scuro senza alone. Grafica provvisoria.
+- **Integrazione:**
+  - `car-sprites.mjs`: `SERVICE2_VARIANTS`, `TOW_TRUCK_IDS`, `BUS_IDS`, dimensioni di disegno;
+  - `traffic-collision.mjs`: sagome `attrezzi-` e `autobus-`;
+  - `vehicle-handling.mjs`: `TOW_HANDLING`, `BUS_HANDLING`;
+  - `roads.mjs`: `BUS_ROADS`/`isBusModel`; l'autobus nasce, svolta e viene riposizionato solo sulle strade principali;
+  - `game.mjs`: traffico, sosta del solo carro attrezzi, corpo proprio in `ownBody`.
+- **Cache:** `game.mjs?v=176`, `car-sprites 113`, `traffic-collision 130`, `vehicle-handling 005`, `roads 156` e, a cascata, i moduli che li importano.
+- **Test:** `q19-service-vehicles.test.mjs`; suite completa 419/419. Browser breve e stress di 60 s senza errori né compenetrazioni.
+- **Limiti:** fermate e routine nella Q20; non provato su un telefono reale.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q21 passeggeri su auto e scooter
+- **Nuovo `passengers.mjs`:** capienza per mezzo, guidatore escluso: auto 4, scooter/moto 1, Ape 1, furgoni 2, banchi 0. Associazione stabile posto ↔ NPC (`vehicle.seats`, `npc.aboard`), senza doppioni né eccedenze.
+- **Traffico:** occupanti stabili dal seed (circa il 40% delle auto e il 25% degli scooter), con teste viste attraverso i vetri.
+- **Scooter:** il passeggero dietro il guidatore è disegnato in `motorcycles.mjs`, opzione `pillion`.
+- **`game.mjs`:**
+  - autostoppisti (un passante anonimo su 5) con cartello «PASSAGGIO?»;
+  - a mezzo fermo `E · DAI UN PASSAGGIO`, poi `FAI SCENDERE` e solo dopo l'uscita del giocatore;
+  - meta reale con anello in strada e punto sulla minimappa;
+  - discesa dalla portiera con ritorno al marciapiede tramite il recupero;
+  - mancia di 4 € salvata se il passeggero arriva;
+  - HUD «N A BORDO».
+- **Cache:** `motorcycles.mjs?v=007`, `passengers.mjs?v=001`, `game.mjs?v=172`.
+- **Test:** `q21-passengers.test.mjs` (9 test); adattati `bf11-pc-board` e `steering-wheel` (banco HUD). Suite completa una volta alla fine.
+- **Browser** (prova breve, carico ~4): salita, discesa e uscita in auto, scooter con passeggero, capienza piena, 0 errori JS. Primo piano di auto, Ape e scooter guardato.
+- **Limiti:** grafica provvisoria da far approvare a Simone; i passeggeri del traffico non scendono mai; touch non provato a parte; telefono reale non disponibile.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF14 asset più piccoli, zoom maggiore, parcheggi fuori dalle corsie
+- **Prima.** Le auto erano disegnate larghe 5,1–5,5 m, con una sagoma di collisione di 3,4 m. Gli stalli BF02 erano calcolati sulla sagoma, non sul disegno. Su una residenziale (larga 15,4) la corsia stava a 3,54 m dal centro e lo stallo a 7,19 m: il disegno dell'auto in sosta arrivava fino a 4,44 m dal centro, mentre quello dell'auto in marcia occupava da 0,89 a 6,19 m.
+  - Le linee bianche interne passavano sotto il traffico in 850 fasce su 1.083.
+  - In 209 fasce lo stallo entrava nelle corsie di altri tratti, nelle curve e agli incroci.
+- **Scelta.** Seconda opzione del committente: rimpicciolire gli asset e aumentare lo zoom, con un solo punto di regolazione in `world-scale.mjs`.
+  - Veicoli `VEHICLE_SCALE=0,75`. Con 0,75 un'auto disegnata in marcia e una in sosta stanno affiancate su una residenziale senza invadere la corsia né la linea dei pedoni; il limite era 0,787.
+  - Persone `PERSON_SCALE=0,8`: restano proporzionate alle auto.
+  - Telecamera `CAMERA_SCALE_GAIN=1,2`, così a schermo le dimensioni restano simili.
+- **Cosa usa la scala:**
+  - `drawCar` scala ogni veicolo attorno al centro, compresi i passeggeri di Q21, che sono disegnati dentro `drawCar`;
+  - sprite delle persone (pedoni, extra, mestieri, friggitore, persona di riserva);
+  - sagome di collisione e margini dei pedoni (`traffic-collision.mjs`);
+  - sonde di `offStreetExcess` e del giro in auto (`road-clearance.mjs`);
+  - corsie (`roadTrafficLaneOffset`) e corsia ristretta Q15;
+  - stalli BF02: dimensioni, `drawnHalf` per il disegno, controllo «corsia» anche sullo stallo dipinto;
+  - distanze di coda e di nascita del traffico; fari e fanali; lati di servizio dei furgoni BF04; `minLane` dei lavavetri; discesa dallo scooter; raggio dei pedoni negli oggetti di strada; scala dei banchi del mercato; zoom.
+  - Il raggio per salire sui mezzi resta 9,5/8,5 m (comodità, non ingombro): la Panda di partenza, a 9,3 m, ora è a portata; prima era a 10 m, fuori portata.
+- **Cache.** Versioni rialzate a cascata per tutti i moduli toccati; `game.mjs?v=174`, `road-widths.mjs?v=044`, unica per tutti i consumatori del confronto A/B.
+- **Test.** Una ventina di test esistenti avevano misure scritte a mano (corsia 3,542, sagoma 3,15/1,7, zoom 6,6): ora usano `vs()`, `ps()` e `CAMERA_SCALE_GAIN`. Suite completa verde.
+- **Dopo (Chrome headless, mappa reale):**
+  - fasce sotto il traffico della propria strada: 0, margine minimo +0,32 m;
+  - fasce sulle corsie di altri tratti: 0, margine minimo +0,23 m;
+  - stalli: 10.110;
+  - stress di 60 s a 44,6 FPS: 0 compenetrazioni, 0 NPC fermi;
+  - salita, guida e discesa corrette;
+  - foto prima/dopo in Via Roma e in una residenziale.
+- **Limiti:**
+  - l'aspetto finale (proporzioni, zoom) va giudicato da Simone;
+  - i furgoni ambulanti disegnati sono più larghi di un'auto e possono ancora sfiorare la corsia con il tendone;
+  - non provato su telefono reale;
+  - l'interno della banca usa la stessa scala persona.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q20 routine dei veicoli di servizio
+- **Nuovo `service-routines.mjs`:** le routine sono simulate e dichiarate.
+  - **Corriere:** stallo libero, quattro frecce, l'autista consegna a un portone o all'ingresso del palazzo, poi ritorno e uscita a corsia libera.
+  - **Nettezza urbana:** sempre lenta; con un bidone accanto si ferma, l'operatore lo svuota e lo rimette esattamente al suo posto. In `street-objects.mjs`: `moveStreetObject`.
+  - **Carro attrezzi:** auto in sosta in panne (quattro frecce e triangolo), percorso vero, carico sul pianale, riconsegna fuori vista in un altro stallo; aggancio Q23 `reportBreakdown`.
+  - **Autobus:** 14 fermate simulate sulle principali, porte, passanti veri che aspettano, salgono e scendono, senza doppioni e fino alla capienza.
+- **`roads.mjs`:** salta i mezzi e i pedoni in servizio (`serviceHold`).
+- **`npc-reactions.mjs`, `npc-social.mjs`:** non coinvolgono i pedoni in servizio.
+- **`game.mjs`:** creazione al caricamento e al cambio di larghezza strade, passo dopo `balanceTraffic`; disegno di pensiline, porte, auto sul pianale e figure; quattro frecce (`hazard`) in `drawBlinker`; `?servizio=1` per le prove.
+- **Cache:** `game.mjs?v=179`, `roads 157`, `npc-commute 012`, `npc-density 005`, `npc-reactions 005`, `npc-social 004`, `street-objects 002`, `service-routines 001`.
+- **Test:** `q20-service-routines.test.mjs` con 7 test. Adattato il cablaggio Q07 in `street-objects.test.mjs`. Suite completa verde.
+- **Browser:** 30 s a 51,7 FPS. Foto di consegna, raccolta, soccorso e fermata, più l'auto sul pianale. 0 compenetrazioni, 0 errori JS.
+- **Limiti:** grafica provvisoria; salita in autobus vista solo in Node; non provato su telefono reale.
+- **Adattamento alla scala BF14 (commit successivo):** `fitsParkingBay` controllava anche la corsia della propria strada con lo stallo dipinto (+0,05 m), quindi su tutte le strade dove lo stallo sta al minimo (le residenziali) rifiutava per 3 cm perfino un'auto: sulla mappa reale (grafo in Node, senza muri e ingressi del gioco) ci stava in 2.939 stalli su 11.297. Ora verso quella corsia conta il corpo disegnato del mezzo, e un'auto ci sta in 11.297 su 11.297. Il furgone del corriere si controlla con la larghezza di un'auto in scala (`vs(1,7)` invece di 1,7 fisso, in `game.mjs` e nel test), e trova 11.209 stalli. Nettezza urbana: corsia e camion sono più vicini al centro, ma i bidoni sono rimasti dov'erano, quindi l'operatore cammina fino a 1,5 m in più per tratto. Per questo `binReach` passa da 8 a 9,5 m (in portata gli stessi bidoni di prima) e `maxJob` da 45 a 60 s: prima due bidoni su una residenziale finivano quasi sempre «interrotto: troppo tempo». La finestra lungo il camion ora è `vs(-3)…vs(4)`, e anche le sagome di riserva sono in scala. Nei test i film del corriere e della nettezza sono più lunghi (70 s e 60 s), con le stesse verifiche più «nessun lavoro interrotto». Cache: `parking-bays 003`, `service-routines 002`, `game.mjs?v=182`. Suite 467/467.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q25 ingressi e interni riutilizzabili dei negozi
+- **Nuovo `shop-interiors.mjs`:** modelli di stanza per tipo (bar/caffè 80×60, minimarket 80×60, panificio/pasticceria 64×50 = 1/4–1/6 della banca), override per singolo negozio, arredi solidi con bancone, commesso e punto di servizio, camera e viewport come la banca, passo del protagonista alla stessa velocità della strada, uscita dalla porta, disegno in pixel art procedurale con la palette e le ombre della banca. Stanze immaginarie, nome reale del POI.
+- **Portoni:** `resolveShopEntrances` usa `probeDoor` (Q03) sulla facciata davanti all'insegna o 3–5 m di lato; scarta i portoni in carreggiata o troppo vicini all'insegna (COMPRA). Sulla mappa reale 8 locali aperti su 47 vetrine con nome; gli altri restano chiusi.
+- **`game.mjs`:** `createShopEntrances()` al caricamento e al cambio larghezza strade (prima dei pedoni); bidoni e paletti tengono libero il portone; a piedi `footShopTarget` sceglie fra portone (ENTRA) e insegna (COMPRA) il più vicino; `state.shopInterior` con ingresso, passo, camera, HUD, disegno, Esc, minimappa, audio e radio come la banca; orologio NPC fermo dentro; ritorno alle coordinate esterne esatte. Aggancio Q26: `interiorCounterNear` e risposta del commesso alla prima E al bancone.
+- **Test:** nuovo `q25-shop-interiors.test.mjs` (7); resi tolleranti 5 controlli di cablaggio (Q02, Q06, BF11, Q15, plancia del volante) alla nuova voce ENTRA e a `shopInterior`. Suite completa a fine lavoro.
+- **Browser (Chrome headless, una prova breve):** Bar Alexander (80×60) e Panificio Pagliuca (64×50) su PC e telefono: ENTRA, interno, PARLA, uscita, ritorno esatto, 0 errori JS; sul telefono anche con tocchi veri. Corretto dopo le foto: niente scritta sopra l'insegna esterna, niente doppia scritta dei comandi dentro, fumetto del commesso sotto di lui (sul telefono finiva sotto la testata).
+- **Cache:** `game.mjs?v=181`, `shop-interiors.mjs?v=001`.
+- **Limiti:** grafica provvisoria; nessun cliente NPC dentro; COMPRA ancora fuori fino alla Q26; Android reale non provato.
+
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q26 acquisti dentro i negozi
+- I negozi con interno (Q25) vendono solo al bancone o alla cassa: fuori, all'insegna e al portone, c'è «ENTRA · NOME»; dentro, davanti al bancone, c'è «COMPRA · BANCONE», che apre il pannello Q06 con lo stesso catalogo, saldo, bonus e salvataggio. Nuovi prodotti: spremuta (bar) e snack (minimarket).
+- `shop-interiors.mjs`: `outdoorShops` (negozi che vendono ancora fuori) ed `entranceAtSign` (l'insegna di un negozio con interno porta all'ENTRA).
+- `game.mjs`: `nearestCounter` usa `state.outdoorShops`; `footShopTarget` riconosce l'insegna; il bancone apre `openShop(inner.shop)`; il pannello si chiude lontano dal bancone e all'uscita.
+- Invariati: negozi senza interno, furgoncini Q17, banca.
+- Cache: `game.mjs?v=183`, `local-shops.mjs?v=003`, `shop-interiors.mjs?v=002`, `campaign.mjs?v=003`.
+- Test: nuovo `q26-acquisti-dentro.test.mjs` (6); reso tollerante un controllo di cablaggio della Q17. Browser breve su PC e telefono: acquisto dentro riuscito e salvato, nessuna vendita dall'esterno, 0 errori JS.
+- Non eseguito: Android reale; acquisto con fondi insufficienti nel browser (verificato in Node).
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q28 slot machine arcade (nucleo del minigioco)
+- **Nuovo:** `minigame-slot.mjs`, «SLOT DEL VESUVIO». Pixel art disegnata via codice con cornice a luci, 3 rulli e 8 simboli napoletani di fantasia; giro di 1,25 s con i rulli che si fermano in sequenza; risultati a schermo; regole sempre visibili. Controlli da tastiera (SPAZIO/INVIO, ←/→, ESC) e touch.
+- **Crediti solo virtuali**, separati dagli euro della Q06. Non si comprano e non c'è ricarica a pagamento. A crediti finiti si «ricomincia da 50» gratis. Nessuna chiamata di rete né collegamento a scommesse.
+- **Generatore con seme** (mulberry32, seme salvato e numero del giro). Il saldo si salva prima dell'animazione, quindi un reload non duplica nulla. Ritorno medio di circa 0,9 crediti per credito.
+- **Nel gioco:** sotto la slot il mondo resta in pausa e la radio si abbassa. Si apre da PAUSA › STRUMENTI › «PROVA SLOT» o con `?minigioco=slot`. L'aggancio per il cabinato della Q27 è `openSlotGame()`.
+- **Cache:** `game.mjs?v=182`, `minigame-slot.mjs?v=001`.
+- **Test:** `q28-slot.test.mjs` (7 test). Browser breve su PC e telefono: giro, saldo, pausa, uscita, 0 errori JS.
+- **Limiti:** grafica provvisoria da approvare; cabinato del bar in attesa della Q27; nessun suono; Android reale non provato.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q29 video poker da cabinato «POKER DEL GOLFO»
+- **Cosa:** nuovo `minigame-poker.mjs`, secondo minigioco distinto dalla slot Q28, sullo stesso contratto: pannello sopra la scena in pausa, radio abbassata, ritorno alla scena. Jacks or Better semplificato: 5 carte, TIENI (tasti 1–5, tocco sulla carta o pulsanti TIENI), un cambio, tabella delle combinazioni a schermo moltiplicata per la puntata (1–5).
+- **Crediti:** solo virtuali, propri del cabinato (`gta-melito-poker-v1`), separati da slot ed euro Q06; nessun acquisto, ricarica, rete o scommessa; ricomincia gratis da 50. Puntata salvata alla distribuzione, vincita al cambio: un ricaricamento a metà mano ridà le stesse carte senza rimborsi né doppioni.
+- **Mazzo:** 52 carte, Fisher–Yates con il generatore della slot (seme + numero della mano), cambi presi in ordine dalla sesta carta.
+- **Avvio provvisorio:** PAUSA › STRUMENTI › «PROVA VIDEO POKER», `?minigioco=poker`; aggancio `openPokerGame()` per il cabinato Q27.
+- **Cache:** `game.mjs?v=184`, `minigame-poker.mjs?v=001`.
+- **Test:** `q29-poker.test.mjs` (8 test); resi tolleranti a `||isPokerOpen()` in coda alle condizioni di pausa 2 controlli di `q28-slot.test.mjs` e 1 di `local-shops.test.mjs` (Q06); suite completa 425/425. Chrome headless PC e telefono 844×390, 53–63 FPS: tasti e tocchi veri, TIENI, cambio pagato e salvato, pausa sotto, ESC, 0 sovrapposizioni, 0 errori JS. Dopo le foto: l'etichetta TIENI sopra le carte toccava la tabella, ora è un nastro dorato dentro la carta. Prova browser ripetuta 3 volte (una per i numeri, una dopo il ritocco).
+- **Limiti:** grafica provvisoria da approvare; cabinato Q27 mancante; niente suoni; Android reale non provato.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q32 campetti da calcetto: accesso e mappa
+- **Fonti:** foto aerea Esri World Imagery (consultata 20/10/2026, tile in cache fuori dal repo) e audit BF13 (A01 Via delle Palme, M12 Corso Europa). Nessun `leisure=pitch` nell'estratto OSM del gioco.
+- **Campi:** campetto di Via delle Palme (550,1198) 52×32; campo a 11 di Via delle Palme (528,5,1276) 61×108; campetto di Corso Europa (1026,1882) 30×17. Tutti senza edifici OSM e senza strade dentro la recinzione (test su griglia di 1,5 m).
+- **Infill:** filtrati in `prepareMap` i segnaposto inventati che toccano un campo (10, tra cui i 9 sul campo di Via delle Palme).
+- **Gioco:** nuovo `football-pitches.mjs`, con dati, cancello sul lato raggiungibile (ricerca a griglia fino a una strada), collisioni, hotspot e disegno; cablato in `validWalk`, `carBlocked`, `canKnockbackMove`, nel disegno a terra e nel tetto trasparente, al caricamento e al cambio di larghezza strade; prompt e tasto E «GIOCA A CALCETTO»; avviso temporaneo `state.notice`. Cache `game.mjs?v=185`.
+- **Prove:** 6 test nuovi e suite completa; Chrome headless su PC e telefono, una prova breve, 51–60 FPS, 0 errori.
+- **Limiti:** grafica provvisoria da far approvare; partita della Q33 non ancora presente; Android reale non provato.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q27 arredi dei bar e cabinati
+- `shop-interiors.mjs?v=003`: due allestimenti di bar (grande 80×60, piccolo 64×50) scelti in modo deterministico (caffè sempre piccoli; bar per area della sagoma OSM dietro al portone, soglia 200 m²; override per id). Arredi solidi: bancone, sgabelli, tavolini, 1–2 cabinati; biliardo solo nel grande e solo se `poolFits` trova spazio. Nuove funzioni `barLayoutFor`, `footprintArea`, `poolFits`, `interiorGameNear`, `startBarGame`, `endBarGame`; disegno pixel art di cabinati slot/poker, biliardo, sgabelli, hotspot e fumetto «IN ARRIVO».
+- `game.mjs`: `footprintAt` passato a `resolveShopEntrances`; hotspot «E · GIOCA SLOT / VIDEO POKER / A BILIARDO» con pulsante GIOCA; `openSlotGame/openPokerGame/openPoolGame` chiamati solo se definiti (arrivano con Q28–Q30), il gioco riceve `{game,shop,from:'bar',onExit}`; durante il gioco il protagonista è fermo, `returnFromBarGame` lo rimette nello stesso punto (anche con Esc). HUD «DENTRO · BAR GRANDE/PICCOLO».
+- Cache: `game.mjs?v=188`, `shop-interiors.mjs?v=003`.
+- Test: nuovo `q27-bar-arredi.test.mjs` (8); reso tollerante 1 controllo di cablaggio Q26; suite completa una volta.
+- Non eseguito: prova nel browser e su telefono (scadenza 30 minuti); non verificato quale bar reale esca grande o piccolo. Grafica provvisoria da far approvare a Simone. Riprendere da Q28 (slot) usando il contratto `onExit`.
+
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q39–Q41 app Rider: consegne in scooter, timer, profilo (prima versione, ramo `q39`)
+- **Fatto:** nuovo `rider.mjs` (logica pura): ritiri da POI di cibo con nome OSM (bar, cafe, pastry, restaurant, fast_food, bakery) e dai furgoncini Q17; destinazioni su vie OSM con nome; offerte deterministiche; accettazione solo su scooter SH/retrò o moto naked; ritiro in sella entro 9 m; consegna entro 12 m (in sella al mezzo del pacco o a piedi con il mezzo a ≤25 m); freschezza, compenso, bonus, stelle, recensioni, livelli; percorso Dijkstra su `state.graph`; salvataggio in `progress.rider` (`campaign.mjs`).
+- **`game.mjs`:** pannello RIDER (PAUSA › 🛵 RIDER, tasto `J`, `openRiderApp()` anche su `window` per la Q37), il pannello mette il gioco in pausa; riga HUD `#rider-hud`; frecce gialle sull'asfalto ogni 10 m vicino al giocatore, freccia attorno al giocatore, anello giallo sul punto, cubo giallo sul mezzo, linea gialla in minimappa. `index.html`: pannello, HUD, CSS, `game.mjs?v=193`; `campaign.mjs?v=003`, `rider.mjs?v=001`.
+- **Test:** nuovo `q39-rider.test.mjs` (9 test: scooter, ritiro, tempo/ritardo, compenso, percorso, livelli, persistenza/migrazione, pannello); suite completa eseguita una volta: 433 test, 432 ok, 1 ko (`local-shops.test.mjs`, controllo testuale della pausa che non prevedeva `||state.riderOpen`); reso tollerante quel controllo e rilanciati solo i file toccati (`local-shops`, `q39-rider`, `campaign`: 22/22 ok).
+- **Non fatto / limiti:** nessuna prova in browser in questa tornata (scadenza 35 min); consegna attiva persa al ricaricamento (senza penale, lo storico resta); frecce non limitate alle svolte; voce `rider` non ancora in `novita.mjs` (solo in `NOVITA_DA_APPROVARE.md`); app Profilo generale e icona smartphone sono della Q37. Grafica provvisoria da far approvare a Simone.
+- **Dove riprendere:** prova in Chrome (PC e telefono) di accetta → ritiro → consegna; poi aggiungere `rider` a `novita.mjs` e frecce solo alle svolte.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q31 goriziana arcade (biliardo a nove birilli)
+- **Cosa:** nuovo `minigame-goriziana.mjs`, indipendente dal biliardo a buche Q30 (`minigame-pool.mjs` non toccato). Tavolo pixel art senza buche, 9 birilli a rombo (centrale rosso), 2 biglie bianche (IA col puntino rosso) e pallino rosso, tutto disegnato in codice.
+- **Comandi:** tocco/mouse (trascina sul tavolo: direzione = mira, distanza = potenza, rilascio = tiro), frecce ←/→ mira e ↑/↓ potenza, SPAZIO tira, ESC esce; pulsanti per il touch.
+- **Fisica:** 2D leggera a passi fissi (attrito, sponde, urti fra biglie, birilli che cadono al tocco, catena breve sul birillo dietro).
+- **Regole semplificate a schermo:** tocca per prima la biglia avversaria; birillo 2, rosso 4 (10 da solo), pallino +3; fallo = punti del tiro all'avversario (almeno 2); birilli rialzati dopo ogni tiro; turni contro un'IA semplice; 30 punti o 5 tiri a testa. Niente soldi, crediti, salvataggi o rete.
+- **Nel gioco:** `game.mjs` mette in pausa mondo e audio città con `isGorizianaOpen()`, abbassa la radio; avvio da PAUSA › STRUMENTI › «PROVA GORIZIANA» e `?minigioco=goriziana`; aggancio Q27 `openGorizianaGame()`. CSS `#goriziana-canvas` in `index.html`.
+- **Cache:** `game.mjs?v=189`, `minigame-goriziana.mjs?v=001`.
+- **Test:** nuovo `q31-goriziana.test.mjs` (10 test); resi tolleranti ad altri `||isXxxOpen()` in coda alle condizioni di pausa 2 controlli di `q28-slot.test.mjs`, 2 di `q29-poker.test.mjs` e 1 di `local-shops.test.mjs`. Suite completa 435/435 (`# fail 0`).
+- **Non fatto:** prova nel browser (nessun browser headless disponibile in questa sessione) e telefono reale. Simulazione Node di 40 partite IA contro IA: circa 1 fallo ogni 5 tiri, 1,7 punti medi per tiro valido.
+- **Dove riprendere:** far approvare la grafica a Simone; prova browser PC + telefono 844×390; collegare il tavolo nei bar grandi (Q27). Q31 resta `[ ]`.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q34 gare clandestine arcade (finzione)
+- **Fatto:** nuovo `street-race.mjs` (puro, senza DOM): 2 partenze periferiche deterministiche sul grafo stradale (GARA 1 Via Colonne di Giugliano 959 m, GARA 2 Via Signorelli 681 m), sprint sulle sole corsie auto, anelli in ordine, 3 avversari sul percorso, conto alla rovescia, cronometro, posizione, classifica, premio 300/150/60/0 € di gioco, annullamento (scendere, allontanarsi, tempo). Avvertenza di finzione prima di ogni partenza e nell'HUD.
+- **Cablaggio `game.mjs`:** `createRaces` dopo il grafo (anche al cambio larghezza strade), «E · GARA» in auto in `toggleVehicle`/`updateHud`/`boardPrompt`, `stepStreetRace` nel `tick` dopo il traffico, disegno di bandiera/anelli/frecce/avversari prima delle auto del giocatore, HUD in coordinate schermo a fine `draw`, percorso in `drawMini`. Premio con `awardPrize` + `saveProgress`. Voce `gare` in `novita.mjs` e `NOVITA_DA_APPROVARE.md`. Cache `game.mjs?v=190`, `novita.mjs?v=002`.
+- **Test:** `q34-race.test.mjs` (8 test) e `bf15-novita.test.mjs` verdi. Suite completa: prima tornata 429/432 (3 controlli di cablaggio BF11, BF13 e `steering-wheel` toccati dalle mie righe in `game.mjs`); corretto il cablaggio senza cambiare quei test (HUD gara prima della foto aerea, «E · GARA» con un `boardPrompt` a parte, partenza vicina calcolata nel tick in `state.raceNear`); seconda tornata **432/432, `# fail 0`**.
+- **Non fatto / limiti:** nessuna prova nel browser, né PC né telefono; avversari senza collisioni fisiche; traffico non limitato sul percorso; niente giri; nessun record salvato. Grafica provvisoria (bandiera, anelli, frecce, sprite del traffico), da far approvare a Simone.
+- **Dove riprendere:** prova browser con `?v=190` alla GARA 2 (Via Signorelli), poi collisioni avversari via `impact-physics.mjs` e riduzione del traffico sul percorso.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q35 garage e veicoli posseduti (prima versione)
+- **Fatto:** nuovo `garages.mjs` con due garage di fantasia (Via Don Raffaele Abete 1051,3/1416; Via Fratelli Cervi 1388,5/1424,3), scelti con uno script sulla mappa OSM: saracinesca fuori carreggiata, edificio OSM subito dietro. Archivio `progress.garage` in `campaign.mjs` (max 6 posti, id stabili `v1…`, stato in garage/in strada, danni, tuning).
+- **Gioco (`game.mjs`, `index.html`):** prompt «METTI IN GARAGE» in auto, «GARAGE» a piedi, pannello `garage-panel` (stesso stile del negozio) con PRENDI e RICHIAMA QUI; l'auto depositata esce da `state.cars`, quella ritirata ricompare sulla corsia davanti al primo posto libero (edifici, auto, traffico, persone). Saracinesca, rampa e insegna disegnate sopra la strada. Cache `game.mjs?v=191`, `campaign.mjs?v=003`.
+- **Test:** nuovo `q35-garage.test.mjs` (6 test: posizione sulla mappa vera, deposito/ritiro senza doppioni, garage pieno, ricaricamento, uscita libera, cablaggio). Resi tolleranti 5 controlli di cablaggio (BF11, Q06, Q15, volante, Q10).
+- **Non fatto:** interno camminabile del garage, prova nel browser e sul telefono, voce in NOVITÀ · DA APPROVARE. Grafica provvisoria da far approvare a Simone.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q36 officina di tuning (prima versione)
+- **Fatto:** nuovo `tuning.mjs`: vernice tra le varianti dello stesso modello di `car-sprites` (150 €), prestazioni +5/+10/+15% su accelerazione e velocità massima del profilo base BF05 (`tunedProfile`, mai cumulativo, tetto 15%, 300/500/800 €), neon sottoscocca in 5 colori (250 €) con `drawNeonUnderglow` e luce di notte `neonNightGlows`. Pagamento dal saldo della campagna, spesa in `progress.garage.spent`.
+- **Gioco (`game.mjs`):** `vehicleProfile(car)` sostituisce `handlingProfile(car)` per l'auto guidata; pulsante TUNING nell'elenco del garage; con un'auto registrata davanti al Garage e officina Cervi «E · TUNING» (dentro il pannello anche METTI IN GARAGE); neon disegnato sotto le auto e nel passaggio luci di notte.
+- **Test:** nuovo `q36-tuning.test.mjs` (6 test: colori dello stesso modello e ritorno al colore originale, percentuali e tetto, prezzi e saldo, salvataggio, neon giorno/notte, cablaggio). Suite completa a fine lavoro.
+- **Non fatto:** frenata/assetto, interno dell'officina, prova nel browser e sul telefono, voce in NOVITÀ · DA APPROVARE. Grafica provvisoria da far approvare a Simone.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q37 smartphone come menu PAUSA
+- **Fatto:** nuovo `smartphone.mjs`. Il menu PAUSA (Esc, P, pulsante Ⅱ/START) ora è un telefono in pixel art provvisoria con home di 7 app: Drive, Rider, Garage, Mappa, Missioni, Profilo, Impostazioni (icone 12×12 su canvas). Impostazioni: i due volumi BF10 (RADIO/MUSICA, EFFETTI/AMBIENTE) e «Sviluppatore».
+- **Come:** il telefono si monta a runtime attorno al vecchio `#pause-menu` e **sposta** i nodi esistenti (il blocco audio in Impostazioni, tutta la `.pause-card` in Sviluppatore, `#pause-close` nella barra del telefono): nessun ID usato da `game.mjs` è perso e il markup di `index.html` resta quello di BF11/BF13/BF15 (i loro test passano). In Sviluppatore restano zoom, reset, confronto strade, satellite, NOVITÀ, crediti/licenze OSM-ISTAT; aggiunto PROVE MINIGIOCHI (pulsanti attivi solo se esistono `testFootballMatch`/`testArcadeSlot`/`testBilliards`). Rider/Garage: «IN ARRIVO» o `openRiderApp`/`openGarageApp` se definite. Mappa e Missioni chiudono il telefono e aprono la mappa o il pannello missioni.
+- **Comandi:** in `game.mjs` il keydown passa prima dal telefono quando è aperto (frecce, INVIO, ESC indietro; la scrittura nella ricerca non arriva al gioco). `openPause` azzera pedali e levetta come prima e riporta il telefono alla home. Su telefono in orizzontale il telefono è largo al massimo `100vw − 330px`, fra volante e pedali. Cache `game.mjs?v=192`.
+- **Test:** nuovo `q37-phone.test.mjs` (5 test); suite completa 433 test, `# fail 0` (con la Q38).
+- **Non fatto / limiti:** nessuna prova in browser (sul server non c'è Chrome in questa sessione); non provato in banca, negozi, Android reale; grafica da far approvare a Simone (non ancora registrata in `novita.mjs`).
+- **Dove riprendere:** prova browser PC + telefono orizzontale, registrare il telefono fra le NOVITÀ, poi Q39 (Rider) usando `openRiderApp`.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q38 app Drive con percorso
+- **Fatto:** nuovo `drive-app.mjs` e schermata Drive nel telefono Q37. Ricerca (senza accenti e maiuscole, almeno 2 lettere) fra nomi di vie OSM (`state.roads`, punto = metà del tratto più lungo) e POI (`state.map.pois`); niente civici. «LUOGO NON TROVATO» se il nome non c'è.
+- **Percorso:** Dijkstra con heap sul grafo `state.graph`; in auto solo archi carrabili (i sensi unici esistono solo nel verso consentito), a piedi anche gli archi pedonali; partenza/arrivo agganciati al tratto più vicino (entrambi i sensi), aggancio fra nodi entro 6 m come `npc-commute.mjs`. Linea azzurra e quadratino rosa sulla minimappa; riquadro in alto `#drive-banner` con freccia e «tra 120 m gira a destra» / «prosegui dritto per … m».
+- **Durante il gioco:** `updateDrive(dt)` a ogni fotogramma; ricalcolo se ti allontani più di 22 m (al massimo ogni 1,2 s) o se sali/scendi dal mezzo; «ARRIVATO» entro 14 m, poi si chiude dopo 5 s; ANNULLA PERCORSO nell'app; in banca il riquadro si nasconde e il percorso resta.
+- **Test:** nuovo `q38-drive.test.mjs` (4 test: ricerca, percorso valido su strada e sensi unici, ricalcolo e arrivo, cablaggio). Suite completa `nice -n 15 node --test games/gta-melito/*.test.mjs games/gta-melito/survey/*.test.mjs`: 433 test, `# fail 0`.
+- **Limiti:** preferiti/segnalibri e scelta del punto sulla mappa (chiesti dalla Q38) non fatti; niente frecce sull'asfalto (Q40); svolte stimate dall'angolo dei tratti OSM (possibili «gira» su curve forti); nessuna prova in browser; grafica da far approvare a Simone.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q30 biliardo arcade «BILIARDO DEL RIONE»
+- **Cosa:** nuovo `minigame-pool.mjs`, terzo minigioco sullo stesso contratto di slot e poker (pannello sopra la scena in pausa, radio abbassata, ritorno alla scena). Tavolo pixel art dall'alto con 6 buche, sponde, stecca e linea di mira con biglia fantasma. Regole semplificate scritte sul pannello («a chi ne imbuca di più», bianca in buca −1), contro una CPU semplice o a tiro libero.
+- **Fisica:** passo fisso 1/240 s, attrito, urti elastici fra biglie uguali, sponde, bocche delle buche (una biglia lenta oltre la linea della sponda cade). In Node, 200 partite intere CPU contro CPU: tutte finite, nessuna biglia fuori dal panno, nessun NaN né compenetrazione. Taratura scelta: attrito 70, resistenza 0,3, velocità massima 450 px/s, errore IA 0,03 rad (spacco con circa 1,5 biglie in buca, IA che imbuca circa una volta su due).
+- **Salvataggio:** niente denaro, crediti o scommesse; solo i risultati delle partite finite, una volta sola (`gta-melito-biliardo-v1`).
+- **Avvio provvisorio:** PAUSA › STRUMENTI › «PROVA BILIARDO», `?minigioco=biliardo`; aggancio `openPoolGame()` per i tavoli dei bar grandi della Q27. Slot, poker e biliardo non si aprono mai insieme.
+- **Cache:** `game.mjs?v=187`, `minigame-pool.mjs?v=001`.
+- **Test:** `q30-pool.test.mjs` (12 test); resi tolleranti a un qualunque `||isXxxOpen()` in coda alle condizioni di pausa 2 controlli di `q28-slot.test.mjs`, 2 di `q29-poker.test.mjs` e 1 di `local-shops.test.mjs`. Suite completa verde.
+- **Browser:** una sola prova breve in Chrome headless, PC 1280×720 (53 FPS) e telefono 844×390 (58 FPS): mouse e tocchi veri, spacco, tiro della CPU, pausa sotto, ESC, 0 sovrapposizioni, 0 errori JS. Foto della prova conservate fuori dal repository. Dopo le foto: buche più tonde, stecca che non copre più la striscia del punteggio, testi della colonna destra più corti sugli schermi bassi; questi ritocchi sono coperti dai test Node ma non riprovati in browser.
+- **Limiti / dove riprendere:** grafica provvisoria da far approvare a Simone; con la Q27 collegare `openPoolGame()` all'hotspot davanti al tavolo disegnato e togliere l'avvio di prova; niente suoni; Android reale non provato.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q33 partita di calcetto 5 contro 5
+- **C'era:** i campetti della Q32 con «E · GIOCA A CALCETTO» e l'aggancio `openFootballMatch()`, che mostrava solo un avviso.
+- **Nuovo `minigame-football.mjs`:**
+  - logica pura e ripetibile con un seme: campo 40×20, 5 contro 5 con portieri, possesso, passaggio, tiro, contrasto, cambio giocatore, IA di compagni, avversari e portieri, gol tra i pali, palo, rimesse, cronometro accelerato 2 min → 40';
+  - scena DOM/canvas a schermo intero in pixel art semplice, con tastiera e touch (levetta, TIRO, PASSA, CAMBIO, ESCI);
+  - salvataggio del solo bilancio vittorie/pareggi/sconfitte, senza doppioni.
+- **`game.mjs`:** `openFootballMatch` apre la partita. Sotto, la città è in pausa (`tick`, disegno e suoni). All'uscita si torna al cancello nella stessa posa (`footballReturnPoint`). Il risultato si salva subito al fischio.
+- **Altri file:** `campaign.mjs?v=003` (campo `football` nel salvataggio); `novita.mjs?v=002` e `NOVITA_DA_APPROVARE.md` (voce `calcetto`); CSS in `index.html`; cache `game.mjs?v=186`.
+- **Test:** nuovo `q33-football.test.mjs` (9 test); in `q32-pitches.test.mjs` reso tollerante l'elenco degli import; suite completa verde.
+- **Browser** (una prova breve, Chrome headless, PC 1280×720 e telefono 844×390): 59–61 FPS, 0 errori JS. Provati E e tocco al cancello, partita, fischio, ritorno nella stessa posa, città ferma, 1 risultato salvato, ESC senza salvataggio.
+- **Limiti:**
+  - grafica provvisoria da far approvare a Simone;
+  - niente intervallo, falli o rigori;
+  - Android vero non provato;
+  - palla e freccia ingrandite dopo le foto, controllate solo con un disegno di prova in Node.

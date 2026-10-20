@@ -30,8 +30,15 @@
 | `satellite` | Foto aerea Esri come sovramappa di confronto | BF13 / #49 | Piazza Santo Stefano, circa (1093, 1121) | `?satellite=50` | allineamento e leggibilità della foto al 50% |
 | `corsie` | Corsie fuori dagli edifici nelle vie strette | Q15 / #57 | Via Francesco Rossi, circa (1075, 1087) | — | le auto NPC non passano più sotto la sagoma della chiesa |
 | `pulsante` | Pulsante azione attenuato sul telefono | Q15 / #57 | sul telefono, a piedi lontano da tutto | — | il pulsante è spento invece di dire «ENTRA IN AUTO» |
+| `calcetto` | Campetti e partita di calcetto 5 contro 5 | Q32 · Q33 / in revisione | cancello del campetto più vicino alla partenza (Corso Europa, circa (1010, 1878); l'altro è in Via delle Palme, circa (535, 1181)), poi «E · GIOCA A CALCETTO» | — | erba, porte, rete, recinzione e fari del campetto; nella partita: campo, calciatori 7×9 pixel con maglie a due colori (ROSSI/BLU, portieri giallo/verde), freccia gialla del giocatore attivo, levetta e pulsanti TIRO/PASSA/CAMBIO |
 | `scala` | Veicoli e persone più piccoli, parcheggi fuori dalle corsie | BF14 / in arrivo | si attiva quando c'è | — | proporzioni rispetto alle strade e agli stalli |
 | `transenne` | Transenne del mercato | Q42 R06 / non ancora | — | — | non ancora nel gioco |
 | `corriere` | Furgone del corriere | Q18 / in arrivo | si attiva quando c'è | — | cabina e vano, livrea inventata |
 | `nettezza` | Camion della nettezza urbana | Q18 / in arrivo | si attiva quando c'è | — | compattatore, livrea inventata |
 | `passeggeri` | Passeggeri su auto e scooter | Q21 / in arrivo | si attiva quando c'è | — | passeggeri visibili in marcia, «E · DAI UN PASSAGGIO» |
+
+### Aggiunta Q39–Q41 (2026-10-20, Claude) — non ancora in `novita.mjs`
+| id | Elemento | Lavoro / PR | Dove guardare (esempio) | Ora / parametri | Cosa giudicare |
+|---|---|---|---|---|---|
+| `rider` | App RIDER: pannello, riga HUD gialla, frecce gialle sull'asfalto, linea sulla minimappa, cubo giallo sul mezzo | Q39–Q41 / ramo `q39` | sali sullo scooter vicino alla partenza, premi `J` (o PAUSA › 🛵 RIDER) e accetta un'offerta | — | leggibilità di cubo, frecce e freccia attorno al giocatore a zoom scooter; pannello su telefono |
+| `gare` | Gare clandestine arcade (finzione): partenza, anelli, frecce, avversari | Q34 / in revisione | partenza GARA 1 su Via Colonne di Giugliano, circa (345, 445); GARA 2 su Via Signorelli, circa (8, 927) | in auto, «E · GARA» | bandiera e cerchio, anelli gialli, frecce, sprite avversari, cronometro in alto |

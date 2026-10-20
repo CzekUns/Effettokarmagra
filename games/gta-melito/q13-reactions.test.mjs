@@ -1,10 +1,11 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {vs} from './world-scale.mjs';
 import {readFile} from 'node:fs/promises';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=154';
-import {vehicleHitsPedestrian,makeCollisionIndex} from './traffic-collision.mjs?v=128';
-import {createReactions,stepReactions,startCrossing,kerbWait,pickBlockedHorn,vehicleThreat,crossingThreat,speedOf,REACTION_RULES} from './npc-reactions.mjs?v=002';
-import {canSocialize} from './npc-social.mjs?v=003';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=161';
+import {vehicleHitsPedestrian,makeCollisionIndex} from './traffic-collision.mjs?v=131';
+import {createReactions,stepReactions,startCrossing,kerbWait,pickBlockedHorn,vehicleThreat,crossingThreat,speedOf,REACTION_RULES} from './npc-reactions.mjs?v=005';
+import {canSocialize} from './npc-social.mjs?v=004';
 
 // Via Roma lungo x (residenziale, larga 8) e una traversa a x=300.
 const graph=buildRoadGraph([
@@ -106,7 +107,7 @@ test('Q13 an NPC car slows and stops before a pedestrian standing on its lane, t
   minGap=Math.min(minGap,ped.x-car.x);
   if(car.v<.3)stopped=true;
  }
- assert.ok(stopped,'it stops');assert.ok(minGap>3.15+1,'well before the pedestrian: '+minGap.toFixed(2));
+ assert.ok(stopped,'it stops');assert.ok(minGap>vs(3.15)+1,'well before the pedestrian: '+minGap.toFixed(2));
  assert.equal(car.yieldPed,ped);assert.ok(car.yieldWait>1,'waiting for it');
  ped.y+=12;ped.crossing=null;
  const x=car.x;for(let i=0;i<120;i++)stepAgents(graph,[car],dt,null,{people:[ped],view});
@@ -134,17 +135,18 @@ test('Q13 kerb at a junction: waits while a car is coming on the side street, th
 });
 
 test('Q13 crossing gap is judged lane by lane: a car that passes before the pedestrian reaches its lane is fine',()=>{
- const from={x:0,y:5.7},to={x:0,y:-5.7};
+ // BF14: lanes at the world scale (closer to the centre line); distances re-measured on the new lanes.
+ const from={x:0,y:5.7},to={x:0,y:-5.7},LN=vs(1.84);
  const lane=y=>({x:-25,y,a:0,speed:10});
- assert.ok(crossingThreat(from,to,[lane(-1.84)]),'far lane, 2 s away: the pedestrian would be there');
- assert.equal(crossingThreat(from,to,[{x:-120,y:-1.84,a:0,speed:10}]),null,'12 s away: real gap');
- assert.equal(crossingThreat(from,to,[{x:4,y:1.84,a:0,speed:10}]),null,'near lane, just gone past: no wait');
- assert.ok(crossingThreat(from,to,[{x:-6,y:1.84,a:0,speed:10}]),'near lane, arriving now');
- assert.equal(crossingThreat(from,to,[{x:30,y:-1.84,a:0,speed:10}]),null,'driving away');
- assert.ok(crossingThreat(from,to,[{x:0,y:-1.84,a:0,speed:0}]),'a car stopped on the crossing closes it');
- const t0=crossingThreat(from,to,[{x:-83.6,y:-1.84,a:0,speed:10}],0),t1=crossingThreat(from,to,[{x:-83.6,y:-1.84,a:0,speed:10}],30);
+ assert.ok(crossingThreat(from,to,[lane(-LN)]),'far lane, 2 s away: the pedestrian would be there');
+ assert.equal(crossingThreat(from,to,[{x:-120,y:-LN,a:0,speed:10}]),null,'12 s away: real gap');
+ assert.equal(crossingThreat(from,to,[{x:4,y:LN,a:0,speed:10}]),null,'near lane, just gone past: no wait');
+ assert.ok(crossingThreat(from,to,[{x:-6,y:LN,a:0,speed:10}]),'near lane, arriving now');
+ assert.equal(crossingThreat(from,to,[{x:30,y:-LN,a:0,speed:10}]),null,'driving away');
+ assert.ok(crossingThreat(from,to,[{x:0,y:-LN,a:0,speed:0}]),'a car stopped on the crossing closes it');
+ const t0=crossingThreat(from,to,[{x:-80,y:-LN,a:0,speed:10}],0),t1=crossingThreat(from,to,[{x:-80,y:-LN,a:0,speed:10}],30);
  assert.ok(t0&&!t1,'after a long wait the margin is a little smaller');
- assert.ok(crossingThreat(from,to,[{x:-77,y:-1.84,a:0,speed:10}],30),'but never below the minimum');
+ assert.ok(crossingThreat(from,to,[{x:-71,y:-LN,a:0,speed:10}],30),'but never below the minimum');
 });
 
 test('Q13 horns: only when the player or a pedestrian on the road blocks the car, with per-car, global and window limits',()=>{

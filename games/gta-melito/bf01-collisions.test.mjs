@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {buildRoadGraph,createAgents,stepAgents,unstickVehicle} from './roads.mjs';
 import {makeCollisionIndex,vehiclesOverlap,vehicleSeparation,vehicleShape,trafficMoveBlocked} from './traffic-collision.mjs';
 import {applyNonlethalImpact,advanceNonlethalImpact} from './impact-physics.mjs';
+import {vs} from './world-scale.mjs';
 
 const graph=buildRoadGraph([
  {id:1,n:'Via Roma',t:'residential',w:8,p:[0,0,300,0,600,0]},
@@ -13,24 +14,25 @@ const view=[-1000,-1000,1000,1000],dt=.05;
 const firstCar=()=>createAgents(graph,1,77,'car',[])[0];
 
 test('BF01 separation: the shortest way out of an overlap, null when bodies are apart',()=>{
- const a={x:0,y:0,a:0},b={x:5,y:0,a:0};
+ // BF14: the bodies are VEHICLE_SCALE of the measured ones; the set-up scales with them.
+ const a={x:0,y:0,a:0},b={x:vs(5),y:0,a:0};
  const sep=vehicleSeparation(a,b);
  assert.ok(sep&&sep.nx<0&&Math.abs(sep.ny)<1e-9,'pushed back along the length');
- assert.ok(Math.abs(sep.depth-(3.15*2-5))<1e-9);
- assert.equal(vehicleSeparation(a,{x:7,y:0,a:0}),null);
- assert.equal(vehicleSeparation({x:0,y:0,a:0},{x:0,y:3.5,a:0}),null,'side by side in two lanes: no contact');
+ assert.ok(Math.abs(sep.depth-vs(3.15*2-5))<1e-9);
+ assert.equal(vehicleSeparation(a,{x:vs(7),y:0,a:0}),null);
+ assert.equal(vehicleSeparation({x:0,y:0,a:0},{x:0,y:vs(3.5),a:0}),null,'side by side in two lanes: no contact');
 });
 
 test('BF01 Ape and food trucks: collision boxes follow the sprites, cars unchanged',()=>{
- assert.deepEqual(vehicleShape({model:'panda-modern-white'}),{halfLength:3.15,halfWidth:1.7});
- assert.ok(vehicleShape({model:'ape-car-azzurra'}).halfWidth<1.7&&vehicleShape({model:'ape-car-azzurra'}).halfLength<3.15);
- assert.ok(vehicleShape({model:'ape-verde-pesce'}).halfLength<3.15);
- assert.ok(vehicleShape({model:'food-panini'}).halfWidth<1.7,'awning not part of the solid body');
- assert.equal(vehicleShape({vehicleType:'motorcycle',model:'moto-scooter-sh-red'}).halfLength,2.8);
+ assert.deepEqual(vehicleShape({model:'panda-modern-white'}),{halfLength:vs(3.15),halfWidth:vs(1.7)});
+ assert.ok(vehicleShape({model:'ape-car-azzurra'}).halfWidth<vs(1.7)&&vehicleShape({model:'ape-car-azzurra'}).halfLength<vs(3.15));
+ assert.ok(vehicleShape({model:'ape-verde-pesce'}).halfLength<vs(3.15));
+ assert.ok(vehicleShape({model:'food-panini'}).halfWidth<vs(1.7),'awning not part of the solid body');
+ assert.equal(vehicleShape({vehicleType:'motorcycle',model:'moto-scooter-sh-red'}).halfLength,vs(2.8));
  // the model travels with every swept pose, so a small Ape is not tested as a full car
- const ape={x:0,y:0,a:0,model:'ape-car-azzurra',body:'car'},wall={x:6,y:0,a:0,body:'car',model:'panda-modern-white'};
- assert.equal(trafficMoveBlocked(ape,{x:.4,y:0,a:0},'car',makeCollisionIndex([wall]),ape),false,'an Ape fits where a full car would touch');
- assert.equal(trafficMoveBlocked({...ape,model:'panda-modern-white'},{x:.4,y:0,a:0},'car',makeCollisionIndex([wall]),ape),true);
+ const ape={x:0,y:0,a:0,model:'ape-car-azzurra',body:'car'},wall={x:vs(6),y:0,a:0,body:'car',model:'panda-modern-white'};
+ assert.equal(trafficMoveBlocked(ape,{x:vs(.4),y:0,a:0},'car',makeCollisionIndex([wall]),ape),false,'an Ape fits where a full car would touch');
+ assert.equal(trafficMoveBlocked({...ape,model:'panda-modern-white'},{x:vs(.4),y:0,a:0},'car',makeCollisionIndex([wall]),ape),true);
 });
 
 test('BF01 an NPC car shoved onto a car parked at the kerb slides out and drives on (no permanent jam)',()=>{

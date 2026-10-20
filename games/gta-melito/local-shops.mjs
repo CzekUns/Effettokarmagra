@@ -10,6 +10,9 @@ export const OFFERS=Object.freeze({
  sfogliatella:{name:'Sfogliatella',price:2,effect:'carica',seconds:150},
  pane:{name:'Pane cafone',price:2,effect:'carica',seconds:120},
  acqua:{name:'Bottiglia d’acqua',price:1,effect:'carica',seconds:60},
+ // Q26: al bancone dei locali con interno (bar e minimarket).
+ spremuta:{name:'Spremuta d’arancia',price:2,effect:'carica',seconds:120},
+ snack:{name:'Snack salato',price:1,effect:'carica',seconds:60},
  cartolina:{name:'Cartolina di Melito',price:3,effect:'ricordo'},
  taglio:{name:'Taglio di capelli',price:12,effect:'rispetto',respect:3},
  // Q17: cibo di strada dei friggitori ambulanti (nomi dei venditori e prezzi INVENTATI).
@@ -23,8 +26,8 @@ export const OFFERS=Object.freeze({
  hotdog:{name:'Hot dog',price:3,effect:'carica',seconds:180},
  peremusso:{name:'’O pere e ’o musso',price:4,effect:'carica',seconds:200}
 });
-const BY_KIND={bar:['caffe','cornetto'],cafe:['caffe','cornetto'],pastry:['sfogliatella','caffe'],
- bakery:['pane','sfogliatella'],supermarket:['acqua','pane'],convenience:['acqua'],
+const BY_KIND={bar:['caffe','cornetto','spremuta'],cafe:['caffe','cornetto','spremuta'],pastry:['sfogliatella','caffe'],
+ bakery:['pane','sfogliatella'],supermarket:['acqua','pane','snack'],convenience:['acqua','snack'],
  stationery:['cartolina'],hairdresser:['taglio'],
  'street-fritti':['frittatina','crocche','zeppola'],'street-zeppole':['zeppola','panzerotto','frittatina'],
  'street-pere-musso':['peremusso'],'street-panini':['panino','frittatina'],'street-hotdog':['hotdog'],

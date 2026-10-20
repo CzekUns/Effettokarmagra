@@ -8,8 +8,8 @@
  * - Vetrine: chi passa davanti a un negozio si ferma qualche secondo a guardare.
  * - Clacson NPC solo se a bloccare è il giocatore o un pedone in carreggiata; cooldown e limite.
  * Ogni posizione nuova passa da ctx.canStand: niente pedoni dentro muri o edifici. */
-import {lanePosition,DRIVABLE} from './roads.mjs?v=154';
-import {vehicleShape,vehicleHitsPedestrian} from './traffic-collision.mjs?v=128';
+import {lanePosition,DRIVABLE} from './roads.mjs?v=161';
+import {vehicleShape,vehicleHitsPedestrian} from './traffic-collision.mjs?v=131';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=n=>{const x=Math.sin(n*12.9898)*43758.5453;return x-Math.floor(x);};
@@ -26,7 +26,7 @@ export const REACTION_RULES=Object.freeze({
 });
 export function createReactions(seed=1313){
  return {seed,clock:0,checks:0,alarm:null,horns:{last:-1e9,byCar:new WeakMap(),recent:[]},
-  lastBubble:-1e9,shopUsed:new WeakMap(),log:[]};
+  lastBubble:-1e9,shopUsed:new WeakMap(),log:[],crossRequests:new Map()};
 }
 const note=(r,type,extra={})=>{r.log.push({type,t:+r.clock.toFixed(2),...extra});if(r.log.length>200)r.log.shift();};
 
@@ -48,7 +48,7 @@ export function vehicleThreat(ped,v){
  return {ttc:gap/Math.abs(speed),gap,lateral,along,side:Math.sign(-dx*hy+dy*hx)||1,hx,hy};
 }
 // I lavavetri (BF08) hanno la loro routine al semaforo: window-washers.mjs li muove e li tiene al sicuro.
-const reactive=a=>a&&a.body==='walk'&&!a.indoors&&!a.commuter&&!a.frozen&&!a.washer&&!(a.impactTime>0);
+const reactive=a=>a&&a.body==='walk'&&!a.indoors&&!a.commuter&&!a.frozen&&!a.washer&&!a.serviceHold&&!(a.impactTime>0);
 // Il salto di lato è riservato a chi cammina libero (non dentro una porta, non in sella).
 const canJump=a=>reactive(a)&&!a.residentRoutine?.doorStep&&!a.crossing;
 function say(r,ctx,agent,text){
@@ -181,6 +181,12 @@ export function crossingThreat(from,to,vehicles,waited=0){
  * Il cordolo è dove inizia la carreggiata della traversa più larga; si guarda il passaggio dritto
  * fino al cordolo opposto. Chi è già sceso dal cordolo non torna indietro. */
 export function kerbWait(r,a,graph,ctx){
+ const waiting=kerbWaitDecision(r,a,graph,ctx);
+ // Q22: chi non aspetta più al cordolo non chiede più la precedenza alle strisce.
+ if(!waiting)r.crossRequests?.delete(a);
+ return waiting;
+}
+function kerbWaitDecision(r,a,graph,ctx){
  const R=REACTION_RULES;
  if(a.residentRoutine||a.corner||a.edge==null||a.crossing)return false;
  const edge=graph.edges[a.edge];if(!edge)return false;
@@ -195,10 +201,14 @@ export function kerbWait(r,a,graph,ctx){
  if(left<radius-1.5&&!a.kerbWait){a.kerbGo=a.edge;return false;}
  const waited=a.kerbWaited||0,ux=Math.cos(edge.angle),uy=Math.sin(edge.angle);
  const from={x:a.x,y:a.y},to={x:a.x+ux*(left+radius),y:a.y+uy*(left+radius)};
- const threat=crossingThreat(from,to,(ctx.vehicles||[]).filter(v=>Math.hypot(v.x-node.x,v.y-node.y)<90),waited);
+ // Q22: un'auto che si sta fermando per lasciarlo passare (giveWayTo) non chiude il varco.
+ const threat=crossingThreat(from,to,(ctx.vehicles||[]).filter(v=>Math.hypot(v.x-node.x,v.y-node.y)<90&&
+  !(v.giveWayTo===a&&Math.abs(speedOf(v))<4)),waited);
  if(threat&&waited<R.maxCrossWait){
   if(!a.kerbWait)note(r,'kerb-wait');
   a.kerbWait=true;a.kerbWaited=waited+(ctx.dt||.05);a.braking=true;
+  // Q22: dopo 1 s al cordolo il pedone chiede la precedenza alle strisce (roads.mjs → crosswalkYield).
+  if(a.kerbWaited>=1&&r.crossRequests)r.crossRequests.set(a,{ped:a,from,to});
   a.a=Math.atan2(threat.v.y-a.y,threat.v.x-a.x);
   return true;
  }

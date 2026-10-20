@@ -62,7 +62,7 @@ test('regression: vehicle state reaches the actual stage element, hiding the stu
   'the stage must have the exact ID looked up by updateHud');
  assert.match(game,/const stage=\$\('stage'\)\|\|document\.querySelector\?\.\('\.stage'\)/);
  assert.match(game,/stage\?\.classList\.toggle\('driving',driving\)/);
- assert.match(game,/stage\?\.classList\.toggle\('interior',!!state\.bankInterior\)/);
+ assert.match(game,/stage\?\.classList\.toggle\('interior',!!state\.bankInterior(?:\|\|!!state\.shopInterior)?\)/);
  // Both visual modes depend on this CSS class, not on the keyboard state.
  assert.match(html,/\.stage\.driving \.touch-stick\{display:none!important\}/);
  assert.match(html,/\.stage\.driving \.steering-wheel\{display:flex\}/);
@@ -102,12 +102,17 @@ test('real HUD switches visible controls between car, walking and interior scene
  assert.ok(start>0&&end>start);
  const update=new Function('state','document','pressed','nearestBankEntrance',
   'nearestEnterableVehicle','moveAxes','describeCameraZoom','interiorZoom',
-  'isMotorcycle','nearest','formatNpcClock','cityEventAction','nearestShop','boostSecondsLeft','npcWeekday','nearestCounter',[
+  'isMotorcycle','nearest','formatNpcClock','cityEventAction','nearestShop','boostSecondsLeft','npcWeekday','nearestCounter','pitchHotspot','garagePrompt','footShopTarget',
+  'DAMAGE_LABEL','damageLevel','nearWorkshop','repairCost',
+  // Q21: passengers (no one on board, nobody asking for a lift in this scene)
+  'occupantsOf','liftHere','PASSENGER_RULES',[
    'const $=id=>document.getElementById(id);',
    game.slice(start,end),
    'return updateHud;'
   ].join('\n'))(state,document,{run:false},()=>null,()=>null,
-  ()=>({x:0,y:0}),()=>'',()=>6.6,()=>false,()=>null,formatNpcClock,cityEventAction,nearestShop,boostSecondsLeft,npcWeekday,p=>nearestShop([],p));
+  ()=>({x:0,y:0}),()=>'',()=>6.6,()=>false,()=>null,formatNpcClock,cityEventAction,nearestShop,boostSecondsLeft,npcWeekday,p=>nearestShop([],p),()=>null,()=>'',()=>null,
+  {integro:'',ammaccato:'AMMACCATA',grave:'DANNEGGIATA'},()=>'integro',()=>false,()=>0,
+  ()=>[],()=>null,{stopSpeed:1.2});
  update();
  assert.ok(nodes.get('stage').classes.has('driving'),'in the car the wheel must appear');
  assert.ok(controls.classes.has('driving'),'in the car the pedals must appear');

@@ -1,9 +1,12 @@
-import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
-import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=006';
-import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=128';
-import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=003';
-import {buildJunctions,chooseSignals,junctionDecision,pruneReservations,pedestrianMayCross,clockSecondsFromMinutes} from './junctions.mjs?v=002';
-import {findBorderGates,gateMouthClear,borderRing,GATE_RULES} from './border-gates.mjs?v=001';
+import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=044';
+import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=008';
+import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=131';
+import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=005';
+import {vs,ps} from './world-scale.mjs?v=001';
+// BF14: following distance between two cars on the same edge (centre to centre).
+const QUEUE=Object.freeze({stop:vs(6.3)+1,window:vs(7)});
+import {buildJunctions,chooseSignals,junctionDecision,pruneReservations,pedestrianMayCross,clockSecondsFromMinutes,crosswalkYield} from './junctions.mjs?v=003';
+import {findBorderGates,gateMouthClear,borderRing,GATE_RULES} from './border-gates.mjs?v=002';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
  * Simulates moving traffic through intersections with legal one-way exits. */
@@ -107,7 +110,7 @@ function liveCarEdges(nodes,edges){
 export function laneOffsetOf(edge){return edge.laneOffset??roadTrafficLaneOffset(edge.streetWidth);}
 // The lane never goes below the offset at which two cars in opposite directions still pass each other
 // (minimum), and the last metres before each junction are left to the junction geometry (corners).
-export function fitLanesToBuildings(graph,clear,{halfWidth=1.7,margin=.25,step=3,minimum=1.75,ends=5}={}){
+export function fitLanesToBuildings(graph,clear,{halfWidth=vs(1.7),margin=.25,step=3,minimum=vs(1.75),ends=5}={}){
  let narrowed=0;
  for(const e of graph.edges){
   if(!e.car||e.len<=2*ends)continue;
@@ -148,11 +151,12 @@ export function createAgents(graph,count,seed=10,kind='car',avoid=[],settings={}
    const at={...position(graph,edgeIndex,t,kind,side),...(kind==='car'?{vehicleType}:{})};
    // BF03: the model is known before the checks, so the whole body of an Ape or a van is tested.
    if(kind==='car'&&settings.model)at.model=settings.model(i,vehicleType);
+   if(kind==='car'&&isBusModel(at.model)&&!BUS_ROADS.has(edge.roadType))continue;
    if(collidesWithTraffic(at,kind,occupied))continue;
    if(kind==='walk'&&[...nearbyColliders(occupied,at.x,at.y,2)].some(other=>
-    other.body==='walk'&&Math.hypot(at.x-other.x,at.y-other.y)<1.5))continue;
+    other.body==='walk'&&Math.hypot(at.x-other.x,at.y-other.y)<ps(1.5)))continue;
    if(kind==='car'&&[...nearbyColliders(occupied,at.x,at.y,10)].some(other=>
-    (other.body||'car')==='car'&&Math.hypot(at.x-other.x,at.y-other.y)<9))continue;
+    (other.body||'car')==='car'&&Math.hypot(at.x-other.x,at.y-other.y)<vs(9)))continue;
    if(kind==='car'&&!carSpawnClear(graph,edgeIndex,t,at,occupied,junctionGap,settings))continue;
    const role=kind==='walk'?['commuter','errand','stroller'][hash(seed+i*31)%3]:
     ['through','local','courier'][hash(seed+i*31)%3];
@@ -212,12 +216,18 @@ function hasThroughExit(graph,id){
  return graph.nodes[edge.to].out.some(next=>graph.edges[next].car&&graph.edges[next].to!==edge.from&&
   (!graph.liveCar||graph.liveCar[next]));
 }
+/* Q19: the urban bus is long (a 12,6 m body against the cars' 6,3): it is born, turns and is moved
+ * off screen only on the main roads, where lanes and junctions are wide enough for it. */
+export const BUS_ROADS=Object.freeze(new Set(['trunk','trunk_link','primary','primary_link','secondary','secondary_link','tertiary','tertiary_link']));
+export const isBusModel=model=>/^autobus-/.test(model||'');
 export function chooseTurn(graph,nodeId,oldEdge,agent,allowed){
  const node=graph.nodes[nodeId],incoming=graph.edges[oldEdge];
  let exits=node.out.filter(id=>allowed(graph.edges[id],id));
  if(!exits.length)return null;
  // BF03: a car never turns into a street that only leads to a one-way terminal, when it has a choice.
  if(agent.body==='car'&&graph.liveCar){const live=exits.filter(id=>graph.liveCar[id]);if(live.length)exits=live;}
+ // Q19: the bus keeps to the main roads whenever the junction offers one.
+ if(agent.mainOnly){const main=exits.filter(id=>BUS_ROADS.has(graph.edges[id].roadType));if(main.length)exits=main;}
  // Q12: an agent with a planned path follows it; everyone else keeps the usual wandering.
  if(agent.path){const k=agent.path.indexOf(oldEdge),want=k>=0?agent.path[k+1]:undefined;if(want!==undefined&&exits.includes(want))return want;}
  let pool=exits.filter(id=>graph.edges[id].to!==incoming.from);
@@ -272,6 +282,22 @@ function sidewalkTurn(graph,oldId,newId,side){
  const corner={x:start.x+ux*approach,y:start.y+uy*approach};
  return {side:nextSide,points:[corner,end]};
 }
+// Q22: on the inside of a corner (turning towards its own pavement side) a pedestrian turns at the
+// corner of the block, where the two pavements meet, instead of crossing the side street and back.
+const INNER_REACH=18;
+function innerTurn(graph,oldId,newId,side,left){
+ const old=graph.edges[oldId],next=graph.edges[newId];
+ const turn=Math.atan2(Math.sin(next.angle-old.angle),Math.cos(next.angle-old.angle));
+ if(Math.abs(turn)<.32||Math.abs(turn)>2.65||Math.sign(turn)!==Math.sign(side))return null;
+ const s1=position(graph,oldId,1,'walk',side),s2=position(graph,newId,0,'walk',side);
+ const ux=Math.cos(old.angle),uy=Math.sin(old.angle),vx=Math.cos(next.angle),vy=Math.sin(next.angle);
+ const cross=ux*vy-uy*vx;if(Math.abs(cross)<.2)return null;
+ const dx=s2.x-s1.x,dy=s2.y-s1.y,a=(dx*vy-dy*vx)/cross,b=(dx*uy-dy*ux)/cross;
+ // P = s1 + u·a = s2 + v·b: the corner, a little before the end of the old pavement and a little
+ // after the start of the new one; it must still be ahead of the pedestrian.
+ if(a>.5||a<-left+.2||b<-.5||b>Math.min(20,next.len*.6))return null;
+ return {side,inner:true,points:[{x:s1.x+ux*a,y:s1.y+uy*a}],startT:Math.max(0,b)/next.len};
+}
 function stepSidewalkCorner(agent,distance,index){
  const path=agent.corner;
  while(distance>0&&path.at<path.points.length){
@@ -283,7 +309,7 @@ function stepSidewalkCorner(agent,distance,index){
   if(scale<1)break;
   path.at++;
  }
- if(path.at===path.points.length){agent.edge=path.edge;agent.t=0;agent.side=path.side;
+ if(path.at===path.points.length){agent.edge=path.edge;agent.t=path.startT||0;agent.side=path.side;
   agent.seed=path.seed;agent.a=path.angle;agent.corner=null;
   agent.segments=(agent.segments||0)+1;
   if(agent.routine==='errand'&&agent.segments%5===0)agent.wait=1.5+rand(agent.seed)*2.5;
@@ -292,7 +318,7 @@ function stepSidewalkCorner(agent,distance,index){
  agent.braking=false;
 }
 function nextPose(graph,agent,distance){
- const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1,body:agent.body,routine:agent.routine,home:agent.home,path:agent.path};
+ const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1,body:agent.body,routine:agent.routine,home:agent.home,path:agent.path,mainOnly:isBusModel(agent.model)};
  let hops=0;
  while(distance>.00001&&hops++<8){
   const edge=graph.edges[route.edge];if(!edge)break;
@@ -316,7 +342,7 @@ function nextPose(graph,agent,distance){
 // (chooseTurn on a copy of the route, so the agent's own seed is untouched).
 function nextJunction(graph,agent,maxDist){
  const junctions=graph.intersections;if(!junctions||agent.edge==null)return null;
- const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1,body:agent.body,routine:agent.routine,home:agent.home,path:agent.path};
+ const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1,body:agent.body,routine:agent.routine,home:agent.home,path:agent.path,mainOnly:isBusModel(agent.model)};
  let dist=0;
  for(let hops=0;hops<12;hops++){
   const edge=graph.edges[route.edge];if(!edge)return null;
@@ -374,7 +400,7 @@ function walkPlans(graph,agent,edge){
  }
  return {plans,route:{seed:agent.seed,body:'walk',routine:agent.routine,home:agent.home,path:agent.path}};
 }
-export {position as lanePosition,sidewalkTurn,nextPose as previewNextPose};
+export {position as lanePosition,sidewalkTurn,innerTurn,nextPose as previewNextPose};
 export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockMinutes=null,valid=null){
  if(!Number.isFinite(dt)||dt<=0||agent.impactTime>0||agent.needsRoutineRecovery)return;
  const elapsed=Math.min(dt,.1);
@@ -396,6 +422,25 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
  let speed=agent.speed;
  if(agent.body==='walk'){
   if(agent.corner){stepSidewalkCorner(agent,speed*elapsed,index);return;}
+  // Q22: a few metres before the end of the pavement the pedestrian picks its way on; on the inside
+  // of a corner it leaves the pavement at the corner of the block (no crossing, no detour).
+  const before=(1-agent.t)*edge.len;
+  if(agent.innerFor!==agent.edge&&before<=INNER_REACH){
+   agent.innerFor=agent.edge;
+   const {plans,route}=walkPlans(graph,agent,edge);
+   for(const id of graph.nodes[edge.to].out){
+    if(!graph.edges[id].walk)continue;
+    const inner=innerTurn(graph,agent.edge,id,agent.side||1,before);
+    if(inner&&!(graph.isWalkBlocked&&graph.isWalkBlocked(id,inner.side)))plans.set(id,inner);
+   }
+   const chosen=chooseTurn(graph,edge.to,agent.edge,route,(_,id)=>plans.has(id));
+   agent.nextExit=chosen;
+   const plan=chosen!=null?plans.get(chosen):null;
+   if(plan?.inner){
+    agent.corner={...plan,edge:chosen,angle:graph.edges[chosen].angle,seed:route.seed,at:0};agent.braking=false;
+    stepSidewalkCorner(agent,speed*elapsed,index);return;
+   }
+  }
   // BF07: at a junction with (simulated) traffic lights a pedestrian who goes straight on crosses
   // the side street only with the green of its own street; it waits on the kerb, before the road.
   const signalled=graph.intersections?.byNode.get(edge.to);
@@ -413,7 +458,9 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
   agent.signalWait=false;
   if(agent.t*edge.len+speed*elapsed>=edge.len){
    const {plans,route}=walkPlans(graph,agent,edge);
-   const chosen=chooseTurn(graph,edge.to,agent.edge,route,(_,id)=>plans.has(id));
+   // Q22: keep the way on picked at the corner check, when it is still possible.
+   const chosen=agent.innerFor===agent.edge&&agent.nextExit!=null&&plans.has(agent.nextExit)?agent.nextExit:
+    chooseTurn(graph,edge.to,agent.edge,route,(_,id)=>plans.has(id));
    if(chosen!=null){
     const at=position(graph,agent.edge,1,'walk',agent.side);
     if(index&&trafficMoveBlocked(agent,at,'walk',index,agent)){agent.braking=true;return;}
@@ -450,11 +497,14 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
    }
    if(other.body!=='car'||other.edge!==agent.edge)continue;
    const ahead=(other.t-agent.t)*edge.len;
-   if(ahead>0&&ahead<12){const v=cruise*clamp((ahead-5)/7,0,1);if(v<speed){speed=v;agent.follows=other;}}
+   // BF14: queue gap and slow-down window follow the (smaller) vehicles: about 1 m between bumpers.
+   if(ahead>0&&ahead<QUEUE.stop+QUEUE.window){const v=cruise*clamp((ahead-QUEUE.stop)/QUEUE.window,0,1);if(v<speed){speed=v;agent.follows=other;}}
   }
   agent.yieldPed=yieldPed;agent.yieldWait=yieldPed&&!(agent.v>.5)?(agent.yieldWait||0)+elapsed:0;
   // BF07: stop line of the next junction (red light, right of way, junction or exit not free).
   if(Number.isFinite(agent.jLimit)){limit=Math.max(0,agent.jLimit);speed=Math.min(speed,Math.sqrt(2*4.5*limit));}
+  // Q24: a (fictional) speed bump ahead on this segment: slow down to cross it gently.
+  if(edge.bumps){const at=agent.t*edge.len;for(const d of edge.bumps){const ahead=d-at;if(ahead>-2.5&&ahead<18)speed=Math.min(speed,ahead<2?3.2:3.2+(ahead-2)*.7);}}
   speed=npcSpeedStep(profile,agent.v,speed,elapsed);
  }
  if(limit<=1e-3){agent.braking=true;agent.blockedBy=null;if(profile)agent.v=0;return;}
@@ -688,7 +738,7 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
    jctx={approaching:new Map(),traffic:new Set(),index,player:playerBody,signalSeconds:junctions.clockSeconds,
     time:(junctions.time=(junctions.time||0)+dt)};
    for(const agent of agents){
-    if(agent.body!=='car'||agent.commuter||agent.stationary){continue;}
+    if(agent.body!=='car'||agent.commuter||agent.stationary||agent.serviceHold){continue;}
     jctx.traffic.add(agent);
     // Outside the map (varchi di confine, t oltre 0..1) there are no junctions to negotiate.
     agent.jx=agent.impactTime>0||agent.needsRoutineRecovery||agent.gateMode||!(agent.t>=0&&agent.t<=1)?null:nextJunction(graph,agent,70);
@@ -707,6 +757,9 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
    else{stepGate(graph,agent,dt,index);if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);continue;}
   }
   if(agent.impactTime>0){agent.braking=true;continue;}
+  // Q20: a service vehicle at work (courier stop, refuse collection, tow, bus stop) or a passer-by waiting at
+  // a bus stop is moved by service-routines.mjs, a little at a time.
+  if(agent.serviceHold){agent.braking=true;agent.stalled=0;agent.turnSignal=null;continue;}
   if(agent.body==='car'&&unstickVehicle(agent,index,world,dt)){
    agent.stalled=0;if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);continue;
   }
@@ -753,6 +806,12 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
    const decision=junctionDecision(graph,agent,jx,jctx);
    agent.jLimit=decision.limit;agent.jHold=decision.reason;
   }
+  // Q22: strisce senza semaforo: precedenza al pedone che aspetta al cordolo (junctions.mjs).
+  if(agent.body==='car'&&world.crossings?.size&&!(agent.backoff>0)&&!(agent.wait>0)){
+   const give=crosswalkYield(agent,world.crossings,dt);
+   agent.giveWayTo=give?give.ped:null;
+   if(give&&give.limit<agent.jLimit){agent.jLimit=give.limit;agent.jHold=agent.jHold||'strisce';}
+  }else agent.giveWayTo=null;
   stepAgent(graph,agent,dt,agents,player,index,world.npcClockMinutes,world.validRecovery);
   const moved=Math.hypot(agent.x-x,agent.y-y)>=.02;
   if(agent.body==='car'){
@@ -776,12 +835,13 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
      (graph.throughStarts?.length?graph.throughStarts:graph.trafficStarts);
     for(let attempt=0;attempt<32;attempt++){
      const edgeId=options[hash(agent.seed+attempt*3253)%options.length];
+     if(isBusModel(agent.model)&&!BUS_ROADS.has(graph.edges[edgeId]?.roadType))continue;
      const t=.15+rand(agent.seed+attempt*1459)*.7;
      const at={...position(graph,edgeId,t,'car'),vehicleType:agent.vehicleType,model:agent.model};
      if(agent.home&&(agent.respawnFails||0)<2&&Math.hypot(at.x-agent.home.x,at.y-agent.home.y)>agent.home.radius*.65)continue;
      if(at.x>=view[0]-15&&at.x<=view[2]+15&&at.y>=view[1]-15&&at.y<=view[3]+15)continue;
      if(collidesWithTraffic(at,'car',index,agent)||[...nearbyColliders(index,at.x,at.y,10)].some(other=>
-       other!==agent&&(other.body||'car')==='car'&&Math.hypot(at.x-other.x,at.y-other.y)<9))continue;
+       other!==agent&&(other.body||'car')==='car'&&Math.hypot(at.x-other.x,at.y-other.y)<vs(9)))continue;
      Object.assign(agent,at,{edge:edgeId,t,seed:agent.seed+attempt+1,wait:0,stalled:0,
       prevX:at.x,prevY:at.y,prevA:at.a,braking:false,respawnFails:0,blockedBy:null,backoff:0});
      break;
@@ -803,7 +863,7 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
     if(at.x>=world.view[0]-15&&at.x<=world.view[2]+15&&at.y>=world.view[1]-15&&at.y<=world.view[3]+15)continue;
     if(collidesWithTraffic(at,'walk',index,agent))continue;
     if([...nearbyColliders(index,at.x,at.y,2)].some(other=>
-      other!==agent&&other.body==='walk'&&Math.hypot(at.x-other.x,at.y-other.y)<1.5))continue;
+      other!==agent&&other.body==='walk'&&Math.hypot(at.x-other.x,at.y-other.y)<ps(1.5)))continue;
     Object.assign(agent,at,{edge:edgeId,t,seed:agent.seed+attempt+1,wait:0,stalled:0,
      corner:null,prevX:at.x,prevY:at.y,prevA:at.a,braking:false});
     break;

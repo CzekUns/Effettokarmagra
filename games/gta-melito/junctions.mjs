@@ -3,9 +3,9 @@
  * SEMAFORI SIMULATI: l'istantanea OSM del gioco (data/melito-map.json) non contiene nodi
  * highway=traffic_signals, quindi i semafori sono POSIZIONAMENTI DI GIOCO scelti con una regola
  * sugli incroci principali, NON semafori rilevati né attribuiti alla città reale. */
-import {roadTrafficLaneOffset} from './road-widths.mjs?v=043';
-import {NPC_MINUTES_PER_SECOND} from './npc-agenda.mjs?v=001';
-import {vehicleShape,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=128';
+import {roadTrafficLaneOffset} from './road-widths.mjs?v=044';
+import {NPC_MINUTES_PER_SECOND} from './npc-agenda.mjs?v=002';
+import {vehicleShape,vehiclesOverlap,nearbyColliders} from './traffic-collision.mjs?v=131';
 
 // Nessun semaforo nei dati: quelli in gioco sono simulati (vedi README e scheda PAUSA).
 export const SIGNALS_SIMULATED=true;
@@ -157,6 +157,36 @@ function opposite(graph,ja,jb){
  return Math.cos(a.angle)*Math.cos(b.angle)+Math.sin(a.angle)*Math.sin(b.angle)<-.7;
 }
 const stopped=v=>!!(v.braking||v.wait>0||v.impactTime>0||v.needsRoutineRecovery||v.backoff>0);
+
+/* Q22: strisce senza semaforo. Un pedone che aspetta al cordolo da almeno 1 s (npc-reactions.mjs,
+ * kerbWait → requests) ha la precedenza: l'auto in arrivo che può fermarsi comodamente si ferma prima
+ * del passaggio (largo 2 × half). Chi non può fermarsi passa (il pedone aspetta ancora il varco).
+ * Un'auto ferma per lo stesso pedone da oltre giveUp secondi riparte e non gli cede più (niente code
+ * infinite). Ritorna {limit,ped}: la distanza che il centro può ancora percorrere, o null. */
+export const CROSSWALK_RULES=Object.freeze({half:1.6,look:40,giveUp:6});
+export function crosswalkYield(agent,requests,dt=.05){
+ const R=CROSSWALK_RULES,shape=vehicleShape(agent),hx=Math.cos(agent.a),hy=Math.sin(agent.a);
+ const speed=Math.max(0,Number.isFinite(agent.v)?agent.v:agent.speed||0);
+ let best=null;
+ for(const q of requests.values()){
+  if(agent.gaveUpOn?.has(q.ped))continue;
+  const cx=q.to.x-q.from.x,cy=q.to.y-q.from.y,len=Math.hypot(cx,cy)||1,ux=cx/len,uy=cy/len;
+  const den=ux*hy-uy*hx;if(Math.abs(den)<.3)continue;
+  // from + c·s = auto + h·u: s lungo il passaggio, u davanti all'auto (come crossingThreat)
+  const wx=agent.x-q.from.x,wy=agent.y-q.from.y,s=(wx*hy-wy*hx)/den,u=(wx*uy-wy*ux)/den;
+  if(s<-1||s>len+1)continue;
+  const front=u-shape.halfLength;
+  if(front>R.look)continue;
+  if(front<R.half-.2)continue;// già sulle strisce: le libera
+  const limit=front-R.half-.8;
+  if(speed*speed/(2*JUNCTION_RULES.comfortDecel)>limit+1)continue;// troppo vicina per fermarsi bene
+  if(!best||limit<best.limit)best={limit:Math.max(0,limit),ped:q.ped};
+ }
+ if(!best){agent.giveWayWait=0;return null;}
+ agent.giveWayWait=agent.giveWayTo===best.ped?(agent.giveWayWait||0)+(speed<.3?dt:0):0;
+ if(agent.giveWayWait>R.giveUp){(agent.gaveUpOn||=new WeakSet()).add(best.ped);agent.giveWayWait=0;return null;}
+ return best;
+}
 
 /* Decisione di un'auto (o moto) del traffico che si avvicina al prossimo incrocio del suo percorso.
  * Ritorna la distanza che il centro del mezzo può ancora percorrere (Infinity = libero) e il motivo.
