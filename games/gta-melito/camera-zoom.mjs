@@ -19,7 +19,9 @@ export function targetCameraZoom({inVehicle=false,speed=0,running=false,moving=f
 // Keep the vehicle near the trailing edge while moving, so most of the
 // viewport shows the road ahead. At rest it returns smoothly to the center.
 export function vehicleCameraTarget({x=0,y=0,a=0,speed=0}={},width=0,height=0,zoom=1){
- const dx=Math.cos(a),dy=Math.sin(a),span=(Math.abs(dx)*Math.max(0,width)+Math.abs(dy)*Math.max(0,height))/Math.max(.01,zoom);
+ // Q15: in reverse the view leads behind the car, where it is going (it used to show the bonnet side).
+ const back=(Number(speed)||0)<-.5?-1:1;
+ const dx=Math.cos(a)*back,dy=Math.sin(a)*back,span=(Math.abs(dx)*Math.max(0,width)+Math.abs(dy)*Math.max(0,height))/Math.max(.01,zoom);
  const moving=Math.max(0,Math.min(1,Math.abs(Number(speed)||0)/12));
  // At full speed the vehicle sits 30% from the trailing edge, leaving
  // roughly 70% of the directional view ahead without pushing it to the edge.

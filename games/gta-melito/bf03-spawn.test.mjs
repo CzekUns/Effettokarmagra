@@ -41,7 +41,7 @@ test('BF03 real map: no open-counter food truck or loaded market Ape in moving t
  const traffic=spawn();
  for(const v of traffic){
   assert.ok(!/^food-/.test(v.model)&&!counters.has(v.model),v.model);
-  if(/^ape-/.test(v.model))assert.ok(v.model==='ape-car-azzurra'||TRAFFIC_APES.includes(v.model),v.model);
+  if(/^ape-/.test(v.model))assert.ok(v.model==='ape-car-azzurra'||TRAFFIC_APES.includes(v.model)||/^ape-(classica|vissuta)-/.test(v.model),v.model);
  }
  assert.ok(traffic.some(v=>TRAFFIC_APES.includes(v.model)),'closed market Apes do travel');
 });

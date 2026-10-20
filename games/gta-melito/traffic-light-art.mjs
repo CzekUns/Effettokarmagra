@@ -1,7 +1,7 @@
 /* GTA Melito — BF07: semafori di gioco e linee d'arresto, disegnati in pixel art procedurale come
  * i lampioni di visuals.mjs (vista dall'alto 2.5D: il palo sale verso l'alto dello schermo).
  * I semafori sono SIMULATI (vedi junctions.mjs, SIGNALS_SIMULATED): nessun dato OSM li rileva. */
-import {signalAspect} from './junctions.mjs?v=001';
+import {signalAspect} from './junctions.mjs?v=002';
 import {roadTrafficLaneOffset} from './road-widths.mjs?v=043';
 
 const LAMPS=Object.freeze([

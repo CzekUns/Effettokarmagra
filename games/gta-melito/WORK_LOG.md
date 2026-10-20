@@ -824,3 +824,31 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **HUD mobile:** 7 viewport in orizzontale con tocco emulato. 0 sovrapposizioni e 0 elementi fuori schermo, a piedi e alla guida; ordine pedali BF06 rispettato. Guida con tocchi veri e multi-touch volante+gas; START apre la pausa; verticale con «RUOTA LO SCHERMO»; desktop BF11 senza scorrimento. FPS 12–35 con il server carico.
 - **Test:** nuovo `q14-radio.test.mjs` (5 test). **Cache:** `car-radio.mjs?v=003`, `game.mjs?v=165`.
 - **Non eseguito:** Android reale (checklist in TODO sotto Q14), ascolto effettivo dell'audio, consenso delle emittenti.
+
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q16 Piaggio Ape Car in circolazione
+- **Verificato cosa c'era:** Ape del mercato nel traffico, profilo di guida e sagoma Ape, una sola Ape parcheggiata con uno sprite più lungo e poco riconoscibile.
+- **Aggiunto:** atlante `ape-classica-16-rgba.png` (8 tinte pulite + 8 vissute, ricolorazione della sola carrozzeria delle Ape approvate, trasparenza reale verificata cella per cella); Ape Car parcheggiate (`k%9===8`) e nel traffico NPC (`i%11===8`); sterzata più stretta da triciclo; sonde e sagoma del giocatore a misura di Ape (`isApe`/`bodyShape`/`offStreetExcess`). Auto, moto e liste esistenti invariate.
+- **Cache:** `car-sprites.mjs?v=109`, `vehicle-handling.mjs?v=003` e a cascata `roads 154`, `motorcycles 006`, `driving-controls 098`, `city-audio 004`, `street-professions 005`, `npc-commute 009`, `npc-reactions 002`, `npc-density 002`, `bank-interior 008`, `game.mjs?v=169`.
+- **Prove:** test Node mirati verdi e suite completa; browser breve a circa 48 FPS (salita, guida, curva, retro, urto senza compenetrazione), 0 errori JS.
+- **Non eseguito:** guida touch specifica dell'Ape, telefono reale.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q17 furgoncino del friggitore ambulante: si compra al banco
+- **C'era già:** sprite del furgone fritti e 8 varianti di furgoncini ambulanti, i furgoni nel traffico e negli stalli, la guida con `VAN_HANDLING`, 5 soste con il friggitore al banco (BF02/BF04).
+- **Aggiunto:**
+  - `local-shops.mjs?v=002`: offerte di cibo di strada inventate, `VENDOR_KINDS` per modello, `vendorShops` e `vendorOpen` (il banco è aperto solo con il friggitore al posto), `shopNote(shop)` per gli ambulanti;
+  - `game.mjs`: `state.vendorShops`, `nearestCounter` (negozio OSM o banco, il più vicino), pannello «AMBULANTE», prompt «E · COMPRA · NOME»;
+  - `campaign.mjs?v=002`: solo import.
+- **Test:** `q17-street-food.test.mjs` (4); adeguati `steering-wheel.test.mjs`, `local-shops.test.mjs`, `bf11-pc-board.test.mjs`; suite completa verde.
+- **Browser:** una prova da 20 s, acquisto reale salvato, 0 errori.
+- **Cache:** `game.mjs?v=170`.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q15 consolidamento di Via Roma e Piazza Santo Stefano (prima tornata)
+- **Metodo:** script in Chrome headless (PC 1280×720, 43–46 FPS, carico server 3–6) con un monitor automatico. Esplorati 256 punti a piedi, guida in auto 2,5 km e in scooter 0,7 km lungo Via Roma, ingresso e uscita dalla banca, 12 s di sosta in Piazza Santo Stefano, al mercato e alla partenza. Da ogni punto si legge il prompt E e il pulsante azione.
+- **Corretto `roads.mjs` (`fitLanesToBuildings`, `laneOffsetOf`):** sulle vie strette la corsia NPC passava sotto le sagome OSM (es. l'angolo della chiesa di Santa Maria delle Grazie, Via Francesco Rossi). Ora `buildRoadGraph(...,{laneClear})` restringe la corsia di ogni arco finché il fianco dell'auto è fuori dagli edifici, mai sotto 1,75 m (due auto si incrociano ancora) e senza contare gli ultimi 5 m prima degli incroci. 106 archi ristretti sulla mappa reale; le traiettorie negli incroci (`junctions.mjs`) usano la corsia adattata.
+- **Corretto `camera-zoom.mjs`:** in retromarcia la telecamera guardava avanti. Ora segue la direzione di marcia; misura a −12: da +47 m a −40 m lungo il muso.
+- **Corretto `game.mjs` + `index.html`:** il pulsante azione touch, quando non c'è nulla a portata, è attenuato (`idle`, `aria-disabled`).
+- **Verificato senza problemi:** 0 errori JS, 0 compenetrazioni, banca (prompt, interno, uscita sul posto, zoom 6,6→6,6, volante e radio nascosti a piedi), guida senza episodi di blocco. Prova di stress 3 minuti a 39,7 FPS: 92 urti, 0 compenetrazioni, nessun NPC fermo in vista, 3/3 fughe.
+- **Test:** nuovo `q15-consolidamento.test.mjs` (4 test, falliscono senza le correzioni); resi tolleranti 1 controllo di BF09 e le versioni cache. Suite completa a fine lavoro.
+- **Cache:** `game.mjs?v=168`, `roads.mjs?v=154`, `junctions.mjs?v=002`, `camera-zoom.mjs?v=101`, `npc-commute.mjs?v=009`, `npc-density.mjs?v=002`, `npc-reactions.mjs?v=002`, `traffic-light-art.mjs?v=002`, `window-washers.mjs?v=002`, `street-professions.mjs?v=005`.
+- **Residui (Q15 resta `[ ]`):** sagome OSM sulla carreggiata visuale fuori zona (Via Papa Giovanni XXIII, Via Lago di Como), un'auto parcheggiata dentro una sagoma a (1308,1305), pedoni rasenti la chiesa nella sagoma, raggio di salita in auto di 9,5 m, telecamera veloce nelle inversioni a U. Non eseguiti per la regola di prove brevi: notte/pioggia e telefono completi, partita integrata di 5 minuti. Android reale non disponibile.

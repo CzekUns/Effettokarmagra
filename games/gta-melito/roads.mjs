@@ -1,8 +1,8 @@
 import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
 import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=006';
 import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=128';
-import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=002';
-import {buildJunctions,chooseSignals,junctionDecision,pruneReservations,pedestrianMayCross,clockSecondsFromMinutes} from './junctions.mjs?v=001';
+import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=003';
+import {buildJunctions,chooseSignals,junctionDecision,pruneReservations,pedestrianMayCross,clockSecondsFromMinutes} from './junctions.mjs?v=002';
 import {findBorderGates,gateMouthClear,borderRing,GATE_RULES} from './border-gates.mjs?v=001';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
@@ -78,6 +78,8 @@ export function buildRoadGraph(roads,settings={}){
  const throughStarts=trafficStarts.filter(id=>liveCar[id]&&hasThroughExit({nodes,edges,liveCar,gates},id));
  const ring=borderRing(settings.border),center=ring.length?ring.reduce((c,p)=>({x:c.x+p[0]/ring.length,y:c.y+p[1]/ring.length}),{x:0,y:0}):null;
  const graph={nodes,edges,trafficStarts,throughStarts,walkStarts,junctions,liveCar,gates,borderCenter:center};
+ // Q15: lanes clear of the building outlines on narrow streets (before the junction geometry uses them).
+ if(settings.laneClear)graph.narrowedLanes=fitLanesToBuildings(graph,settings.laneClear);
  // BF07: incroci con linee d'arresto e precedenze; semafori SIMULATI sugli incroci principali.
  graph.intersections=buildJunctions(graph);
  graph.signals=chooseSignals(graph,graph.intersections);
@@ -98,9 +100,31 @@ function liveCarEdges(nodes,edges){
  }
  return live;
 }
+// Q15: on narrow streets the visual road is wider than the gap between the OSM building outlines:
+// the default lane ran under the walls (NPC cars drove through the corner of Santa Maria delle
+// Grazie on Via Francesco Rossi). Each car edge keeps the widest lane, down to the usual minimum,
+// whose outer flank stays clear of buildings along the whole edge.
+export function laneOffsetOf(edge){return edge.laneOffset??roadTrafficLaneOffset(edge.streetWidth);}
+// The lane never goes below the offset at which two cars in opposite directions still pass each other
+// (minimum), and the last metres before each junction are left to the junction geometry (corners).
+export function fitLanesToBuildings(graph,clear,{halfWidth=1.7,margin=.25,step=3,minimum=1.75,ends=5}={}){
+ let narrowed=0;
+ for(const e of graph.edges){
+  if(!e.car||e.len<=2*ends)continue;
+  const a=graph.nodes[e.from],b=graph.nodes[e.to],nx=-Math.sin(e.angle),ny=Math.cos(e.angle);
+  const wanted=roadTrafficLaneOffset(e.streetWidth),flank=halfWidth+margin,floor=Math.min(wanted,minimum);
+  const samples=Math.max(2,Math.ceil((e.len-2*ends)/step)+1);
+  const fits=off=>{for(let i=0;i<samples;i++){const d=ends+(e.len-2*ends)*i/(samples-1),t=d/e.len,x=a.x+(b.x-a.x)*t+nx*off,y=a.y+(b.y-a.y)*t+ny*off;
+   if(!clear(x,y)||!clear(x+nx*flank,y+ny*flank))return false;}return true;};
+  let off=wanted;
+  while(off>floor+1e-9&&!fits(off))off=Math.max(floor,off-.25);
+  if(off<wanted-1e-9){e.laneOffset=off;narrowed++;}
+ }
+ return narrowed;
+}
 function position(graph,edgeIndex,t,body='walk',side=1){
  const e=graph.edges[edgeIndex],a=graph.nodes[e.from],b=graph.nodes[e.to];
- const offset=body==='car'?roadTrafficLaneOffset(e.streetWidth):
+ const offset=body==='car'?laneOffsetOf(e):
   DRIVABLE.has(e.roadType)?side*(e.streetWidth/2+1.7):0;
  return {x:a.x+(b.x-a.x)*t-Math.sin(e.angle)*offset,y:a.y+(b.y-a.y)*t+Math.cos(e.angle)*offset,a:e.angle};
 }
