@@ -1,7 +1,7 @@
 /* GTA Melito 0.3 · fictional campaign grounded in REAL OSM landmarks.
  * Locations come from the OSM map snapshot, names are not fabricated.
  * All characters, dialogues and jobs are fictional and unaffiliated with real businesses. */
-import {freshShopSave,sanitizeShopSave} from './local-shops.mjs?v=001';
+import {freshShopSave,sanitizeShopSave} from './local-shops.mjs?v=002';
 export const SAVE_KEY='gta-melito-campaign-v3';
 export const STORY=[
  {id:'primo-contatto',title:'01 · Il primo contatto',reward:75,time:0,

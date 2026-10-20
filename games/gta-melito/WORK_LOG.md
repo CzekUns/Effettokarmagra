@@ -832,3 +832,14 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Cache:** `car-sprites.mjs?v=109`, `vehicle-handling.mjs?v=003` e a cascata `roads 154`, `motorcycles 006`, `driving-controls 098`, `city-audio 004`, `street-professions 005`, `npc-commute 009`, `npc-reactions 002`, `npc-density 002`, `bank-interior 008`, `game.mjs?v=169`.
 - **Prove:** test Node mirati verdi e suite completa; browser breve a circa 48 FPS (salita, guida, curva, retro, urto senza compenetrazione), 0 errori JS.
 - **Non eseguito:** guida touch specifica dell'Ape, telefono reale.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q17 furgoncino del friggitore ambulante: si compra al banco
+- **C'era già:** sprite del furgone fritti e 8 varianti di furgoncini ambulanti, i furgoni nel traffico e negli stalli, la guida con `VAN_HANDLING`, 5 soste con il friggitore al banco (BF02/BF04).
+- **Aggiunto:**
+  - `local-shops.mjs?v=002`: offerte di cibo di strada inventate, `VENDOR_KINDS` per modello, `vendorShops` e `vendorOpen` (il banco è aperto solo con il friggitore al posto), `shopNote(shop)` per gli ambulanti;
+  - `game.mjs`: `state.vendorShops`, `nearestCounter` (negozio OSM o banco, il più vicino), pannello «AMBULANTE», prompt «E · COMPRA · NOME»;
+  - `campaign.mjs?v=002`: solo import.
+- **Test:** `q17-street-food.test.mjs` (4); adeguati `steering-wheel.test.mjs`, `local-shops.test.mjs`, `bf11-pc-board.test.mjs`; suite completa verde.
+- **Browser:** una prova da 20 s, acquisto reale salvato, 0 errori.
+- **Cache:** `game.mjs?v=170`.
+
