@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {prepareWaterTowers,towerPoint,towerRevealTarget,checker,markRuinPool,UP,drawWaterTower,loadWaterTowerSprite,WATER_TOWER_SPRITE_PATH,WATER_TOWER_CROP,drawRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs';
+import {prepareWaterTowers,towerPoint,towerRevealTarget,checker,markRuinPool,UP,drawWaterTower,loadWaterTowerSprite,waterTowerSpriteSize,WATER_TOWER_SPRITE_PATH,WATER_TOWER_CROP,drawRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs';
 import {exposedFacade,shiftColor} from './building-volume.mjs';
 
 const read=f=>readFile(new URL('./'+f,import.meta.url),'utf8');
@@ -48,7 +48,8 @@ test('BF12 water tower: lifted like the buildings, checkered, see-through when t
   const ctx=fakeCanvas();drawWaterTower(ctx,t,{alpha:.5,zoom:2});
   assert.equal(ctx.calls.filter(k=>k==='drawImage').length,1,'single PNG in place of old tower');
   assert.equal(ctx.calls.filter(k=>k==='fill').length,2,'only original ground shadow remains procedural');
-  assert.ok(ctx.calls.includes('transform'),'projection into city space');
+  assert.ok(!ctx.calls.includes('transform'),'never shear or warp the original PNG');
+  assert.ok(ctx.calls.includes('translate'),'sprite remains anchored at its original base');
  }finally{globalThis.Image=previousImage;}
 });
 
@@ -85,4 +86,14 @@ test('BF12 water tower asset: RGBA PNG and crop inside image bounds',async()=>{
  assert.ok(WATER_TOWER_CROP.y+WATER_TOWER_CROP.height<=1254);
  const source=await read('municipio-landmarks.mjs');
  assert.ok(!source.includes('const sectors=20'),'no procedural checkered tank under PNG');
+});
+
+test('Municipio: red tower PNG keeps native aspect ratio and roughly the same visual mass',()=>{
+ const [t]=prepareWaterTowers(data),size=waterTowerSpriteSize(t),crop=WATER_TOWER_CROP;
+ assert.ok(Math.abs(size.width/size.height-crop.width/crop.height)<1e-10,'no width/height distortion');
+ assert.ok(Math.abs(size.width*size.height-(t.tank*2)*(t.height*.81))<1e-8,'same total visual area as before');
+ assert.ok(size.width>0&&size.height>0);
+ // The old transform physically sheared the tower's shaft. No transform remains in drawWaterTower.
+ const renderer=drawWaterTower.toString();
+ assert.ok(!renderer.includes('c.transform('));
 });

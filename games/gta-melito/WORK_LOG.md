@@ -1155,3 +1155,9 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - Renderer: eliminato completamente il precedente modello procedurale fusto/scacchiera/cappello in `municipio-landmarks.mjs`, sostituito da un solo `drawImage` su crop della sorgente e proiezione game-space. Salvaguardati ombra a terra, trasparenza al passaggio e lampeggiante notturno.
 - Preload in `game.mjs`, aggiornati import di `city-art.mjs` e versione `game.mjs?v=198` in HTML. Il rudere ex piscina e la geometria OSM non sono alterati. Test BF12 aggiornati per il PNG RGBA.
 - Test visuali in Chrome e su telefono Android **non eseguiti in questa sessione**, da fare prima di dichiarare l'aspetto definitivo.
+
+### 2026-10-20 — Corretto serbatoio deformato, confermata scala monumentale
+- Feedback visivo dell'utente da screenshot Android: **la grandezza è corretta** (la torre è davvero gigantesca) e il maggior dettaglio è voluto per pochi edifici speciali; unica criticità: il PNG veniva deformato.
+- Corretto `municipio-landmarks.mjs`: rimossa del tutto la matrice di shear (che inclinava il fusto) e sostituita la scala indipendente X/Y con **una sola scala uniforme** che conserva il rapporto d'aspetto originale, mantenendo la **stessa area visiva** del precedente ingombro di riferimento.
+- Allineati dissolvenza per chi passa sotto la torre e lampeggiante alla nuova geometria verticale. Nessuna modifica alla sorgente artistica, ai colori rosso/crema, alle strutture adiacenti o alle collisioni. Cache aggiornata `game.mjs?v=199`, modulo `municipio-landmarks.mjs?v=003`.
+- Aggiornati test BF12: proporzioni native, area visiva conservata, assenza trasformazione shear. Verifica Android reale **da ripetere** dopo il deploy.

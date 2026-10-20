@@ -744,3 +744,6 @@ Schermata della slot in pixel art disegnata via codice. Griglia logica 192×128,
 
 ### 2026-10-20 — Asset rosso del serbatoio (Via Madrid)
 Nuova torre a scacchi rossi/crema, PNG RGBA `assets/buildings/serbatoio-melito-scacchi-rossi.png`. Rimosso il vecchio Canvas della torre; si visualizza soltanto il PNG con crop `350,62,555,1128`, inclinato 2.5D e ancorato nel punto OSM del fusto. Gli effetti di ombra/fade/luce restano. Il disegno è un'interpretazione grafica, non una ricostruzione fotografica verificata. Collaudo Android/desktop da svolgere.
+
+### 2026-10-20 — Serbatoio: deformazione del PNG rimossa
+Secondo screenshot e correzione dell'utente, **mantenere la torre molto grande e dettagliata**: è un'eccezione monumentale intenzionale. La versione precedente piegava visibilmente il fusto verso sinistra a causa di `c.transform(... shear ...)` e lo schiacciava verticalmente per via della diversa scala X/Y. Renderer aggiornato con PNG diritto e **fattore uniforme isotropo**, stessa massa/area visiva precedente; testa allineata a base, dissolvenza e luci riallineate. L'immagine originale non è stata rigenerata. Resta il collaudo sul telefono.

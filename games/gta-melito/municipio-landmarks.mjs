@@ -25,6 +25,15 @@ export function waterTowerSpriteReady(){
  const im=loadWaterTowerSprite();
  return !!(im?.complete&&im.naturalWidth>0&&im.naturalHeight>0);
 }
+/* Uniform scaling: preserve the PNG's actual aspect ratio without making the
+ * landmark smaller overall. Keep its previous screen-space bounding-box AREA
+ * (not its distorted width/height) as the visual-size reference. */
+export function waterTowerSpriteSize(t){
+ const {width:sourceWidth,height:sourceHeight}=WATER_TOWER_CROP;
+ const oldWidth=t.tank*2,oldHeight=t.height*.81;
+ const s=Math.sqrt((oldWidth*oldHeight)/(sourceWidth*sourceHeight));
+ return {width:sourceWidth*s,height:sourceHeight*s};
+}
 
 // The game's 2.5D lift (building-volume.mjs): height goes up-left on screen.
 export const UP=Object.freeze({x:-.22,y:-.66});
@@ -37,7 +46,10 @@ export function prepareWaterTowers(data){
 export function towerPoint(t,h){return {x:t.x+UP.x*h,y:t.y+UP.y*h};}
 /* Fade target: see-through while an actor stands under the tank or next to the shaft. */
 export function towerRevealTarget(t,actors){
- const top=towerPoint(t,t.height*.86),shaftTop=towerPoint(t,t.height*t.tankFrom);
+ // The artwork stands vertically upright: don't use the old tilted geometry
+ // for see-through detection, or it fades away in the wrong place.
+ const {height}=waterTowerSpriteSize(t);
+ const top={x:t.x,y:t.y-height*.78},shaftTop={x:t.x,y:t.y-height*.56};
  for(const a of actors||[]){
   if(!a)continue;
   if(Math.hypot(a.x-top.x,a.y-top.y)<t.tank+3)return .3;
@@ -62,8 +74,8 @@ export function drawWaterTower(c,t,{alpha=1,zoom=1}={}){
  if(!img?.complete||!img.naturalWidth||!img.naturalHeight)return;
  c.save();c.globalAlpha=alpha;
  drawTowerShadow(c,t);
- const width=t.tank*2,height=t.height*.81,shear=-(UP.x*t.height)/height;
- c.translate(t.x,t.y);c.transform(1,0,shear,1,0,0);
+ const {width,height}=waterTowerSpriteSize(t);
+ c.translate(t.x,t.y); // image stands straight: no shear and no anisotropic scale
  c.imageSmoothingEnabled=false;
  const r=WATER_TOWER_CROP;
  c.drawImage(img,r.x,r.y,r.width,r.height,-width/2,-height,width,height);
@@ -72,7 +84,7 @@ export function drawWaterTower(c,t,{alpha=1,zoom=1}={}){
 /* Obstruction light on the cap at night (an artistic, not surveyed, detail): drawn above the darkness. */
 export function drawWaterTowerLight(c,t,{darkness=0,clock=0,alpha=1}={}){
  if(darkness<.15)return;
- const cap={x:t.x+UP.x*t.height,y:t.y-t.height*.81},on=Math.floor(clock*1.1)%2===0;
+ const cap={x:t.x,y:t.y-waterTowerSpriteSize(t).height},on=Math.floor(clock*1.1)%2===0;
  c.save();c.globalAlpha=alpha*Math.min(1,darkness*1.5);
  c.fillStyle=on?'#ff3b2e':'#7a2620';c.beginPath();c.arc(cap.x,cap.y-.6,.75,0,TAU);c.fill();
  if(on){const g=c.createRadialGradient(cap.x,cap.y-.6,0,cap.x,cap.y-.6,5);g.addColorStop(0,'#ff4a3a88');g.addColorStop(1,'#ff4a3a00');c.fillStyle=g;c.beginPath();c.arc(cap.x,cap.y-.6,5,0,TAU);c.fill();}

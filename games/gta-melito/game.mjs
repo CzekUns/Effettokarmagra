@@ -72,7 +72,7 @@ import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitch
 import {GARAGES,nearestGarage,canStoreVehicle,depositVehicle,takeVehicle,vehicleFromEntry,chooseExitSpot,garageMessage,vehicleLabel,ownedEntry,ownedCount,garageById,GARAGE_SLOTS,drawGarage} from './garages.mjs?v=001';
 import {paintOptions,paintName,PERF_LEVELS,perfPrice,PAINT_PRICE,NEON_PRICE,NEON_COLORS,tunedProfile,buyTuning,tuningMessage,drawNeonUnderglow,neonNightGlows} from './tuning.mjs?v=001';
 import {openFootballGame,isFootballOpen,recordFootballResult,footballReturnPoint,footballRecordText} from './minigame-football.mjs?v=001';
-import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,loadWaterTowerSprite,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=002';
+import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,loadWaterTowerSprite,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=003';
 import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
