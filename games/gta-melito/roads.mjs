@@ -2,7 +2,7 @@ import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
 import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=006';
 import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=128';
 import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=003';
-import {buildJunctions,chooseSignals,junctionDecision,pruneReservations,pedestrianMayCross,clockSecondsFromMinutes} from './junctions.mjs?v=002';
+import {buildJunctions,chooseSignals,junctionDecision,pruneReservations,pedestrianMayCross,clockSecondsFromMinutes,crosswalkYield} from './junctions.mjs?v=003';
 import {findBorderGates,gateMouthClear,borderRing,GATE_RULES} from './border-gates.mjs?v=001';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
@@ -272,6 +272,22 @@ function sidewalkTurn(graph,oldId,newId,side){
  const corner={x:start.x+ux*approach,y:start.y+uy*approach};
  return {side:nextSide,points:[corner,end]};
 }
+// Q22: on the inside of a corner (turning towards its own pavement side) a pedestrian turns at the
+// corner of the block, where the two pavements meet, instead of crossing the side street and back.
+const INNER_REACH=18;
+function innerTurn(graph,oldId,newId,side,left){
+ const old=graph.edges[oldId],next=graph.edges[newId];
+ const turn=Math.atan2(Math.sin(next.angle-old.angle),Math.cos(next.angle-old.angle));
+ if(Math.abs(turn)<.32||Math.abs(turn)>2.65||Math.sign(turn)!==Math.sign(side))return null;
+ const s1=position(graph,oldId,1,'walk',side),s2=position(graph,newId,0,'walk',side);
+ const ux=Math.cos(old.angle),uy=Math.sin(old.angle),vx=Math.cos(next.angle),vy=Math.sin(next.angle);
+ const cross=ux*vy-uy*vx;if(Math.abs(cross)<.2)return null;
+ const dx=s2.x-s1.x,dy=s2.y-s1.y,a=(dx*vy-dy*vx)/cross,b=(dx*uy-dy*ux)/cross;
+ // P = s1 + u·a = s2 + v·b: the corner, a little before the end of the old pavement and a little
+ // after the start of the new one; it must still be ahead of the pedestrian.
+ if(a>.5||a<-left+.2||b<-.5||b>Math.min(20,next.len*.6))return null;
+ return {side,inner:true,points:[{x:s1.x+ux*a,y:s1.y+uy*a}],startT:Math.max(0,b)/next.len};
+}
 function stepSidewalkCorner(agent,distance,index){
  const path=agent.corner;
  while(distance>0&&path.at<path.points.length){
@@ -283,7 +299,7 @@ function stepSidewalkCorner(agent,distance,index){
   if(scale<1)break;
   path.at++;
  }
- if(path.at===path.points.length){agent.edge=path.edge;agent.t=0;agent.side=path.side;
+ if(path.at===path.points.length){agent.edge=path.edge;agent.t=path.startT||0;agent.side=path.side;
   agent.seed=path.seed;agent.a=path.angle;agent.corner=null;
   agent.segments=(agent.segments||0)+1;
   if(agent.routine==='errand'&&agent.segments%5===0)agent.wait=1.5+rand(agent.seed)*2.5;
@@ -374,7 +390,7 @@ function walkPlans(graph,agent,edge){
  }
  return {plans,route:{seed:agent.seed,body:'walk',routine:agent.routine,home:agent.home,path:agent.path}};
 }
-export {position as lanePosition,sidewalkTurn,nextPose as previewNextPose};
+export {position as lanePosition,sidewalkTurn,innerTurn,nextPose as previewNextPose};
 export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockMinutes=null,valid=null){
  if(!Number.isFinite(dt)||dt<=0||agent.impactTime>0||agent.needsRoutineRecovery)return;
  const elapsed=Math.min(dt,.1);
@@ -396,6 +412,25 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
  let speed=agent.speed;
  if(agent.body==='walk'){
   if(agent.corner){stepSidewalkCorner(agent,speed*elapsed,index);return;}
+  // Q22: a few metres before the end of the pavement the pedestrian picks its way on; on the inside
+  // of a corner it leaves the pavement at the corner of the block (no crossing, no detour).
+  const before=(1-agent.t)*edge.len;
+  if(agent.innerFor!==agent.edge&&before<=INNER_REACH){
+   agent.innerFor=agent.edge;
+   const {plans,route}=walkPlans(graph,agent,edge);
+   for(const id of graph.nodes[edge.to].out){
+    if(!graph.edges[id].walk)continue;
+    const inner=innerTurn(graph,agent.edge,id,agent.side||1,before);
+    if(inner&&!(graph.isWalkBlocked&&graph.isWalkBlocked(id,inner.side)))plans.set(id,inner);
+   }
+   const chosen=chooseTurn(graph,edge.to,agent.edge,route,(_,id)=>plans.has(id));
+   agent.nextExit=chosen;
+   const plan=chosen!=null?plans.get(chosen):null;
+   if(plan?.inner){
+    agent.corner={...plan,edge:chosen,angle:graph.edges[chosen].angle,seed:route.seed,at:0};agent.braking=false;
+    stepSidewalkCorner(agent,speed*elapsed,index);return;
+   }
+  }
   // BF07: at a junction with (simulated) traffic lights a pedestrian who goes straight on crosses
   // the side street only with the green of its own street; it waits on the kerb, before the road.
   const signalled=graph.intersections?.byNode.get(edge.to);
@@ -413,7 +448,9 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
   agent.signalWait=false;
   if(agent.t*edge.len+speed*elapsed>=edge.len){
    const {plans,route}=walkPlans(graph,agent,edge);
-   const chosen=chooseTurn(graph,edge.to,agent.edge,route,(_,id)=>plans.has(id));
+   // Q22: keep the way on picked at the corner check, when it is still possible.
+   const chosen=agent.innerFor===agent.edge&&agent.nextExit!=null&&plans.has(agent.nextExit)?agent.nextExit:
+    chooseTurn(graph,edge.to,agent.edge,route,(_,id)=>plans.has(id));
    if(chosen!=null){
     const at=position(graph,agent.edge,1,'walk',agent.side);
     if(index&&trafficMoveBlocked(agent,at,'walk',index,agent)){agent.braking=true;return;}
@@ -753,6 +790,12 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
    const decision=junctionDecision(graph,agent,jx,jctx);
    agent.jLimit=decision.limit;agent.jHold=decision.reason;
   }
+  // Q22: strisce senza semaforo: precedenza al pedone che aspetta al cordolo (junctions.mjs).
+  if(agent.body==='car'&&world.crossings?.size&&!(agent.backoff>0)&&!(agent.wait>0)){
+   const give=crosswalkYield(agent,world.crossings,dt);
+   agent.giveWayTo=give?give.ped:null;
+   if(give&&give.limit<agent.jLimit){agent.jLimit=give.limit;agent.jHold=agent.jHold||'strisce';}
+  }else agent.giveWayTo=null;
   stepAgent(graph,agent,dt,agents,player,index,world.npcClockMinutes,world.validRecovery);
   const moved=Math.hypot(agent.x-x,agent.y-y)>=.02;
   if(agent.body==='car'){
