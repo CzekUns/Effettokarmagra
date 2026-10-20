@@ -1062,3 +1062,14 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** nuovo `q39-rider.test.mjs` (9 test: scooter, ritiro, tempo/ritardo, compenso, percorso, livelli, persistenza/migrazione, pannello); suite completa eseguita una volta: 433 test, 432 ok, 1 ko (`local-shops.test.mjs`, controllo testuale della pausa che non prevedeva `||state.riderOpen`); reso tollerante quel controllo e rilanciati solo i file toccati (`local-shops`, `q39-rider`, `campaign`: 22/22 ok).
 - **Non fatto / limiti:** nessuna prova in browser in questa tornata (scadenza 35 min); consegna attiva persa al ricaricamento (senza penale, lo storico resta); frecce non limitate alle svolte; voce `rider` non ancora in `novita.mjs` (solo in `NOVITA_DA_APPROVARE.md`); app Profilo generale e icona smartphone sono della Q37. Grafica provvisoria da far approvare a Simone.
 - **Dove riprendere:** prova in Chrome (PC e telefono) di accetta → ritiro → consegna; poi aggiungere `rider` a `novita.mjs` e frecce solo alle svolte.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q31 goriziana arcade (biliardo a nove birilli)
+- **Cosa:** nuovo `minigame-goriziana.mjs`, indipendente dal biliardo a buche Q30 (`minigame-pool.mjs` non toccato). Tavolo pixel art senza buche, 9 birilli a rombo (centrale rosso), 2 biglie bianche (IA col puntino rosso) e pallino rosso, tutto disegnato in codice.
+- **Comandi:** tocco/mouse (trascina sul tavolo: direzione = mira, distanza = potenza, rilascio = tiro), frecce ←/→ mira e ↑/↓ potenza, SPAZIO tira, ESC esce; pulsanti per il touch.
+- **Fisica:** 2D leggera a passi fissi (attrito, sponde, urti fra biglie, birilli che cadono al tocco, catena breve sul birillo dietro).
+- **Regole semplificate a schermo:** tocca per prima la biglia avversaria; birillo 2, rosso 4 (10 da solo), pallino +3; fallo = punti del tiro all'avversario (almeno 2); birilli rialzati dopo ogni tiro; turni contro un'IA semplice; 30 punti o 5 tiri a testa. Niente soldi, crediti, salvataggi o rete.
+- **Nel gioco:** `game.mjs` mette in pausa mondo e audio città con `isGorizianaOpen()`, abbassa la radio; avvio da PAUSA › STRUMENTI › «PROVA GORIZIANA» e `?minigioco=goriziana`; aggancio Q27 `openGorizianaGame()`. CSS `#goriziana-canvas` in `index.html`.
+- **Cache:** `game.mjs?v=189`, `minigame-goriziana.mjs?v=001`.
+- **Test:** nuovo `q31-goriziana.test.mjs` (10 test); resi tolleranti ad altri `||isXxxOpen()` in coda alle condizioni di pausa 2 controlli di `q28-slot.test.mjs`, 2 di `q29-poker.test.mjs` e 1 di `local-shops.test.mjs`. Suite completa 435/435 (`# fail 0`).
+- **Non fatto:** prova nel browser (nessun browser headless disponibile in questa sessione) e telefono reale. Simulazione Node di 40 partite IA contro IA: circa 1 fallo ogni 5 tiri, 1,7 punti medi per tiro valido.
+- **Dove riprendere:** far approvare la grafica a Simone; prova browser PC + telefono 844×390; collegare il tavolo nei bar grandi (Q27). Q31 resta `[ ]`.

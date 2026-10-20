@@ -107,8 +107,8 @@ test('Q29 pixel art: cards, suits and the whole screen draw without errors; taps
 test('Q29 game wiring: pause under the cabinet, radio ducked, PAUSE › STRUMENTI and ?minigioco=poker, hook for Q27',async()=>{
  const [game,html]=await Promise.all(['game.mjs','index.html'].map(f=>readFile(new URL('./'+f,import.meta.url),'utf8')));
  assert.match(game,/import \{openPokerMachine,isPokerOpen\} from '\.\/minigame-poker\.mjs\?v=\d+'/);
- assert.match(game,/function tick\(dt\)\{\n if\(!state\.ready\)return;\n if\(state\.mapOpen\|\|[^\n]*\|\|isSlotOpen\(\)\|\|isPokerOpen\(\)\)\{\n  for\(const key of Object\.keys\(pressed\)\)pressed\[key\]=false;/,'the world stops under the poker');
- assert.match(game,/const paused=state\.mapOpen\|\|[^\n]*\|\|isPokerOpen\(\);/,'city audio quiet');
+ assert.match(game,/function tick\(dt\)\{\n if\(!state\.ready\)return;\n if\(state\.mapOpen\|\|[^\n]*\|\|isSlotOpen\(\)\|\|isPokerOpen\(\)(?:\|\|is\w+Open\(\))*\)\{\n  for\(const key of Object\.keys\(pressed\)\)pressed\[key\]=false;/,'the world stops under the poker');
+ assert.match(game,/const paused=state\.mapOpen\|\|[^\n]*\|\|isPokerOpen\(\)(?:\|\|is\w+Open\(\))*;/,'city audio quiet');
  assert.match(game,/function openPokerGame\(\)\{[\s\S]{0,260}carRadio\.duck\(true\);[\s\S]{0,200}onExit:\(\)=>\{carRadio\.duck\(false\);/);
  assert.match(game,/get\('minigioco'\)==='poker'/);assert.match(game,/else if\(POKER_FROM_URL\)openPokerGame\(\);/);
  assert.match(game,/\$\('pause-poker'\)\.addEventListener\('click',\(\)=>\{closePause\(\);openPokerGame\(\);\}\);/);

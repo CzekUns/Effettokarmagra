@@ -72,8 +72,8 @@ test('Q28 pixel art: every symbol and the whole screen draw on a canvas without 
 test('Q28 game wiring: pause under the slot, radio ducked, PAUSE › STRUMENTI and ?minigioco=slot, hook for Q27',async()=>{
  const [game,html]=await Promise.all(['game.mjs','index.html'].map(f=>readFile(new URL('./'+f,import.meta.url),'utf8')));
  assert.match(game,/import \{openSlotMachine,isSlotOpen\} from '\.\/minigame-slot\.mjs\?v=\d+'/);
- assert.match(game,/state\.shopOpen(?:\|\|state\.riderOpen)?\|\|isSlotOpen\(\)(\|\|isPokerOpen\(\))?\)\{\n  for\(const key of Object\.keys\(pressed\)\)pressed\[key\]=false;/,'the world stops under the slot');
- assert.match(game,/const paused=[^\n]*\|\|isSlotOpen\(\)(\|\|isPokerOpen\(\))?;/,'city audio quiet');
+ assert.match(game,/state\.shopOpen(?:\|\|state\.riderOpen)?\|\|isSlotOpen\(\)(\|\|is\w+Open\(\))*\)\{\n  for\(const key of Object\.keys\(pressed\)\)pressed\[key\]=false;/,'the world stops under the slot');
+ assert.match(game,/const paused=[^\n]*\|\|isSlotOpen\(\)(\|\|is\w+Open\(\))*;/,'city audio quiet');
  assert.match(game,/function openSlotGame\(\)\{[\s\S]{0,260}carRadio\.duck\(true\);[\s\S]{0,200}onExit:\(\)=>\{carRadio\.duck\(false\);/);
  assert.match(game,/get\('minigioco'\)==='slot'/);assert.match(game,/if\(SLOT_FROM_URL\)openSlotGame\(\);/);
  assert.match(game,/\$\('pause-slot'\)\.addEventListener\('click',\(\)=>\{closePause\(\);openSlotGame\(\);\}\);/);

@@ -369,6 +369,8 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
 .slot-rules,.slot-note{font-size:10px;margin:4px 0;color:#d8c9a8}.slot-note{color:#9fb59a}
 /* Q29: video poker, stesso cabinato della slot; tasti TIENI per il touch. */
 #poker-canvas{width:min(92vw,576px,calc((96vh - 200px)*1.5));aspect-ratio:3/2;image-rendering:pixelated;image-rendering:crisp-edges;display:block;margin:0 auto;cursor:pointer}
+/* Q31: goriziana, stesso pannello; il tavolo si tocca e si trascina per mirare (niente scroll della pagina). */
+#goriziana-canvas{width:min(92vw,576px,calc((96vh - 230px)*1.5));aspect-ratio:3/2;image-rendering:pixelated;image-rendering:crisp-edges;display:block;margin:0 auto;touch-action:none;cursor:crosshair}
 .poker-holds{margin:6px 0 0}.poker-holds button{min-width:58px;font-size:11px}.poker-holds button[aria-pressed="true"]{background:#9b6b1d;color:#1b1410}
 </style>
 </head><body><main class="app">
@@ -465,9 +467,10 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
   <button id="road-width-compare" type="button" aria-pressed="false">CONFRONTA CON PRIMA</button>
  </div>
  <div class="pause-audio pause-satellite" role="group" aria-label="Foto aerea di confronto"><button id="pause-satellite" type="button" aria-pressed="false" aria-label="Mostra o nascondi la foto aerea Esri sopra la mappa">SATELLITE: OFF</button><div class="pause-volume" role="group" aria-label="Opacità della foto aerea"><span class="pause-volume-name">OPACITÀ FOTO</span><button id="pause-satellite-down" type="button" aria-label="Riduci l'opacità della foto aerea">−</button><output id="pause-satellite-level" aria-live="polite">50%</output><button id="pause-satellite-up" type="button" aria-label="Aumenta l'opacità della foto aerea">＋</button></div></div>
- <div class="pause-audio" role="group" aria-label="Minigiochi di prova"><button id="pause-slot" type="button" aria-label="Apri la slot machine di prova con crediti virtuali">PROVA SLOT</button><button id="pause-poker" type="button" aria-label="Apri il video poker di prova con crediti virtuali">PROVA VIDEO POKER</button></div>
+ <div class="pause-audio" role="group" aria-label="Minigiochi di prova"><button id="pause-slot" type="button" aria-label="Apri la slot machine di prova con crediti virtuali">PROVA SLOT</button><button id="pause-poker" type="button" aria-label="Apri il video poker di prova con crediti virtuali">PROVA VIDEO POKER</button><button id="pause-goriziana" type="button" aria-label="Apri la goriziana di prova, biliardo a nove birilli senza soldi">PROVA GORIZIANA</button></div>
  <p class="pause-info">PROVA SLOT: slot machine arcade di fantasia (Q28), solo crediti virtuali di gioco che non si comprano e non valgono denaro. In attesa del cabinato nei bar (Q27).</p>
  <p class="pause-info">PROVA VIDEO POKER: video poker Jacks or Better di fantasia (Q29), crediti virtuali propri, separati da quelli della slot; anche lui in attesa del cabinato (Q27).</p>
+ <p class="pause-info">PROVA GORIZIANA: biliardo all'italiana a nove birilli, tavolo senza buche (Q31), regole semplificate a schermo, partita contro l'IA a 30 punti o 5 tiri a testa; niente soldi né crediti. In attesa del tavolo nei bar grandi (Q27).</p>
  <p class="pause-info">FOTO AEREA DI CONFRONTO: la foto Esri World Imagery sopra la mappa del gioco, per vedere dove mancano dettagli. Si scarica solo mentre è accesa e riparte sempre spenta.</p>
  </section>
  <section class="pause-section pause-credits" aria-labelledby="pause-h-credits"><h3 id="pause-h-credits">CREDITI E LICENZE</h3>
