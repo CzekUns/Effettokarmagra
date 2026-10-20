@@ -141,7 +141,7 @@ test('BF02 game wiring: strip before parked vehicles, drawn under the roofs, reb
  const [game,html,prof]=await Promise.all(['game.mjs','index.html','street-professions.mjs'].map(f=>readFile(new URL('./'+f,import.meta.url),'utf8')));
  assert.match(game,/import \{buildParkingBays,[^}]*\} from '\.\/parking-bays\.mjs\?v=\d+'/);
  const load=game.indexOf('state.cars=[];state.streetObjects=null;createParkingBays();');
- assert.ok(load>0&&load<game.indexOf('state.cars=[nearCar]')&&load<game.indexOf('state.traffic=createTraffic()'),'stalls exist before any vehicle');
+ assert.ok(load>0&&load<game.indexOf('state.cars=[nearCar]')&&load<game.indexOf('state.traffic=createTraffic('),'stalls exist before any vehicle');
  assert.equal((game.match(/parkInStall\(/g)||[]).length,4,'Panda, starter scooter, scooters and cars all use a stall');
  assert.ok(!/shoulder/.test(game),'no more kerb guesses on the pavement');
  assert.match(game,/vehicleOffset:bayOffset,\n  vehicleOK:v=>fitsParkingBay\(state\.parkingBays,v,vehicleShape\(v\)\)/);

@@ -186,7 +186,7 @@ test('BF07 real map: 6–12 simulated lights on main junctions, posts and stop l
  }
  const [game,html,readme]=await Promise.all(['game.mjs','index.html','README.md'].map(f=>readFile(new URL('./'+f,import.meta.url),'utf8')));
  assert.match(game,/import \{prepareSignalPosts,drawStopLines,drawSignals,signalGlows\} from '\.\/traffic-light-art\.mjs\?v=\d+'/);
- assert.match(game,/state\.traffic=createTraffic\(\);prepareSignals\(\);/);
+ assert.match(game,/state\.traffic=createTraffic\([^)]*\);prepareSignals\(\);/,'Q13: createTraffic takes the hour');
  assert.ok(game.indexOf('drawStopLines(c,')<game.indexOf('drawCityPeople(c,'),'stop lines on the asphalt, under people and cars');
  assert.ok(game.indexOf('drawSignals(c,')>game.indexOf('drawPlayer();'),'lights above the traffic');
  assert.match(game,/drawBlinker\(x,y,a,ai\)/);
