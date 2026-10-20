@@ -229,6 +229,10 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
 /* BF11: on a PC the page is ONLY the game board, full window; title, status bar, road-width tool,
  * instructions and credits live in the PAUSE menu (Esc, P or the small Ⅱ button). Phones keep BF06. */
 .pc-prompt,.map-attribution{display:none}
+/* BF13: attribuzione della foto aerea, visibile su PC e telefono solo mentre la sovramappa è accesa. */
+.satellite-attribution{position:absolute;z-index:4;left:50%;top:6px;transform:translateX(-50%);margin:0;max-width:calc(100% - 120px);
+ background:#101b17d9;border:1px solid #c9b47a;color:#f1e3bd;font-size:9px;letter-spacing:.03em;padding:3px 8px;text-align:center;pointer-events:none}
+.satellite-attribution[hidden]{display:none}
 .pause-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.pause-head h2{font-size:18px;margin:0;color:#f2d18a}
 .pause-close{background:#dfc27b;color:#1c2a23;border:1px solid #fff0ba;font-weight:bold;padding:8px 12px}
 .pause-info{font-size:11px;line-height:1.7;color:#c6d0bf;margin:10px 0}
@@ -344,6 +348,7 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  <button class="pause-toggle" id="pause-toggle" type="button" aria-expanded="false" aria-label="Pausa e altre informazioni" title="Pausa · Esc o P">Ⅱ</button>
  <div class="pc-prompt" id="pc-prompt" hidden aria-live="polite"></div>
  <p class="map-attribution"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap</a> · ISTAT · menu PAUSA: Esc / P</p>
+ <p class="satellite-attribution" id="satellite-attribution" hidden>Immagini: Esri, Maxar, Earthstar Geographics e la comunità GIS — Esri World Imagery</p>
  <div class="touch-stick" id="touch-stick" role="application" aria-label="Levetta analogica: muovi il personaggio a piedi"><div class="stick-knob" id="stick-knob"></div></div>
  <div class="steering-wheel" id="steering-wheel" role="application" tabindex="0" aria-label="Sterzo: trascina il volante in senso orario o antiorario per girare">
   <div class="steering-face" id="steering-face" aria-hidden="true">
@@ -409,13 +414,15 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
   <div><strong>STRADA RESIDENZIALE</strong> <span id="road-width-current">ADESSO · 15,4</span> <small>unità grafiche</small></div>
   <button id="road-width-compare" type="button" aria-pressed="false">CONFRONTA CON PRIMA</button>
  </div>
+ <div class="pause-audio pause-satellite" role="group" aria-label="Foto aerea di confronto"><button id="pause-satellite" type="button" aria-pressed="false" aria-label="Mostra o nascondi la foto aerea Esri sopra la mappa">SATELLITE: OFF</button><div class="pause-volume" role="group" aria-label="Opacità della foto aerea"><span class="pause-volume-name">OPACITÀ FOTO</span><button id="pause-satellite-down" type="button" aria-label="Riduci l'opacità della foto aerea">−</button><output id="pause-satellite-level" aria-live="polite">50%</output><button id="pause-satellite-up" type="button" aria-label="Aumenta l'opacità della foto aerea">＋</button></div></div>
+ <p class="pause-info">FOTO AEREA DI CONFRONTO: la foto Esri World Imagery sopra la mappa del gioco, per vedere dove mancano dettagli. Si scarica solo mentre è accesa e riparte sempre spenta.</p>
  </section>
  <section class="pause-section pause-credits" aria-labelledby="pause-h-credits"><h3 id="pause-h-credits">CREDITI E LICENZE</h3>
  <p class="instructions"><a href="./survey/index.html" target="_blank" rel="noopener noreferrer">🗺 TUTTA MELITO · 2.056 EDIFICI MODELLATI →</a> · 2.056 sagome OSM censite · 2.056 edifici con profilo grafico individuale e palazzi segnaposto aggiuntivi (NON rilievi OSM). Piazza Santo Stefano dettagliata: una facciata verificata fotograficamente, le altre ancora stimate.</p>
- <footer class="credits"><span>© OpenStreetMap contributors — ODbL · Confini: ISTAT 2026 — CC BY · MIT: ispirazione motore <a href="https://github.com/harmanhanjra/punjab-stories" target="_blank" rel="noreferrer">Punjab Stories</a></span><span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Crediti cartografia</a> · <a href="./README.md">Informazioni sul progetto</a></span></footer>
+ <footer class="credits"><span>© OpenStreetMap contributors — ODbL · Confini: ISTAT 2026 — CC BY · Foto aerea di confronto (solo se accesa in STRUMENTI): Esri World Imagery — Esri, Maxar, Earthstar Geographics e la comunità GIS · MIT: ispirazione motore <a href="https://github.com/harmanhanjra/punjab-stories" target="_blank" rel="noreferrer">Punjab Stories</a></span><span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Crediti cartografia</a> · <a href="./README.md">Informazioni sul progetto</a></span></footer>
  </section>
  </div></div>
  <div class="rotate-screen" id="rotate-screen" hidden><div class="rotate-card"><span class="rotate-icon" aria-hidden="true">▰</span><h2>RUOTA LO SCHERMO</h2><p>GTA Melito si gioca in orizzontale. Ruota il telefono per continuare.</p></div></div>
 </div>
 <div class="controls" aria-label="Comandi"><div class="touch-actions" aria-label="Azioni"><button class="control-action" id="action">ENTRA IN VEICOLO</button><button id="sprint" aria-label="Corri a piedi">CORRI</button><div class="pedals" aria-label="Pedali di guida"><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="accelerator" aria-label="Tieni premuto per accelerare">ACCELERA</button><button id="reverse" aria-label="Tieni premuto per andare in retromarcia">RETRO</button></div></div><div class="dpad" aria-hidden="true"></div><div class="buttons"><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-auto" aria-label="Ripristina zoom automatico">AUTO</button><button class="mini" id="zoom-in" aria-label="Regola zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div></div>
-</main><script type="module" src="./game.mjs?v=161"></script></body></html>
+</main><script type="module" src="./game.mjs?v=164"></script></body></html>

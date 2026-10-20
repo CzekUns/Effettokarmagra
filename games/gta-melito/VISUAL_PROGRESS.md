@@ -619,3 +619,11 @@ Il lavavetri resta sul lato guida e il tergivetro si vede sul parabrezza. Non co
 Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA, diviso in 5 sezioni con titoletti spaziati nello stile del gioco.
 
 **Verifiche:** foto Chrome headless prima/dopo a 1280×720, 1366×768 e 1920×1080, menu pausa (inizio e fondo), indicazione del tasto E e telefono 844×390 in guida e in pausa, invariato. Non provato su un PC con schermo touch né su un telefono reale.
+
+### 2026-10-20 — BF13 sovramappa satellitare di confronto (Claude)
+- **Novità:** PAUSA › STRUMENTI › «SATELLITE» mostra la foto aerea Esri World Imagery allineata alla città, sopra la scena, con opacità 25/50/75/100%.
+  - Al 50% si vedono insieme il gioco e la foto: si nota subito dove mancano parchi, campi, recinti, edifici e ponti.
+  - Al 100% si può ricalcare.
+- **Dove compare:** è uno strumento di lavoro, non grafica di gioco. Parte sempre spento e l'attribuzione resta in alto al centro mentre è acceso.
+- **Prove:** screenshot di controllo (fuori dal repo) su PC e telefono in 3 zone del centro.
+- **Cosa emerge dall'audit:** i segnaposto dell'infill coprono molte aree verdi. Dettagli in `AUDIT_SATELLITE.md`.

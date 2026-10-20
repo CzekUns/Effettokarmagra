@@ -1,0 +1,51 @@
+id,zona_strada,x,y,categoria,cosa_si_vede_in_foto,cosa_ce_nel_gioco,priorita,lavoro_suggerito,note
+A01,Via delle Palme (campo sportivo),539,1271,impianto sportivo,campo da calcio a 11 in erba sintetica con tribuna sul lato ovest e recinzione,9 palazzine segnaposto e cortili pavimentati,P0,Q32 + correggere urban-infill,il campo occupa circa 100 × 60 m; i segnaposto vanno tolti
+A02,Via Cupa di Melito,490,2001,area agricola,campi coltivati e frutteti divisi da muretti e recinzioni,piazzale pavimentato vuoto,P1,nuova Q aree agricole/verdi,circa 20.000 m² di verde continuo
+A03,Via Cupa di Melito,725,2027,area agricola,orti a strisce e piccole serre,pavimentazione e 4 palazzine segnaposto,P1,nuova Q aree agricole/verdi + urban-infill,
+A04,Via Cupa di Melito,523,1801,area agricola,campi e una serra,6 palazzine segnaposto,P1,urban-infill,
+A05,Via Vienna,1356,665,area verde,prato/lotto verde tra palazzine,strade e un edificio,P2,nuova Q aree verdi,
+A06,Via Due Giugno,772,2183,area verde,giardini e terreno alberato,3 palazzine segnaposto,P2,urban-infill,
+A07,SP500 Asse Perimetrale (lato nord),1695,1792,area agricola,terreno agricolo lungo la superstrada,pavimentazione vuota,P2,nuova Q aree verdi,
+A08,Svincolo SP500 / Via Pietro Nenni,923,2395,svincolo e ponte,svincolo con rampe ad anello e prato interno; la superstrada passa sopra,incrocio a raso senza rampe,P1,nuova Q ponti e svincoli,il gioco non ha ancora ponti né livelli
+A09,Via Campania,1377,2791,edificio mancante,grande capannone commerciale/industriale con parcheggio,piazzale vuoto,P1,dati OSM / Q15,verificare se l’edificio manca in OSM
+A10,Svincolo Via Roma verso Scampia,1796,2071,svincolo e ponte,rampa ad anello con prato interno,strade senza rampe,P1,nuova Q ponti e svincoli,
+A11,Via Pietro Nenni (rilevato),967,2479,area verde,scarpata verde del rilevato della superstrada,una palazzina segnaposto,P2,urban-infill,
+A12,Via Cupa di Melito (piazzale),608,1897,parcheggio a raso,"grande parcheggio scoperto con decine di auto (deposito o concessionaria, da verificare)",piazzale vuoto senza auto,P1,estendere BF02 ai parcheggi a raso,
+A13,Via Salvatore Di Giacomo,1288,746,edificio mancante,grande complesso bianco a H con cortili e giardino (scuola? da verificare),palazzine minori e strade,P1,dati OSM / Q15,
+A14,Asse Perimetrale su Via Pietro Nenni,875,2415,svincolo e ponte,viadotto della superstrada che scavalca le strade sotto,incrocio a raso,P1,nuova Q ponti e svincoli,zona del parco Prima Casa (vedi BF12)
+A15,Via Danubio,1037,1855,area verde,"palazzine in linea con cortili verdi, un campetto e un parcheggio",strade a ricciolo e palazzine segnaposto,P1,urban-infill + Q32,
+A16,Via della Galassia,870,1202,area verde,grande terreno incolto alberato,palazzine segnaposto,P1,urban-infill,
+A17,Via Giuseppe Saragat,1500,975,edificio mancante,"grande edificio a tetto rosso con due cortili interni (scuola o caserma, da verificare)",gruppo di case segnaposto,P0,dati OSM / BF12,edificio-simbolo vicino al Municipio
+A18,Via dei Tulipani,362,738,edificio mancante,"villa con corte, giardino e parcheggio",palazzine segnaposto,P2,urban-infill,
+A19,"Via Roma, presso la chiesa",1088,1188,edifici mancanti,tessuto storico fitto di case basse,isolato con piazzale e pochi edifici,P1,Q15 consolidamento Via Roma,OSM incompleto nel centro storico
+A20,Via Pizzone,1212,1212,edifici mancanti,case storiche fitte con cortili,ampi piazzali pavimentati,P1,Q15 consolidamento Via Roma,
+A21,Via delle Magnolie,538,1412,edificio mancante,grande chiesa/parrocchia a pianta a croce con sagrato,piazzale con qualche oggetto,P0,dati OSM / Q15,punto di riferimento per i giocatori
+A22,Corso Europa (tratto sud),1362,2212,edifici mancanti,case fitte e un grande edificio a tetto rosso,isolato vuoto con alberi,P1,dati OSM,
+A23,"Corso Europa (tratto sud, lato est)",1412,2212,edifici mancanti,case fitte,isolato vuoto,P1,dati OSM,
+A24,Via Roma verso Scampia (confine),1912,2338,edifici al confine,palazzine in linea sul bordo del comune,tagliate dal confine (area nera),P2,BF09 varchi / confine,gli edifici a cavallo del confine spariscono
+A25,Tutta la città (sintesi),1100,1400,segnaposto su verde,"135 dei 553 edifici segnaposto stanno dove la foto mostra prati, campi o alberi (le vie con più casi: Via Cupa di Melito 13, Corso Europa 9, Via Salvatore Di Giacomo 7, Via Signorelli 6, Via Pietro Nenni 5)",palazzine segnaposto generate da urban-infill.mjs nei vuoti tra le strade,P0,nuovo BF: urban-infill non deve riempire aree verdi,"analisi automatica: indice di verde 2G−R−B sulle tile, soglia 60% della sagoma"
+A26,Tutta la città (sintesi),1100,1400,edifici da verificare,"98 sagome OSM cadono su punti verdi in foto (alberi sopra il tetto, edifici demoliti o mai costruiti)",edifici disegnati,P2,verifica dati OSM,controllare a campione prima di toglierli
+M01,"Municipio, parco a est",1330,980,area verde,parco alberato con vialetti accanto al complesso del Municipio,palazzine segnaposto e piazzali,P0,BF12 recinti + urban-infill,coordinate stimate a vista ±15 m
+M02,"Municipio, bosco a sud",1320,1060,area verde,area alberata fitta con sentieri,case segnaposto,P0,BF12 recinti + urban-infill,coordinate stimate a vista ±15 m
+M03,Prato a est della strada del Municipio,1390,880,area verde,grande prato incolto,case a tetto rosso,P1,urban-infill,coordinate stimate a vista ±15 m
+M04,Area mercatale rione 219,1160,940,cantiere o lotto,lotto sgomberato con macerie e recinzione di cantiere (area in riqualificazione),piazzetta pavimentata con due alberi,P1,Q42 mercato + cantiere,coerente con MERCATO_MELITO.md (lavori fino al 2027)
+M05,Via Praga / Via Budapest,1135,845,edificio mancante,due lunghe stecche bianche parallele,una sola stecca,P2,dati OSM,coordinate stimate a vista ±15 m
+M06,Giardino con vialetto diagonale,1290,1130,area verde,"giardino recintato con vialetto diagonale e alberi (possibile villa comunale, da verificare)",isolato con edifici,P0,BF12 recinti,coordinate stimate a vista ±15 m
+M07,Filare di alberi,1260,1100,alberature,filare continuo di alberi lungo la strada,uno o due alberi,P2,nuova Q alberature,
+M08,Edificio con copertura chiara,1275,1350,edificio speciale,"tetto verde-azzurro chiaro, forse una copertura in vetro (da confrontare con la galleria Atlante)",palazzina normale,P2,BF12 (galleria Atlante),da verificare sul posto
+M09,"Via Roma ovest, terreno incolto",865,1250,area verde,grande area verde incolta,case segnaposto,P1,urban-infill,
+M10,Capannone a ovest di Via Roma,855,1385,edificio mancante,grande copertura industriale grigia,case segnaposto,P2,dati OSM,
+M11,Struttura lineare diagonale,1045,1320,linea ferroviaria da verificare,"lunga copertura in linea: forse la linea metropolitana EAV con una stazione, o un vecchio tracciato (da verificare in OSM: railway=*)",strada diagonale con palazzine,P1,verifica OSM + nuova Q ferrovia,"prosegue verso (875,1430)"
+M12,Campi da tennis/calcetto,1020,1900,impianto sportivo,3–4 campi rettangolari verdi accanto a un edificio,isolato con case,P0,Q32 campetti,
+M13,Campo in terra rossa,1015,2060,impianto sportivo,campo arancione (terra rossa) con piccola tribuna,case,P1,Q32 campetti,
+M14,Orti e giardini a sud di Corso Europa,850,2000,area agricola,appezzamenti coltivati con capanni,piazzale vuoto,P1,nuova Q aree agricole/verdi,
+M15,Parcheggio con pannelli solari,985,1875,parcheggio a raso,parcheggio di struttura con pensiline fotovoltaiche,isolato con palazzine,P2,estendere BF02 ai parcheggi,
+M16,Complesso di palazzoni nel verde,1120,1770,recinto da verificare,palazzoni in linea in un parco con viali interni (possibile parco residenziale recintato),palazzine segnaposto e strade,P1,BF12 recinti,confrontare con parco GB e parco Prima Casa
+M17,Accanto alla parrocchia di Via delle Magnolie,500,1410,edificio mancante,lungo edificio a tetto rosso (scuola? da verificare),palazzine segnaposto,P1,dati OSM,
+M18,Capannone o palestra,505,1550,edificio mancante,grande copertura piana grigia,palazzine segnaposto,P2,dati OSM,
+M19,"Corso Europa ovest, grande complesso",810,1290,edificio mancante,"grande copertura grigia, un edificio rosso, un prato e un cortile",isolati con strade a ricciolo,P1,dati OSM + urban-infill,
+M20,Deposito all’aperto,828,1505,cantiere o lotto,cortile con materiali e teli blu,case,P2,nuova Q dettagli urbani,
+M21,Possibile rotatoria,1190,1860,incrocio,aiuola circolare alberata a un incrocio (da verificare),incrocio normale,P2,BF07 incroci,
+M22,Viadotto su Corso Europa sud,1280,2050,svincolo e ponte,la superstrada passa sopra Corso Europa,incrocio o strada a raso,P1,nuova Q ponti e svincoli,
+M23,Piazza Santo Stefano,1099,1150,piazza,sagrato e piazza con alberature e auto in sosta intorno alla chiesa,piazza con sagrato e qualche albero,P2,Q15 consolidamento,il gioco qui è il più vicino alla foto
+M24,Corso Europa ovest (corte verde),850,1262,area verde,corte verde interna al grande complesso,cortile pavimentato,P2,urban-infill,
