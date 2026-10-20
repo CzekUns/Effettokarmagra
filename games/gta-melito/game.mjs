@@ -74,6 +74,7 @@ import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,
 import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
+import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
 import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=002';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
 import {PASSENGER_RULES,seatCapacity,ensureSeats,occupantsOf,freeSeat,boardPassenger,alightPassenger,hitchhikersNear,liftCandidate,liftDestination,alightSpot,doorSpots,trafficOccupants,lookOf,drawCabinOccupants} from './passengers.mjs?v=001';
@@ -2286,7 +2287,16 @@ function prepareMini(){
  for(const road of state.roads)if(DRIVE.has(road.t)){b.beginPath();b.moveTo(road.p[0],road.p[1]);for(let i=2;i<road.p.length;i+=2)b.lineTo(road.p[i],road.p[i+1]);b.stroke();}
  b.restore();state.mapCanvas=off;state.mini={k,ox,oy};
 }
-let phoneUi=null;
+// Q38: navigatore dell'app Drive (destinazione, ricalcolo, ARRIVATO).
+const drive=createDrive();let driveArrivedAt=null,phoneUi=null,driveUi=null;
+function updateDrive(dt){
+ const banner=$('drive-banner');if(!banner)return;
+ if(!drive.destination||!state.ready||state.bankInterior){banner.hidden=true;return;}
+ stepDrive(drive,state.player,{graph:state.graph,mode:state.player.car>=0?'car':'walk'},dt);
+ if(drive.arrived){driveArrivedAt??=state.clock;if(state.clock-driveArrivedAt>5){cancelDrive(drive);driveArrivedAt=null;banner.hidden=true;return;}}else driveArrivedAt=null;
+ const text=instructionText(drive),arrow=drive.arrived?'✔':drive.turn?.side?ARROW[drive.turn.side]:'↑';
+ banner.textContent=arrow+' '+text.toUpperCase();banner.classList.toggle('arrived',drive.arrived);banner.hidden=false;
+}
 function drawMini(){
  if(!state.mapCanvas||state.bankInterior||state.shopInterior)return;
  r.clearRect(0,0,168,142);r.drawImage(state.mapCanvas,0,0);
@@ -2297,6 +2307,7 @@ function drawMini(){
  // Q21: meta del passeggero a bordo.
  const ride=p.car>=0?state.cars[p.car]:null,going=ride?occupantsOf(ride).map(n=>n.liftTo).find(Boolean):null;
  if(going){r.fillStyle='#f6d36a';r.strokeStyle='#1e2920';r.lineWidth=1.2;r.beginPath();r.arc(ox+going.x*k,oy+going.y*k,3.2,0,Math.PI*2);r.fill();r.stroke();}
+ drawDriveRoute(r,drive,state.mini);
  r.fillStyle='#ffce66';r.beginPath();r.arc(x,y,4,0,Math.PI*2);r.fill();
  r.lineWidth=1.4;r.strokeStyle='#1e2920';r.stroke();
  r.fillStyle='#fff0b9';r.font='bold 8px monospace';r.fillText('MELITO',5,10);
@@ -2387,7 +2398,7 @@ function soundLabel(){
 }
 function frame(now){
  const dt=state.last?Math.min(.05,(now-state.last)/1000):0;state.last=now;
- tick(dt);draw(dt);drawMini();updateCityAudio();requestAnimationFrame(frame);
+ tick(dt);draw(dt);drawMini();updateCityAudio();updateDrive(dt);requestAnimationFrame(frame);
 }
 async function load(){
  if(state.loading)return;
@@ -2572,8 +2583,12 @@ function bind(){
   onScreen:screen=>{
    const clock=document.getElementById('phone-clock'),profile=document.getElementById('phone-profile-text');
    if(clock)clock.textContent=$('npc-clock').textContent.split(' ')[0]||'';
+   if(screen==='drive')driveUi?.refresh();
    if(screen==='profilo'&&profile)profile.textContent='SALDO '+$('mission-money').textContent+' · RISPETTO ★ '+$('mission-respect').textContent+' · MISSIONI '+$('mission-progress').textContent+' · MEZZO: '+$('vehicle').textContent+' · '+$('place').textContent;
   }}});
+ driveUi=mountDriveApp(document,phoneUi.elements?.drive,{drive,
+  getWorld:()=>state.ready?{graph:state.graph,roads:state.roads,pois:state.map?.pois||[],player:{x:state.player.x,y:state.player.y},mode:state.player.car>=0?'car':'walk'}:null,
+  onPicked:()=>{closePause();}});
  const orient=()=>{const rotate=$('rotate-screen');rotate.hidden=typeof matchMedia!=='function'||matchMedia('(orientation: landscape)').matches;};
  orient();window.addEventListener('orientationchange',orient);window.addEventListener('resize',orient);
  const lockLandscape=()=>{try{if(typeof screen!=='undefined'&&screen.orientation?.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(_){}};
