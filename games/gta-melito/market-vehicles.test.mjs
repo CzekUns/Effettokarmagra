@@ -86,12 +86,14 @@ test('game draws each sprite from the correct source crop and follows GTA headin
   }
  }finally{if(original===undefined)delete globalThis.Image;else globalThis.Image=original;}
 });
-test('parking uses new sprites while moving traffic retains the old roster',async()=>{
+test('food truck awnings stay parked while compact Ape models join moving traffic',async()=>{
  const [game,page]=await Promise.all([
   readFile(new URL('./game.mjs',import.meta.url),'utf8'),
   readFile(new URL('./index.html',import.meta.url),'utf8')]);
  assert.ok(game.includes('CAR_PARKED_SPRITE_IDS[(k*7)%CAR_PARKED_SPRITE_IDS.length]'));
  assert.ok(game.includes('CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length]'));
  assert.ok(game.includes("car-sprites.mjs?v=108"));
- assert.ok(page.includes('game.mjs?v=153'));
+ assert.ok(game.includes('trafficApeModel(i)'));
+ assert.ok(!game.includes("v.model='food-zeppole-panzerotti'"));
+ assert.ok(page.includes('game.mjs?v=154'));
 });
