@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=153';
 import {vehicleHitsPedestrian,makeCollisionIndex} from './traffic-collision.mjs?v=128';
 import {createReactions,stepReactions,startCrossing,kerbWait,pickBlockedHorn,vehicleThreat,crossingThreat,speedOf,REACTION_RULES} from './npc-reactions.mjs?v=001';
-import {canSocialize} from './npc-social.mjs?v=003';
+import {canSocialize} from './npc-social.mjs?v=004';
 
 // Via Roma lungo x (residenziale, larga 8) e una traversa a x=300.
 const graph=buildRoadGraph([

@@ -866,3 +866,17 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Cache:** `game.mjs?v=176`, `car-sprites 113`, `traffic-collision 130`, `vehicle-handling 005`, `roads 156` e, a cascata, i moduli che li importano.
 - **Test:** `q19-service-vehicles.test.mjs`; suite completa 419/419. Browser breve e stress di 60 s senza errori né compenetrazioni.
 - **Limiti:** fermate e routine nella Q20; non provato su un telefono reale.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q20 routine dei veicoli di servizio
+- **Nuovo `service-routines.mjs`:** le routine sono simulate e dichiarate.
+  - **Corriere:** stallo libero, quattro frecce, l'autista consegna a un portone o all'ingresso del palazzo, poi ritorno e uscita a corsia libera.
+  - **Nettezza urbana:** sempre lenta; con un bidone accanto si ferma, l'operatore lo svuota e lo rimette esattamente al suo posto. In `street-objects.mjs`: `moveStreetObject`.
+  - **Carro attrezzi:** auto in sosta in panne (quattro frecce e triangolo), percorso vero, carico sul pianale, riconsegna fuori vista in un altro stallo; aggancio Q23 `reportBreakdown`.
+  - **Autobus:** 14 fermate simulate sulle principali, porte, passanti veri che aspettano, salgono e scendono, senza doppioni e fino alla capienza.
+- **`roads.mjs`:** salta i mezzi e i pedoni in servizio (`serviceHold`).
+- **`npc-reactions.mjs`, `npc-social.mjs`:** non coinvolgono i pedoni in servizio.
+- **`game.mjs`:** creazione al caricamento e al cambio di larghezza strade, passo dopo `balanceTraffic`; disegno di pensiline, porte, auto sul pianale e figure; quattro frecce (`hazard`) in `drawBlinker`; `?servizio=1` per le prove.
+- **Cache:** `game.mjs?v=179`, `roads 157`, `npc-commute 012`, `npc-density 005`, `npc-reactions 005`, `npc-social 004`, `street-objects 002`, `service-routines 001`.
+- **Test:** `q20-service-routines.test.mjs` con 7 test. Adattato il cablaggio Q07 in `street-objects.test.mjs`. Suite completa verde.
+- **Browser:** 30 s a 51,7 FPS. Foto di consegna, raccolta, soccorso e fermata, più l'auto sul pianale. 0 compenetrazioni, 0 errori JS.
+- **Limiti:** grafica provvisoria; salita in autobus vista solo in Node; non provato su telefono reale.

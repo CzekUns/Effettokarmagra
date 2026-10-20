@@ -671,7 +671,7 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
    jctx={approaching:new Map(),traffic:new Set(),index,player:playerBody,signalSeconds:junctions.clockSeconds,
     time:(junctions.time=(junctions.time||0)+dt)};
    for(const agent of agents){
-    if(agent.body!=='car'||agent.commuter||agent.stationary){continue;}
+    if(agent.body!=='car'||agent.commuter||agent.stationary||agent.serviceHold){continue;}
     jctx.traffic.add(agent);
     // Outside the map (varchi di confine, t oltre 0..1) there are no junctions to negotiate.
     agent.jx=agent.impactTime>0||agent.needsRoutineRecovery||agent.gateMode||!(agent.t>=0&&agent.t<=1)?null:nextJunction(graph,agent,70);
@@ -690,6 +690,9 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
    else{stepGate(graph,agent,dt,index);if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);continue;}
   }
   if(agent.impactTime>0){agent.braking=true;continue;}
+  // Q20: a service vehicle at work (courier stop, refuse collection, tow, bus stop) or a passer-by waiting at
+  // a bus stop is moved by service-routines.mjs, a little at a time.
+  if(agent.serviceHold){agent.braking=true;agent.stalled=0;agent.turnSignal=null;continue;}
   if(agent.body==='car'&&unstickVehicle(agent,index,world,dt)){
    agent.stalled=0;if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);continue;
   }

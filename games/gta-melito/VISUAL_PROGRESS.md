@@ -674,3 +674,11 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 - **Carro attrezzi:** giallo, arancio, bianco-rosso, rosso, blu, bianco, grigio-arancio, giallo vissuto.
 - **Autobus urbano corto:** arancio, verde-bianco, blu-bianco, rosso, bianco-azzurro, giallo, grigio-verde, arancio vissuto.
 - Livree inventate, senza scritte, numeri di linea o marchi. Pixel art provvisoria: da far approvare a Simone.
+
+### 2026-10-20 — Q20 routine dei veicoli di servizio (grafica PROVVISORIA, da approvare)
+- **Fermate:** pensilina con vetro e panca, palina gialla «FERMATA» (nessun numero di linea), tutto in primitive canvas.
+- **Autobus:** due varchi scuri sul fianco destro quando le porte sono aperte.
+- **Auto in panne:** quattro frecce e triangolo rosso dietro.
+- **Carro attrezzi:** l'auto soccorsa è disegnata sul pianale, all'88%.
+- **Persone:** autista del corriere e operatore della nettezza urbana con gli sprite esistenti dei pedoni.
+- **Dove guardare:** `?servizio=1&ora=10:00` accelera le routine; le foto di prova sono fuori dal repo.

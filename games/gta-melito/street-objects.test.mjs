@@ -94,7 +94,7 @@ test('Q07 recovery: a knocked bin goes back home only out of sight, after a whil
 
 test('Q07 game wiring: placed after doors and NPCs, bollards in car and walking collisions, physics after traffic',async()=>{
  const [game,html]=await Promise.all(['game.mjs','index.html'].map(f=>readFile(new URL('./'+f,import.meta.url),'utf8')));
- assert.match(game,/import \{placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker\} from '\.\/street-objects\.mjs\?v=\d+'/);
+ assert.match(game,/import \{placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker(?:,\w+)*\} from '\.\/street-objects\.mjs\?v=\d+'/);
  assert.equal((game.match(/state\.people=createCityPedestrians\(\);state\.streetObjects=createStreetObjects\(\);/g)||[]).length,2,'on load and on reset');
  assert.match(game,/\.\.\.\(state\.doors\|\|\[\]\)\.map\(d=>\(\{x:d\.x,y:d\.y,r:2\.6\}\)\)/,'doors kept clear');
  assert.match(game,/\.\.\.state\.cars\.map\(v=>\(\{x:v\.x,y:v\.y,r:3\.6\}\)\)/,'parked cars kept clear');

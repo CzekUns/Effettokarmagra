@@ -8,7 +8,7 @@
  *   lontani riappare FUORI DALLA VISTA su un marciapiede vicino (mai dentro la camera);
  * - se ce ne sono troppi (es. a notte fonda) uno di quelli fuori vista se ne va lontano.
  * Le posizioni sono quelle dei marciapiedi del grafo stradale OSM, controllate con canStand. */
-import {lanePosition} from './roads.mjs?v=156';
+import {lanePosition} from './roads.mjs?v=157';
 import {collidesWithTraffic,nearbyColliders} from './traffic-collision.mjs?v=130';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));

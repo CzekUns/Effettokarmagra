@@ -78,6 +78,8 @@ function moveInGrid(objects,bin,oldX,oldY){
  const list=objects.grid.get(a);if(list){const i=list.indexOf(bin);if(i>=0)list.splice(i,1);}
  if(!objects.grid.has(b))objects.grid.set(b,[]);objects.grid.get(b).push(bin);
 }
+// Q20: un bidone spostato a mano (l'operatore della nettezza urbana): posizione e griglia insieme.
+export function moveStreetObject(objects,obj,x,y){const ox=obj.x,oy=obj.y;obj.x=x;obj.y=y;moveInGrid(objects,obj,ox,oy);}
 // Cerchio contro rettangolo orientato del veicolo (stesse misure di traffic-collision).
 export function circleHitsVehicle(x,y,r,v,shape){
  const ca=Math.cos(v.a),sa=Math.sin(v.a),dx=x-v.x,dy=y-v.y;
