@@ -75,7 +75,7 @@ test('Q32 drawing: grass, lines, goals, fence and floodlights without errors, no
 
 test('Q32 game wiring: placeholders filtered, pitches on load and width switch, collisions, hotspot',async()=>{
  const [game,html]=await Promise.all([read('game.mjs'),read('index.html')]);
- assert.match(game,/import \{preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches\} from '\.\/football-pitches\.mjs\?v=\d+'/);
+ assert.match(game,/import \{preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches[^}]*\} from '\.\/football-pitches\.mjs\?v=\d+'/);
  assert.match(game,/state\.inferredBuildings=inferred\.buildings\.filter\(b=>!infillOnPitch\(b\)\)/);
  assert.match(game,/!\(state\.pitches&&pitchWalkBlocked\(state\.pitches,x,y\)\)/,'fences in validWalk');
  assert.match(game,/state\.inferredGrid=makeIndex\(state\.inferredBuildings\);\n createPitches\(\);/,'on load, after the building grids');

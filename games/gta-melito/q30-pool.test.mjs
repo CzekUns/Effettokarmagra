@@ -277,7 +277,7 @@ test('Q30 game wiring: pause under the table, radio ducked, PAUSA › STRUMENTI 
  const [game,html]=await Promise.all(['game.mjs','index.html'].map(f=>readFile(new URL('./'+f,import.meta.url),'utf8')));
  assert.match(game,/import \{openPoolMachine,isPoolOpen\} from '\.\/minigame-pool\.mjs\?v=\d+'/);
  assert.match(game,/function tick\(dt\)\{\n if\(!state\.ready\)return;\n if\(state\.mapOpen\|\|[^\n]*\|\|isPoolOpen\(\)\)\{\n  for\(const key of Object\.keys\(pressed\)\)pressed\[key\]=false;/,'the world stops under the table');
- assert.match(game,/const paused=state\.mapOpen\|\|[^\n]*\|\|isPoolOpen\(\);/,'city audio quiet');
+ assert.match(game,/const paused=state\.mapOpen\|\|[^\n]*\|\|isPoolOpen\(\)(?:\|\|is\w+Open\(\))*;/,'city audio quiet');
  assert.match(game,/function openPoolGame\(\)\{\n if\(isPoolOpen\(\)\|\|isSlotOpen\(\)\|\|isPokerOpen\(\)\)return false;[\s\S]{0,120}carRadio\.duck\(true\);[\s\S]{0,200}onExit:\(\)=>\{carRadio\.duck\(false\);/);
  assert.match(game,/function openSlotGame\(\)\{\n if\([^\n]*isPoolOpen\(\)\)return false;/,'never two minigames at once');
  assert.match(game,/function openPokerGame\(\)\{\n if\([^\n]*isPoolOpen\(\)\)return false;/);

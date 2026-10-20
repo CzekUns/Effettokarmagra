@@ -4,6 +4,8 @@
 import {freshShopSave,sanitizeShopSave} from './local-shops.mjs?v=003';
 import {freshGarageSave,sanitizeGarageSave} from './garages.mjs?v=001';
 import {freshRiderSave,sanitizeRiderSave} from './rider.mjs?v=001';
+// Q33: the calcetto record (wins / draws / losses only) lives in the same save, reset with it.
+import {freshFootballSave,sanitizeFootballSave} from './minigame-football.mjs?v=001';
 export const SAVE_KEY='gta-melito-campaign-v3';
 export const STORY=[
  {id:'primo-contatto',title:'01 · Il primo contatto',reward:75,time:0,
@@ -99,14 +101,14 @@ export function resolveLandmarks(map,spawn){
 }
 // Q35: `garage` is the archive of owned vehicles (max 6), Q36 tuning lives inside each entry.
 // Q06: `shop` keeps purchases next to the money they were paid with (same save, same reset).
-export function freshProgress(){return {version:3,mission:0,stage:0,money:0,respect:0,remaining:null,completed:false,stamp:0,shop:freshShopSave(),garage:freshGarageSave(),rider:freshRiderSave()};}
+export function freshProgress(){return {version:3,mission:0,stage:0,money:0,respect:0,remaining:null,completed:false,stamp:0,shop:freshShopSave(),garage:freshGarageSave(),rider:freshRiderSave(),football:freshFootballSave()};}
 export function readProgress(storage){
  let p;try{p=JSON.parse(storage.getItem(SAVE_KEY)||'null');}catch(_){}
  if(!p||p.version!==3)return freshProgress();
  const m=Number(p.mission),s=Number(p.stage);
  if(!Number.isInteger(m)||m<0||m>STORY.length||!Number.isInteger(s)||s<0||s>5)return freshProgress();
  if(m<STORY.length&&s>=STORY[m].steps.length)return freshProgress();
- return {version:3,mission:m,stage:m===STORY.length?0:s,money:Math.max(0,Math.min(999999,Number(p.money)||0)),respect:Math.max(0,Math.min(1000,Number(p.respect)||0)),remaining:Number.isFinite(p.remaining)&&p.remaining>=0?Math.min(500,p.remaining):null,completed:m===STORY.length,stamp:0,shop:sanitizeShopSave(p.shop),garage:sanitizeGarageSave(p.garage),rider:sanitizeRiderSave(p.rider)};
+ return {version:3,mission:m,stage:m===STORY.length?0:s,money:Math.max(0,Math.min(999999,Number(p.money)||0)),respect:Math.max(0,Math.min(1000,Number(p.respect)||0)),remaining:Number.isFinite(p.remaining)&&p.remaining>=0?Math.min(500,p.remaining):null,completed:m===STORY.length,stamp:0,shop:sanitizeShopSave(p.shop),garage:sanitizeGarageSave(p.garage),rider:sanitizeRiderSave(p.rider),football:sanitizeFootballSave(p.football)};
 }
 export function saveProgress(storage,p){
  try{storage.setItem(SAVE_KEY,JSON.stringify({...p,stamp:0}));return true;}catch(e){return false;}

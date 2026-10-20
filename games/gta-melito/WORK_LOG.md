@@ -1117,3 +1117,19 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** `q30-pool.test.mjs` (12 test); resi tolleranti a un qualunque `||isXxxOpen()` in coda alle condizioni di pausa 2 controlli di `q28-slot.test.mjs`, 2 di `q29-poker.test.mjs` e 1 di `local-shops.test.mjs`. Suite completa verde.
 - **Browser:** una sola prova breve in Chrome headless, PC 1280×720 (53 FPS) e telefono 844×390 (58 FPS): mouse e tocchi veri, spacco, tiro della CPU, pausa sotto, ESC, 0 sovrapposizioni, 0 errori JS. Foto della prova conservate fuori dal repository. Dopo le foto: buche più tonde, stecca che non copre più la striscia del punteggio, testi della colonna destra più corti sugli schermi bassi; questi ritocchi sono coperti dai test Node ma non riprovati in browser.
 - **Limiti / dove riprendere:** grafica provvisoria da far approvare a Simone; con la Q27 collegare `openPoolGame()` all'hotspot davanti al tavolo disegnato e togliere l'avvio di prova; niente suoni; Android reale non provato.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q33 partita di calcetto 5 contro 5
+- **C'era:** i campetti della Q32 con «E · GIOCA A CALCETTO» e l'aggancio `openFootballMatch()`, che mostrava solo un avviso.
+- **Nuovo `minigame-football.mjs`:**
+  - logica pura e ripetibile con un seme: campo 40×20, 5 contro 5 con portieri, possesso, passaggio, tiro, contrasto, cambio giocatore, IA di compagni, avversari e portieri, gol tra i pali, palo, rimesse, cronometro accelerato 2 min → 40';
+  - scena DOM/canvas a schermo intero in pixel art semplice, con tastiera e touch (levetta, TIRO, PASSA, CAMBIO, ESCI);
+  - salvataggio del solo bilancio vittorie/pareggi/sconfitte, senza doppioni.
+- **`game.mjs`:** `openFootballMatch` apre la partita. Sotto, la città è in pausa (`tick`, disegno e suoni). All'uscita si torna al cancello nella stessa posa (`footballReturnPoint`). Il risultato si salva subito al fischio.
+- **Altri file:** `campaign.mjs?v=003` (campo `football` nel salvataggio); `novita.mjs?v=002` e `NOVITA_DA_APPROVARE.md` (voce `calcetto`); CSS in `index.html`; cache `game.mjs?v=186`.
+- **Test:** nuovo `q33-football.test.mjs` (9 test); in `q32-pitches.test.mjs` reso tollerante l'elenco degli import; suite completa verde.
+- **Browser** (una prova breve, Chrome headless, PC 1280×720 e telefono 844×390): 59–61 FPS, 0 errori JS. Provati E e tocco al cancello, partita, fischio, ritorno nella stessa posa, città ferma, 1 risultato salvato, ESC senza salvataggio.
+- **Limiti:**
+  - grafica provvisoria da far approvare a Simone;
+  - niente intervallo, falli o rigori;
+  - Android vero non provato;
+  - palla e freccia ingrandite dopo le foto, controllate solo con un disegno di prova in Node.

@@ -729,3 +729,8 @@ Schermata della slot in pixel art disegnata via codice. Griglia logica 192×128,
 - Tavolo visto dall'alto disegnato in codice su una griglia logica 224×136, ingrandita senza sfocature: cornice di legno con venature e diamanti color perla, sponde verde scuro, panno verde con trama a punti, linea di battuta e punto di acchito, 6 buche nere con bordo.
 - Biglie 7×7 px con contorno scuro, ombra sul panno, ombreggiatura e punto di luce; la 9 è rigata. Stecca con puntale azzurro di gesso, ghiera bianca, fusto chiaro e calcio scuro, che arretra con la potenza. Linea di mira a puntini, biglia fantasma e direzione della biglia colpita in oro. In alto la striscia del punteggio con le biglie imbucate da ciascuno e la freccia del turno.
 - Da vedere: PAUSA › STRUMENTI › PROVA BILIARDO, oppure `?minigioco=biliardo`, su PC e telefono in orizzontale.
+
+## 2026-10-20 — Q33 partita di calcetto (grafica PROVVISORIA, da approvare)
+- Scena a schermo intero vista dall'alto, come nei primi giochi di calcio. Campo a strisce con gli stessi verdi del campetto Q32, linee del calcio a 5, porte con rete a quadretti, recinzione con pali e fari.
+- Calciatori 7×9 pixel con maglia a due colori: ROSSI rosso e bianco, BLU blu e azzurro; portieri giallo e verde. Freccia gialla sul giocatore comandato; palla 3×3 pixel con ombra.
+- Sul telefono: levetta, TIRO, PASSA e CAMBIO; sul PC la riga dei tasti. Dove vederla: «E · GIOCA A CALCETTO» al cancello di un campetto (Via delle Palme (535, 1181) o Corso Europa (1010, 1878)), oppure PAUSA › NOVITÀ › `calcetto`.

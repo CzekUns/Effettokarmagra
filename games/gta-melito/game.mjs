@@ -68,9 +68,10 @@ import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,return
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=002';
-import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches} from './football-pitches.mjs?v=001';
+import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches,PITCH_RULES} from './football-pitches.mjs?v=001';
 import {GARAGES,nearestGarage,canStoreVehicle,depositVehicle,takeVehicle,vehicleFromEntry,chooseExitSpot,garageMessage,vehicleLabel,ownedEntry,ownedCount,garageById,GARAGE_SLOTS,drawGarage} from './garages.mjs?v=001';
 import {paintOptions,paintName,PERF_LEVELS,perfPrice,PAINT_PRICE,NEON_PRICE,NEON_COLORS,tunedProfile,buyTuning,tuningMessage,drawNeonUnderglow,neonNightGlows} from './tuning.mjs?v=001';
+import {openFootballGame,isFootballOpen,recordFootballResult,footballReturnPoint,footballRecordText} from './minigame-football.mjs?v=001';
 import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=001';
 import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
@@ -279,11 +280,34 @@ function createPitches(){
   nearStreet:(x,y)=>{const r=nearest(x,y,24,state.roads);return !!r&&r.distance<=visualRoadWidth(r.road)/2+2;}});
  if(state.pitches.failed.length)console.warn('Campetti non collocati: '+state.pitches.failed.map(f=>f.id+' ('+f.reason+')').join(', '));
 }
-// Q32: the Q33 match will open here; until then the gate only says so.
+// Q33: the calcetto match opens over the city, which stays paused underneath (tick/draw skip it);
+// after the final whistle or ESC the player is back at the gate of the pitch, in the same pose.
+// Only the finished result (win/draw/loss) goes into the campaign save, once per match id.
 function openFootballMatch(pitch){
- state.notice={text:'CALCETTO · '+pitch.nome.toUpperCase()+' · LA PARTITA ARRIVA CON LA Q33',until:state.clock+4};
- cityEventBubble(state.events,state.player,'Calcetto in arrivo!');
- updateHud();
+ if(isFootballOpen()||!state.ready)return false;
+ const p=state.player,entry={x:p.x,y:p.y,a:p.a};
+ for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;resetDrivingControls();
+ $('stick-knob').style.transform='translate(0,0)';
+ carRadio.duck(true);
+ const opened=openFootballGame({pitch,record:()=>state.progress?.football,
+  sound:{get muted(){return cityAudio.muted;},get volume(){return cityAudio.effectsVolume;}},
+  onResult:result=>{
+   if(state.progress&&recordFootballResult(state.progress,result)){saveProgress(localStorage,state.progress);refreshCampaign();}
+  },
+  onExit:({result})=>{
+   const back=footballReturnPoint(pitch,entry,PITCH_RULES.hotspot);
+   p.x=back.x;p.y=back.y;p.a=back.a;p.car=-1;p.vehicleType=null;
+   p.impactTime=0;p.impactVX=0;p.impactVY=0;p.impactLock=0;
+   state.camera.x=p.x;state.camera.y=p.y;state.last=0;
+   for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
+   carRadio.duck(false);
+   const word=result?{vittoria:'VITTORIA',pareggio:'PAREGGIO',sconfitta:'SCONFITTA'}[result.outcome]+' '+result.home+'–'+result.away:'PARTITA ABBANDONATA';
+   state.notice={text:'CALCETTO · '+word+' · BILANCIO '+footballRecordText(state.progress?.football),until:state.clock+5};
+   cityEventBubble(state.events,p,result?word:'Partita abbandonata');
+   canvas.focus?.({preventScroll:true});updateHud();
+  }});
+ if(!opened)carRadio.duck(false);
+ return opened;
 }
 // Q36: the driven profile is always the model's BASE profile (BF05) plus the owned car's tuning.
 function vehicleProfile(car){
@@ -1551,7 +1575,7 @@ function drawSkidMarks([x0,y0,x1,y1]){
 }
 function tick(dt){
  if(!state.ready)return;
- if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||state.shopOpen||state.garageOpen||state.riderOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen()){
+ if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||isFootballOpen()||state.shopOpen||state.garageOpen||state.riderOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen()){
   for(const key of Object.keys(pressed))pressed[key]=false;
   stick.x=0;stick.y=0;
   return;
@@ -2326,7 +2350,7 @@ function drawMini(){
 function updateCityAudio(){
  if(!cityAudio.started||!state.ready)return;
  const p=state.player,car=p.car>=0?state.cars[p.car]:null;
- const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen||!!state.garageOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen();
+ const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen||!!state.garageOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen()||isFootballOpen();
  const traffic=[...state.traffic.filter(v=>v.body==='car'),...(state.commuters||[]).filter(c=>c.bike.rider).map(c=>c.bike)];
  cityAudio.update({paused,interior:!!state.bankInterior||!!state.shopInterior,radioLive:radioStatus==='live',
   player:{x:p.x,y:p.y,inVehicle:!!car,vehicleType:car&&isMotorcycle(car)?'motorcycle':'car',model:car?.model||'',speed:car?car.speed:0,throttle:pressed.up||pressed.accelerate?1:0},
@@ -2409,6 +2433,8 @@ function soundLabel(){
 }
 function frame(now){
  const dt=state.last?Math.min(.05,(now-state.last)/1000):0;state.last=now;
+ // Q33: during a calcetto match the city is paused and hidden under the full-screen scene.
+ if(isFootballOpen()){updateCityAudio();requestAnimationFrame(frame);return;}
  tick(dt);draw(dt);drawMini();updateCityAudio();updateDrive(dt);requestAnimationFrame(frame);
 }
 async function load(){
