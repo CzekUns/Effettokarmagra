@@ -638,3 +638,11 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 - **Dove compare:** è uno strumento di lavoro, non grafica di gioco. Parte sempre spento e l'attribuzione resta in alto al centro mentre è acceso.
 - **Prove:** screenshot di controllo (fuori dal repo) su PC e telefono in 3 zone del centro.
 - **Cosa emerge dall'audit:** i segnaposto dell'infill coprono molte aree verdi. Dettagli in `AUDIT_SATELLITE.md`.
+### 2026-10-20 — Q42 mercato del rione 219 (Claude)
+- **Ombrelloni:** pixel art procedurale, 4 px per unità, una cache per variante.
+  - Quadrati a quattro falde, con spicchi a strisce che convergono al pomolo, nervature scure, mantovana smerlata e luce da nord-ovest.
+  - Tondi a otto spicchi (giocattoli multicolori, fiori, bigiotteria); tenda rettangolare a strisce per i casalinghi.
+  - Colori dal foglio `mercato-banchi.csv`; abbigliamento a colori vivaci diversi per banco.
+- **Profondità e trasparenza:** la tela è sollevata sopra il palo (2.5D) e passa sopra persone e veicoli. Quando il giocatore è sotto o accanto sfuma all'80%, come i tetti.
+- **Banchi:** segnaposto semplici con bancone di legno, telo, merce stilizzata a blocchi nei colori del foglio e furgone-negozio per salumi e porchetta. Durante il montaggio ci sono cassette per terra; fuori orario restano i posteggi gialli numerati.
+- **Foto guardate:** montaggio, pieno, vuoto, notte con pioggia, pioggia, telefono, R01 a piedi e in auto.

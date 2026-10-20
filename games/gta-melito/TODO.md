@@ -114,6 +114,23 @@ Aggiornato: 2026-10-20 · Ambito: `games/gta-melito/` · Stato: Q01–Q12 integr
 
 - [ ] **Q42 — Mercato settimanale di Melito: allestimento area mercatale.** Area identificata (rione 219, isolato tra Via Praga, Via Dublino, Via Budapest e Via Ginevra) e segnata **da arredare** in [MERCATO_MELITO.md](./MERCATO_MELITO.md) e `data/market-area.json`, che il gioco non usa ancora. Creare banchi, ombrelloni grandi che diventano trasparenti quando il giocatore ci passa sotto (come i tetti, `roof-reveal.mjs`), venditori e clienti, seguendo [mercato-banchi.csv](./mercato-banchi.csv) e [mercato-requisiti.csv](./mercato-requisiti.csv) (R01–R16). **L'arte la produce il proprietario o ChatGPT seguendo il CSV**; il codice di posizionamento, orari e chiusura strade va in una PR dedicata. Giorno, orari e posteggi reali sono da confermare con il Comune: oggi la stima è venerdì mattina. **Prova:** R15 di `mercato-requisiti.csv`.
   - **Stato 2026-10-20:** proposta (Claude / account `ilconsulentelogistico-hue`), da approvare; nessun codice di gioco cambiato.
+  - **Esito 2026-10-20 (Claude / account `ilconsulentelogistico-hue`): prima versione giocabile, con segnaposto.** Nuovo `market.mjs`, collegato a `game.mjs`.
+    - **Calendario:** nuovo contatore dei giorni in `npc-agenda.mjs`: il giorno 0 è un VENERDÌ, si vede nell'HUD. Mercato il venerdì (non verificato): montaggio 6:30–7:30, aperto 7:30–13:30, smontaggio 13:30–14:30; `?mercato=1` lo fa ogni giorno.
+    - **Banchi:** 15–16 banchi PLACEHOLDER dei 14 tipi del foglio, disposti a file; misure reali × 1,9. Mai su edifici, carreggiate, linea dei pedoni, alberi, panchine, porte o baie. Sono solidi per il giocatore a piedi e in veicolo, con la regola di BF01 (ci si allontana sempre). L'arte definitiva si aggancia da `MARKET_ART`.
+    - **Ombrelloni:** in pixel art procedurale (quadrati a spicchi, tondi, tenda), con ombra, palo e lieve ondeggio con vento e pioggia. Sfumano come i tetti quando il giocatore, a piedi o in auto, è sotto o accanto (R01).
+    - **Persone:** un venditore per banco e fino a 16 clienti, più gente la mattina tardi. I clienti arrivano dai marciapiedi delle 4 vie, comprano a 1–3 banchi per 5–15 s ed escono. Compaiono e spariscono solo fuori vista; i venditori lanciano qualche voce rara. Gli sprite sono i pedoni esistenti.
+    - **Verifiche:**
+      - suite 350/350, con il nuovo `q42-market.test.mjs` (10 test);
+      - Chrome headless: montaggio graduale (0→14 banchi tra 6:32 e 7:02), smontaggio graduale, 3 minuti di giro dentro il mercato con 0 comparse in vista, 0 persone dentro banchi o edifici, 0 bloccati, 33 acquisti;
+      - R01 su PC e telefono; foto alle 6:40, alle 10:30, alle 15:00, di notte e con la pioggia; prova di stress BF01 senza compenetrazioni.
+    - **Limiti:**
+      - entrano 15–16 banchi dei 23 indicativi: lo spazio è limitato da pensilina, alberi e linea dei pedoni;
+      - le vie attorno non vengono chiuse (R06), il vigile (R11), i suoni (R10) e la pulizia (R14) non ci sono;
+      - la pensilina OSM resta un edificio pieno (R16);
+      - i banchi sono segnaposto in attesa di arte;
+      - non provato su telefono reale.
+
+      Resta `[ ]`.
 
 **Criterio trasversale di ogni nuova Q:** pixel art 2.5D coerente con `PIXEL_ART_MODUS.md`; nessuna modifica diretta a geometria OSM, missioni esistenti o mappa in assenza di motivazione; separare edifici/impianti realmente identificati da scenografia immaginaria; compatibilità Android orizzontale e tastiera; `node --test games/gta-melito/*.test.mjs games/gta-melito/survey/*.test.mjs`, test mirati, smoke browser, note nel `WORK_LOG.md` e screenshot quando cambia il rendering. **Non marcare [x] senza implementazione/PR integrata e verifiche.**
 

@@ -1,6 +1,6 @@
-# Area mercatale di Melito — DA ARREDARE
+# Area mercatale di Melito — PRIMA VERSIONE CON SEGNAPOSTO
 
-**Stato:** `da-arredare`. L'area è identificata e segnata nei dati (`data/market-area.json`), ma il gioco **non la usa ancora**: banchi, ombrelloni e venditori sono da creare (Q42). Richiesta del committente, 20/10/2026: «area mercatale di melito, identificala e segnala come zona diciamo da "arredare" … ci vogliono gli ombrelloni grandi che se ci passo sotto vanno in trasparenza e vedo la bancarella».
+**Stato:** `prima-versione-placeholder` (Q42, 20/10/2026). Il gioco usa l'area tramite `market.mjs`: banchi **segnaposto** dei 14 tipi del foglio, ombrelloni in pixel art procedurale che sfumano quando ci si passa sotto (R01), un venditore per banco e clienti che arrivano dalle vie, comprano ed escono. Il mercato si tiene il venerdì di gioco (il giorno 0 della partita è un venerdì), con montaggio 6:30–7:30, mercato 7:30–13:30 e smontaggio 13:30–14:30; `?mercato=1` lo monta ogni giorno per le prove. L'arte definitiva dei banchi si aggancia da `MARKET_ART` in `market.mjs`. Richiesta iniziale del committente, 20/10/2026: «area mercatale di melito, identificala e segnala come zona diciamo da "arredare" … ci vogliono gli ombrelloni grandi che se ci passo sotto vanno in trasparenza e vedo la bancarella».
 
 ## Dove si trova
 - **Mercato settimanale, rione 219:** l'isolato tra **Via Praga** (ovest), **Via Dublino** (nord), **Via Budapest** (est) e **Via Ginevra** (sud). Via Berlino prosegue a sud-est dall'angolo Budapest/Ginevra.

@@ -749,3 +749,44 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
   - prova di stress BF01 alle 8:00 (90+ s di guida automatica, due giri): compenetrazioni massime **0**, auto NPC ferme in vista 0, 17 urti nel secondo giro, fughe 2/2 e 6/6;
   - interruzioni con un mezzo lanciato sul marciapiede: chiacchiera Q11 sciolta ("pericolo"), nessuno resta in chiacchiera o in recupero dopo 13 s; oggetto perduto Q05: il proprietario salta durante la ricerca, l'evento si chiude "ritrovato", deviazione chiusa; porta Q03: sulla soglia solo uno sguardo, la soglia si completa, nessuno stato appeso; pendolare Q12: non salta, il ciclo prosegue (TO_BIKE → PULL_OUT → RIDE).
 - **Limiti:** non provato su Android reale; in camera Piazza Santo Stefano, Corso Europa e periferia restano poco popolate (i portoni Q03 esistono solo vicino a Via Roma, gli altri arrivano a piedi da fuori camera); vetrine verificate in Node, non viste nelle zone misurate; ore di punta senza meno auto in sosta (le baie BF02 restano uguali a ogni ora); gli attraversamenti ai semafori restano quelli di BF07; i tempi assoluti sono di un server carico, contano i confronti A/B.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q42 mercato settimanale: banchi segnaposto, ombrelloni, venditori e clienti
+- **Richiesta del committente (20/10):** «puoi anche mettere degli omini e dei placeholder, gli ombrelloni li puoi creare tu, solo per i banchi metti dei placeholder poi eventualmente si creano in pixelart».
+- **Nuovo `market.mjs`, collegato a `game.mjs`:**
+  - **Calendario:** `npc-agenda.mjs` conta i giorni (`npcDay`/`npcWeekday`) e il giorno 0 della partita è un venerdì, visibile nell'HUD.
+  - **Orari:** il venerdì (dato non verificato) montaggio 6:30–7:30, mercato 7:30–13:30, smontaggio 13:30–14:30, tutti graduali. Ogni venditore arriva fino a 45 minuti prima. `?mercato=1` per le prove.
+  - **Banchi:** 14 tipi dal foglio, disposti in 6 file deterministiche. Sulla mappa reale ne entrano 15–16.
+    - Misure reali × 1,9.
+    - Mai su edifici, carreggiata o linea dei pedoni (almeno 2,5 m dal bordo); mai su alberi, panchine, cassonetti, porte o baie. La tela sollevata non copre chiome né auto in sosta.
+    - Davanti a ogni banco restano due posti per i clienti.
+    - Sono segnaposto disegnati qui, messi in sprite una volta montati; `MARKET_ART` è il punto di aggancio per l'arte definitiva.
+    - Fuori orario restano i posteggi gialli numerati.
+  - **Ombrelloni:** pixel art procedurale in cache, nei colori del foglio.
+    - Forme: quadrati a 4 falde con spicchi a strisce che convergono al pomolo, mantovana smerlata, nervature e luce da nord-ovest; tondi a 8 spicchi; tenda rettangolare a strisce.
+    - Hanno ombra, palo e tela sollevata (2.5D); ondeggiano col vento e di più con la pioggia.
+    - **R01:** sfumano come i tetti (`easeRoofReveal`) quando il giocatore, a piedi o in auto, è sotto o accanto al banco.
+  - **Persone:** venditori e clienti usano gli sprite dei pedoni esistenti e vivono in `state.market.people`, fuori da `state.people`.
+    - Venditori: si girano verso il cliente, si muovono un poco dietro il bancone e lanciano voci rare se il giocatore è vicino.
+    - Clienti: fino a 16 che comprano (22 contando chi arriva o se ne va), di più la mattina tardi. Arrivano dai marciapiedi delle 4 vie, si muovono su una griglia di 1 m (A*), comprano a 1–3 banchi per 5–15 s ed escono.
+    - Compaiono e spariscono solo fuori vista; se l'area non si vede si portano subito allo stato dovuto.
+    - Sono nell'indice delle collisioni come pedoni e possono essere urtati (non letale).
+  - **Collisioni:** i banchi fermano il giocatore a piedi, i veicoli (con la regola di BF01: la mossa che esce dalla sovrapposizione è sempre permessa) e le spinte degli urti; gli ombrelloni no.
+- **Cache:** `game.mjs?v=162`, `npc-agenda.mjs?v=002` (in game e market), `market.mjs?v=001`.
+- **Test:**
+  - nuovo `q42-market.test.mjs`, 10 test: calendario, coerenza con CSV e `data/market-area.json`, posizionamento, banchi solidi e regola BF01, R01, percorsi, mattinata fuori vista, clienti in vista senza comparse, montaggio e smontaggio graduali, cablaggio;
+  - aggiornati `mercato-dati.test.mjs` (stato «prima-versione-placeholder») e `steering-wheel.test.mjs` (`updateHud` usa `npcWeekday`);
+  - suite **350/350**.
+- **Browser (Chrome headless, prove una alla volta con `nice`, server carico):**
+  - montaggio dalle 6:10: 0→14 banchi montati tra 6:32 e 7:02, fino a 12 banchi in montaggio contemporaneo;
+  - smontaggio dalle 13:15: graduale dalle 13:38;
+  - 3 minuti di giro a piedi dentro il mercato dalle 9:30: comparse e sparizioni in vista 0, persone dentro banchi o edifici 0, persone bloccate 0, 13 clienti arrivati a piedi, 33 acquisti, fino a 37 persone;
+  - R01 su PC e telefono: ombrellone 1,00 trasparente col giocatore davanti, 0 lontano, 1,00 con l'auto accanto; l'auto non entra nel banco e indietro è libera;
+  - foto alle 6:40, alle 10:30, alle 15:00, alle 21:30 con pioggia, alle 10:30 con pioggia e sul telefono;
+  - FPS alle 10:30 nel mercato: PC 50–60 contro 37–50 senza mercato, telefono 844×390 51–56 contro 55–59, misure molto rumorose per il carico. Durante le prove lunghe in parallelo, prima dell'avviso, gli FPS erano 12–27;
+  - prova di stress BF01, 90 s: compenetrazioni 0, NPC fermi in vista 0. Un incastro del pilota automatico vicino alla partenza, in Via Roma (1135, 1253), con un residente a 1,6 m: è il caso già noto di BF01, lontano dal mercato;
+  - 0 errori JS.
+- **Limiti:**
+  - entrano 15–16 dei 23 banchi indicativi;
+  - vie attorno non chiuse (R06), niente vigile (R11), suoni (R10) e pulizia finale (R14);
+  - la pensilina OSM resta un edificio pieno (R16);
+  - banchi segnaposto in attesa di pixel art, nessuna animazione dedicata di venditori e clienti;
+  - non provato su telefono reale.

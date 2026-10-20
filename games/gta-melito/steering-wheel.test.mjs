@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs';
 import {stepDriving} from './driving-controls.mjs';
 import {stepMotorcycle} from './motorcycles.mjs';
-import {formatNpcClock} from './npc-agenda.mjs';
+import {formatNpcClock,npcWeekday} from './npc-agenda.mjs';
 import {cityEventAction} from './city-events.mjs';
 import {nearestShop,boostSecondsLeft} from './local-shops.mjs';
 
@@ -102,12 +102,12 @@ test('real HUD switches visible controls between car, walking and interior scene
  assert.ok(start>0&&end>start);
  const update=new Function('state','document','pressed','nearestBankEntrance',
   'nearestEnterableVehicle','moveAxes','describeCameraZoom','interiorZoom',
-  'isMotorcycle','nearest','formatNpcClock','cityEventAction','nearestShop','boostSecondsLeft',[
+  'isMotorcycle','nearest','formatNpcClock','cityEventAction','nearestShop','boostSecondsLeft','npcWeekday',[
    'const $=id=>document.getElementById(id);',
    game.slice(start,end),
    'return updateHud;'
   ].join('\n'))(state,document,{run:false},()=>null,()=>null,
-  ()=>({x:0,y:0}),()=>'',()=>6.6,()=>false,()=>null,formatNpcClock,cityEventAction,nearestShop,boostSecondsLeft);
+  ()=>({x:0,y:0}),()=>'',()=>6.6,()=>false,()=>null,formatNpcClock,cityEventAction,nearestShop,boostSecondsLeft,npcWeekday);
  update();
  assert.ok(nodes.get('stage').classes.has('driving'),'in the car the wheel must appear');
  assert.ok(controls.classes.has('driving'),'in the car the pedals must appear');

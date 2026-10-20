@@ -16,9 +16,9 @@ function parseCsv(text){
  });
 }
 
-test('Q42 area mercatale: dati validi, da arredare, strade presenti nella mappa del gioco',async()=>{
+test('Q42 area mercatale: dati validi, prima versione con segnaposto, strade presenti nella mappa del gioco',async()=>{
  const [area,map]=await Promise.all([read('data/market-area.json'),read('data/melito-map.json')]).then(v=>v.map(JSON.parse));
- assert.equal(area.status,'da-arredare');assert.equal(area.used_by_game,false,'il gioco non la usa ancora');
+ assert.equal(area.status,'prima-versione-placeholder');assert.equal(area.used_by_game,true,'Q42: usata dal gioco tramite market.mjs');
  assert.equal(typeof area.verified.location,'boolean');assert.equal(area.verified.day,false,'il giorno non è confermato dal Comune');
  assert.ok(area.sources.length>=3&&area.sources.every(s=>/^https?:\/\//.test(s.url)&&s.consulted));
  assert.equal(area.polygon_game.length,4);assert.equal(area.polygon_wgs84.length,4);
