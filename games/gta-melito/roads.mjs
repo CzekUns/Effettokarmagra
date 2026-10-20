@@ -343,6 +343,24 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
  for(const agent of agents){
   const x=agent.x,y=agent.y;
   if(agent.impactTime>0){agent.braking=true;continue;}
+  // Vendors and junction-side washers hold an actual foot position, but after
+  // nonlethal impacts they step back towards it instead of snapping on screen.
+  if(agent.stationary){
+   const post=agent.post||agent.home;
+   if(post){
+    const dx=post.x-agent.x,dy=post.y-agent.y,d=Math.hypot(dx,dy);
+    if(d>.12){
+     const step=Math.min(d,dt*1.15),next={x:agent.x+dx*step/d,y:agent.y+dy*step/d,
+      a:Math.atan2(dy,dx)};
+     if((!world.validRecovery||world.validRecovery(next.x,next.y))&&
+       !trafficMoveBlocked(agent,next,'walk',index,agent)){
+      Object.assign(agent,next,{braking:false});
+      moveInCollisionIndex(index,agent,x,y);
+     }else agent.braking=true;
+    }else agent.braking=true;
+   }
+   continue;
+  }
   // Q12: commuters (walk ↔ scooter) are moved and recovered by npc-commute.mjs, not by the wanderer.
   if(agent.commuter)continue;
   // Q11: chatting with an acquaintance; npc-social.mjs turns them face to face and lets go.
