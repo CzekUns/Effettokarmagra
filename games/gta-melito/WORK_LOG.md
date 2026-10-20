@@ -852,3 +852,12 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** nuovo `q15-consolidamento.test.mjs` (4 test, falliscono senza le correzioni); resi tolleranti 1 controllo di BF09 e le versioni cache. Suite completa a fine lavoro.
 - **Cache:** `game.mjs?v=168`, `roads.mjs?v=154`, `junctions.mjs?v=002`, `camera-zoom.mjs?v=101`, `npc-commute.mjs?v=009`, `npc-density.mjs?v=002`, `npc-reactions.mjs?v=002`, `traffic-light-art.mjs?v=002`, `window-washers.mjs?v=002`, `street-professions.mjs?v=005`.
 - **Residui (Q15 resta `[ ]`):** sagome OSM sulla carreggiata visuale fuori zona (Via Papa Giovanni XXIII, Via Lago di Como), un'auto parcheggiata dentro una sagoma a (1308,1305), pedoni rasenti la chiesa nella sagoma, raggio di salita in auto di 9,5 m, telecamera veloce nelle inversioni a U. Non eseguiti per la regola di prove brevi: notte/pioggia e telefono completi, partita integrata di 5 minuti. Android reale non disponibile.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q22 semafori, precedenze, strisce e frecce: chiusi i residui
+- **Scooter del pendolare (Q12):** freccia prima delle svolte, come le auto (`commuteTurnSignal`, `npc-commute.mjs`); disegnata anche sui mezzi della lista parcheggiati (`game.mjs`).
+- **Strisce senza semaforo:** dopo 1 s al cordolo il pedone chiede la precedenza (`npc-reactions.mjs`, `crossRequests`); l'auto NPC che può fermarsi comodamente si ferma prima delle strisce (`crosswalkYield`, `junctions.mjs`, applicato in `stepAgents`); dopo 6 s per lo stesso pedone riparte e non gli cede più; le auto che cedono non chiudono il varco del pedone.
+- **Svolte interne dei pedoni:** all'angolo dell'isolato, senza attraversare la traversa (`innerTurn`, decisione 18 m prima della fine del marciapiede, `roads.mjs`).
+- **Cache:** `game.mjs?v=177`, `roads.mjs?v=158`, `junctions.mjs?v=003`, `npc-reactions.mjs?v=004`, `npc-commute.mjs?v=012`, `traffic-light-art.mjs?v=004`, `window-washers.mjs?v=004`.
+- **Test:** `q22-incroci.test.mjs` (6), suite 416/416; browser 25 s a 45 FPS, 9 svolte interne, 0 errori JS.
+- **Non eseguito:** precedenza alle strisce e freccia del pendolare non osservate a vista nel browser (solo Node); niente prove lunghe (regola test brevi); Android reale non disponibile.
+

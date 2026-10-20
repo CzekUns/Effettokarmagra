@@ -4,7 +4,7 @@
  * No new map features, traffic signal claims or synthetic street geometry. */
 import {MARKET_VARIANTS} from './car-sprites.mjs?v=109';
 import {vehicleHitsPedestrian} from './traffic-collision.mjs?v=128';
-import {washerSpots} from './window-washers.mjs?v=002';
+import {washerSpots} from './window-washers.mjs?v=004';
 export const TRAFFIC_APES=Object.freeze([
  'ape-azzurra-vuota','ape-azzurra-ferro','ape-verde-vuota','ape-verde-ferro'
 ]);
