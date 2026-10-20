@@ -23,7 +23,7 @@ import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reac
 import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=005';
 import {trafficTargetAt} from './traffic-rush.mjs?v=001';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
-import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker} from './traffic-collision.mjs?v=130';
+import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker,addToCollisionIndex} from './traffic-collision.mjs?v=130';
 import {buildParkingBays,bayOffset,fitsParkingBay,nearestFreeStalls,parkInStall,insideParkingStrip,drawParkingBays} from './parking-bays.mjs?v=001';
 import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
 import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=003';
@@ -65,6 +65,7 @@ import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,
 import {createCarRadio} from './car-radio.mjs?v=003';
 import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=001';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
+import {PASSENGER_RULES,seatCapacity,ensureSeats,occupantsOf,freeSeat,boardPassenger,alightPassenger,hitchhikersNear,liftCandidate,liftDestination,alightSpot,doorSpots,trafficOccupants,lookOf,drawCabinOccupants} from './passengers.mjs?v=001';
 const $=id=>document.getElementById(id);
 // Q09: last radio status, read by the city sound to duck engines while a station plays.
 let radioStatus='off';
@@ -879,6 +880,42 @@ function buyFromShop(offerId){
  renderShop();updateHud();
 }
 function closeShop(){state.shopOpen=null;$('shop-panel').hidden=true;canvas.focus?.({preventScroll:true});updateHud();}
+// Q21: passaggi. Un passante anonimo «autostoppista» accanto al mezzo fermo sale su un posto libero
+// (E · DAI UN PASSAGGIO); con qualcuno a bordo la prima E lo fa scendere, con la mancia se è arrivato.
+const liftPlace=(id,t,side=1)=>{const at=lanePosition(state.graph,id,t,'walk',side);return at&&canStand(at.x,at.y)?at:null;};
+const liftSkip=a=>state.events?.active?.owner===a;
+function liftHere(vehicle){return liftCandidate(state.people,vehicle,{speed:vehicle.speed||0,skip:liftSkip});}
+function liftBubble(text){state.liftBubble={text,until:state.clock+3.4};}
+function giveLift(vehicle,npc){
+ const seat=boardPassenger(vehicle,npc);
+ if(seat<0)return false;
+ const i=state.people.indexOf(npc);if(i>=0)state.people.splice(i,1);
+ npc.look=lookOf(npc,seat);
+ const dest=liftDestination(state.graph,vehicle,npc.seed|0,{valid:canStand,place:liftPlace});
+ npc.liftTo=dest;
+ liftBubble(dest?'PORTAMI · '+PASSENGER_RULES.tip+' €\n'+(dest.name||'QUELLA STRADA').toUpperCase():'GRAZIE DEL PASSAGGIO!');
+ return true;
+}
+function dropPassengers(vehicle){
+ let dropped=0,tip=0;
+ const blocked=(x,y)=>!!(state.dynamicCollision&&collidesWithTraffic({x,y,a:0},'walk',state.dynamicCollision,vehicle));
+ for(let seat=0;seat<(vehicle.seats||[]).length;seat++){
+  const npc=vehicle.seats[seat];if(!npc)continue;
+  // Out of the door (passenger side first), then back to the nearest pavement on foot.
+  const door=doorSpots(vehicle).find(q=>canStand(q.x,q.y)&&!blocked(q.x,q.y));
+  const lane=door&&alightSpot(state.graph,door,{place:liftPlace,valid:canStand});
+  if(!door||!lane){liftBubble('QUI NON POSSO SCENDERE');break;}
+  alightPassenger(vehicle,seat);
+  Object.assign(npc,{x:door.x,y:door.y,a:door.a,edge:lane.edge,t:lane.t,side:lane.side,corner:null,wait:.6,stalled:0,
+   braking:true,prevX:door.x,prevY:door.y,prevA:door.a,frozen:false,impactTime:0,needsRoutineRecovery:true,recoverySeconds:0});
+  state.people.push(npc);if(state.dynamicCollision)addToCollisionIndex(state.dynamicCollision,npc);
+  if(npc.liftTo&&Math.hypot(vehicle.x-npc.liftTo.x,vehicle.y-npc.liftTo.y)<=PASSENGER_RULES.arrive)tip+=PASSENGER_RULES.tip;
+  npc.liftTo=null;npc.noLift=true;dropped++;
+ }
+ if(tip&&state.progress){state.progress.money+=tip;saveProgress(localStorage,state.progress);refreshCampaign();}
+ if(dropped)liftBubble(tip?'GRAZIE! ECCO '+tip+' €':'SCENDO QUI. GRAZIE!');
+ return dropped;
+}
 function toggleVehicle(){
  if(!state.ready)return;
  if(state.shopOpen){closeShop();return;}
@@ -918,6 +955,13 @@ function toggleVehicle(){
    if(result.ok){saveProgress(localStorage,state.progress);refreshCampaign();}
    message(repairMessage(result),'OFFICINA DI GIOCO','MECCANICO');updateHud();return;
   }
+  // Q21: from a (nearly) stopped vehicle, E first takes on someone asking for a lift, then lets the
+  // passengers out; only with nobody on board it gets the player out.
+  if(Math.abs(vehicle.speed||0)<=PASSENGER_RULES.stopSpeed){
+   const hitch=liftHere(vehicle);
+   if(hitch&&giveLift(vehicle,hitch)){updateHud();return;}
+   if(occupantsOf(vehicle).length){dropPassengers(vehicle);updateHud();return;}
+  }else if(occupantsOf(vehicle).length){$('street').textContent='FERMATI PER FAR SCENDERE IL PASSEGGERO';return;}
   if(bike&&Math.abs(vehicle.speed||0)>2.3){
    $('street').textContent='FERMATI PRIMA DI SCENDERE DALLA MOTO';return;
   }
@@ -1225,7 +1269,9 @@ function updateHud(){
  }
  const boostLeft=boostSecondsLeft(state.boost,state.clock);
  const myCar=p.car>=0?state.cars[p.car]:null,dmg=myCar?DAMAGE_LABEL[damageLevel(myCar)]:'';
- $('vehicle').textContent=p.car>=0?(isMotorcycle(state.cars[p.car])?'MOTO · ':'AUTO · ')+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H'+(dmg?' · '+dmg:''):'A PIEDI'+(boostLeft?' · CARICO '+boostLeft+' S':'');
+ const ride=myCar,aboard=ride?occupantsOf(ride).length:0;
+ const liftAction=ride&&Math.abs(ride.speed||0)<=PASSENGER_RULES.stopSpeed?(liftHere(ride)?'DAI UN PASSAGGIO':aboard?'FAI SCENDERE':null):null;
+ $('vehicle').textContent=p.car>=0?(isMotorcycle(state.cars[p.car])?'MOTO · ':'AUTO · ')+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H'+(dmg?' · '+dmg:'')+(aboard?' · '+aboard+' A BORDO':''):'A PIEDI'+(boostLeft?' · CARICO '+boostLeft+' S':'');
  const n=state.roadGrid?nearest(p.x,p.y,70):null;
  if(n&&n.road.n)$('street').textContent=n.road.n.toUpperCase();
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
@@ -1235,12 +1281,12 @@ function updateHud(){
  const enterable=p.car<0?nearestEnterableVehicle(state.cars,p):null;
  // Q23: fermo davanti all'officina di gioco con il mezzo danneggiato, E ripara (a pagamento).
  const repair=myCar&&nearWorkshop(state.workshop,myCar)&&Math.abs(myCar.speed||0)<1.5?repairCost(myCar):0;
- $('action').textContent=eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':repair?'RIPARA · '+repair+' €':p.car>=0?'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ $('action').textContent=eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':repair?'RIPARA · '+repair+' €':p.car>=0?liftAction||'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
  // Q15: on foot with nothing in reach the touch button is shown dimmed (it used to invite to get into a
  // car that was not there; the tap then only said to get closer to a vehicle).
  const idle=p.car<0&&!eventAction&&!shopNear&&!bank&&!enterable;
  $('action').classList.toggle('idle',idle);$('action').setAttribute('aria-disabled',idle?'true':'false');
- boardPrompt(p.car>=0?(repair?'RIPARA · '+repair+' € · OFFICINA DI GIOCO':''):eventAction||(shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
+ boardPrompt(p.car>=0?(repair?'RIPARA · '+repair+' € · OFFICINA DI GIOCO':liftAction||''):eventAction||(shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
@@ -1259,9 +1305,13 @@ function boardPrompt(label){
 function drawLine(p){c.beginPath();c.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)c.lineTo(p[i],p[i+1]);}
 function poly(p){drawLine(p);c.closePath();}
 function drawCar(x,y,a,type,drive=false,model=null,vehicle=null){
+ // Q21: who is on board — the player's real passengers, or the stable occupants of a traffic NPC.
+ const traffic=!!vehicle&&vehicle.edge!=null&&!vehicle.vendorStand&&!vehicle.npcRider;
+ const riders=drive?occupantsOf(vehicle).map(n=>({...lookOf(n,n.aboard.seat),seat:n.aboard.seat})):
+  traffic?trafficOccupants(vehicle):[];
  if(isMotorcycle(vehicle)){
   drawMotorcycle(c,x,y,a,model,{rider:drive||!!vehicle.rider,focused:drive,
-   jacket:drive?'#b7343b':vehicle.kind%3===0?'#406b87':'#86896e'});
+   jacket:drive?'#b7343b':vehicle.kind%3===0?'#406b87':'#86896e',pillion:(drive||vehicle.rider)?riders[0]||null:null});
   return;
  }
  // Q24: the player's car "lifts" a little over a pothole or a bump (top-down: a small scale pulse).
@@ -1270,6 +1320,7 @@ function drawCar(x,y,a,type,drive=false,model=null,vehicle=null){
  if(!drawCarSprite(c,x,y,a,model,drive))drawCityCar(c,x,y,a,type,drive,state.clock);
  // Q23: graffi, ammaccature, vetro incrinato e fumo, nelle coordinate dello sprite (seguono la scala).
  if(vehicle?.damage)drawVehicleDamage(c,vehicle,x,y,a,carDrawSize(model),state.clock);
+ if(drive||traffic)drawCabinOccupants(c,x,y,a,vehicle,riders,{driver:true,driverLook:drive?{hair:'#3a2a22',jacket:'#b7343b'}:null});
  if(lift!==1)c.restore();
 }
 function drawParkedMotorcycleHints(){
@@ -1291,6 +1342,36 @@ function drawParkedMotorcycleHints(){
   c.strokeStyle='#ecd18e';c.lineWidth=.17;c.strokeRect(v.x-width/2,v.y-8.9,width,3.25);
   c.fillStyle='#ffe6a7';c.fillText(text,v.x,v.y-6.55);
  }
+ c.restore();
+}
+// Q21: «PASSAGGIO?» sopra chi lo chiede vicino al mezzo del giocatore, il fumetto del passeggero
+// e la sua meta (anello giallo in strada e punto sulla minimappa).
+function liftTag(x,y,text,focus=false){
+ // One or two short lines (the passenger's street on the second one), never a long banner.
+ const lines=String(text).split('\n').map(l=>l.length>26?l.slice(0,25)+'…':l);
+ c.font='bold 2.15px monospace';c.textAlign='center';
+ const width=Math.max(...lines.map(l=>l.length))*1.35+2.2,height=1.1+lines.length*2.6;
+ c.fillStyle=focus?'#2c2a12f0':'#182725e8';c.fillRect(x-width/2,y,width,height);
+ c.strokeStyle='#ecd18e';c.lineWidth=.17;c.strokeRect(x-width/2,y,width,height);
+ c.fillStyle='#ffe6a7';lines.forEach((l,i)=>c.fillText(l,x,y+2.35+i*2.6));
+}
+function drawLiftHints(){
+ const p=state.player;
+ if(p.car<0||state.zoom<2.5||state.bankInterior)return;
+ const v=state.cars[p.car];if(!v)return;
+ c.save();
+ if(freeSeat(v)>=0&&Math.abs(v.speed||0)<8){
+  const chosen=liftHere(v);
+  for(const {npc} of hitchhikersNear(state.people,v,PASSENGER_RULES.hintRange,liftSkip).slice(0,2))
+   liftTag(npc.x,npc.y-8.4,'PASSAGGIO?'+(npc===chosen?' · E':''),npc===chosen);
+ }
+ const going=occupantsOf(v).map(n=>n.liftTo).find(Boolean);
+ if(going){
+  const pulse=1+.12*Math.sin(state.clock*4);
+  c.strokeStyle='#f6d36a';c.lineWidth=.45;c.setLineDash([1.2,.9]);
+  c.beginPath();c.arc(going.x,going.y,4.2*pulse,0,Math.PI*2);c.stroke();c.setLineDash([]);
+ }
+ if(state.liftBubble&&state.liftBubble.until>state.clock)liftTag(v.x,v.y-10.5,state.liftBubble.text,true);
  c.restore();
 }
 function drawPlayer(){
@@ -1606,7 +1687,7 @@ function draw(dt=0){
  for(const t of state.waterTowers||[])drawWaterTowerLight(c,t,{darkness:state.light?.darkness||0,clock:state.clock,alpha:state.towerReveal.get(t.id)??1});
  if(weather&&weather.rain>.02)drawRain(c,state.clock,canvas.width,canvas.height,weather.rain);
  drawCityEventOverlay(c,state.events,state.player.car<0?state.player:null,state.zoom);
- drawParkedMotorcycleHints();
+ drawParkedMotorcycleHints();drawLiftHints();
  for(const bank of state.bankEntrances)if(bank.x>=x0&&bank.x<=x1&&bank.y>=y0&&bank.y<=y1)drawBankEntrance(c,bank,state.clock);
  // BF13: foto aerea di confronto sopra tutta la scena, in trasparenza (spenta: nessun costo).
  if(state.satellite?.enabled)state.satellite.draw(c,[x0,y0,x1,y1],state.zoom);
@@ -1681,6 +1762,9 @@ function drawMini(){
  r.clearRect(0,0,168,142);r.drawImage(state.mapCanvas,0,0);
  if(state.progress)drawMinimapLandmarks(r,state.landmarks,activeTarget(state.progress,state.landmarks),state.mini);
  const {k,ox,oy}=state.mini,p=state.player,x=ox+p.x*k,y=oy+p.y*k;
+ // Q21: meta del passeggero a bordo.
+ const ride=p.car>=0?state.cars[p.car]:null,going=ride?occupantsOf(ride).map(n=>n.liftTo).find(Boolean):null;
+ if(going){r.fillStyle='#f6d36a';r.strokeStyle='#1e2920';r.lineWidth=1.2;r.beginPath();r.arc(ox+going.x*k,oy+going.y*k,3.2,0,Math.PI*2);r.fill();r.stroke();}
  r.fillStyle='#ffce66';r.beginPath();r.arc(x,y,4,0,Math.PI*2);r.fill();
  r.lineWidth=1.4;r.strokeStyle='#1e2920';r.stroke();
  r.fillStyle='#fff0b9';r.font='bold 8px monospace';r.fillText('MELITO',5,10);
