@@ -171,8 +171,13 @@ function takeTurn(b,action,random=Math.random){
   emit("move",who,attacker.name+" usa "+m.name+"!",{move:m.id,type:m.type,tier:m.tier});
   let accuracy=m.accuracy-(attacker.status.impiastricciato?18:0);
   if(roll(random)*100>=accuracy){emit("miss",who,"Il colpo va a vuoto!");return;}
-  const prev=target.hp,power=previewAttack(b,m,who),damageBeforeGuard=cap(power.min+Math.floor(roll(random)*5),1,99);
+  // Colpo critico: lo stesso tiro che decide la variazione del danno; sopra 0,92 (8%) il colpo entra
+  // al massimo e fa ×1,5. Nessun tiro in più, quindi le sequenze casuali di prima restano uguali.
+  const prev=target.hp,power=previewAttack(b,m,who),r=roll(random),critical=r>=.92&&!target.guarding;
+  let damageBeforeGuard=cap(power.min+Math.floor(r*5),1,99);
+  if(critical)damageBeforeGuard=cap(Math.round(damageBeforeGuard*1.5),1,99);
   const damage=target.guarding?Math.max(1,Math.round(damageBeforeGuard*.45)):damageBeforeGuard;
+  if(critical)emit("critical",who,"Colpo critico!");
   target.hp=cap(target.hp-damage,0,target.maxHp);
   let msg=target.name+" perde "+(prev-target.hp)+" PS.";
   if(target.guarding)msg+=" Difesa riuscita!";
