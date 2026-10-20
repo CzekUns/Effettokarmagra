@@ -824,3 +824,11 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **HUD mobile:** 7 viewport in orizzontale con tocco emulato. 0 sovrapposizioni e 0 elementi fuori schermo, a piedi e alla guida; ordine pedali BF06 rispettato. Guida con tocchi veri e multi-touch volante+gas; START apre la pausa; verticale con «RUOTA LO SCHERMO»; desktop BF11 senza scorrimento. FPS 12–35 con il server carico.
 - **Test:** nuovo `q14-radio.test.mjs` (5 test). **Cache:** `car-radio.mjs?v=003`, `game.mjs?v=165`.
 - **Non eseguito:** Android reale (checklist in TODO sotto Q14), ascolto effettivo dell'audio, consenso delle emittenti.
+
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q16 Piaggio Ape Car in circolazione
+- **Verificato cosa c'era:** Ape del mercato nel traffico, profilo di guida e sagoma Ape, una sola Ape parcheggiata con uno sprite più lungo e poco riconoscibile.
+- **Aggiunto:** atlante `ape-classica-16-rgba.png` (8 tinte pulite + 8 vissute, ricolorazione della sola carrozzeria delle Ape approvate, trasparenza reale verificata cella per cella); Ape Car parcheggiate (`k%9===8`) e nel traffico NPC (`i%11===8`); sterzata più stretta da triciclo; sonde e sagoma del giocatore a misura di Ape (`isApe`/`bodyShape`/`offStreetExcess`). Auto, moto e liste esistenti invariate.
+- **Cache:** `car-sprites.mjs?v=109`, `vehicle-handling.mjs?v=003` e a cascata `roads 154`, `motorcycles 006`, `driving-controls 098`, `city-audio 004`, `street-professions 005`, `npc-commute 009`, `npc-reactions 002`, `npc-density 002`, `bank-interior 008`, `game.mjs?v=169`.
+- **Prove:** test Node mirati verdi e suite completa; browser breve a circa 48 FPS (salita, guida, curva, retro, urto senza compenetrazione), 0 errori JS.
+- **Non eseguito:** guida touch specifica dell'Ape, telefono reale.
