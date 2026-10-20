@@ -92,13 +92,18 @@ export function carSpriteReady(model){
  if(CAR_ATLAS_VARIANTS[model]||EXTRA_CAR_VARIANTS[model])return !!(img?.complete&&img.naturalWidth===160&&img.naturalHeight===240);
  return !!(img?.complete&&img.naturalWidth>0&&img.naturalHeight>0);
 }
+// Q23: dimensioni disegnate [larghezza,lunghezza] dello sprite, usate anche dai segni dei danni.
+export function carDrawSize(model){
+ const variant=CAR_ATLAS_VARIANTS[model]||EXTRA_CAR_VARIANTS[model]||MARKET_VARIANTS[model]||APE_CAR_VARIANTS[model];
+ return MODEL_DRAW_SIZE[variant?.model||model]||(model==='panda-modern-white'?[5.5,8.75]:[5.1,8.55]);
+}
 export function drawCarSprite(ctx,x,y,angle,model,focused=false){
  if(!model)return false;
  if(!attempted)loadCarSprites();
  const img=loadedImage(model);
  if(!carSpriteReady(model))return false;
  const variant=CAR_ATLAS_VARIANTS[model]||EXTRA_CAR_VARIANTS[model]||MARKET_VARIANTS[model]||APE_CAR_VARIANTS[model];
- const [width,length]=MODEL_DRAW_SIZE[variant?.model||model]||(model==='panda-modern-white'?[5.5,8.75]:[5.1,8.55]);
+ const [width,length]=carDrawSize(model);
  ctx.save();ctx.translate(x,y);ctx.rotate(angle+Math.PI/2);ctx.imageSmoothingEnabled=false;
  if(variant){
   const {width:sw,height:sh,columns}=MARKET_VARIANTS[model]||APE_CAR_VARIANTS[model]?MARKET_ATLAS_CELL:CAR_ATLAS_CELL;

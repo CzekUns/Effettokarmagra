@@ -34,12 +34,13 @@ import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentSt
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
 import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=131';
 import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
-import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS,CAR_PARKED_SPRITE_IDS,APE_CAR_IDS} from './car-sprites.mjs?v=109';
+import {loadCarSprites,drawCarSprite,carDrawSize,CAR_TRAFFIC_SPRITE_IDS,CAR_PARKED_SPRITE_IDS,APE_CAR_IDS} from './car-sprites.mjs?v=110';
+import {DAMAGE_RULES,DAMAGE_LABEL,addDamage,damageLevel,damagedProfile,repairCost,payRepair,repairMessage,healOutOfView,drawVehicleDamage,placeWorkshop,nearWorkshop,drawWorkshop} from './vehicle-damage.mjs?v=001';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
 import {loadFryerSprite} from './friggitore-sprites.mjs?v=001';
 import {loadProfessionSprites} from './profession-sprites.mjs?v=001';
-import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=005';
+import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=006';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
@@ -264,7 +265,9 @@ function stepMelitoMarket(dt){
 // BF02: the parking strip between lane and pavement, rebuilt with the road widths.
 function createParkingBays(){
  const keepClear=[...(state.shops||[]).map(s=>({x:s.x,y:s.y,r:6,why:'ingresso'})),
-  ...(state.bankEntrances||[]).map(b=>({x:b.x,y:b.y,r:9,why:'ingresso'}))];
+  ...(state.bankEntrances||[]).map(b=>({x:b.x,y:b.y,r:9,why:'ingresso'})),
+  // Q23: davanti all'officina di gioco niente stalli, così ci si ferma per riparare.
+  ...(state.workshop?[{x:state.workshop.roadX,y:state.workshop.roadY,r:10,why:'officina'}]:[])];
  state.parkingBays=buildParkingBays(state.graph,{keepClear,blocked:pose=>carBlocked(pose.x,pose.y,pose.a,-1,{vehicleType:'car'})});
  state.bayGrid=makeIndex(state.parkingBays.strips);
 }
@@ -492,7 +495,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  // pavement; where there is no real room there is no parking (fewer vehicles, not worse ones).
  // Bollards of a previous load must not shape the stalls: street objects are placed afterwards.
  createEnclosures();
- state.cars=[];state.streetObjects=null;createParkingBays();
+ state.cars=[];state.streetObjects=null;createWorkshop();createParkingBays();
  const free=(x,y,options)=>nearestFreeStalls(state.parkingBays,x,y,state.cars,vehiclesOverlap,options)[0]||null;
  const starterStall=free(point.x,point.y,{radius:60})||free(point.x,point.y);
  const nearCar=starterStall?parkInStall({type:0,model:'panda-modern-white'},starterStall):
@@ -690,6 +693,11 @@ function impactTraffic(dt){
    if(!sweptVehicleContact(source,target,from,to))continue;
    const hit=applyNonlethalImpact({...source,speed},target,speed);
    if(!hit)continue;
+   // Q23: un urto tra veicoli lascia segni su entrambi (pedoni esclusi: nessun danno al mezzo).
+   if(target!==p&&(target.body==='car'||state.cars.includes(target))){
+    addDamage(target,speed,source,{clock:state.clock});
+    addDamage(source,speed,target,{factor:DAMAGE_RULES.strikerFactor,clock:state.clock});
+   }
    if(isPlayerCar)slowImpactSource(source,speed);
    if(++hits>=3)break;
   }
@@ -699,6 +707,14 @@ function impactTraffic(dt){
 // BF03: only vehicles really on their way, each with its own model from the start, so the spawn
 // checks use its whole body: clear of parked vehicles, of the player (on foot or at the wheel),
 // of walls and of the junctions (roads.mjs), never on a street that only ends at a one-way terminal.
+// Q23: officina di GIOCO (punto simulato, nessuna attività reale) sul marciapiede di Via Roma.
+function createWorkshop(){
+ const border=toRing(state.map.border);
+ state.workshop=placeWorkshop((x,y)=>{const r=nearest(x,y,30,state.roads,true);return r?{x:r.x,y:r.y,a:r.a,width:visualRoadWidth(r.road)}:null;},
+  (x,y)=>validWalk(x,y)&&!buildingAt(x,y)&&inside([x,y],border)&&
+   (()=>{const r=nearest(x,y,24,state.roads,true);return !r||r.distance>visualRoadWidth(r.road)/2+.8;})(),
+  undefined);
+}
 // BF07: semafori SIMULATI (nessun dato OSM): pali sul marciapiede degli incroci principali.
 function prepareSignals(){
  const border=toRing(state.map.border);
@@ -742,6 +758,9 @@ function updateTraffic(dt){
  state.trafficClock+=dt;
  if(state.trafficClock<.05)return;
  const elapsed=.05;state.trafficClock-=elapsed;
+ // Q23: i mezzi NPC danneggiati tornano integri solo dopo un po' fuori vista; quello del giocatore no.
+ state.damageClock=(state.damageClock||0)+elapsed;
+ if(state.damageClock>=.5){healOutOfView([...state.traffic,...state.cars],visibleBounds(),state.damageClock,state.player.car>=0?state.cars[state.player.car]:null);state.damageClock=0;}
  for(const door of state.doors||[])if(door.open>0)door.open=Math.max(0,door.open-elapsed);
  for(const agent of [...state.people,...state.traffic]){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
@@ -862,6 +881,12 @@ function toggleVehicle(){
  }
  if(p.car>=0){
   const vehicle=state.cars[p.car],bike=isMotorcycle(vehicle);
+  // Q23: all'officina di gioco la prima E ripara il mezzo danneggiato (saldo della campagna Q06).
+  if(nearWorkshop(state.workshop,vehicle)&&repairCost(vehicle)>0&&Math.abs(vehicle.speed||0)<1.5){
+   const result=payRepair(state.progress,vehicle);
+   if(result.ok){saveProgress(localStorage,state.progress);refreshCampaign();}
+   message(repairMessage(result),'OFFICINA DI GIOCO','MECCANICO');updateHud();return;
+  }
   if(bike&&Math.abs(vehicle.speed||0)>2.3){
    $('street').textContent='FERMATI PRIMA DI SCENDERE DALLA MOTO';return;
   }
@@ -1004,7 +1029,7 @@ function tick(dt){
   }else{
    advanceNonlethalImpact(car,dt,canKnockbackMove);
    // Q10: each model has its own handling; wet roads (Q08) brake a little longer.
-   ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt,pressed.brake,handlingProfile(car),state.weather?.wetness||0));
+   ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt,pressed.brake,damagedProfile(handlingProfile(car),car),state.weather?.wetness||0));
    const road=nearest(car.x,car.y,25,state.roads,true);
    const turn=guideIntersection({x:car.x,y:car.y,angle,speed},axes.x,road,
     state.graph,state.turnGuides,car.turnGuide||null,dt);
@@ -1019,7 +1044,7 @@ function tick(dt){
   car.a=angle;
   // Q10: the body points where the wheel says, but it travels where grip allows (recoverable slides).
   const grip=car.recoil>0?{travel:car.a,slip:0,speed,sliding:false}:
-   applyGrip(car,{angle:car.a,speed,dt,handbrake:pressed.handbrake,profile:handlingProfile(car),wet:state.weather?.wetness||0,steer:axes.x});
+   applyGrip(car,{angle:car.a,speed,dt,handbrake:pressed.handbrake,profile:damagedProfile(handlingProfile(car),car),wet:state.weather?.wetness||0,steer:axes.x});
   car.travel=grip.travel;car.slip=grip.slip;speed=grip.speed;
   if(grip.sliding&&speed>8)addSkidMarks(car);
   const nx=car.x+Math.cos(car.travel)*speed*dt,ny=car.y+Math.sin(car.travel)*speed*dt;
@@ -1031,8 +1056,14 @@ function tick(dt){
    {x:nx,y:ny,a:car.a,vehicleType:isMotorcycle(car)?'motorcycle':'car'},
    'car',state.dynamicCollision,car);
   if(touched&&Math.abs(speed)>=IMPACT_MIN_SPEED)
-   if(applyNonlethalImpact({...car,speed},touched,Math.abs(speed)))
+   if(applyNonlethalImpact({...car,speed},touched,Math.abs(speed))){
     speed*=.65;
+    // Q23: danni a chi è colpito e, meno, all'auto del giocatore (solo tra veicoli).
+    if(touched.body==='car'||state.cars.includes(touched)){
+     addDamage(touched,Math.abs(speed)/.65,car,{clock:state.clock});
+     addDamage(car,Math.abs(speed)/.65,touched,{factor:DAMAGE_RULES.strikerFactor,clock:state.clock});
+    }
+   }
   if(!carBlocked(nx,ny,car.a,p.car)){
    car.x=nx;car.y=ny;state.distance+=Math.abs(speed*dt);
   }else{
@@ -1041,6 +1072,8 @@ function tick(dt){
    const way=Math.abs(speed)>.3&&state.dynamicCollision&&trafficMoveBlocker({...car,vehicleType:type},
     {x:nx,y:ny,a:car.a,vehicleType:type,model:car.model},'car',state.dynamicCollision,car);
    if(way&&way.body==='car'&&way.edge!=null)way.yieldToPlayer=1.5;
+   // Q23: contro muri, paletti e bordi l'auto si ammacca dal lato che urta.
+   if(!way&&Math.abs(speed)>=IMPACT_MIN_SPEED)addDamage(car,Math.abs(speed),{x:car.x+(nx-car.x)*40,y:car.y+(ny-car.y)*40},{factor:DAMAGE_RULES.wallFactor,clock:state.clock});
    if(car.recoil>0){speed=0;car.recoil=0;car.turnGuide=null;}
    else{
     const bounce=reboundCar(car,speed,previousAngle,(x,y,a)=>carBlocked(x,y,a,p.car));
@@ -1116,7 +1149,7 @@ function compareRoadWidths(){
  setRoadWidthMode(getRoadWidthMode()==='before'?'wide':'before');
  // Every consumer shares the same module instance, including roads/traffic,
  // street furniture, crosswalks and building-side storefront placements.
- state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y),laneClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createEnclosures();createParkingBays();
+ state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y),laneClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createEnclosures();createWorkshop();createParkingBays();
  state.traffic=createTraffic(state.npcClockMinutes);prepareSignals();
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
@@ -1145,7 +1178,8 @@ function updateHud(){
   $('camera-mode').textContent='INTERNO · '+interiorZoom().toFixed(1)+'×';return;
  }
  const boostLeft=boostSecondsLeft(state.boost,state.clock);
- $('vehicle').textContent=p.car>=0?(isMotorcycle(state.cars[p.car])?'MOTO · ':'AUTO · ')+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H':'A PIEDI'+(boostLeft?' · CARICO '+boostLeft+' S':'');
+ const myCar=p.car>=0?state.cars[p.car]:null,dmg=myCar?DAMAGE_LABEL[damageLevel(myCar)]:'';
+ $('vehicle').textContent=p.car>=0?(isMotorcycle(state.cars[p.car])?'MOTO · ':'AUTO · ')+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H'+(dmg?' · '+dmg:''):'A PIEDI'+(boostLeft?' · CARICO '+boostLeft+' S':'');
  const n=state.roadGrid?nearest(p.x,p.y,70):null;
  if(n&&n.road.n)$('street').textContent=n.road.n.toUpperCase();
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
@@ -1153,12 +1187,14 @@ function updateHud(){
  const eventAction=p.car<0?cityEventAction(state.events,p):null;
  const shopNear=p.car<0&&!eventAction?nearestCounter(p):null;
  const enterable=p.car<0?nearestEnterableVehicle(state.cars,p):null;
- $('action').textContent=eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ // Q23: fermo davanti all'officina di gioco con il mezzo danneggiato, E ripara (a pagamento).
+ const repair=myCar&&nearWorkshop(state.workshop,myCar)&&Math.abs(myCar.speed||0)<1.5?repairCost(myCar):0;
+ $('action').textContent=eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':repair?'RIPARA · '+repair+' €':p.car>=0?'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
  // Q15: on foot with nothing in reach the touch button is shown dimmed (it used to invite to get into a
  // car that was not there; the tap then only said to get closer to a vehicle).
  const idle=p.car<0&&!eventAction&&!shopNear&&!bank&&!enterable;
  $('action').classList.toggle('idle',idle);$('action').setAttribute('aria-disabled',idle?'true':'false');
- boardPrompt(p.car>=0?'':eventAction||(shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
+ boardPrompt(p.car>=0?(repair?'RIPARA · '+repair+' € · OFFICINA DI GIOCO':''):eventAction||(shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
@@ -1183,6 +1219,8 @@ function drawCar(x,y,a,type,drive=false,model=null,vehicle=null){
   return;
  }
  if(!drawCarSprite(c,x,y,a,model,drive))drawCityCar(c,x,y,a,type,drive,state.clock);
+ // Q23: graffi, ammaccature, vetro incrinato e fumo, nelle coordinate dello sprite (seguono la scala).
+ if(vehicle?.damage)drawVehicleDamage(c,vehicle,x,y,a,carDrawSize(model),state.clock);
 }
 function drawParkedMotorcycleHints(){
  // Only near the walking player: avoid labeling the entire street scene.
@@ -1462,6 +1500,7 @@ function draw(dt=0){
  }
  drawSkidMarks([x0,y0,x1,y1]);
  drawStreetObjects(c,state.streetObjects,[x0,y0,x1,y1],state.zoom);
+ drawWorkshop(c,state.workshop,[x0,y0,x1,y1]);
  drawEnclosureGates(c,state.enclosures,[x0,y0,x1,y1],state.zoom,{...enclosureTime(),clock:state.clock});
  drawMarketStalls(c,state.market,[x0,y0,x1,y1],state.clock);
  if(state.weather?.wetness>.12)for(const b of buildings)if(b.art?.ruinPool)drawRuinPoolPuddles(c,b,state.weather.wetness,state.clock);

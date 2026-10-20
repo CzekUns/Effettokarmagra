@@ -63,7 +63,7 @@ test('BF11 game wiring: Esc and P open and close the pause, the E prompt only wh
  assert.match(game,/if\(e\.key==='Escape'\)\{[^\n]*if\(!pause\.hidden\)closePause\(\);else openPause\(\);\}/);
  assert.match(game,/if\(e\.key\.toLowerCase\(\)==='p'&&!e\.repeat&&!state\.shopOpen\)\{e\.preventDefault\(\);[^\n]*if\(!pause\.hidden\)closePause\(\);else openPause\(\);\}/);
  assert.match(game,/function boardPrompt\(label\)\{\n const el=\$\('pc-prompt'\);if\(!el\)return;/);
- assert.match(game,/boardPrompt\(p\.car>=0\?'':eventAction\|\|\(shopNear\?(?:'COMPRA'|\(shopNear\.vendor\?'COMPRA · '\+shopNear\.name\.toUpperCase\(\):'COMPRA'\)):bank\?'ENTRA IN BANCA':enterable\?/);
+ assert.match(game,/boardPrompt\(p\.car>=0\?(?:''|\(repair\?[^)]*\)):eventAction\|\|\(shopNear\?(?:'COMPRA'|\(shopNear\.vendor\?'COMPRA · '\+shopNear\.name\.toUpperCase\(\):'COMPRA'\)):bank\?'ENTRA IN BANCA':enterable\?/);
  assert.match(game,/boardPrompt\('ESCI DALLA BANCA'\);/);
  assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=160);
 });

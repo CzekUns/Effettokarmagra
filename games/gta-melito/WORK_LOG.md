@@ -882,3 +882,25 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** `q22-incroci.test.mjs` (6), suite 416/416; browser 25 s a 45 FPS, 9 svolte interne, 0 errori JS.
 - **Non eseguito:** precedenza alle strisce e freccia del pendolare non osservate a vista nel browser (solo Node); niente prove lunghe (regola test brevi); Android reale non disponibile.
 
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q23 danni progressivi visibili ai veicoli
+- **Fatto:** nuovo `vehicle-damage.mjs`. Danno 0–100 dagli urti non letali in tre stati: integro, ammaccato (da 22), grave (da 62).
+  - Chi è colpito prende il danno pieno, chi colpisce il 55%, muri e paletti il 70%, con un cooldown di 0,35 s.
+  - Segni sopra lo sprite in coordinate normalizzate: graffi, ammaccature e vetro incrinato dopo un frontale forte. Seguono la scala dei veicoli (BF14).
+  - Con danno grave il cofano fa un fumo leggero.
+  - Solo l'auto del giocatore con danno grave perde un po' di prestazioni (spinta ×0,8, velocità massima ×0,85).
+  - Gli NPC tornano integri dopo 20 s fuori vista.
+  - Officina di gioco simulata in Via Roma, vicino alla partenza: «E · RIPARA · N €» con il saldo Q06 salvato. Davanti all'officina niente stalli (keepClear di BF02).
+  - Nell'HUD compare lo stato del mezzo.
+- **Codice:** `game.mjs` (impactTraffic, urto diretto, rimbalzo contro i muri, profilo di guida, drawCar, updateTraffic, toggleVehicle, updateHud, createWorkshop prima delle baie), `car-sprites.mjs` (`carDrawSize`).
+- **Versioni cache:** `game.mjs?v=178`, `car-sprites.mjs?v=110`, `street-professions.mjs?v=006`, `vehicle-damage.mjs?v=001`.
+- **Test:** `q23-damage.test.mjs` (7). Adattati i controlli testuali in `vehicle-handling`, `bf11-pc-board`, `steering-wheel` (banco HUD), `bf12-enclosures` e `parking-bays`.
+- **Browser** (Chrome headless, 49–61 FPS, carico 7–9):
+  - urto vero contro un muro: 14–17 punti;
+  - foto dei tre livelli;
+  - riparazione con il tasto E, saldo da 100 a 60 € salvato;
+  - 0 errori JS.
+- **Limiti:**
+  - scooter e moto senza danni;
+  - danno del mezzo non persistente dopo il ricaricamento;
+  - grafica provvisoria, da approvare;
+  - touch e telefono reale non provati.

@@ -662,3 +662,12 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 ### 2026-10-20 — Q17 banco degli ambulanti
 - Nessuna nuova arte. Il pannello acquisti, lo stesso dei negozi Q06, ora si apre anche al banco dei furgoncini, con l'intestazione «AMBULANTE · MELITO». Sulla plancia PC compare la scritta «E · COMPRA · NOME DEL BANCO». Foto: banco «Zeppole e panzerotti» in Via Roma.
 
+
+### 2026-10-20 — Q23 danni visibili (grafica PROVVISORIA, da approvare)
+- **Segni dei danni:** disegnati sopra lo sprite dei veicoli, non sono nuovi sprite.
+  - Graffi: tratti chiari.
+  - Ammaccature: macchie scure con un riflesso.
+  - Vetro incrinato: stella bianca sul parabrezza.
+  - Danno grave: tre sbuffi di fumo grigio dal cofano.
+- **Cartello «OFFICINA · DI GIOCO»** sul marciapiede di Via Roma vicino alla partenza: insegna verde con la chiave inglese, nessun marchio.
+- **Dove vederli:** urta un muro o un'auto in Via Roma vicino alla partenza; l'officina è pochi metri più avanti, intorno a (1240, 1380).
