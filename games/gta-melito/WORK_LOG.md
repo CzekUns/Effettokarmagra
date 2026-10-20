@@ -526,3 +526,47 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
   - i pali non hanno collisione, per non bloccare il giocatore;
   - nessuna prova su telefono reale.
 - **Da fare:** BF08 (lavavetri ai semafori).
+
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF08 lavavetri ai semafori, al finestrino del lato guida (richiesta del committente)
+- **Richiesta (Simone, 20/10):** «lavavetri ai semafori che fanno routine sulle auto ferme avvicinandosi al lato guida». Parte da BF07, che ha messo i semafori di gioco.
+- **Prima:** 7 lavavetri **fermi** accanto a incroci qualsiasi, senza nessuna azione.
+- **Ora (`window-washers.mjs`, `street-professions.mjs`):**
+  - un lavavetri per ciascun semaforo di gioco con spazio a sinistra delle auto (corsia ad almeno 2,7 m dalla mezzeria): 7 sulla mappa;
+  - sta sul marciapiede accanto al palo;
+  - col rosso, quando la prima auto della coda è ferma da 1 s e il rosso che resta basta per arrivare e lavare, passa davanti al paraurti sulle strisce, risale il fianco sinistro e si ferma al finestrino del **lato guida**;
+  - lava il parabrezza 3–6 s, poi torna sul marciapiede per la stessa strada;
+  - al giallo o al verde, o se l'auto si muove, rientra subito; l'auto davanti alla quale ripassa lo aspetta;
+  - fa lo stesso con l'auto del giocatore se è la prima ferma al rosso; ignora moto e scooter;
+  - fumetti rari («Pulisco il vetro?», «Grazie, capo!»);
+  - se lo urtano lascia la routine e torna al suo posto con la logica dei mestieri.
+- **Gioco (`game.mjs`, `roads.mjs`):**
+  - la routine va avanti dopo il traffico dello stesso passo;
+  - il recupero «torna al palo» dei mestieri lascia stare il lavavetri al lavoro (`agent.scripted`);
+  - le auto NPC non lo urtano mentre lavora (in `impactTraffic`);
+  - quando sta davanti all'auto (più in basso sullo schermo) si disegna sopra di lei;
+  - tergivetro animato sul vetro dal lato guida;
+  - sprite esistente, fermo durante il lavaggio.
+- **Cache:** `game.mjs?v=159`, `roads.mjs?v=150` (anche in `npc-commute.mjs`), `npc-commute.mjs?v=005`, `street-professions.mjs?v=004`; nuovo `window-washers.mjs?v=001`.
+- **Test:** nuovo `bf08-washers.test.mjs`, 7 test, che falliscono senza la correzione:
+  - posti sulla mappa reale: accanto ai pali, oltre il cordolo, uno per incrocio;
+  - routine completa: lato guida, al finestrino, 3–6 s di lavaggio, di nuovo sul marciapiede, mai davanti a un'auto che si muove, auto ripartita col verde;
+  - rosso insufficiente → resta sul marciapiede;
+  - moto ignorate;
+  - auto del giocatore;
+  - auto che si sposta prima → torna indietro senza lavare;
+  - cablaggio.
+
+  Suite **316/316** su `integ` + BF07.
+- **Browser (Chrome headless, mappa reale):**
+  - su un'auto NPC ferma al rosso in Via Signorelli: fasi complete, sempre sul lato sinistro, mai dentro un'auto, lavaggio 4,4 s, di nuovo esattamente al suo posto, l'auto riparte col verde;
+  - sull'auto del giocatore in Corso Europa: giro completo dal lato guida;
+  - stesso esito su PC e su telefono 844×390; 0 errori JS.
+  - Prima della correzione in `impactTraffic`, un'auto NPC «bloccata» dal lavavetri lo spingeva via quando ripassava davanti a lei: ora lo aspetta.
+- **Limiti:**
+  - sprite dei mestieri ancora «da rivedere» secondo PIXEL_ART_MODUS: niente frame dedicati al lavaggio, solo il tergivetro disegnato;
+  - nessuna mancia o denaro per il giocatore;
+  - un solo lavavetri per semaforo e solo la prima auto della coda;
+  - le figure sono grandi rispetto alle auto, quindi al finestrino il lavavetri sovrappone un poco la carrozzeria (si disegna sopra o sotto secondo chi sta davanti);
+  - non provato su telefono reale.
+- **Da fare:** revisione e merge di BF07 e BF08; frecce e semafori per lo scooter dei pendolari (Q12/Q22).

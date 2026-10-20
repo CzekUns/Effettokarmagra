@@ -537,6 +537,8 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
   // Vendors and junction-side washers hold an actual foot position, but after
   // nonlethal impacts they step back towards it instead of snapping on screen.
   if(agent.stationary){
+   // BF08: a washer at work is moved by window-washers.mjs; back on the kerb it is a post again.
+   if(agent.scripted)continue;
    const post=agent.post||agent.home;
    if(post){
     const dx=post.x-agent.x,dy=post.y-agent.y,d=Math.hypot(dx,dy);
