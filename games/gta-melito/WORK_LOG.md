@@ -389,3 +389,12 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - Documentazione aggiornata in `PIXEL_ART_MODUS.md` e richiamo esplicito in `AGENTS.md` per gli altri agenti. Seconda tavola pedoni solo secondaria; vecchio friggitore e mestieri/PR #33 non approvati come modello artistico.
 - Specificati formato 4 persone × 4 direzioni × 4 frame (384×160, cella 24×40), confronto visivo affiancato e blocco della generazione se il file originale non è accessibile.
 - Intervento **solo di documentazione**: PNG/renderer/routine, deploy, CI e giocabilità invariati; test tecnici non eseguiti perché non sono stati modificati.
+
+
+### 2026-10-20 — ChatGPT/GitHub — Nuova roadmap Q25–Q41: negozi, minigiochi, smartphone
+- **Richiesta:** ampliare la coda dopo Q24 con negozi accessibili e acquisto interno, slot/video poker da bar, biliardo e goriziana, calcetto 5v5, gare auto fittizie, garage, tuning, smartphone con Drive e lavoro Rider.
+- **Fatto:** create esattamente **17 nuove Q25–Q41** in `TODO.md`, tutte **[ ]** con requisiti, dipendenze, prove di accettazione; conservate Q01–Q24 e la priorità dei sei BF della issue #32. Aggiornate istruzioni in `AGENTS.md`, collegamento di precedenza in `BUGFIX_TODO.md` e handoff nella issue #28 (collaboratore `ilconsulentelogistico-hue`).
+- **Verifica iniziale:** `local-shops.mjs`/`game.mjs` oggi aprono negozi e acquisti dall'esterno, `bank-interior.mjs` ha sala 160×120; Q25 propone un locale circa 80×60 (1/4 area) o 64×50 (1/6 area), con stessa scala e camera della banca.
+- **Progettazione:** app PAUSA/Start smartphone con vecchie funzioni accessibili in Impostazioni → Sviluppatore; app Drive con POI/strade OSM e preferiti; Rider con ritiro, cubo giallo, percorso, timer/freschezza, recensioni persistenti. I giochi arcade sono fittizi, senza denaro reale; nessun campo, slot o luogo di gara viene attribuito come esistente senza conferma.
+- **Test/stato:** solo modifiche di documentazione e istruzioni; numerazione Q01–Q41 verificata prima del commit. **Non eseguiti** suite Node, test browser, Android o deploy, né è stata implementata alcuna delle nuove Q.
+- **Ripresa:** il collaboratore completa BF01→BF06, poi Q13→Q24, infine Q25→Q41, **una PR per task**. Nessun incarico assegnato significa avvio autonomo della sessione AI esterna.
