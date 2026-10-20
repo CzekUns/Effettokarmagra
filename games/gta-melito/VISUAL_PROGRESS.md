@@ -560,3 +560,12 @@ Aggiunto il renderer per l'atlante originale `npc-mestieri-4chars-4dir-4frames-2
 **Interfaccia:** nella colonna di guida a destra il pulsante rosso FRENO è ora in alto, il verde ACCELERA al centro e RETRO in basso; misure, colori e ombre invariati.
 
 **Verifiche:** foto Chrome headless sul telefono in orizzontale prima/dopo (stessa scena), con prova dei tre tasti a tocco vero e controllo che non coprano minimappa, missioni e volante. Non provato su un telefono reale.
+
+### 2026-10-20 — Varchi di confine: strade tagliate dritte e imbocchi che sfumano (BF09)
+
+**Grafica:**
+- Le strade non finiscono più con mezzo cerchio sopra l'area nera: il taglio è dritto, lungo il confine comunale.
+- A ogni strada che prosegue in un altro comune, un imbocco a trapezio continua asfalto, marciapiedi e cordolo per 16 m, li stringe un poco e li fa sparire nel buio. Sulle strade larghe a doppio senso si vede anche la mezzeria che si perde.
+- Le auto NPC che escono svaniscono dentro l'imbocco, insieme ai fari; quelle che entrano emergono dal buio.
+
+**Verifiche:** foto Chrome headless prima e dopo su una trunk (SP 500), una residential (Via Hugo Pratt) e una service (Via Visconti), su PC, telefono 844×390 e alle 21:30 con la pioggia. Ci sono anche le foto di un'uscita e di un ingresso in movimento. Non provato su Android reale.

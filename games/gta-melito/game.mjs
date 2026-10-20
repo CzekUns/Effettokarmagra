@@ -6,8 +6,9 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=151';
-import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=006';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition,balanceTraffic,createGateVehicle} from './roads.mjs?v=152';
+import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=007';
+import {drawBorderGates,borderGateList,borderRing,distanceToBorder,GATE_RULES} from './border-gates.mjs?v=001';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=006';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
@@ -395,7 +396,9 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  state.zoom=CAMERA_ZOOM_MAX;state.zoomTarget=CAMERA_ZOOM_MAX;state.zoomBias=1;
  state.spawn=[point.x,point.y];Object.assign(state.player,{x:point.x,y:point.y,a:point.a,car:-1,vehicleType:null});
  state.camera.x=point.x;state.camera.y=point.y;state.distance=0;
- state.graph=buildRoadGraph(state.roads);
+ state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y)});
+ // BF09: the border gates as plain data (WGS84 too), the anchor points for future neighbouring maps.
+ state.borderGates=borderGateList(state.graph.gates,state.map.projection);
  state.turnGuides=buildTurnGuides(state.graph);
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
  state.propsGrid=makeIndex(state.props);
@@ -604,11 +607,21 @@ function trafficModel(i,type){
  return type==='motorcycle'?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:
   trafficApeModel(i)||CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];
 }
+const TRAFFIC_COUNT=140;
 function createTraffic(){
- const p=state.player,traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4,model:trafficModel,
+ const p=state.player,traffic=createAgents(state.graph,TRAFFIC_COUNT,189,'car',state.cars,{motorcycleEvery:4,model:trafficModel,
   keepClear:[{x:p.x,y:p.y,r:14}],clear:(x,y)=>!buildingAt(x,y)});
  for(const v of traffic)v.rider=isMotorcycle(v);
+ // BF09: how many vehicles drive around now; balanceTraffic brings in or lets out the difference
+ // through the border gates (Q13 can follow the rush hours by changing it).
+ state.trafficTarget=TRAFFIC_COUNT;state.trafficMade=TRAFFIC_COUNT;
  return traffic;
+}
+// BF09: a new vehicle that comes in from a border gate (same mix of models and scooters).
+function newGateVehicle(){
+ const i=state.trafficMade++,type=i%4===2?'motorcycle':'car';
+ const v=createGateVehicle(state.graph,189+i*17,{vehicleType:type,model:trafficModel(i,type)});
+ v.rider=type==='motorcycle';return v;
 }
 function updateTraffic(dt){
  state.trafficClock+=dt;
@@ -623,6 +636,7 @@ function updateTraffic(dt){
  const view=[state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH];
  stepAgents(state.graph,state.people,elapsed,state.player,{parked:state.cars,traffic:state.traffic,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes});
  stepAgents(state.graph,state.traffic,elapsed,state.player,{parked:state.cars,people:state.people,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes});
+ balanceTraffic(state.graph,state.traffic,state.trafficTarget,{view},newGateVehicle);
  impactTraffic(elapsed);
  for(const agent of [...state.people,...state.traffic])if(Math.hypot(agent.x-agent.prevX,agent.y-agent.prevY)>15){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
@@ -940,7 +954,7 @@ function compareRoadWidths(){
  setRoadWidthMode(getRoadWidthMode()==='before'?'wide':'before');
  // Every consumer shares the same module instance, including roads/traffic,
  // street furniture, crosswalks and building-side storefront placements.
- state.graph=buildRoadGraph(state.roads);state.streetObjects=null;createParkingBays();
+ state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createParkingBays();
  state.traffic=createTraffic();
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
@@ -1025,6 +1039,22 @@ function visibleBounds(){
  const x=state.camera.x,y=state.camera.y,pad=18;
  return [x-canvas.clientWidth/(2*state.zoom)-pad,y-canvas.clientHeight/(2*state.zoom)-pad,x+canvas.clientWidth/(2*state.zoom)+pad,y+canvas.clientHeight/(2*state.zoom)+pad];
 }
+// BF09: the municipal border as a path, for the straight cut of the streets and the gate mouths.
+function borderPath(ctx,outside=false){
+ const b=state.map.border;ctx.beginPath();
+ if(outside)ctx.rect(-1e5,-1e5,2e5,2e5);
+ ctx.moveTo(b[0],b[1]);for(let i=2;i<b.length;i+=2)ctx.lineTo(b[i],b[i+1]);ctx.closePath();
+}
+// Only areas near the border pay for the clip (a clipped stroke is slower to paint).
+function nearBorder(x0,y0,x1,y1,margin=12){
+ const ring=state.borderRingXY||(state.borderRingXY=borderRing(state.map.border));
+ return distanceToBorder((x0+x1)/2,(y0+y1)/2,ring)<Math.hypot(x1-x0,y1-y0)/2+margin;
+}
+function drawGateMouths(ctx,[x0,y0,x1,y1]){
+ const pad=GATE_RULES.mouth+20,gates=(state.graph?.gates||[]).filter(g=>g.x>x0-pad&&g.x<x1+pad&&g.y>y0-pad&&g.y<y1+pad);
+ if(!gates.length)return;
+ ctx.save();borderPath(ctx,true);ctx.clip('evenodd');drawBorderGates(ctx,gates);ctx.restore();
+}
 function paintStaticScene(ctx,bounds,zoom){
  const [x0,y0,x1,y1]=bounds,border=state.map.border;
  ctx.beginPath();ctx.moveTo(border[0],border[1]);
@@ -1040,7 +1070,10 @@ function paintStaticScene(ctx,bounds,zoom){
  const inferred=query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1);
  const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
  drawCityParcels(ctx,[...inferred,...buildings]);
- drawCityStreets(ctx,roads,zoom);
+ // BF09: streets end with a straight cut along the border (no round caps over the dark), then a
+ // trapezoid mouth fades each gate road into the next town.
+ if(nearBorder(x0,y0,x1,y1,GATE_RULES.mouth+4)){ctx.save();borderPath(ctx);ctx.clip();drawCityStreets(ctx,roads,zoom);ctx.restore();drawGateMouths(ctx,bounds);}
+ else drawCityStreets(ctx,roads,zoom);
  if(state.parkingBays)drawParkingBays(ctx,query(state.parkingBays.strips,state.bayGrid,x0,y0,x1,y1),zoom);
  drawCityBuildings(ctx,[...inferred,...buildings],zoom);
  // The road remains below the entire roof, including the authored church art.
@@ -1077,7 +1110,8 @@ function drawRoofReveal(ctx,buildings,roads,dt,bounds){
   const art=b.art;
   drawTerrain(ctx,[art.x0-22,art.y0-22,art.x1+22,art.y1+22],state.zoom,state.ground);
   drawCityParcels(ctx,[b]);
-  drawCityStreets(ctx,roads,state.zoom);
+  if(nearBorder(art.x0-22,art.y0-22,art.x1+22,art.y1+22)){ctx.save();borderPath(ctx);ctx.clip();drawCityStreets(ctx,roads,state.zoom);ctx.restore();}
+  else drawCityStreets(ctx,roads,state.zoom);
   if(state.parkingBays)drawParkingBays(ctx,query(state.parkingBays.strips,state.bayGrid,art.x0-22,art.y0-22,art.x1+22,art.y1+22),state.zoom);
   ctx.globalAlpha=1-.72*amount;
   drawCityBuildings(ctx,[b],state.zoom);
@@ -1114,11 +1148,13 @@ function wetTile(tx,ty){
  const g=layer.getContext('2d');g.setTransform(WET_PIXELS,0,0,WET_PIXELS,-x*WET_PIXELS,-y*WET_PIXELS);
  const x0=x-TILE_BLEED,y0=y-TILE_BLEED,x1=x+STATIC_TILE+TILE_BLEED,y1=y+STATIC_TILE+TILE_BLEED;
  g.lineCap='round';g.lineJoin='round';g.strokeStyle='#0a1a28';
+ g.save();if(nearBorder(x0,y0,x1,y1)){borderPath(g);g.clip();}
  for(const road of query(state.roads,state.roadGrid,x0,y0,x1,y1)){
   if(!DRIVE.has(road.t))continue;
   g.beginPath();g.moveTo(road.p[0],road.p[1]);for(let i=2;i<road.p.length;i+=2)g.lineTo(road.p[i],road.p[i+1]);
   g.lineWidth=Math.max(1,visualRoadWidth(road)-.5);g.stroke();
  }
+ g.restore();
  g.globalCompositeOperation='destination-out';g.fillStyle='#000';
  for(const b of [...query(state.buildings,state.buildingGrid,x0,y0,x1+20,y1+20),...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1+20,y1+20)]){
   const p=b.p,v=buildingVolume(b),shift=v?[[0,0],[v.dx,v.dy]]:[[0,0]];
@@ -1257,7 +1293,10 @@ function draw(dt=0){
   const x=ai.prevX===undefined?ai.x:ai.prevX+(ai.x-ai.prevX)*alpha;
   const y=ai.prevY===undefined?ai.y:ai.prevY+(ai.y-ai.prevY)*alpha;
   const a=ai.prevA===undefined?ai.a:ai.prevA+Math.atan2(Math.sin(ai.a-ai.prevA),Math.cos(ai.a-ai.prevA))*alpha;
-  drawCar(x,y,a,ai.kind,false,ai.model,ai);
+  // BF09: beyond a border gate the vehicle fades into the dark (or comes out of it).
+  const fade=ai.gateFade??1;if(fade<=.01)continue;
+  if(fade<1){c.save();c.globalAlpha=fade;drawCar(x,y,a,ai.kind,false,ai.model,ai);c.restore();}
+  else drawCar(x,y,a,ai.kind,false,ai.model,ai);
  }
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);});
  drawPlayer();
@@ -1294,8 +1333,9 @@ function drawNightLighting([x0,y0,x1,y1],buildings,ratio,cw,ch,dt){
   for(const c of state.commuters||[])if(c.bike.rider)driven.push(c.bike);
   for(const v of driven){
    if(v.x<x0-pad||v.x>x1+pad||v.y<y0-pad||v.y>y1+pad)continue;
-   const kind={x:v.x,y:v.y,a:v.a,vehicleType:isMotorcycle(v)?'motorcycle':'car'};
-   lights.push(...headlightLights(kind,light.headlights));glows.push(...vehicleLamps(kind,light.headlights));
+   const kind={x:v.x,y:v.y,a:v.a,vehicleType:isMotorcycle(v)?'motorcycle':'car'},fade=v.gateFade??1;
+   if(fade<=.01)continue;
+   lights.push(...headlightLights(kind,light.headlights*fade));glows.push(...vehicleLamps(kind,light.headlights*fade));
   }
  }
  // A faint halo keeps the protagonist readable on dark side streets.
