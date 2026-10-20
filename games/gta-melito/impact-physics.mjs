@@ -2,7 +2,7 @@
  * An impact throws the actor, decays with friction, and then hands NPCs back
  * to their original road routine. Never destroys/removes an NPC or the player.
  */
-import {vehicleHitsPedestrian,vehiclesOverlap} from './traffic-collision.mjs?v=126';
+import {vehicleHitsPedestrian,vehiclesOverlap} from './traffic-collision.mjs?v=128';
 export const IMPACT_MIN_SPEED=3.4;
 export const IMPACT_LOCK_SECONDS=.8;
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
@@ -53,7 +53,8 @@ export function applyNonlethalImpact(source,target,relativeSpeed=null){
  target.impactLock=IMPACT_LOCK_SECONDS;
  target.impactReturning=!!target.home;
  target.braking=false;target.stalled=0;
- if(isCar(target))target.speed=0;
+ // BF01: the struck car stops, but remembers its cruising speed to drive off again afterwards.
+ if(isCar(target)){if(target.speed>0)target.resumeSpeed=target.speed;target.speed=0;}
  return {strength:velocity,speed,dx:target.impactVX,dy:target.impactVY};
 }
 export function advanceNonlethalImpact(actor,dt,canMove=()=>true){

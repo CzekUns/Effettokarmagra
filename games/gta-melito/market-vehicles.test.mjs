@@ -92,8 +92,8 @@ test('food truck awnings stay parked while compact Ape models join moving traffi
   readFile(new URL('./index.html',import.meta.url),'utf8')]);
  assert.ok(game.includes('CAR_PARKED_SPRITE_IDS[(k*7)%CAR_PARKED_SPRITE_IDS.length]'));
  assert.ok(game.includes('CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length]'));
- assert.ok(game.includes("car-sprites.mjs?v=108"));
+ assert.ok(Number((game.match(/car\-sprites\.mjs\?v=(\d+)/)||[])[1])>=108,'car-sprites.mjs almeno v=108');
  assert.ok(game.includes('trafficApeModel(i)'));
  assert.ok(!game.includes("v.model='food-zeppole-panzerotti'"));
- assert.ok(page.includes('game.mjs?v=154'));
+ assert.ok(Number((page.match(/game\.mjs\?v=(\d+)/)||[])[1])>=154,'game.mjs almeno v=154');
 });

@@ -73,7 +73,7 @@ test('city runtime integrates food-truck crews, professions and traffic Ape',asy
  assert.match(game,/trafficApeModel\(i\)/);
  assert.match(art,/drawProfessionSprite\(c,x,y,angle,p.profession/);
  assert.match(art,/drawFryerSprite\(c,x,y,angle,clock,moving,p.speed,p.seed\)/);
- assert.match(game,/car-sprites\.mjs\?v=108/);
- assert.match(game,/city-art\.mjs\?v=129/);
- assert.match(html,/game\.mjs\?v=154/);
+ assert.ok(Number((game.match(/car\-sprites\.mjs\?v=(\d+)/)||[])[1])>=108,'car-sprites.mjs almeno v=108');
+ assert.ok(Number((game.match(/city\-art\.mjs\?v=(\d+)/)||[])[1])>=129,'city-art.mjs almeno v=129');
+ assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=154,'game.mjs almeno v=154');
 });

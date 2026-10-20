@@ -543,3 +543,20 @@ Nuovi sprite top-down 2.5D: friggitore in camice bianco, vigile urbano, lavavetr
 
 ### 2026-10-20 — Strada viva: Ape, food truck e mestieri NPC (branch di sviluppo)
 Aggiunto il renderer per l'atlante originale `npc-mestieri-4chars-4dir-4frames-24x40.png` (friggitore, vigile, lavavetri, contrabbandiere), collegato agli attori reali della simulazione; gli asset `ape-food-16-rgba.png` già presenti alimentano Ape AI senza tendalino aperto e food truck in sosta. Nuovi ancoraggi commerciali deterministici sulla cartografia, con controlli geometrici; non sono esercizi commerciali o semafori verificati sul campo. Il numero di passanti comuni è stato ridotto mentre aumenta la varietà delle mansioni. Aggiornato `index.html` a `game.mjs?v=154`, import di `city-art.mjs?v=129` e `roads.mjs?v=146`. Non sono state prodotte fotografie/screenshot prima-dopo né controlli manuali di rendering browser/telefono in questa sessione: per completare il QA occorre aprire il gioco e confrontare i cinque siti previsti sul percorso. 
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF02 fascia di sosta tra corsia e marciapiede
+- **Cosa si vede:** lungo le strade carrabili compare una fascia di sosta continua con stalli a linee bianche (sosta libera) lunghi 7,2 m. Sulle strade larghe (primarie, trunk, secondarie, terziarie) la fascia sta tutta sull'asfalto accanto al bordo; sulle residenziali entra nel bordo chiaro del marciapiede come un **golfo di sosta**, con il cordolo che ne segue il contorno e raccordi inclinati alle estremità. Le auto, gli scooter e i food truck in sosta stanno dentro gli stalli: non più a cavallo della corsia né sul marciapiede.
+- **Dove non c'è posto** (strade di servizio, vicoli, piazze fatte di tratti cortissimi, accanto a incroci e strisce, davanti a negozi e banca) la fascia non viene disegnata e non ci sono veicoli in sosta.
+- **Livelli:** la fascia è dipinta nelle tessere statiche subito dopo l'asfalto e prima di edifici e tetti, quindi non copre mai un tetto; viene ridipinta anche nel riquadro di "tetto svelato". Nessun asset PNG nuovo: solo forme e linee nel canvas.
+- **Prova visiva (Chrome headless, 1280×720, zoom a piedi):** A/B prima/dopo su Via Roma (partenza: la Panda iniziale prima stava 1,36 m dentro la corsia, ora è nello stallo con lo scooter accanto), Piazza Santo Stefano, Corso Europa e una residenziale (Via Papa Giovanni XXIII). Confronto affiancato allegato alla PR.
+- **Limiti:** la sagoma disegnata delle auto (≈4,5–5 m) resta più larga della sagoma di collisione (3,4 m), quindi sulle residenziali un'auto in sosta e una che passa possono sfiorarsi graficamente senza toccarsi; non provato su telefono reale.
+### 2026-10-20 — Friggitore al banco del suo furgone (BF04)
+
+**Grafica:** il friggitore in camice bianco sta ora subito fuori dalla tendina a strisce del suo food truck, a metà del banco e rivolto verso di esso; i furgoni sono girati in modo che banco e tendina guardino il marciapiede su entrambi i lati della strada. Prima il friggitore compariva a 8–9 m, spesso dietro il furgone o dal lato della carreggiata.
+
+**Verifiche:** foto Chrome headless ravvicinate prima/dopo di tutti e 5 i furgoni (Piazza Santo Stefano, Piazza Immacolata, Corso Europa, Largo Cinque Via, Via Roma) e misure nel gioco reale. Non provato su un telefono reale.
+### 2026-10-20 — Pedali touch in ordine FRENO, ACCELERA, RETRO (BF06)
+
+**Interfaccia:** nella colonna di guida a destra il pulsante rosso FRENO è ora in alto, il verde ACCELERA al centro e RETRO in basso; misure, colori e ombre invariati.
+
+**Verifiche:** foto Chrome headless sul telefono in orizzontale prima/dopo (stessa scena), con prova dei tre tasti a tocco vero e controllo che non coprano minimappa, missioni e volante. Non provato su un telefono reale.

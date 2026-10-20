@@ -42,7 +42,7 @@ test('responsive UI swaps thumbstick for steering wheel only while riding and ha
  ]);
  assert.match(html,/id="steering-wheel"/);
  assert.match(html,/id="steering-face"/);
- assert.match(html,/class="pedals"[\s\S]*id="accelerator"[\s\S]*id="brake"/);
+ assert.match(html,/class="pedals"[\s\S]*id="brake"[\s\S]*id="accelerator"/,'BF06: FRENO sopra ACCELERA');
  assert.match(html,/\.stage\.driving \.touch-stick\{display:none!important\}/);
  assert.match(html,/\.stage\.driving \.steering-wheel\{display:flex\}/);
  assert.match(html,/\.controls\.driving \.pedals\{display:flex\}/);
@@ -119,12 +119,12 @@ test('real HUD switches visible controls between car, walking and interior scene
  assert.ok(!nodes.get('stage').classes.has('driving'),'no wheel inside a bank');
 });
 
-test('retromarcia has its own hold button below the service brake and smaller touch dimensions',async()=>{
+test('retromarcia has its own hold button below the accelerator and smaller touch dimensions',async()=>{
  const [html,game]=await Promise.all([
   readFile(new URL('./index.html',import.meta.url),'utf8'),
   readFile(new URL('./game.mjs',import.meta.url),'utf8')
  ]);
- assert.match(html,/id="accelerator"[^>]*>ACCELERA<\/button><button id="brake"[^>]*>FRENO<\/button><button id="reverse"[^>]*>RETRO<\/button>/);
+ assert.match(html,/id="brake"[^>]*>FRENO<\/button><button id="accelerator"[^>]*>ACCELERA<\/button><button id="reverse"[^>]*>RETRO<\/button>/);
  assert.match(html,/\.touch-actions \.pedals button\{width:clamp\(56px,12vw,72px\);height:clamp\(50px,11vw,64px\)/);
  assert.match(html,/\.touch-actions button\{border-radius:50%;width:clamp\(56px,13vw,76px\)/);
  assert.match(html,/\.touch-actions \.pedals #reverse\{/);
@@ -160,4 +160,25 @@ test('reverse pedal actually reverses car and motorcycle; opposing pedals cancel
  pressed.accelerate=false;
  pressed.down=true;
  assert.equal(driveAxes().y,1,'keyboard S continues to work as reverse');
+});
+
+test('BF06 touch pedals read FRENO, ACCELERA, RETRO from the top with unchanged ids, labels, colours and bindings',async()=>{
+ const [html,game]=await Promise.all([
+  readFile(new URL('./index.html',import.meta.url),'utf8'),
+  readFile(new URL('./game.mjs',import.meta.url),'utf8')
+ ]);
+ const block=html.match(/<div class="pedals"[^>]*>([\s\S]*?)<\/div>/)[1];
+ const order=[...block.matchAll(/<button id="([^"]+)"[^>]*aria-label="([^"]+)"[^>]*>([^<]+)<\/button>/g)].map(m=>[m[1],m[3],m[2]]);
+ assert.deepEqual(order.map(o=>o[0]),['brake','accelerator','reverse'],'top to bottom: brake, accelerator, reverse');
+ assert.deepEqual(order.map(o=>o[1]),['FRENO','ACCELERA','RETRO']);
+ assert.deepEqual(order.map(o=>o[2]),['Tieni premuto per frenare','Tieni premuto per accelerare','Tieni premuto per andare in retromarcia']);
+ // the column stays a plain flex column: DOM order is the visual order
+ assert.match(html,/\.pedals\{display:none;flex-direction:column;/);
+ assert.doesNotMatch(html,/\.pedals[^{]*\{[^}]*(column-reverse|[{;]\s*order:)/,'no CSS reordering that would desync DOM and screen');
+ for(const id of ['accelerator','brake','reverse'])assert.doesNotMatch(html,new RegExp('#'+id+'\\{[^}]*[{;]\\s*order:'),'no per-button order override (border: is not order:)');
+ // colours unchanged: green accelerator, red brake, ochre reverse
+ assert.match(html,/\.touch-actions \.pedals #accelerator\{border-color:#b6eac1;background:linear-gradient\(160deg,#3b8a57,#174c35\)\}/);
+ assert.match(html,/\.touch-actions \.pedals #brake\{border-color:#f5b4a0;background:linear-gradient\(160deg,#b64e43,#762d2b\)\}/);
+ // functions and keyboard unchanged
+ assert.match(game,/for\(const \[id,key\] of \[\['accelerator','accelerate'\],\['brake','brake'\],\['reverse','reverse'\]/);
 });
