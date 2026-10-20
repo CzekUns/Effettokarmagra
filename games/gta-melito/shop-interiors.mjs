@@ -120,6 +120,21 @@ export function stepShopInteriorPlayer(interior,axes,running,dt){
  }
  return player.y>room.height-.6?'exit':null;
 }
+/* Q26: i negozi con un interno vendono SOLO dentro, al bancone. Fuori, all'insegna, il comando
+ * diventa ENTRA; gli altri negozi (e i furgoncini della Q17) vendono ancora dal marciapiede. */
+export const SIGN_RADIUS=5;
+export function outdoorShops(shops,entrances){
+ const inside=new Set((entrances||[]).map(e=>e.shop));
+ return (shops||[]).filter(shop=>!inside.has(shop));
+}
+export function entranceAtSign(entrances,point,radius=SIGN_RADIUS){
+ let best=null;
+ for(const entrance of entrances||[]){
+  const distance=Math.hypot(entrance.shop.x-point.x,entrance.shop.y-point.y);
+  if(distance<=radius&&(!best||distance<best.distance))best={entrance,distance};
+ }
+ return best;
+}
 // Q26: punto di servizio al bancone o alla cassa, se il protagonista è lì davanti.
 export function interiorCounterNear(interior,radius=COUNTER_RADIUS){
  const c=interior?.room?.counter,p=interior?.player;

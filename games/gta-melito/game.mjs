@@ -14,7 +14,7 @@ import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock,npcWeekday} from './npc-agenda.mjs?v=002';
 import {createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols} from './market.mjs?v=001';
 import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=002';
-import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote,vendorShops} from './local-shops.mjs?v=002';
+import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote,vendorShops} from './local-shops.mjs?v=003';
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
 import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=004';
@@ -30,7 +30,7 @@ import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=002';
 import {prepareSignalPosts,drawStopLines,drawSignals,signalGlows} from './traffic-light-art.mjs?v=002';
 import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=002';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
-import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=002';
+import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=003';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
 import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=131';
 import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
@@ -55,7 +55,7 @@ import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
 import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=008';
-import {resolveShopEntrances,nearestShopEntrance,drawShopEntrance,enterShop,stepShopInteriorPlayer,shopInteriorCamera,interiorCounterNear,drawShopInterior} from './shop-interiors.mjs?v=001';
+import {resolveShopEntrances,nearestShopEntrance,drawShopEntrance,enterShop,stepShopInteriorPlayer,shopInteriorCamera,interiorCounterNear,drawShopInterior,outdoorShops,entranceAtSign} from './shop-interiors.mjs?v=002';
 import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=004';
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
@@ -384,11 +384,14 @@ function createShopEntrances(){
   return door.valid?door:null;
  };
  state.shopEntrances=resolveShopEntrances(state.shops||[],{probe,isWalkable:walkOK,onRoad:onCarriageway});
+ // Q26: the shops with an interior sell only inside, at the counter.
+ state.outdoorShops=outdoorShops(state.shops||[],state.shopEntrances);
  state.shopInterior=null;
 }
 // Q25: on foot, the closer of the shop door (ENTRA) and the outdoor counter (COMPRA, Q06/Q17).
+// Q26: by the sign of a shop with an interior the action is ENTRA too (it no longer sells outside).
 function footShopTarget(p){
- const door=nearestShopEntrance(state.shopEntrances,p),counter=nearestCounter(p);
+ const door=nearestShopEntrance(state.shopEntrances,p)||entranceAtSign(state.shopEntrances,p),counter=nearestCounter(p);
  if(door&&(!counter||door.distance<Math.hypot(counter.x-p.x,counter.y-p.y)))return {door:door.entrance};
  return counter?{counter}:null;
 }
@@ -811,7 +814,7 @@ function interiorZoom(){
 const SHOP_KINDS={bar:'BAR',cafe:'CAFFETTERIA',pastry:'PASTICCERIA',bakery:'PANIFICIO',supermarket:'SUPERMERCATO',convenience:'ALIMENTARI',stationery:'CARTOLERIA',hairdresser:'PARRUCCHIERE'};
 // Q06/Q17: the closest counter on foot, a named OSM shop or the counter of a food truck.
 function nearestCounter(p){
- const shop=nearestShop(state.shops,p),stall=nearestShop(state.vendorShops,p);
+ const shop=nearestShop(state.outdoorShops||state.shops,p),stall=nearestShop(state.vendorShops,p);
  if(!shop||!stall)return shop||stall;
  return Math.hypot(stall.x-p.x,stall.y-p.y)<Math.hypot(shop.x-p.x,shop.y-p.y)?stall:shop;
 }
@@ -855,6 +858,7 @@ function enterShopInterior(entrance){
 }
 function leaveShop(){
  const p=state.player,inner=state.shopInterior;if(!inner)return;
+ if(state.shopOpen)closeShop();
  state.shopInterior=null;
  p.x=inner.outside.x;p.y=inner.outside.y;p.a=inner.outside.a;
  state.camera.x=p.x;state.camera.y=p.y;updateHud();
@@ -870,9 +874,12 @@ function toggleVehicle(){
   state.camera.x=p.x;state.camera.y=p.y;updateHud();return;
  }
  if(state.shopInterior){
-  // Q26 hook: at the counter the clerk answers; buying stays at the outdoor counter for now.
-  const counter=interiorCounterNear(state.shopInterior);
-  if(counter&&!state.shopInterior.greeted){state.shopInterior.greeted=true;state.shopInterior.greet={text:'Buongiorno! Dica pure.',until:state.clock+2.6};return;}
+  // Q26: at the counter the clerk answers and the Q06 counter opens (same catalogue, balance, saves).
+  const inner=state.shopInterior,counter=interiorCounterNear(inner);
+  if(counter){
+   inner.greet={text:inner.greeted?'Altro?':'Buongiorno! Dica pure.',until:state.clock+2.6};inner.greeted=true;
+   openShop(inner.shop);return;
+  }
   leaveShop();return;
  }
  if(p.car<0){
@@ -1018,7 +1025,8 @@ function tick(dt){
  if(state.shopInterior){
   const inner=state.shopInterior;
   if(stepShopInteriorPlayer(inner,moveAxes(),pressed.run,dt)==='exit'){leaveShop();return;}
-  if(!interiorCounterNear(inner))inner.greeted=false;
+  // Q26: walking away from the counter closes its panel (no buying across the room).
+  if(!interiorCounterNear(inner)){inner.greeted=false;if(state.shopOpen)closeShop();}
   inner.camera=shopInteriorCamera(inner.room,inner.player,canvas.clientWidth,canvas.clientHeight,interiorZoom(),inner.camera,dt);
   state.clock+=dt;state.hud+=dt;
   if(state.hud>.18){state.hud=0;updateHud();}
@@ -1191,8 +1199,8 @@ function updateHud(){
   const inner=state.shopInterior,counter=interiorCounterNear(inner);
   $('vehicle').textContent='DENTRO · '+(inner.room.size==='piccolo'?'BOTTEGA':'LOCALE');$('street').textContent=inner.shop.name.toUpperCase();
   $('action').classList.remove('idle');$('action').setAttribute('aria-disabled','false');
-  $('action').textContent=counter&&!inner.greeted?'PARLA':'ESCI';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
-  boardPrompt(counter&&!inner.greeted?'PARLA · '+counter.label:'ESCI DAL NEGOZIO');
+  $('action').textContent=counter?'COMPRA':'ESCI';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
+  boardPrompt(counter?'COMPRA · '+counter.label:'ESCI DAL NEGOZIO');
   $('camera-mode').textContent='INTERNO · '+interiorZoom().toFixed(1)+'×';return;
  }
  if(state.bankInterior){
