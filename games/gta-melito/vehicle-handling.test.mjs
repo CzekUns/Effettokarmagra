@@ -89,7 +89,7 @@ test('Q10 no sliding in reverse, at walking pace or while the car rebounds',()=>
 
 test('Q10 game wiring: model profile and wet road passed to the physics, travel direction moves the car, marks and squeal',async()=>{
  const [game,audio]=await Promise.all(['game.mjs','city-audio.mjs'].map(f=>readFile(new URL('./'+f,import.meta.url),'utf8')));
- assert.match(game,/\(isMotorcycle\(car\)\?stepMotorcycle:stepDriving\)\(car\.speed\|\|0,car\.a,axes,pressed\.handbrake,dt,pressed\.brake,(?:(?:damagedProfile\(handlingProfile|vehicleProfile)\(car\),car\)|handlingProfile\(car\)),state\.weather\?\.wetness\|\|0\)/);
+ assert.match(game,/\(isMotorcycle\(car\)\?stepMotorcycle:stepDriving\)\(car\.speed\|\|0,car\.a,axes,pressed\.handbrake,dt,pressed\.brake,(?:damagedProfile\((?:handlingProfile|vehicleProfile)\(car\),car\)|vehicleProfile\(car\)|handlingProfile\(car\)),state\.weather\?\.wetness\|\|0\)/);
  assert.match(game,/const nx=car\.x\+Math\.cos\(car\.travel\)\*speed\*dt,ny=car\.y\+Math\.sin\(car\.travel\)\*speed\*dt;/);
  assert.match(game,/car\.travel=bounce\.angle;car\.slip=0;/,'a rebound cancels the slide');
  assert.match(game,/if\(grip\.sliding&&speed>8\)addSkidMarks\(car\);/);

@@ -69,5 +69,5 @@ test('Q37 game wiring: phone mounted on the pause menu, keys to the phone first,
  assert.match(game,/window\.addEventListener\('keydown',e=>\{\n  \/\/ Q37[^\n]*\n  if\(!\$\('pause-menu'\)\.hidden&&phoneUi\?\.key\(e\)\)return;/);
  assert.match(game,/Object\.keys\(pressed\)\.forEach\(k=>pressed\[k\]=false\);stick\.x=0;stick\.y=0;resetDrivingControls\(\);pause\.hidden=false;phoneUi\?\.opened\(\);/,'no pedal held through the phone');
  assert.match(phoneSrc,/max-height:520px\) and \(orientation:landscape\)[\s\S]*width:min\(500px,calc\(100vw - 330px\)\)/,'landscape phone: between wheel and pedals');
- assert.match(html,/game\.mjs\?v=192/);
+ assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=192);
 });

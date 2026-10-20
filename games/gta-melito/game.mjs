@@ -1588,7 +1588,7 @@ function tick(dt){
   }else{
    advanceNonlethalImpact(car,dt,canKnockbackMove);
    // Q10: each model has its own handling; wet roads (Q08) brake a little longer.
-   ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt,pressed.brake,vedamagedProfile(hicleProfile(car),car),state.weather?.wetness||0));
+   ({speed,angle}=(isMotorcycle(car)?stepMotorcycle:stepDriving)(car.speed||0,car.a,axes,pressed.handbrake,dt,pressed.brake,damagedProfile(vehicleProfile(car),car),state.weather?.wetness||0));
    const road=nearest(car.x,car.y,25,state.roads,true);
    const turn=guideIntersection({x:car.x,y:car.y,angle,speed},axes.x,road,
     state.graph,state.turnGuides,car.turnGuide||null,dt);
@@ -1610,7 +1610,7 @@ function tick(dt){
   }
   // Q10: the body points where the wheel says, but it travels where grip allows (recoverable slides).
   const grip=car.recoil>0?{travel:car.a,slip:0,speed,sliding:false}:
-   applyGrip(car,{angle:car.a,speed,dt,handbrake:pressed.handbrake,profile:vedamagedProfile(hicleProfile(car),car),wet:Math.min(1,wet+(surface?.gripLoss||0)),steer:axes.x});
+   applyGrip(car,{angle:car.a,speed,dt,handbrake:pressed.handbrake,profile:damagedProfile(vehicleProfile(car),car),wet:Math.min(1,wet+(surface?.gripLoss||0)),steer:axes.x});
   car.travel=grip.travel;car.slip=grip.slip;speed=grip.speed;
   if(grip.sliding&&speed>8)addSkidMarks(car);
   const nx=car.x+Math.cos(car.travel)*speed*dt,ny=car.y+Math.sin(car.travel)*speed*dt;

@@ -97,7 +97,7 @@ test('Q23 game wiring: hits damage vehicles, walls dent, player profile, drawing
  assert.match(game,/import \{[^}]*addDamage[^}]*\} from '\.\/vehicle-damage\.mjs\?v=\d+'/);
  assert.match(game,/addDamage\(target,speed,source,\{clock:state\.clock\}\);\n\s*addDamage\(source,speed,target,\{factor:DAMAGE_RULES\.strikerFactor/,'vehicle-vehicle hits in impactTraffic');
  assert.match(game,/if\(!way&&Math\.abs\(speed\)>=IMPACT_MIN_SPEED\)addDamage\(car,/,'walls and bollards dent the player car');
- assert.equal((game.match(/damagedProfile\(handlingProfile\(car\),car\)/g)||[]).length,2,'driving and grip use the damaged profile');
+ assert.equal((game.match(/damagedProfile\((?:handlingProfile|vehicleProfile)\(car\),car\)/g)||[]).length,2,'driving and grip use the damaged profile');
  assert.match(game,/if\(vehicle\?\.damage\)drawVehicleDamage\(c,vehicle,x,y,a,carDrawSize\(model\),state\.clock\);/);
  assert.match(game,/healOutOfView\(\[\.\.\.state\.traffic,\.\.\.state\.cars\],visibleBounds\(\)/);
  assert.match(game,/const result=payRepair\(state\.progress,vehicle\);\n\s*if\(result\.ok\)\{saveProgress\(localStorage,state\.progress\);/,'repair saved with the campaign');

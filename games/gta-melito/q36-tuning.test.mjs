@@ -71,6 +71,6 @@ test('Q36 neon underglow: drawn under the car, stronger at night, coloured night
 
 test('Q36 wired into the game: tuned profile when driving, panel sections',async()=>{
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
- assert.ok(game.includes('profile:vehicleProfile(car)'));assert.ok(game.includes('pressed.brake,vehicleProfile(car)'));
+ assert.ok(/profile:(?:damagedProfile\()?vehicleProfile\(car\)/.test(game));assert.ok(/pressed\.brake,(?:damagedProfile\()?vehicleProfile\(car\)/.test(game));
  for(const s of ['VERNICE','PRESTAZIONI','NEON SOTTOSCOCCA','drawNeonUnderglow(c,v','neonNightGlows('])assert.ok(game.includes(s),s);
 });
