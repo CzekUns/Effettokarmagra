@@ -53,7 +53,8 @@ export function applyNonlethalImpact(source,target,relativeSpeed=null){
  target.impactLock=IMPACT_LOCK_SECONDS;
  target.impactReturning=!!target.home;
  target.braking=false;target.stalled=0;
- if(isCar(target))target.speed=0;
+ // BF01: the struck car stops, but remembers its cruising speed to drive off again afterwards.
+ if(isCar(target)){if(target.speed>0)target.resumeSpeed=target.speed;target.speed=0;}
  return {strength:velocity,speed,dx:target.impactVX,dy:target.impactVY};
 }
 export function advanceNonlethalImpact(actor,dt,canMove=()=>true){

@@ -251,6 +251,9 @@ export {position as lanePosition,sidewalkTurn,nextPose as previewNextPose};
 export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockMinutes=null,valid=null){
  if(!Number.isFinite(dt)||dt<=0||agent.impactTime>0||agent.needsRoutineRecovery)return;
  const elapsed=Math.min(dt,.1);
+ // BF01: a knock sets a car's speed to 0; back on its lane it resumes its own cruising speed
+ // (before, a struck NPC stayed stopped in the middle of the road for good).
+ if(agent.body==='car'&&!(agent.speed>0)&&agent.resumeSpeed>0)agent.speed=agent.resumeSpeed;
  if(agent.residentRoutine){stepResidentRoutine(graph,agent,elapsed,index,clockMinutes,valid);return;}
  // BF01: the yielding car of a mutual block backs up along its own lane, then waits a moment.
  if(agent.body==='car'&&agent.backoff>0){backOff(graph,agent,elapsed,index);return;}

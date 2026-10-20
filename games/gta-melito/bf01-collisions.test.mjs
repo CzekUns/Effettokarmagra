@@ -60,6 +60,23 @@ test('BF01 recovery after a knock is allowed to move away from what it touches',
  assert.equal(vehiclesOverlap(npc,parked,0),false);
 });
 
+test('BF01 a struck NPC car drives off again at its own cruising speed (it used to stay stopped for good)',()=>{
+ const npc=firstCar(),cruise=npc.speed,c=Math.cos(npc.a),s=Math.sin(npc.a);
+ assert.ok(cruise>0&&npc.home,'set-up: a moving NPC with its own district');
+ applyNonlethalImpact({x:npc.x-c*6,y:npc.y-s*6,a:npc.a,speed:12,vx:c*12,vy:s*12},npc,12);
+ assert.equal(npc.speed,0,'the knock stops it');
+ for(let i=0;i<60&&npc.impactTime>0;i++)advanceNonlethalImpact(npc,dt);
+ assert.equal(npc.needsRoutineRecovery,true);
+ let back=null;
+ for(let i=0;i<300;i++){
+  stepAgents(graph,[npc],dt,null,{view,validRecovery:()=>true});
+  if(!back&&!npc.needsRoutineRecovery)back={x:npc.x,y:npc.y};
+ }
+ assert.ok(back,'back on its lane');
+ assert.equal(npc.speed,cruise,'same speed as before the knock');
+ assert.ok(Math.hypot(npc.x-back.x,npc.y-back.y)>20,'and driving again');
+});
+
 test('BF01 a shove stops against a car instead of sinking into it',()=>{
  const target={x:0,y:0,a:0,body:'car',home:{x:0,y:0,radius:50},speed:0},other={x:7.5,y:0,a:0,body:'car'};
  const index=makeCollisionIndex([target,other]);
