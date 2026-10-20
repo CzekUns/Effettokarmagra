@@ -852,3 +852,18 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** nuovo `q15-consolidamento.test.mjs` (4 test, falliscono senza le correzioni); resi tolleranti 1 controllo di BF09 e le versioni cache. Suite completa a fine lavoro.
 - **Cache:** `game.mjs?v=168`, `roads.mjs?v=154`, `junctions.mjs?v=002`, `camera-zoom.mjs?v=101`, `npc-commute.mjs?v=009`, `npc-density.mjs?v=002`, `npc-reactions.mjs?v=002`, `traffic-light-art.mjs?v=002`, `window-washers.mjs?v=002`, `street-professions.mjs?v=005`.
 - **Residui (Q15 resta `[ ]`):** sagome OSM sulla carreggiata visuale fuori zona (Via Papa Giovanni XXIII, Via Lago di Como), un'auto parcheggiata dentro una sagoma a (1308,1305), pedoni rasenti la chiesa nella sagoma, raggio di salita in auto di 9,5 m, telecamera veloce nelle inversioni a U. Non eseguiti per la regola di prove brevi: notte/pioggia e telefono completi, partita integrata di 5 minuti. Android reale non disponibile.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF15 menu NOVITÀ · DA APPROVARE
+- **Richiesta del committente:** le pixel art di Claude sono provvisorie e le giudica lui; servono un posto nel menu PAUSA per trovarle e giudicarle e un elenco che il merger usi per dirgli cosa guardare.
+- **Fatto:**
+  - nuovo `novita.mjs` con 23 voci (18 attive, 5 «in arrivo»), ognuna con lavoro, PR, cosa guardare ed esempio vero nella mappa;
+  - in `game.mjs`, `goToNovita` porta il giocatore a piedi su un posto libero e camminabile vicino all'esempio, con ora, meteo o mercato di prova (`state.preview`); `backFromNovita` ripristina posto, mezzo, ora e foto aerea;
+  - giudizi MI PIACE / DA RIFARE in localStorage e COPIA GIUDIZI come testo;
+  - sezione dopo MAPPA · ZOOM · SUONI, visibile anche sul telefono;
+  - `NOVITA_DA_APPROVARE.md` per il merger, con le coordinate reali; regola permanente in `AGENTS.md`.
+- **Test:** nuovo `bf15-novita.test.mjs` con 8 test. Resi tolleranti 2 controlli: l'ordine delle sezioni in BF11 e la riga del meteo in Q08.
+- **Browser** (Chrome headless, PC, 53 FPS, durata 11 s): 23 righe; VAI A VEDERE semaforo → ore 21:32, giocatore a piedi accanto all'incrocio; VAI A VEDERE torre → 12:02; TORNA DOVE ERI → partenza e 07:31; 0 errori JS (solo il favicon).
+- **Limiti:**
+  - esempi scelti vicino alla partenza;
+  - giudizi solo in questo browser, non inviati;
+  - non provato su telefono reale né, in questa tornata, nel browser in modalità telefono.

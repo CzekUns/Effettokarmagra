@@ -241,6 +241,19 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
 .pause-details{font-size:10px;line-height:1.7;color:#d5dbc7;background:#101b17;border:1px solid #536951;padding:9px;margin:10px 0}
 .pause-section{margin:12px 0 0;padding:10px 0 0;border-top:1px solid #4d6150}
 .pause-section h3{margin:0 0 8px;font-size:10px;letter-spacing:.16em;color:#aebaaa}
+/* BF15: NOVITÀ · DA APPROVARE — elementi grafici provvisori da giudicare, con VAI A VEDERE. */
+.novita-list{display:grid;gap:8px;max-height:46vh;overflow:auto;margin-top:8px;padding-right:2px}
+.novita-item{background:#101b17;border:1px solid #536951;padding:8px 9px}
+.novita-name{font-size:12px;font-weight:bold;color:#f2e0b9}
+.novita-meta{font-size:9px;letter-spacing:.08em;color:#e6c46f;margin:2px 0 4px}
+.novita-what{font-size:10px;line-height:1.6;color:#c6d0bf}
+.novita-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.novita-actions button{background:#30483f;border:1px solid #82927a;color:#f2e0b9;padding:6px 9px;font-size:10px;font-weight:bold;min-height:32px}
+.novita-actions button[aria-pressed=true]{background:#dfc27b;color:#1c2a23;border-color:#fff0ba}
+.novita-actions button:disabled{opacity:.45}
+.novita-off{opacity:.55}
+#novita-export{width:100%;box-sizing:border-box;font:10px/1.5 monospace;background:#0c1512;color:#d5dbc7;border:1px solid #536951;margin:6px 0 0;padding:6px}
+#novita-export[hidden],#novita-back[hidden]{display:none}
 @media(min-width:761px) and (pointer:fine),(min-width:761px) and (pointer:none){
  html,body{height:100%;overflow:hidden}
  body{background:#101714}
@@ -273,6 +286,7 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  .app{width:100%;height:100dvh;max-width:none;margin:0;padding:0}
  .header,.hud,.road-width-bar,.instructions,.credits{display:none!important}
  .pause-section:not(.pause-play){display:none!important}.pause-section{margin:0;padding:0;border:0}.pause-section h3{display:none}
+ .pause-section.pause-novita{display:block!important;margin:10px 0 0;padding:8px 0 0;border-top:1px solid #4d6150}.pause-section.pause-novita h3{display:block}.novita-list{max-height:52vh}
  .controls{display:block!important;position:static;height:0;padding:0}
  .controls .buttons,.controls .dpad{display:none!important}
  .coins{display:none!important}
@@ -410,6 +424,12 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  </section>
  <div class="pause-details" id="pause-details">Carico i dati del gioco…</div>
  <p class="pause-info">Su PC restano disponibili tastiera e tasti WASD/frecce; missioni e mappa completa sono qui.</p><p class="pause-info" id="signal-note">SEMAFORI DI GIOCO, NON RILEVATI: sono posizionati sugli incroci principali per giocare, non sono i semafori reali di Melito.</p><p class="pause-info" id="market-note">MERCATO DEL VENERDÌ · RIONE 219: il luogo è reale, giorno e orari non sono verificati; banchi, merci e venditori sono di fantasia (segnaposto).</p>
+ <section class="pause-section pause-novita" aria-labelledby="pause-h-novita"><h3 id="pause-h-novita">NOVITÀ · DA APPROVARE</h3>
+ <p class="pause-info">Elementi grafici e visivi PROVVISORI aggiunti da Claude (account ilconsulentelogistico-hue): la grafica definitiva la decide il committente. VAI A VEDERE ti porta a piedi davanti a un esempio vero; MI PIACE / DA RIFARE restano solo in questo browser e COPIA GIUDIZI li prepara come testo. <b id="novita-count"></b></p>
+ <div class="pause-shortcuts"><button id="novita-back" type="button" hidden>TORNA DOVE ERI</button><button id="novita-copy" type="button">COPIA GIUDIZI</button></div>
+ <textarea id="novita-export" readonly hidden rows="7" aria-label="Giudizi da copiare"></textarea>
+ <div class="novita-list" id="novita-list" role="list" aria-label="Novità da approvare"></div>
+ </section>
  <section class="pause-section pause-tools" aria-labelledby="pause-h-tools"><h3 id="pause-h-tools">STRUMENTI · CONFRONTO STRADE</h3>
  <div class="road-width-bar" aria-label="Confronto larghezza delle strade">
   <div><strong>STRADA RESIDENZIALE</strong> <span id="road-width-current">ADESSO · 15,4</span> <small>unità grafiche</small></div>
@@ -426,4 +446,4 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  <div class="rotate-screen" id="rotate-screen" hidden><div class="rotate-card"><span class="rotate-icon" aria-hidden="true">▰</span><h2>RUOTA LO SCHERMO</h2><p>GTA Melito si gioca in orizzontale. Ruota il telefono per continuare.</p></div></div>
 </div>
 <div class="controls" aria-label="Comandi"><div class="touch-actions" aria-label="Azioni"><button class="control-action" id="action">ENTRA IN VEICOLO</button><button id="sprint" aria-label="Corri a piedi">CORRI</button><div class="pedals" aria-label="Pedali di guida"><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="accelerator" aria-label="Tieni premuto per accelerare">ACCELERA</button><button id="reverse" aria-label="Tieni premuto per andare in retromarcia">RETRO</button></div></div><div class="dpad" aria-hidden="true"></div><div class="buttons"><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-auto" aria-label="Ripristina zoom automatico">AUTO</button><button class="mini" id="zoom-in" aria-label="Regola zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div></div>
-</main><script type="module" src="./game.mjs?v=173"></script></body></html>
+</main><script type="module" src="./game.mjs?v=175"></script></body></html>
