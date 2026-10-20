@@ -126,7 +126,7 @@ test('BF09 commuters and planned paths never use the gates',()=>{
 
 test('BF09 game wiring: gates on load and on the width switch, straight cut, mouths, fading, balance, versions',async()=>{
  const [game,html,commute]=await Promise.all(['game.mjs','index.html','npc-commute.mjs'].map(f=>readFile(new URL('./'+f,import.meta.url),'utf8')));
- assert.equal((game.match(/buildRoadGraph\(state\.roads,\{border:state\.map\.border,gateClear:\(x,y\)=>!buildingAt\(x,y\)\}\)/g)||[]).length,2);
+ assert.equal((game.match(/buildRoadGraph\(state\.roads,\{border:state\.map\.border,gateClear:\(x,y\)=>!buildingAt\(x,y\)[,}]/g)||[]).length,2);
  assert.match(game,/state\.borderGates=borderGateList\(state\.graph\.gates,state\.map\.projection\)/);
  assert.equal((game.match(/\{ctx\.save\(\);borderPath\(ctx\);ctx\.clip\(\);drawCityStreets\(ctx,roads,/g)||[]).length,2,'streets cut along the border, also under a lifted roof');
  assert.match(game,/function nearBorder\(x0,y0,x1,y1,margin=12\)/,'only near the border: the clip is not paid in the centre');

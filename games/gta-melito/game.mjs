@@ -26,9 +26,9 @@ import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWind
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker} from './traffic-collision.mjs?v=128';
 import {buildParkingBays,bayOffset,fitsParkingBay,nearestFreeStalls,parkInStall,insideParkingStrip,drawParkingBays} from './parking-bays.mjs?v=001';
 import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
-import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=001';
-import {prepareSignalPosts,drawStopLines,drawSignals,signalGlows} from './traffic-light-art.mjs?v=001';
-import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=001';
+import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=002';
+import {prepareSignalPosts,drawStopLines,drawSignals,signalGlows} from './traffic-light-art.mjs?v=002';
+import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=002';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=002';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
@@ -43,7 +43,7 @@ import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} fro
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
-import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=100';
+import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=101';
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=098';
 import {handlingProfile,applyGrip} from './vehicle-handling.mjs?v=003';
 import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=006';
@@ -475,7 +475,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  state.zoom=CAMERA_ZOOM_MAX;state.zoomTarget=CAMERA_ZOOM_MAX;state.zoomBias=1;
  state.spawn=[point.x,point.y];Object.assign(state.player,{x:point.x,y:point.y,a:point.a,car:-1,vehicleType:null});
  state.camera.x=point.x;state.camera.y=point.y;state.distance=0;
- state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y)});
+ state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y),laneClear:(x,y)=>!buildingAt(x,y)});
  // BF09: the border gates as plain data (WGS84 too), the anchor points for future neighbouring maps.
  state.borderGates=borderGateList(state.graph.gates,state.map.projection);
  state.turnGuides=buildTurnGuides(state.graph);
@@ -1114,7 +1114,7 @@ function compareRoadWidths(){
  setRoadWidthMode(getRoadWidthMode()==='before'?'wide':'before');
  // Every consumer shares the same module instance, including roads/traffic,
  // street furniture, crosswalks and building-side storefront placements.
- state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createEnclosures();createParkingBays();
+ state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y),laneClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createEnclosures();createParkingBays();
  state.traffic=createTraffic(state.npcClockMinutes);prepareSignals();
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
@@ -1152,6 +1152,10 @@ function updateHud(){
  const shopNear=p.car<0&&!eventAction?nearestCounter(p):null;
  const enterable=p.car<0?nearestEnterableVehicle(state.cars,p):null;
  $('action').textContent=eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ // Q15: on foot with nothing in reach the touch button is shown dimmed (it used to invite to get into a
+ // car that was not there; the tap then only said to get closer to a vehicle).
+ const idle=p.car<0&&!eventAction&&!shopNear&&!bank&&!enterable;
+ $('action').classList.toggle('idle',idle);$('action').setAttribute('aria-disabled',idle?'true':'false');
  boardPrompt(p.car>=0?'':eventAction||(shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');

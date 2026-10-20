@@ -7,7 +7,7 @@
  * quale ripassa aspetta che lui sia passato (è un pedone del sistema di collisioni).
  * Moto e scooter vengono ignorati. Lo sprite è quello esistente del lavavetri (fermo durante il
  * lavaggio, nessun «camminare sul posto»); il tergivetro sul vetro è un piccolo effetto disegnato. */
-import {signalAspect} from './junctions.mjs?v=001';
+import {signalAspect} from './junctions.mjs?v=002';
 import {roadTrafficLaneOffset} from './road-widths.mjs?v=043';
 import {vehicleShape,vehicleHitsPedestrian,nearbyColliders} from './traffic-collision.mjs?v=128';
 
