@@ -631,3 +631,10 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 - **Galleria Atlante:** facciate a vetrata continua con montanti, traversi e un riflesso diagonale; tetto rosato con atrio vetrato, come sulla foto aerea.
 - **Verifiche:** foto Chrome headless di villa, Municipio (cancelli e lato nord), recinto di fronte al mercato e galleria, di giorno e alle 23:30 con pioggia, su PC e su telefono 844×390. Telefono reale non provato.
 
+### 2026-10-20 — BF13 sovramappa satellitare di confronto (Claude)
+- **Novità:** PAUSA › STRUMENTI › «SATELLITE» mostra la foto aerea Esri World Imagery allineata alla città, sopra la scena, con opacità 25/50/75/100%.
+  - Al 50% si vedono insieme il gioco e la foto: si nota subito dove mancano parchi, campi, recinti, edifici e ponti.
+  - Al 100% si può ricalcare.
+- **Dove compare:** è uno strumento di lavoro, non grafica di gioco. Parte sempre spento e l'attribuzione resta in alto al centro mentre è acceso.
+- **Prove:** screenshot di controllo (fuori dal repo) su PC e telefono in 3 zone del centro.
+- **Cosa emerge dall'audit:** i segnaposto dell'infill coprono molte aree verdi. Dettagli in `AUDIT_SATELLITE.md`.

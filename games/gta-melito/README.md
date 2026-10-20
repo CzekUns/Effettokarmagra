@@ -48,6 +48,7 @@ Piccolo gioco arcade originale ispirato alla visuale dall'alto dei GTA degli ann
 - **OpenStreetMap contributors**, https://www.openstreetmap.org/copyright — Open Database License (ODbL 1.0). I dati stradali ed edilizi derivano dalla community OSM.
 - **ISTAT** e `guglielmo/geojson-italy`, https://github.com/guglielmo/geojson-italy — confine comunale ufficiale riferito al 1 gennaio 2026, dati CC BY. Conservare l'attribuzione in caso di distribuzione.
 - Approccio alla guida 2D ispirato a **Punjab Stories** di Hnjra, https://github.com/harmanhanjra/punjab-stories (MIT, © 2026 Hnjra). Il gioco contiene una nostra implementazione Canvas originale, non una copia delle risorse GTA.
+- **Esri World Imagery** (Esri, Maxar, Earthstar Geographics e la comunità GIS) — foto aerea usata SOLO come riferimento visivo: sovramappa di confronto spenta di default (PAUSA › STRUMENTI › SATELLITE, attribuzione a schermo mentre è accesa) e audit in `AUDIT_SATELLITE.md`. Nel repository non ci sono immagini satellitari, solo coordinate stimate a vista.
 - Non utilizzare Google Maps come sorgente per estrarre o ridisegnare il database cartografico.
 
 ## Dati reali: come funziona l'importazione

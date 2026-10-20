@@ -95,3 +95,12 @@ I bug sono segnalazioni del committente sulla versione giocabile, non diagnosi o
   - **Galleria Atlante:** probabilmente l'edificio OSM 794814541, accanto all'Ufficio Postale Melito 2; facciate e atrio di vetro.
   - **Parco Prima Casa:** NON disegnato, perché non è stato localizzato.
   - **Non ancora fatto:** la piscina in rovina non è disegnata; il gioco non ha ponti; le porte dei residenti dentro i recinti non generano residenti; non è stato provato su un telefono reale.
+### [ ] BF13 — Foto aerea Esri come sovramappa di confronto e audit dei dettagli mancanti — P1
+**Segnalazione (committente, 20/10/2026):** «prova a usare sempre esri world imagery per vedere dove servono dettagli, come overmappa di rendering».
+**Correzione:**
+- nuovo `satellite-overlay.mjs`: foto Esri World Imagery allineata alla mappa del gioco, disegnata sopra la scena in trasparenza. È accesa e spenta da PAUSA › STRUMENTI (opacità 25/50/75/100%) o da `?satellite=50`;
+- tile solo in vista, cache LRU di 96 tile, nessuna richiesta da spenta, nessun errore senza rete;
+- attribuzione a schermo mentre è accesa e nei crediti; la scelta non viene salvata;
+- audit di tutta Melito in `AUDIT_SATELLITE.md` e `audit-satellite.csv` (50 segnalazioni, priorità, Q/BF suggerite), con solo coordinate e descrizioni.
+**Accettazione:** allineamento verificato su almeno 3 zone con lo scarto in metri; costo nullo a sovramappa spenta; prove su PC e telefono; almeno 40 segnalazioni concrete.
+- **Stato 2026-10-20:** corretto in PR (in revisione) — sovramappa provata in Chrome headless su PC e telefono 844×390; conversione uguale a `osm.mjs` entro 0,06 m; scarto foto/sagome OSM 1,7–3,8 m in 3 zone; 0 richieste da spenta; 50 segnalazioni. Non provato su telefono reale.
