@@ -143,7 +143,7 @@ test('BF12 game wiring: data loaded, walls before parking and pedestrians, colli
  assert.match(game,/function validWalk\(x,y\)\{[\s\S]{0,220}enclosureWalkBlocked\(state\.enclosures,x,y\)/,'walls in every walking check');
  const load=game.indexOf(' createEnclosures();\n state.cars=[];state.streetObjects=null;createParkingBays();');
  assert.ok(load>0&&load<game.indexOf('state.people=createCityPedestrians()'),'walls before stalls and pedestrians');
- assert.match(game,/state\.streetObjects=null;createEnclosures\(\);createParkingBays\(\);/,'rebuilt with the road widths');
+ assert.match(game,/state\.streetObjects=null;(?:createPitches\(\);)?createEnclosures\(\);createParkingBays\(\);/,'rebuilt with the road widths');
  assert.match(game,/const hit=enclosureVehicleContacts\(state\.enclosures,\{x,y,a\},bodyShape\(vehicle\),enclosureTime\(\)\);/);
  assert.match(game,/function canKnockbackMove[\s\S]{0,1600}enclosureVehicleContacts\(/);
  assert.ok(game.indexOf('drawEnclosureWalls(ctx,state.enclosures,bounds,zoom);')<game.indexOf('drawCityBuildings(ctx,[...inferred,...buildings],zoom);'),'walls under the roofs');

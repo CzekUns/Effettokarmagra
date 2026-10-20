@@ -60,6 +60,7 @@ import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,return
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=001';
+import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches} from './football-pitches.mjs?v=001';
 import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=001';
 import {createCarRadio} from './car-radio.mjs?v=003';
 import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=001';
@@ -211,7 +212,20 @@ function coveredByBuilding(x,y){
 }
 function validWalk(x,y){
  return x>=0&&y>=0&&x<state.map.projection.width&&y<state.map.projection.height&&!buildingAt(x,y)&&
-  !(state.enclosures&&enclosureWalkBlocked(state.enclosures,x,y));
+  !(state.enclosures&&enclosureWalkBlocked(state.enclosures,x,y))&&!(state.pitches&&pitchWalkBlocked(state.pitches,x,y));
+}
+// Q32: football pitches traced on the Esri aerial photo; the gate opens on the side reachable on foot.
+function createPitches(){
+ state.pitches=null;
+ state.pitches=preparePitches(undefined,{walkable:validWalk,
+  nearStreet:(x,y)=>{const r=nearest(x,y,24,state.roads);return !!r&&r.distance<=visualRoadWidth(r.road)/2+2;}});
+ if(state.pitches.failed.length)console.warn('Campetti non collocati: '+state.pitches.failed.map(f=>f.id+' ('+f.reason+')').join(', '));
+}
+// Q32: the Q33 match will open here; until then the gate only says so.
+function openFootballMatch(pitch){
+ state.notice={text:'CALCETTO · '+pitch.nome.toUpperCase()+' · LA PARTITA ARRIVA CON LA Q33',until:state.clock+4};
+ cityEventBubble(state.events,state.player,'Calcetto in arrivo!');
+ updateHud();
 }
 // BF12: perimeter walls, gates and guard booths of the enclosures (villa comunale, Municipio…),
 // computed on the current road widths: the walls stand just beyond the painted pavement.
@@ -448,7 +462,9 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
   infillCache.sourceOsmBuildings===map.buildings.length&&
   Array.isArray(infillCache.buildings)&&infillCache.stats?.generated===infillCache.buildings.length?
   infillCache:generateUrbanInfill(map);
- state.inferredBuildings=inferred.buildings;state.infillStats=inferred.stats;
+ // Q32: invented placeholders standing on a real pitch (seen on the aerial photo) are left out.
+ state.inferredBuildings=inferred.buildings.filter(b=>!infillOnPitch(b));state.infillStats=inferred.stats;
+ state.pitchInfillRemoved=inferred.buildings.length-state.inferredBuildings.length;
  prepareCityStyles(state.inferredBuildings,[]);
  const facade=['#e6bb7b','#edca92','#dfab67','#f0d59e','#d89c63','#e8b879'];
  const roof=['#dc7138','#e18443','#c85c2e','#df793c','#d76631'];
@@ -463,6 +479,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  state.ground=prepareUrbanGround([...state.buildings,...state.inferredBuildings],state.roads);
  state.roadGrid=makeIndex(state.roads);state.buildingGrid=makeIndex(state.buildings);
  state.inferredGrid=makeIndex(state.inferredBuildings);
+ createPitches();
  state.bankEntrances=resolveBankEntrances(map.pois||[],state.roads,
   (x,y)=>validWalk(x,y)&&inside([x,y],toRing(state.map.border)),visualRoadWidth);
  const possible=state.roads.filter(q=>DRIVE.has(q.t)&&q.p.length>=4);
@@ -645,6 +662,10 @@ function canKnockbackMove(x,y,actor){
  if(actor&&state.enclosures&&(actor.body==='car'||state.cars.includes(actor))&&
   enclosureVehicleContacts(state.enclosures,{x,y,a:actor.a},bodyShape(actor),{barriers:false})>
   enclosureVehicleContacts(state.enclosures,{x:actor.x,y:actor.y,a:actor.a},bodyShape(actor),{barriers:false})+1e-9)return false;
+ // Q32: nor against a pitch fence (walkers already stop there: validWalk).
+ if(actor&&state.pitches&&(actor.body==='car'||state.cars.includes(actor))&&
+  pitchVehicleContacts(state.pitches,{x,y,a:actor.a},bodyShape(actor))>
+  pitchVehicleContacts(state.pitches,{x:actor.x,y:actor.y,a:actor.a},bodyShape(actor))+1e-9)return false;
  // Q42: nessuna spinta dentro i banchi del mercato (persone e veicoli).
  if(state.market&&actor){
   if(actor.body==='car'||state.cars.includes(actor)){if(marketBlocksVehicle(state.market,{x,y,a:actor.a},bodyShape(actor),actor))return false;}
@@ -850,6 +871,9 @@ function toggleVehicle(){
   // Q06: next to the awning of a named OSM shop the action opens its counter.
   const shop=nearestCounter(p);
   if(shop){openShop(shop);return;}
+  // Q32: at the gate (or inside the lines) of a calcetto pitch.
+  const pitch=pitchHotspot(state.pitches,p.x,p.y);
+  if(pitch){openFootballMatch(pitch);return;}
   const entrance=nearestBankEntrance(state.bankEntrances,p);
   if(entrance){
    const local={x:.5,y:.89,a:-Math.PI/2,moving:false};
@@ -927,6 +951,11 @@ function carBlocked(x,y,a,which,vehicle=state.cars[which]){
  if(state.enclosures){
   const hit=enclosureVehicleContacts(state.enclosures,{x,y,a},bodyShape(vehicle),enclosureTime());
   if(hit>0&&!(Number.isFinite(vehicle?.x)&&hit<=enclosureVehicleContacts(state.enclosures,{x:vehicle.x,y:vehicle.y,a:vehicle.a},bodyShape(vehicle),enclosureTime())+1e-9))return true;
+ }
+ // Q32: pitch fences and goals, same rule (a vehicle touching one may always move away from it).
+ if(state.pitches){
+  const hit=pitchVehicleContacts(state.pitches,{x,y,a},bodyShape(vehicle));
+  if(hit>0&&!(Number.isFinite(vehicle?.x)&&hit<=pitchVehicleContacts(state.pitches,{x:vehicle.x,y:vehicle.y,a:vehicle.a},bodyShape(vehicle))+1e-9))return true;
  }
  // BF01: touching another vehicle already (after a crash), every move that separates them is
  // allowed: the player can always reverse or steer away instead of staying pinned.
@@ -1115,7 +1144,7 @@ function compareRoadWidths(){
  setRoadWidthMode(getRoadWidthMode()==='before'?'wide':'before');
  // Every consumer shares the same module instance, including roads/traffic,
  // street furniture, crosswalks and building-side storefront placements.
- state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y),laneClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createEnclosures();createParkingBays();
+ state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y),laneClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createPitches();createEnclosures();createParkingBays();
  state.traffic=createTraffic(state.npcClockMinutes);prepareSignals();
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
@@ -1146,18 +1175,21 @@ function updateHud(){
  const boostLeft=boostSecondsLeft(state.boost,state.clock);
  $('vehicle').textContent=p.car>=0?(isMotorcycle(state.cars[p.car])?'MOTO · ':'AUTO · ')+Math.round(Math.abs(state.cars[p.car].speed)*3.6)+' KM/H':'A PIEDI'+(boostLeft?' · CARICO '+boostLeft+' S':'');
  const n=state.roadGrid?nearest(p.x,p.y,70):null;
- if(n&&n.road.n)$('street').textContent=n.road.n.toUpperCase();
+ // Q32: a short notice (e.g. the calcetto gate) wins over the street name for a few seconds.
+ if(state.notice&&state.clock<state.notice.until)$('street').textContent=state.notice.text;
+ else if(n&&n.road.n)$('street').textContent=n.road.n.toUpperCase();
  else if(n)$('street').textContent='STRADA SENZA NOME · OSM';
  const bank= p.car<0?nearestBankEntrance(state.bankEntrances,p):null;
  const eventAction=p.car<0?cityEventAction(state.events,p):null;
  const shopNear=p.car<0&&!eventAction?nearestCounter(p):null;
  const enterable=p.car<0?nearestEnterableVehicle(state.cars,p):null;
- $('action').textContent=eventAction||(shopNear?'COMPRA':bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ const pitchNear=p.car<0&&!eventAction&&!shopNear?pitchHotspot(state.pitches,p.x,p.y):null;
+ $('action').textContent=eventAction||(shopNear?'COMPRA':pitchNear?'GIOCA A CALCETTO':bank?'ENTRA IN BANCA':p.car>=0?'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
  // Q15: on foot with nothing in reach the touch button is shown dimmed (it used to invite to get into a
  // car that was not there; the tap then only said to get closer to a vehicle).
- const idle=p.car<0&&!eventAction&&!shopNear&&!bank&&!enterable;
+ const idle=p.car<0&&!eventAction&&!shopNear&&!pitchNear&&!bank&&!enterable;
  $('action').classList.toggle('idle',idle);$('action').setAttribute('aria-disabled',idle?'true':'false');
- boardPrompt(p.car>=0?'':eventAction||(shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
+ boardPrompt(p.car>=0?'':eventAction||(shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):pitchNear?'GIOCA A CALCETTO':bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
@@ -1250,6 +1282,7 @@ function paintStaticScene(ctx,bounds,zoom){
  if(nearBorder(x0,y0,x1,y1,GATE_RULES.mouth+4)){ctx.save();borderPath(ctx);ctx.clip();drawCityStreets(ctx,roads,zoom);ctx.restore();drawGateMouths(ctx,bounds);}
  else drawCityStreets(ctx,roads,zoom);
  if(state.parkingBays)drawParkingBays(ctx,query(state.parkingBays.strips,state.bayGrid,x0,y0,x1,y1),zoom);
+ drawPitches(ctx,state.pitches,bounds,zoom);
  drawEnclosureWalls(ctx,state.enclosures,bounds,zoom);
  drawCityBuildings(ctx,[...inferred,...buildings],zoom);
  // The road remains below the entire roof, including the authored church art.
@@ -1289,6 +1322,7 @@ function drawRoofReveal(ctx,buildings,roads,dt,bounds){
   if(nearBorder(art.x0-22,art.y0-22,art.x1+22,art.y1+22)){ctx.save();borderPath(ctx);ctx.clip();drawCityStreets(ctx,roads,state.zoom);ctx.restore();}
   else drawCityStreets(ctx,roads,state.zoom);
   if(state.parkingBays)drawParkingBays(ctx,query(state.parkingBays.strips,state.bayGrid,art.x0-22,art.y0-22,art.x1+22,art.y1+22),state.zoom);
+  drawPitches(ctx,state.pitches,[art.x0-22,art.y0-22,art.x1+22,art.y1+22],state.zoom);
   drawEnclosureWalls(ctx,state.enclosures,[art.x0-22,art.y0-22,art.x1+22,art.y1+22],state.zoom);
   ctx.globalAlpha=1-.72*amount;
   drawCityBuildings(ctx,[b],state.zoom);

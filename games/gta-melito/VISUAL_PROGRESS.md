@@ -662,3 +662,7 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 ### 2026-10-20 — Q17 banco degli ambulanti
 - Nessuna nuova arte. Il pannello acquisti, lo stesso dei negozi Q06, ora si apre anche al banco dei furgoncini, con l'intestazione «AMBULANTE · MELITO». Sulla plancia PC compare la scritta «E · COMPRA · NOME DEL BANCO». Foto: banco «Zeppole e panzerotti» in Via Roma.
 
+
+## 2026-10-20 — Q32 campetti (grafica PROVVISORIA, da approvare)
+- Campi in erba sintetica a strisce, linee bianche (calcio a 5: area a semicerchio, centro; calcio a 11: aree FIFA), porte con rete, recinzione a rete verde scuro con pali ogni 3 m, cancello socchiuso, fari ai quattro angoli. Disegno procedurale nel livello a terra, sotto i tetti.
+- Dove guardarli: Via delle Palme (550, 1198) e (528, 1276); Corso Europa (1026, 1882).

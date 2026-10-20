@@ -148,7 +148,7 @@ test('BF02 game wiring: strip before parked vehicles, drawn under the roofs, reb
  assert.match(prof,/const lateral=vehicleOffset\?vehicleOffset\(edge\.streetWidth\):edge\.streetWidth\/2\+2\.25;/);
  const streets=game.indexOf('drawCityStreets(ctx,roads,zoom);'),bays=game.indexOf('drawParkingBays(ctx,',streets),roofs=game.indexOf('drawCityBuildings(ctx,[...inferred,...buildings],zoom)');
  assert.ok(streets>0&&bays>streets&&bays<roofs,'strip painted after the asphalt and before the roofs');
- assert.match(game,/state\.graph=buildRoadGraph\(state\.roads(?:,\{border:state\.map\.border[^}]*\})?\);state\.streetObjects=null;(?:createEnclosures\(\);)?createParkingBays\(\);/,'A/B of road widths rebuilds the strip');
+ assert.match(game,/state\.graph=buildRoadGraph\(state\.roads(?:,\{border:state\.map\.border[^}]*\})?\);state\.streetObjects=null;(?:createPitches\(\);)?(?:createEnclosures\(\);)?createParkingBays\(\);/,'A/B of road widths rebuilds the strip');
  assert.match(game,/\|\|inParkingBay\(x,y,margin\)/,'no bins or bollards in the stalls');
  assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=156);
 });
