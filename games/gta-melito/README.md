@@ -192,3 +192,21 @@ Fix v104: `vehicle-alpha.mjs` contiene i contorni (envelope delle silhouette der
 - Logica e test: `car-radio.mjs`, `car-radio.test.mjs`. Una prova di funzioni in sandbox JavaScript non sostituisce ascolto reale o verifica legale.
 
 <!-- Q02: five-slot fictional NPC agenda is being integrated; see TODO for status. -->
+
+## Varchi di confine (BF09, 20 ottobre 2026)
+
+Le strade carrabili che OpenStreetMap continua oltre il confine ISTAT vengono tagliate da `osm.mjs` (`clipPolyline`). L'ultimo nodo di ognuna è un **varco** verso un altro comune. Sulla mappa attuale sono 70: trunk 12, primary 4, secondary 2, tertiary 4, unclassified 7, residential 22, service 16, track 3.
+- **Traffico.** Un'auto o moto NPC che arriva a un varco in uscita prosegue nel buio oltre il taglio e sfuma fino a sparire (sparizione controllata). Al suo posto un'altra auto entra da un varco in entrata libero, uscendo dal buio. Il numero di mezzi resta costante e nessun mezzo compare o sparisce a metà strada. Ai varchi non ci sono più inversioni a U, e i sensi unici che escono dal comune non sono più capolinea (BF03).
+- **Varchi esclusi.** Un varco il cui tratto nel buio passa sotto un edificio disegnato oltre il confine resta nei dati, ma il traffico non lo usa.
+- **Grafica.** Le strade finiscono con un taglio dritto lungo il confine, senza estremità arrotondate. Al varco un imbocco a trapezio fa proseguire asfalto e marciapiedi per 16 m, restringendoli un poco e sfumandoli nell'area nera.
+- **Dati per il futuro.** `state.borderGates` (prodotto da `borderGateList` in `border-gates.mjs`) elenca ogni varco con:
+  - `id` stabile (`osmWay@x,y`);
+  - coordinate di gioco e WGS84 (`lon`, `lat`);
+  - angolo verso l'esterno, nome e tipo della strada, OSM way;
+  - sensi ammessi (`entrata`, `uscita`, `entrambi`);
+  - `usatoDalTraffico`;
+  - `comune`, lasciato **vuoto** perché il comune confinante non è nei dati.
+
+  È la base per collegare in futuro le mappe dei comuni vicini.
+- **Numero di mezzi.** `balanceTraffic` (`roads.mjs`) porta il traffico al numero `state.trafficTarget` (oggi 140), sempre passando dai varchi. Le ore di punta (Q13) possono quindi cambiare il numero di mezzi senza far comparire auto in vista.
+- **Giocatore.** Il giocatore non attraversa il confine: resta come prima.

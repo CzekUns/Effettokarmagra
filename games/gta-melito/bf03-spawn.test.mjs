@@ -135,6 +135,7 @@ test('BF03 a ring of three cars blocking one another: exactly one backs up, then
 test('BF03 game wiring: traffic built in one place, with models, the player and walls, on load and on the width switch',async()=>{
  const game=await readFile(new URL('./game.mjs',import.meta.url),'utf8');
  assert.equal((game.match(/state\.traffic=createTraffic\(\);/g)||[]).length,2);
- assert.match(game,/createAgents\(state\.graph,140,189,'car',state\.cars,\{motorcycleEvery:4,model:trafficModel,\s*keepClear:\[\{x:p\.x,y:p\.y,r:14\}\],clear:\(x,y\)=>!buildingAt\(x,y\)\}\)/);
+ assert.match(game,/const TRAFFIC_COUNT=140;/);
+ assert.match(game,/createAgents\(state\.graph,TRAFFIC_COUNT,189,'car',state\.cars,\{motorcycleEvery:4,model:trafficModel,\s*keepClear:\[\{x:p\.x,y:p\.y,r:14\}\],clear:\(x,y\)=>!buildingAt\(x,y\)\}\)/);
  assert.ok(!/state\.traffic\.forEach\(\(v,i\)=>\{const bike/.test(game),'no model assigned after the spawn checks');
 });

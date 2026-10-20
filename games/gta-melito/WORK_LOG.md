@@ -570,3 +570,43 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
   - le figure sono grandi rispetto alle auto, quindi al finestrino il lavavetri sovrappone un poco la carrozzeria (si disegna sopra o sotto secondo chi sta davanti);
   - non provato su telefono reale.
 - **Da fare:** revisione e merge di BF07 e BF08; frecce e semafori per lo scooter dei pendolari (Q12/Q22).
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF09 varchi di confine: sparizione controllata e taglio delle strade
+- **Richiesta del committente:** le strade che finiscono in un altro comune e le aree nere diventano punti di sparizione controllata delle auto NPC, da usare in futuro per collegare nuove mappe; le strade non devono più finire arrotondate sul confine.
+- **Prima (Chrome headless, 3 minuti di gioco):**
+  - 70 estremità di strade carrabili sul confine;
+  - 24 inversioni a U al confine e 1 salto visibile, cioè lo scambio di corsia dell'inversione;
+  - 9 sensi unici in uscita dal comune erano capolinea (BF03 li trattava come trappole);
+  - le strade finivano con mezzo cerchio di asfalto e marciapiede sopra l'area nera.
+- **Correzione:**
+  - Nuovo `border-gates.mjs`. `findBorderGates` trova i varchi: un nodo con un solo vicino carrabile a ≤ 1,5 m dal confine ISTAT. Ognuno ha `id` stabile (`osmWay@x,y`), angolo verso l'esterno, strada, tipo, OSM way e sensi (`entrata`, `uscita`, `entrambi`).
+  - `borderGateList` (in gioco `state.borderGates`) esporta i varchi anche in WGS84, con `comune` vuoto perché il dato non c'è: è la base per collegare in futuro le mappe dei comuni vicini.
+  - `gateMouthClear` esclude dal traffico i varchi il cui tratto nel buio passa sotto un edificio disegnato oltre il confine (2 casi: Corso Europa e Via Cupa di Melito).
+  - `roads.mjs`: `buildRoadGraph(roads,{border,gateClear})` crea `graph.gates`. In `liveCarEdges` un arco che arriva a un varco non è una trappola; in `hasThroughExit` conta come uscita.
+  - In `nextPose` un'auto del traffico che arriva a un varco in uscita prosegue oltre la fine dell'arco (t > 1) e sfuma (`gateFade`) in 11 m. A 13 m un'altra auto entra da un varco in entrata libero, scelto in modo deterministico: nessuno nell'imbocco e i primi 10 m della corsia liberi. L'auto entra con t < 0, uscendo dal buio, e la nuova casa di quartiere è verso l'interno.
+  - Pendolari Q12, percorsi pianificati, mestieri fermi e residenti non usano i varchi. Durante un urto la modalità varco si annulla.
+  - `balanceTraffic` e `createGateVehicle` portano il traffico a `state.trafficTarget` (oggi 140) aggiungendo mezzi solo dai varchi e togliendoli fuori vista o al prossimo varco: è la leva per le ore di punta della Q13.
+  - `game.mjs`: strade tagliate dritte con un clip sul confine, applicato solo vicino al confine; con il clip ovunque il disegno in centro su PC passava da circa 20 a circa 40 ms per fotogramma. Imbocchi a trapezio disegnati solo fuori dal confine (clip `evenodd`): asfalto, marciapiede, cordolo e silhouette proseguono per 16 m, si restringono all'82% e sfumano; c'è anche la mezzeria sulle strade a doppio senso larghe. Mezzi e fari sfumano con `gateFade`; l'asfalto bagnato è tagliato allo stesso modo.
+- **Cache:** `roads.mjs?v=149`, `npc-commute.mjs?v=004` (importa roads 149), `game.mjs?v=159`, nuovo `border-gates.mjs?v=001`.
+- **Test:**
+  - Nuovo `bf09-border-gates.test.mjs` con 7 test:
+    - varchi, sensi, angolo e WGS84 su un comune quadrato di prova;
+    - un senso unico che esce non è più una trappola;
+    - uscita nel buio con sfumatura completa e rientro da un altro varco senza salti né inversioni;
+    - nessun ingresso finché la corsia è occupata;
+    - `balanceTraffic` in su e in giù, senza comparse fuori dai varchi;
+    - pendolari esclusi;
+    - collegamento nel gioco.
+  - Adattati 2 controlli di collegamento di BF02 e BF03, che ora accettano `TRAFFIC_COUNT` e `{border}`.
+  - Suite **306/306**.
+- **Browser (Chrome headless, dopo, 3 minuti):**
+  - 70 varchi (2 esclusi), 86 uscite e 85 entrate, 140 mezzi dall'inizio alla fine;
+  - 0 inversioni al confine, 0 salti visibili, 0 auto ferme ai capolinea e 0 ferme in vista oltre 10 s, 0 errori JS;
+  - fotografati in movimento uscite nel buio (SP 500, Via San Vito) e ingressi dal buio (una residenziale senza nome), su PC e telefono 844×390;
+  - prova di stress BF01: compenetrazioni 0, nessun NPC fermo in vista, come sulla base.
+- **Prestazioni (`draw()` medio, macchina condivisa molto carica):** centro su PC 13,3 ms prima e 15,0 ms dopo (stessa coppia di misure), telefono 52,4 e 53,4 ms; vicino al confine 0,3–3 ms in entrambi. Differenza entro il rumore.
+- **Limiti:**
+  - le auto parcheggiate e i pedoni non usano i varchi;
+  - il comune confinante non è noto;
+  - un varco con tratto nel buio molto curvo usa la direzione dell'ultimo tratto;
+  - i mezzi che entrano tengono il modello del mezzo uscito;
+  - non provato su Android reale.
