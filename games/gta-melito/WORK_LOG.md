@@ -1030,3 +1030,12 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Cache:** `game.mjs?v=182`, `minigame-slot.mjs?v=001`.
 - **Test:** `q28-slot.test.mjs` (7 test). Browser breve su PC e telefono: giro, saldo, pausa, uscita, 0 errori JS.
 - **Limiti:** grafica provvisoria da approvare; cabinato del bar in attesa della Q27; nessun suono; Android reale non provato.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q29 video poker da cabinato «POKER DEL GOLFO»
+- **Cosa:** nuovo `minigame-poker.mjs`, secondo minigioco distinto dalla slot Q28, sullo stesso contratto: pannello sopra la scena in pausa, radio abbassata, ritorno alla scena. Jacks or Better semplificato: 5 carte, TIENI (tasti 1–5, tocco sulla carta o pulsanti TIENI), un cambio, tabella delle combinazioni a schermo moltiplicata per la puntata (1–5).
+- **Crediti:** solo virtuali, propri del cabinato (`gta-melito-poker-v1`), separati da slot ed euro Q06; nessun acquisto, ricarica, rete o scommessa; ricomincia gratis da 50. Puntata salvata alla distribuzione, vincita al cambio: un ricaricamento a metà mano ridà le stesse carte senza rimborsi né doppioni.
+- **Mazzo:** 52 carte, Fisher–Yates con il generatore della slot (seme + numero della mano), cambi presi in ordine dalla sesta carta.
+- **Avvio provvisorio:** PAUSA › STRUMENTI › «PROVA VIDEO POKER», `?minigioco=poker`; aggancio `openPokerGame()` per il cabinato Q27.
+- **Cache:** `game.mjs?v=184`, `minigame-poker.mjs?v=001`.
+- **Test:** `q29-poker.test.mjs` (8 test); resi tolleranti a `||isPokerOpen()` in coda alle condizioni di pausa 2 controlli di `q28-slot.test.mjs` e 1 di `local-shops.test.mjs` (Q06); suite completa 425/425. Chrome headless PC e telefono 844×390, 53–63 FPS: tasti e tocchi veri, TIENI, cambio pagato e salvato, pausa sotto, ESC, 0 sovrapposizioni, 0 errori JS. Dopo le foto: l'etichetta TIENI sopra le carte toccava la tabella, ora è un nastro dorato dentro la carta. Prova browser ripetuta 3 volte (una per i numeri, una dopo il ritocco).
+- **Limiti:** grafica provvisoria da approvare; cabinato Q27 mancante; niente suoni; Android reale non provato.

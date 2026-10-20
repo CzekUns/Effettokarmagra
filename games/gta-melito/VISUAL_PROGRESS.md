@@ -712,3 +712,7 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 
 ### 2026-10-20 — Q28 «SLOT DEL VESUVIO» (provvisoria, da approvare)
 Schermata della slot in pixel art disegnata via codice. Griglia logica 192×128, ingrandita senza sfocature. Cornice rosso scuro e oro con luci che si alternano; tre rulli bianchi con simboli 16×16 ingranditi ×2 (limone, caffè, pizza, babà, sfogliatella, Pulcinella, Vesuvio, cornetto rosso), riga vincente rossa e pannello crediti. È un segnaposto di stile: il proprietario può sostituire i simboli con sprite propri lasciando invariate le regole.
+
+### 2026-10-20 — Q29 video poker «POKER DEL GOLFO» (grafica PROVVISORIA, da approvare)
+- Schermata pixel art disegnata in codice: tavolo verde con cornice e luci, tabella delle combinazioni su due colonne (la riga vinta si illumina), 5 carte 30×42 px con rango, seme piccolo e seme grande, corona dorata sulle figure, dorso blu a rombi, nastro dorato «TIENI» sulle carte tenute; pulsanti TIENI 1–5 per il touch.
+- Da vedere: PAUSA › STRUMENTI › PROVA VIDEO POKER, oppure `?minigioco=poker`, su PC e telefono in orizzontale.
