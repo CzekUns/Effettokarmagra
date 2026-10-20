@@ -188,3 +188,6 @@ Ritagli singoli: [friggitore](./assets/people/npc-friggitore-4dir-4frames.png), 
 | Lavoro successivo | Difetti visivi ancora presenti; esperimenti non conclusi. |
 
 **Registro obbligatorio:** appendere la sessione a [WORK_LOG.md](./WORK_LOG.md); quando il lavoro riguarda asset o resa grafica, annotare anche [VISUAL_PROGRESS.md](./VISUAL_PROGRESS.md). Non attribuire a test automatici la conferma della qualità estetica, né dare per reali edifici/verniciature ipotizzati.
+
+### Torre del serbatoio di Via Madrid — nuova grafica (20 ottobre 2026)
+La [pixel art rossa/crema](./assets/buildings/serbatoio-melito-scacchi-rossi.png) (PNG RGBA 1254×1254) è stata prodotta per la torre a fungo di Via Madrid. Il **rosso** è la correzione esplicita del committente; dettagli e altezza restano interpretazioni, senza foto pubblica diretta verificata. Il vecchio **placeholder procedurale è sostituito**, non disegnato sotto il nuovo asset. Crop in `municipio-landmarks.mjs`: `x=350,y=62,width=555,height=1128`, nearest-neighbor, ancorato al basamento OSM con proiezione in alto-sinistra. Restano ombra dinamica, fade passando sotto e luce di notte. Verificare scala e occlusioni su browser/Android.

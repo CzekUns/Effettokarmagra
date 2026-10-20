@@ -1,7 +1,7 @@
 /* GTA Melito — BF12: il complesso del Municipio.
  * - Torre del serbatoio idrico «a fungo» (serbatoio pensile), simbolo del quartiere, dipinta a scacchi:
  *   posizione dalla foto aerea Esri World Imagery (fusto al centro dell'edificio tondo OSM 733703519,
- *   vasca a fungo con copertura a spicchi). I COLORI della scacchiera e l'altezza sono STIME: non ci
+ *   vasca a fungo con copertura a spicchi). L'altezza e i dettagli sono STIME; il colore ROSSO e' indicato dal committente. Non ci
  *   sono foto verificate. Landmark disegnato sopra la città, con ombra lunga, e trasparente quando il
  *   giocatore gli passa vicino (come i tetti).
  * - Ex piscina comunale di via Madrid, in rovina e interrata (bonifica conclusa il 15/01/2025, fonte
@@ -9,6 +9,23 @@
  *   il livello del terreno. La posizione della vasca dentro l'edificio è una stima.
  * Il poligono OSM non cambia: resta l'ostacolo di sempre, nessuno ci cade dentro. */
 const TAU=Math.PI*2;
+export const WATER_TOWER_SPRITE_PATH='./assets/buildings/serbatoio-melito-scacchi-rossi.png';
+export const WATER_TOWER_CROP=Object.freeze({x:350,y:62,width:555,height:1128});
+let waterTowerSprite=null;
+export function loadWaterTowerSprite(){
+ if(typeof Image==='undefined')return null;
+ if(!waterTowerSprite){
+  waterTowerSprite=new Image();
+  waterTowerSprite.decoding='async';
+  waterTowerSprite.src=WATER_TOWER_SPRITE_PATH;
+ }
+ return waterTowerSprite;
+}
+export function waterTowerSpriteReady(){
+ const im=loadWaterTowerSprite();
+ return !!(im?.complete&&im.naturalWidth>0&&im.naturalHeight>0);
+}
+
 // The game's 2.5D lift (building-volume.mjs): height goes up-left on screen.
 export const UP=Object.freeze({x:-.22,y:-.66});
 
@@ -30,10 +47,6 @@ export function towerRevealTarget(t,actors){
  return 1;
 }
 export function checker(row,col,colors){return colors[(row+col)%2];}
-function shade(hex,d){
- const n=parseInt(hex.slice(1),16),c=s=>Math.max(0,Math.min(255,((n>>s)&255)+d));
- return '#'+[c(16),c(8),c(0)].map(v=>v.toString(16).padStart(2,'0')).join('');
-}
 /* Long ground shadow, drawn under the tower (dynamic layer, before the tower itself). */
 function drawTowerShadow(c,t){
  const L=t.height*.62,sx=.62,sy=.5,ex=t.x+sx*L,ey=t.y+sy*L;
@@ -43,51 +56,23 @@ function drawTowerShadow(c,t){
  c.beginPath();c.ellipse(ex+sx*t.tank*.55,ey+sy*t.tank*.55,t.tank*1.05,t.tank*.8,Math.atan2(sy,sx),0,TAU);c.fill();
  c.restore();
 }
+/* Render only the PNG, not the old procedural tower beneath it. */
 export function drawWaterTower(c,t,{alpha=1,zoom=1}={}){
+ const img=loadWaterTowerSprite();
+ if(!img?.complete||!img.naturalWidth||!img.naturalHeight)return;
  c.save();c.globalAlpha=alpha;
  drawTowerShadow(c,t);
- // shaft: a cylinder seen from above-south, two columns of checker squares (lit left, shaded right)
- const base={x:t.x,y:t.y},neck=towerPoint(t,t.height*t.tankFrom);
- const ux=neck.x-base.x,uy=neck.y-base.y,ul=Math.hypot(ux,uy),px=-uy/ul,py=ux/ul,r=t.shaft;
- const rows=Math.max(6,Math.round(ul/2.4));
- for(let i=0;i<rows;i++)for(let col=0;col<2;col++){
-  const a=i/rows,b=(i+1)/rows,o0=col?0:-r,o1=col?r:0;
-  c.beginPath();
-  c.moveTo(base.x+ux*a+px*o0,base.y+uy*a+py*o0);c.lineTo(base.x+ux*b+px*o0,base.y+uy*b+py*o0);
-  c.lineTo(base.x+ux*b+px*o1,base.y+uy*b+py*o1);c.lineTo(base.x+ux*a+px*o1,base.y+uy*a+py*o1);c.closePath();
-  c.fillStyle=shade(checker(i,col,t.colors),col?-34:6);c.fill();
- }
- c.strokeStyle='#2a2622';c.lineWidth=.3;
- c.beginPath();c.moveTo(base.x-px*r,base.y-py*r);c.lineTo(neck.x-px*r,neck.y-py*r);c.moveTo(base.x+px*r,base.y+py*r);c.lineTo(neck.x+px*r,neck.y+py*r);c.stroke();
- // mushroom tank: a frustum from the neck to the rim, checker sectors, then the ribbed cap
- const rim=towerPoint(t,t.height*.86),cap=towerPoint(t,t.height);
- const sectors=20,rings=3;
- for(let ring=0;ring<rings;ring++)for(let k=0;k<sectors;k++){
-  const a0=k/sectors*TAU,a1=(k+1)/sectors*TAU,f0=ring/rings,f1=(ring+1)/rings;
-  const at=(f,ang)=>{const cx=neck.x+(rim.x-neck.x)*f,cy=neck.y+(rim.y-neck.y)*f,rr=r+(t.tank-r)*Math.pow(f,.8);return [cx+Math.cos(ang)*rr,cy+Math.sin(ang)*rr];};
-  const q=[at(f0,a0),at(f0,a1),at(f1,a1),at(f1,a0)];
-  // front (south) sectors are lit, the sides darker: a rounded body
-  const light=Math.sin((a0+a1)/2)*16-Math.cos((a0+a1)/2)*10;
-  c.beginPath();c.moveTo(...q[0]);c.lineTo(...q[1]);c.lineTo(...q[2]);c.lineTo(...q[3]);c.closePath();
-  c.fillStyle=shade(checker(ring,k,t.colors),Math.round(light-14));c.fill();
- }
- c.strokeStyle='#2c2723';c.lineWidth=.35;c.beginPath();c.arc(rim.x,rim.y,t.tank,0,TAU);c.stroke();
- // cap: shallow dome with radial ribs (as on the aerial photo)
- const g=c.createRadialGradient(cap.x-t.tank*.3,cap.y-t.tank*.35,1,cap.x,cap.y,t.tank);
- g.addColorStop(0,'#f2efe6');g.addColorStop(1,'#b9b4a6');
- c.fillStyle=g;c.beginPath();c.arc((rim.x+cap.x)/2,(rim.y+cap.y)/2,t.tank*.97,0,TAU);c.fill();
- if(zoom>=1.1){
-  c.strokeStyle='#8f8a7c';c.lineWidth=.22;
-  for(let k=0;k<18;k++){const a=k/18*TAU;c.beginPath();c.moveTo(cap.x+Math.cos(a)*1.2,cap.y+Math.sin(a)*1.2);
-   c.lineTo((rim.x+cap.x)/2+Math.cos(a)*t.tank*.95,(rim.y+cap.y)/2+Math.sin(a)*t.tank*.95);c.stroke();}
- }
- c.fillStyle='#6f6a5f';c.beginPath();c.arc(cap.x,cap.y,1.4,0,TAU);c.fill();
+ const width=t.tank*2,height=t.height*.81,shear=-(UP.x*t.height)/height;
+ c.translate(t.x,t.y);c.transform(1,0,shear,1,0,0);
+ c.imageSmoothingEnabled=false;
+ const r=WATER_TOWER_CROP;
+ c.drawImage(img,r.x,r.y,r.width,r.height,-width/2,-height,width,height);
  c.restore();
 }
 /* Obstruction light on the cap at night (an artistic, not surveyed, detail): drawn above the darkness. */
 export function drawWaterTowerLight(c,t,{darkness=0,clock=0,alpha=1}={}){
  if(darkness<.15)return;
- const cap=towerPoint(t,t.height),on=Math.floor(clock*1.1)%2===0;
+ const cap={x:t.x+UP.x*t.height,y:t.y-t.height*.81},on=Math.floor(clock*1.1)%2===0;
  c.save();c.globalAlpha=alpha*Math.min(1,darkness*1.5);
  c.fillStyle=on?'#ff3b2e':'#7a2620';c.beginPath();c.arc(cap.x,cap.y-.6,.75,0,TAU);c.fill();
  if(on){const g=c.createRadialGradient(cap.x,cap.y-.6,0,cap.x,cap.y-.6,5);g.addColorStop(0,'#ff4a3a88');g.addColorStop(1,'#ff4a3a00');c.fillStyle=g;c.beginPath();c.arc(cap.x,cap.y-.6,5,0,TAU);c.fill();}

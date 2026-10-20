@@ -741,3 +741,6 @@ Schermata della slot in pixel art disegnata via codice. Griglia logica 192×128,
 - **PR:** #34 integrata con risoluzione dei conflitti preesistenti; cinque PNG trasparenti `npc-mestieri-prima-reference-384x160.png` + 4 ritagli 96×160 integrati. Il vecchio atlante è conservato.
 - **Nel gioco:** `profession-sprites.mjs` punta al nuovo atlante, versioni cache aggiornate in `city-art.mjs`, `game.mjs` e `index.html` (game v197). Quattro mestieri: friggitore, vigile, lavavetri e contrabbandiere.
 - **Controlli:** file/commit letti da GitHub; nuovo test Node per PNG e collegamenti aggiunto, **non eseguito** in questa sessione. Ancora da verificare rendering reale su Chrome/Android, alpha apparente su sfondi chiari e scuri, movimenti e pivot.
+
+### 2026-10-20 — Asset rosso del serbatoio (Via Madrid)
+Nuova torre a scacchi rossi/crema, PNG RGBA `assets/buildings/serbatoio-melito-scacchi-rossi.png`. Rimosso il vecchio Canvas della torre; si visualizza soltanto il PNG con crop `350,62,555,1128`, inclinato 2.5D e ancorato nel punto OSM del fusto. Gli effetti di ombra/fade/luce restano. Il disegno è un'interpretazione grafica, non una ricostruzione fotografica verificata. Collaudo Android/desktop da svolgere.

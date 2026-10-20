@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {prepareWaterTowers,towerPoint,towerRevealTarget,checker,markRuinPool,UP,drawWaterTower,drawRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs';
+import {prepareWaterTowers,towerPoint,towerRevealTarget,checker,markRuinPool,UP,drawWaterTower,loadWaterTowerSprite,WATER_TOWER_SPRITE_PATH,WATER_TOWER_CROP,drawRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs';
 import {exposedFacade,shiftColor} from './building-volume.mjs';
 
 const read=f=>readFile(new URL('./'+f,import.meta.url),'utf8');
@@ -41,8 +41,15 @@ test('BF12 water tower: lifted like the buildings, checkered, see-through when t
  assert.equal(towerRevealTarget(t,[{x:under.x+2,y:under.y}]),.3,'under the tank');
  assert.equal(towerRevealTarget(t,[{x:t.x+1,y:t.y-3}]),.3,'beside the shaft');
  assert.equal(towerRevealTarget(t,[{x:t.x+60,y:t.y+60}]),1,'far away: solid');
- const ctx=fakeCanvas();drawWaterTower(ctx,t,{alpha:.5,zoom:2});
- assert.ok(ctx.calls.filter(k=>k==='fill').length>60,'shadow, checker shaft, checker tank and cap are painted');
+ const previousImage=globalThis.Image;
+ globalThis.Image=class{constructor(){this.complete=true;this.naturalWidth=1254;this.naturalHeight=1254;}set src(v){this.source=v;}};
+ try{
+  assert.ok(loadWaterTowerSprite().source.endsWith('serbatoio-melito-scacchi-rossi.png'));
+  const ctx=fakeCanvas();drawWaterTower(ctx,t,{alpha:.5,zoom:2});
+  assert.equal(ctx.calls.filter(k=>k==='drawImage').length,1,'single PNG in place of old tower');
+  assert.equal(ctx.calls.filter(k=>k==='fill').length,2,'only original ground shadow remains procedural');
+  assert.ok(ctx.calls.includes('transform'),'projection into city space');
+ }finally{globalThis.Image=previousImage;}
 });
 
 test('BF12 ruined pool: art flag only (polygon untouched), drawn with the sunken basin; puddles only when wet',()=>{
@@ -67,4 +74,15 @@ test('BF12 Municipio wiring: ruin in the building renderer, tower above the city
  assert.ok(game.indexOf('drawWaterTowerLight(c,t,',night)>night,'the warning light shines through the night');
  assert.match(game,/towerRevealTarget\(t,\[p\.car>=0\?state\.cars\[p\.car\]:p\]\)/);
  assert.match(game,/drawRuinPoolPuddles\(c,b,state\.weather\.wetness,state\.clock\)/);
+});
+
+test('BF12 water tower asset: RGBA PNG and crop inside image bounds',async()=>{
+ const bytes=await readFile(new URL(WATER_TOWER_SPRITE_PATH,import.meta.url));
+ assert.equal(bytes.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+ assert.equal(bytes.readUInt32BE(16),1254);assert.equal(bytes.readUInt32BE(20),1254);
+ assert.equal(bytes[25],6,'RGBA PNG with alpha');
+ assert.ok(WATER_TOWER_CROP.x+WATER_TOWER_CROP.width<=1254);
+ assert.ok(WATER_TOWER_CROP.y+WATER_TOWER_CROP.height<=1254);
+ const source=await read('municipio-landmarks.mjs');
+ assert.ok(!source.includes('const sectors=20'),'no procedural checkered tank under PNG');
 });

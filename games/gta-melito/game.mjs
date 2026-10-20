@@ -38,7 +38,7 @@ import {riderPickups,riderDestinations,riderOffers,riderVehicleCheck,acceptOffer
 import {openGoriziana,isGorizianaOpen} from './minigame-goriziana.mjs?v=001';
 import {openPoolMachine,isPoolOpen} from './minigame-pool.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes,SANTA_MARIA_OSM_ID} from './city-art.mjs?v=133';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes,SANTA_MARIA_OSM_ID} from './city-art.mjs?v=134';
 import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
 import {loadCarSprites,drawCarSprite,carDrawSize,CAR_TRAFFIC_SPRITE_IDS,CAR_PARKED_SPRITE_IDS,APE_CAR_IDS,COURIER_IDS,REFUSE_TRUCK_IDS,TOW_TRUCK_IDS,BUS_IDS} from './car-sprites.mjs?v=113';
 import {DAMAGE_RULES,DAMAGE_LABEL,addDamage,damagePoints,damageLevel,damagedProfile,repairCost,payRepair,repairMessage,healOutOfView,drawVehicleDamage,placeWorkshop,nearWorkshop,drawWorkshop} from './vehicle-damage.mjs?v=001';
@@ -72,7 +72,7 @@ import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitch
 import {GARAGES,nearestGarage,canStoreVehicle,depositVehicle,takeVehicle,vehicleFromEntry,chooseExitSpot,garageMessage,vehicleLabel,ownedEntry,ownedCount,garageById,GARAGE_SLOTS,drawGarage} from './garages.mjs?v=001';
 import {paintOptions,paintName,PERF_LEVELS,perfPrice,PAINT_PRICE,NEON_PRICE,NEON_COLORS,tunedProfile,buyTuning,tuningMessage,drawNeonUnderglow,neonNightGlows} from './tuning.mjs?v=001';
 import {openFootballGame,isFootballOpen,recordFootballResult,footballReturnPoint,footballRecordText} from './minigame-football.mjs?v=001';
-import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=001';
+import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,loadWaterTowerSprite,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=002';
 import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
@@ -719,6 +719,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  // BF12: Municipio complex: the ruin of the former pool and the chequered water tower (landmark).
  markRuinPool(state.buildings,enclosureData);
  state.waterTowers=prepareWaterTowers(enclosureData);state.towerReveal=new Map();
+ loadWaterTowerSprite(); // preload the authored red/cream tower
  const terracotta=applyApprovedArcadeRoofStyle(state.buildings);
  applyPiazzaRoofStudies(state.buildings);
  console.info('Melito visual city scan: '+survey.applied+'/'+survey.total+' buildings styled, '+survey.verified+' photo-verified');
