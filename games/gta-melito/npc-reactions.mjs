@@ -9,7 +9,7 @@
  * - Clacson NPC solo se a bloccare è il giocatore o un pedone in carreggiata; cooldown e limite.
  * Ogni posizione nuova passa da ctx.canStand: niente pedoni dentro muri o edifici. */
 import {lanePosition,DRIVABLE} from './roads.mjs?v=161';
-import {vehicleShape,vehicleHitsPedestrian} from './traffic-collision.mjs?v=129';
+import {vehicleShape,vehicleHitsPedestrian} from './traffic-collision.mjs?v=130';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=n=>{const x=Math.sin(n*12.9898)*43758.5453;return x-Math.floor(x);};

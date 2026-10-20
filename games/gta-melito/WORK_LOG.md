@@ -928,3 +928,15 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** `q18-service-vehicles.test.mjs`; suite completa 412/412. Browser breve e stress di 60 s senza errori né compenetrazioni.
 - **Limiti:** routine di lavoro rimandate alla Q20; non provato su un telefono reale.
 
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q19 carro attrezzi e autobus urbano
+- **Arte:** atlante `servizio2-16-rgba.png` (4×4 da 52×124), 8 + 8 livree disegnate via codice (`sources/servizio2-16-genera.py`) nello stile della Q18, alpha reale e contorno scuro senza alone. Grafica provvisoria.
+- **Integrazione:**
+  - `car-sprites.mjs`: `SERVICE2_VARIANTS`, `TOW_TRUCK_IDS`, `BUS_IDS`, dimensioni di disegno;
+  - `traffic-collision.mjs`: sagome `attrezzi-` e `autobus-`;
+  - `vehicle-handling.mjs`: `TOW_HANDLING`, `BUS_HANDLING`;
+  - `roads.mjs`: `BUS_ROADS`/`isBusModel`; l'autobus nasce, svolta e viene riposizionato solo sulle strade principali;
+  - `game.mjs`: traffico, sosta del solo carro attrezzi, corpo proprio in `ownBody`.
+- **Cache:** `game.mjs?v=176`, `car-sprites 113`, `traffic-collision 130`, `vehicle-handling 005`, `roads 156` e, a cascata, i moduli che li importano.
+- **Test:** `q19-service-vehicles.test.mjs`; suite completa 419/419. Browser breve e stress di 60 s senza errori né compenetrazioni.
+- **Limiti:** fermate e routine nella Q20; non provato su un telefono reale.
