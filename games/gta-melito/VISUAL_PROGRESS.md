@@ -662,3 +662,9 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 ### 2026-10-20 — Q17 banco degli ambulanti
 - Nessuna nuova arte. Il pannello acquisti, lo stesso dei negozi Q06, ora si apre anche al banco dei furgoncini, con l'intestazione «AMBULANTE · MELITO». Sulla plancia PC compare la scritta «E · COMPRA · NOME DEL BANCO». Foto: banco «Zeppole e panzerotti» in Via Roma.
 
+
+### 2026-10-20 — Q24 superfici stradali (grafica PROVVISORIA, da approvare)
+- Buche irregolari scure con bordo chiaro e crepe; tombini tondi a grata; rappezzi d'asfalto più scuro.
+- Dossi a strisce gialle e nere di traverso sulla carreggiata; pavé a pietre sfalsate con estremità arrotondate; sterrato marrone con due solchi.
+- Con la pioggia le buche diventano pozzanghere con riflesso e cerchi delle gocce.
+- Dove guardarli: dosso «vicino a chiesa» in Via Lavinaio (1120, 1142); buche e tombini in Vico Orefici (1147, 1218); pavé in Piazza Guglielmo Marconi; sterrato sulle 4 strade `track` OSM.

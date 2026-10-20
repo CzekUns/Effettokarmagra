@@ -852,3 +852,17 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** nuovo `q15-consolidamento.test.mjs` (4 test, falliscono senza le correzioni); resi tolleranti 1 controllo di BF09 e le versioni cache. Suite completa a fine lavoro.
 - **Cache:** `game.mjs?v=168`, `roads.mjs?v=154`, `junctions.mjs?v=002`, `camera-zoom.mjs?v=101`, `npc-commute.mjs?v=009`, `npc-density.mjs?v=002`, `npc-reactions.mjs?v=002`, `traffic-light-art.mjs?v=002`, `window-washers.mjs?v=002`, `street-professions.mjs?v=005`.
 - **Residui (Q15 resta `[ ]`):** sagome OSM sulla carreggiata visuale fuori zona (Via Papa Giovanni XXIII, Via Lago di Como), un'auto parcheggiata dentro una sagoma a (1308,1305), pedoni rasenti la chiesa nella sagoma, raggio di salita in auto di 9,5 m, telecamera veloce nelle inversioni a U. Non eseguiti per la regola di prove brevi: notte/pioggia e telefono completi, partita integrata di 5 minuti. Android reale non disponibile.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q24 buche, dossi e superfici stradali
+- **Cosa:** nuovo `road-surfaces.mjs` con buche, tombini, rappezzi, dossi rallentatori, pavé nelle piazze e sterrato sulle `track`. È tutta finzione arcade dichiarata (`SURFACE_FICTION`), posizionata in modo deterministico su tratti sicuri: lontano da ogni incrocio (≥ 20 m), dalle baie BF02, dal confine e dai bordi della carreggiata. Geometria OSM invariata.
+- **Effetti:**
+  - `roadSurfaceEffect` (ruote del mezzo e cooldown per elemento), `kerbEffect`;
+  - sobbalzo della camera e piccolo «sollevamento» dello sprite del giocatore;
+  - `thump` in `city-audio.mjs`;
+  - aderenza ridotta passata ad `applyGrip` come bagnato in più;
+  - NPC che rallentano prima dei dossi (`edge.bumps` in `roads.mjs`);
+  - `onSurfaceHit` per la Q23.
+- **Mezzi:** tabella `SURFACE_FEEL` per auto, Ape, scooter, moto e mezzi pesanti.
+- **Prove:** 7 test nuovi; suite 417/417; prova Chrome breve (56 FPS, 0 errori).
+- **Versioni:** `game.mjs?v=180`, `roads 161`, `city-audio 005`, `npc-commute 013`, `npc-reactions 005`, `npc-density 005`, `road-surfaces 001`.
+- **Limiti:** grafica provvisoria da approvare; pavé solo sui tratti di strada delle piazze; nessuna prova touch dedicata né su telefono reale.
