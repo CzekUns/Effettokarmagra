@@ -2,6 +2,7 @@
  * Locations come from the OSM map snapshot, names are not fabricated.
  * All characters, dialogues and jobs are fictional and unaffiliated with real businesses. */
 import {freshShopSave,sanitizeShopSave} from './local-shops.mjs?v=003';
+import {freshRiderSave,sanitizeRiderSave} from './rider.mjs?v=001';
 export const SAVE_KEY='gta-melito-campaign-v3';
 export const STORY=[
  {id:'primo-contatto',title:'01 · Il primo contatto',reward:75,time:0,
@@ -96,14 +97,14 @@ export function resolveLandmarks(map,spawn){
  return result;
 }
 // Q06: `shop` keeps purchases next to the money they were paid with (same save, same reset).
-export function freshProgress(){return {version:3,mission:0,stage:0,money:0,respect:0,remaining:null,completed:false,stamp:0,shop:freshShopSave()};}
+export function freshProgress(){return {version:3,mission:0,stage:0,money:0,respect:0,remaining:null,completed:false,stamp:0,shop:freshShopSave(),rider:freshRiderSave()};}
 export function readProgress(storage){
  let p;try{p=JSON.parse(storage.getItem(SAVE_KEY)||'null');}catch(_){}
  if(!p||p.version!==3)return freshProgress();
  const m=Number(p.mission),s=Number(p.stage);
  if(!Number.isInteger(m)||m<0||m>STORY.length||!Number.isInteger(s)||s<0||s>5)return freshProgress();
  if(m<STORY.length&&s>=STORY[m].steps.length)return freshProgress();
- return {version:3,mission:m,stage:m===STORY.length?0:s,money:Math.max(0,Math.min(999999,Number(p.money)||0)),respect:Math.max(0,Math.min(1000,Number(p.respect)||0)),remaining:Number.isFinite(p.remaining)&&p.remaining>=0?Math.min(500,p.remaining):null,completed:m===STORY.length,stamp:0,shop:sanitizeShopSave(p.shop)};
+ return {version:3,mission:m,stage:m===STORY.length?0:s,money:Math.max(0,Math.min(999999,Number(p.money)||0)),respect:Math.max(0,Math.min(1000,Number(p.respect)||0)),remaining:Number.isFinite(p.remaining)&&p.remaining>=0?Math.min(500,p.remaining):null,completed:m===STORY.length,stamp:0,shop:sanitizeShopSave(p.shop),rider:sanitizeRiderSave(p.rider)};
 }
 export function saveProgress(storage,p){
  try{storage.setItem(SAVE_KEY,JSON.stringify({...p,stamp:0}));return true;}catch(e){return false;}

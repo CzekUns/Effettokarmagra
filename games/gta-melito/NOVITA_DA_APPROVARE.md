@@ -35,3 +35,8 @@
 | `corriere` | Furgone del corriere | Q18 / in arrivo | si attiva quando c'è | — | cabina e vano, livrea inventata |
 | `nettezza` | Camion della nettezza urbana | Q18 / in arrivo | si attiva quando c'è | — | compattatore, livrea inventata |
 | `passeggeri` | Passeggeri su auto e scooter | Q21 / in arrivo | si attiva quando c'è | — | passeggeri visibili in marcia, «E · DAI UN PASSAGGIO» |
+
+### Aggiunta Q39–Q41 (2026-10-20, Claude) — non ancora in `novita.mjs`
+| id | Elemento | Lavoro / PR | Dove guardare (esempio) | Ora / parametri | Cosa giudicare |
+|---|---|---|---|---|---|
+| `rider` | App RIDER: pannello, riga HUD gialla, frecce gialle sull'asfalto, linea sulla minimappa, cubo giallo sul mezzo | Q39–Q41 / ramo `q39` | sali sullo scooter vicino alla partenza, premi `J` (o PAUSA › 🛵 RIDER) e accetta un'offerta | — | leggibilità di cubo, frecce e freccia attorno al giocatore a zoom scooter; pannello su telefono |

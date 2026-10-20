@@ -34,6 +34,7 @@ import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetP
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=003';
 import {openSlotMachine,isSlotOpen} from './minigame-slot.mjs?v=001';
 import {openPokerMachine,isPokerOpen} from './minigame-poker.mjs?v=001';
+import {riderPickups,riderDestinations,riderOffers,riderVehicleCheck,acceptOffer,cancelJob,stepJob,completeDelivery,riderStats,riderRoute,routeLookahead,PICKUP_RADIUS,DELIVERY_RADIUS} from './rider.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
 import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes,SANTA_MARIA_OSM_ID} from './city-art.mjs?v=132';
 import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
@@ -599,6 +600,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  state.cars.push(...state.foodVendors.map(v=>v.vehicle));
  // Q17: each food truck sells at its counter while its fryer is there.
  state.vendorShops=vendorShops(state.foodVendors);
+ state.riderPickups=riderPickups(state.shops,state.vendorShops);state.riderDestinations=riderDestinations(state.roads);
  // Separate two-wheel parking pass; OSM road candidates remain subject to
  // all road/building and existing parked-vehicle collision validations.
  let parkedBikeCount=state.cars.filter(isMotorcycle).length;
@@ -1036,6 +1038,116 @@ function returnFromBarGame(inner){
  inner.camera=shopInteriorCamera(inner.room,inner.player,canvas.clientWidth,canvas.clientHeight,interiorZoom());
  canvas.focus?.({preventScroll:true});updateHud();
 }
+// Q39–Q41: app RIDER (lavoro di finzione). Apribile da PAUSA, tasto J o openRiderApp() (icona Q37).
+const riderState=()=>state.rider||(state.rider={offers:[],job:null,route:null,routeTimer:0,seed:1,feedback:''});
+function riderVehicle(){const p=state.player;return p.car>=0?state.cars[p.car]:null;}
+function refreshRiderOffers(force=false){
+ const r=riderState();
+ if(!force&&r.offers.length)return;
+ if(force)r.seed++;
+ r.offers=riderOffers({pickups:state.riderPickups||[],destinations:state.riderDestinations||[],player:state.player,seed:r.seed*7919+(state.progress?.rider?.serial||0),save:state.progress?.rider});
+}
+function openRiderApp(){
+ if(!state.ready||state.bankInterior)return false;
+ if(!$('pause-menu').hidden)$('pause-close').click();
+ if(state.shopOpen)closeShop();
+ Object.keys(pressed).forEach(k=>pressed[k]=false);stick.x=0;stick.y=0;
+ state.riderOpen=true;refreshRiderOffers();renderRider();$('rider-panel').hidden=false;return true;
+}
+function closeRiderApp(){state.riderOpen=false;$('rider-panel').hidden=true;canvas.focus?.({preventScroll:true});}
+window.openRiderApp=openRiderApp;
+const riderTime=s=>Math.floor(Math.max(0,s)/60)+':'+String(Math.floor(Math.max(0,s)%60)).padStart(2,'0');
+const riderStars=n=>'★'.repeat(n)+'☆'.repeat(5-n);
+function renderRider(){
+ const r=riderState(),save=state.progress?.rider,st=riderStats(save),check=riderVehicleCheck(riderVehicle());
+ const box=$('rider-body');box.textContent='';
+ const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;box.appendChild(e);return e;};
+ el('p','rider-status'+(check.ok?' ok':''),check.ok?'🛵 MEZZO OK · puoi accettare consegne':'⚠ '+check.message);
+ if(r.job){
+  const j=r.job;
+  el('h3',null,'CONSEGNA ATTIVA #'+j.id);
+  el('p',null,j.phase==='pickup'?'1 · RITIRA da '+j.pickup.name+(j.pickup.truck?' (ambulante di fantasia)':''):'2 · CONSEGNA a '+j.client+' · '+j.dest.address);
+  el('p',null,j.phase==='pickup'?'Tempo limite dopo il ritiro: '+j.limit+' s · compenso '+j.pay+' €':'⏱ '+riderTime(j.elapsed)+' / '+riderTime(j.limit)+' · FRESCHEZZA '+j.fresh+'%');
+  const b=el('button','rider-cancel','ANNULLA CONSEGNA');b.addEventListener('click',()=>{cancelJob(state.progress.rider,r.job);r.job=null;r.route=null;r.feedback='Consegna annullata, nessuna penale.';saveProgress(localStorage,state.progress);renderRider();});
+ }else{
+  el('h3',null,'OFFERTE VICINE');
+  if(!r.offers.length)el('p',null,'Nessuna offerta qui intorno.');
+  r.offers.forEach((o,i)=>{
+   const b=el('button','rider-offer'+(check.ok?'':' poor'));
+   b.textContent=(i+1)+' · '+o.pickup.name+' → '+o.dest.address+' · '+o.meters+' m · '+o.limit+' s · '+o.pay+' €';
+   b.addEventListener('click',()=>acceptRider(i));
+  });
+  const n=el('button','rider-refresh','↻ NUOVE OFFERTE');n.addEventListener('click',()=>{refreshRiderOffers(true);renderRider();});
+ }
+ el('h3',null,'PROFILO · '+st.level.name.toUpperCase()+(st.level.bonus?' (+'+Math.round(st.level.bonus*100)+'% bonus)':''));
+ el('p',null,st.deliveries+' consegne · puntuali '+st.onTimePct+'% · '+(st.deliveries?riderStars(Math.round(st.avgStars))+' '+st.avgStars:'nessuna valutazione')+' · guadagnati '+st.earned+' € (bonus '+st.bonus+' €)');
+ if(st.level.next)el('p','rider-note','Prossimo livello: '+st.level.next.name+' a '+st.level.next.deliveries+' consegne'+(st.level.next.rating?' e media '+st.level.next.rating+'★':''));
+ for(const h of (save?.history||[]).slice(0,4))el('p','rider-review',riderStars(h.stars)+' '+h.client+': «'+h.review+'» · '+h.to+' · '+(h.pay+h.bonus)+' €');
+ el('p','rider-feedback',r.feedback||'');
+ el('p','rider-note','Lavoro di finzione: ritiri da locali con nome OSM o ambulanti inventati, vie OSM reali; clienti, ordini, compensi e recensioni inventati. Tasto J.');
+}
+function acceptRider(index){
+ const r=riderState(),res=acceptOffer(state.progress.rider,r.job,r.offers[index],riderVehicle());
+ r.feedback=res.message;
+ if(res.ok){r.job=res.job;r.offers=[];r.route=null;r.routeTimer=0;saveProgress(localStorage,state.progress);closeRiderApp();message(res.message,'RIDER · NUOVO ORDINE','RIDER');}
+ else renderRider();
+}
+function stepRiderGame(dt){
+ const r=state.rider,p=state.player;
+ if(!r?.job||!state.progress){$('rider-hud').hidden=true;return;}
+ const j=r.job,vehicle=riderVehicle(),cargo=j.cargo!=null?state.cars[j.cargo]:null;
+ const res=stepJob(j,{x:p.car>=0?vehicle.x:p.x,y:p.car>=0?vehicle.y:p.y,vehicle,vehicleId:p.car>=0?p.car:null,cargoPos:cargo,dt});
+ if(res?.type==='picked'){r.route=null;r.routeTimer=0;message(res.message,'RIDER · PACCO CARICATO','RIDER');}
+ else if(res?.type==='arrived'){
+  const out=completeDelivery(state.progress,j);r.job=null;r.route=null;
+  if(out.ok){saveProgress(localStorage,state.progress);refreshCampaign();
+   message((out.onTime?'IN TEMPO':'IN RITARDO')+' · '+out.seconds+' s · freschezza '+out.fresh+'% · +'+out.total+' € (bonus '+out.bonus+' €) · '+riderStars(out.stars)+' «'+out.review+'»'+(out.levelUp?' · NUOVO LIVELLO: '+out.levelUp.name:''),'RIDER · CONSEGNATO','CLIENTE');}
+ }else if(res&&res.message&&state.clock-(r.hintAt||-9)>4){r.hintAt=state.clock;state.notice={text:res.message,until:state.clock+3};}
+ if(!r.job){$('rider-hud').hidden=true;return;}
+ // Percorso sul grafo, ricalcolato ogni 2 s se il giocatore esce dalla traccia.
+ r.routeTimer-=dt;
+ const here=p.car>=0?vehicle:p,goal=j.phase==='pickup'?j.pickup:j.dest;
+ const look=r.route&&routeLookahead(r.route.points,here);
+ if(!r.route||(r.routeTimer<=0&&look&&look.offRoute>25)){r.route=riderRoute(state.graph,here,goal)||{points:[{x:goal.x,y:goal.y}],length:0};r.routeTimer=2;}
+ const d=Math.round(Math.hypot(goal.x-here.x,goal.y-here.y));
+ $('rider-hud').hidden=false;
+ $('rider-hud').textContent=j.phase==='pickup'?'🛵 RITIRO · '+j.pickup.name+' · '+d+' m':
+  '📦 '+j.dest.address+' · '+d+' m · ⏱ '+riderTime(j.limit-j.elapsed)+(j.elapsed>j.limit?' RITARDO':'')+' · FRESCO '+j.fresh+'%';
+ $('rider-hud').classList.toggle('late',j.phase==='deliver'&&j.elapsed>j.limit);
+}
+function drawRiderWorld(c){
+ const r=state.rider;if(!r?.job||state.bankInterior)return;
+ const j=r.job,p=state.player,here=p.car>=0?state.cars[p.car]:p,goal=j.phase==='pickup'?j.pickup:j.dest;
+ c.save();
+ // Frecce gialle leggere sull'asfalto lungo il percorso (ogni ~10 m, solo vicino al giocatore).
+ const pts=r.route?.points||[];c.fillStyle='rgba(255,214,64,.55)';
+ for(let i=1;i<pts.length;i++){
+  const a=pts[i-1],b=pts[i],len=Math.hypot(b.x-a.x,b.y-a.y),ang=Math.atan2(b.y-a.y,b.x-a.x);
+  for(let t=5;t<len;t+=10){const x=a.x+(b.x-a.x)*t/len,y=a.y+(b.y-a.y)*t/len;
+   if(Math.hypot(x-here.x,y-here.y)>90)continue;
+   c.save();c.translate(x,y);c.rotate(ang);c.beginPath();c.moveTo(1.6,0);c.lineTo(-1,-1.1);c.lineTo(-.4,0);c.lineTo(-1,1.1);c.closePath();c.fill();c.restore();}
+ }
+ // Punto di ritiro / consegna: anello pulsante giallo.
+ const pulse=1+.15*Math.sin(state.clock*5);
+ c.strokeStyle='#ffd640';c.lineWidth=.6;c.beginPath();c.arc(goal.x,goal.y,(j.phase==='pickup'?PICKUP_RADIUS:DELIVERY_RADIUS)*.55*pulse,0,Math.PI*2);c.stroke();
+ // Cubo giallo sul mezzo che porta il pacco.
+ const cargo=j.cargo!=null?state.cars[j.cargo]:null;
+ if(cargo){c.save();c.translate(cargo.x,cargo.y);c.rotate(cargo.a+Math.PI/2);c.translate(0,1.9);
+  c.fillStyle='#8a6a10';c.fillRect(-.95,-.75,1.9,1.7);c.fillStyle='#ffd23a';c.fillRect(-.95,-1.05,1.9,1.6);
+  c.fillStyle='#fff3a8';c.fillRect(-.95,-1.05,1.9,.35);c.strokeStyle='#3a2c06';c.lineWidth=.12;c.strokeRect(-.95,-1.05,1.9,1.9);c.restore();}
+ // Freccia HUD attorno al giocatore verso il prossimo tratto.
+ const look=routeLookahead(pts,here),t=look?.target||goal,ang=Math.atan2(t.y-here.y,t.x-here.x),s=Math.max(1,9/state.zoom);
+ c.translate(here.x+Math.cos(ang)*6*s,here.y+Math.sin(ang)*6*s);c.rotate(ang);c.scale(s,s);
+ c.fillStyle='#ffd640';c.strokeStyle='#2b2206';c.lineWidth=.3;c.beginPath();c.moveTo(2.2,0);c.lineTo(-1.2,-1.6);c.lineTo(-.4,0);c.lineTo(-1.2,1.6);c.closePath();c.fill();c.stroke();
+ c.restore();
+}
+function drawRiderMini(){
+ const j=state.rider?.job;if(!j)return;
+ const {k,ox,oy}=state.mini,pts=state.rider.route?.points||[],goal=j.phase==='pickup'?j.pickup:j.dest;
+ r.save();r.strokeStyle='#ffd640';r.lineWidth=2;r.beginPath();
+ pts.forEach((q,i)=>i?r.lineTo(ox+q.x*k,oy+q.y*k):r.moveTo(ox+q.x*k,oy+q.y*k));r.stroke();
+ r.fillStyle='#ffd640';r.fillRect(ox+goal.x*k-3,oy+goal.y*k-3,6,6);r.restore();
+}
 function closeShop(){state.shopOpen=null;$('shop-panel').hidden=true;canvas.focus?.({preventScroll:true});updateHud();}
 // Q21: passaggi. Un passante anonimo «autostoppista» accanto al mezzo fermo sale su un posto libero
 // (E · DAI UN PASSAGGIO); con qualcuno a bordo la prima E lo fa scendere, con la mancia se è arrivato.
@@ -1247,7 +1359,7 @@ function drawSkidMarks([x0,y0,x1,y1]){
 }
 function tick(dt){
  if(!state.ready)return;
- if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||state.shopOpen||isSlotOpen()||isPokerOpen()){
+ if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||state.shopOpen||state.riderOpen||isSlotOpen()||isPokerOpen()){
   for(const key of Object.keys(pressed))pressed[key]=false;
   stick.x=0;stick.y=0;
   return;
@@ -1401,6 +1513,7 @@ function tick(dt){
   state.lastSave+=dt;
   if(state.lastSave>4){state.lastSave=0;saveProgress(localStorage,state.progress);}
  }
+ stepRiderGame(dt);
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
  const movement={inVehicle:p.car>=0,
   speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?RUN_SPEED:WALK_SPEED):0,
@@ -1910,6 +2023,7 @@ function draw(dt=0){
  drawParkedMotorcycleHints();drawLiftHints();
  for(const bank of state.bankEntrances)if(bank.x>=x0&&bank.x<=x1&&bank.y>=y0&&bank.y<=y1)drawBankEntrance(c,bank,state.clock);
  if(state.player.car<0)for(const e of state.shopEntrances||[])if(e.x>=x0&&e.x<=x1&&e.y>=y0&&e.y<=y1)drawShopEntrance(c,e,state.clock);
+ drawRiderWorld(c);
  // BF13: foto aerea di confronto sopra tutta la scena, in trasparenza (spenta: nessun costo).
  if(state.satellite?.enabled)state.satellite.draw(c,[x0,y0,x1,y1],state.zoom);
 }
@@ -1982,6 +2096,7 @@ function drawMini(){
  if(!state.mapCanvas||state.bankInterior||state.shopInterior)return;
  r.clearRect(0,0,168,142);r.drawImage(state.mapCanvas,0,0);
  if(state.progress)drawMinimapLandmarks(r,state.landmarks,activeTarget(state.progress,state.landmarks),state.mini);
+ drawRiderMini();
  const {k,ox,oy}=state.mini,p=state.player,x=ox+p.x*k,y=oy+p.y*k;
  // Q21: meta del passeggero a bordo.
  const ride=p.car>=0?state.cars[p.car]:null,going=ride?occupantsOf(ride).map(n=>n.liftTo).find(Boolean):null;
@@ -2141,6 +2256,13 @@ function bind(){
   if(dir){e.preventDefault();pressed[dir]=true;}
   if(e.key==='Shift')pressed.run=true;
   if(e.code==='Space'){e.preventDefault();pressed.handbrake=true;}
+  if(state.riderOpen){
+   const offer=Number(e.key)-1;
+   if(offer>=0&&offer<9&&!e.repeat&&!state.rider?.job){e.preventDefault();acceptRider(offer);return;}
+   if((e.key==='Escape'||e.key.toLowerCase()==='j')&&!e.repeat){e.preventDefault();closeRiderApp();}
+   return;
+  }
+  if(e.key.toLowerCase()==='j'&&!e.repeat&&!state.shopOpen){e.preventDefault();openRiderApp();return;}
   if(state.shopOpen){
    const index=Number(e.key)-1,offer=offersFor(state.shopOpen.kind)[index];
    if(offer&&!e.repeat){e.preventDefault();buyFromShop(offer.id);return;}
@@ -2232,6 +2354,8 @@ function bind(){
  $('pause-slot').addEventListener('click',()=>{closePause();openSlotGame();});
  $('pause-poker').addEventListener('click',()=>{closePause();openPokerGame();});
  for(const [id,dir] of [['pause-satellite-down',-1],['pause-satellite-up',1]])$(id).addEventListener('click',()=>{satelliteOverlay()?.stepOpacity(dir);satelliteLabel();});
+ $('pause-rider').addEventListener('click',()=>{closePause();openRiderApp();});
+ $('rider-close').addEventListener('click',closeRiderApp);
  $('pause-missions').addEventListener('click',()=>{closePause();if($('mission-panel').hidden)$('mission-panel-toggle').click();});
  $('pause-map').addEventListener('click',()=>{closePause();toggleBigMap();});
  for(const [id,target] of [['pause-zoom-auto','zoom-auto'],['pause-zoom-in','zoom-in'],['pause-zoom-out','zoom-out'],['pause-reset','reset'],['pause-road-compare','road-width-compare']])$(id).addEventListener('click',()=>$(target).click());
