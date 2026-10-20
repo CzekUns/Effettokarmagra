@@ -8,6 +8,7 @@ import {buildingVolume,exposedFacade,facadePoints,shiftColor} from './building-v
 import {material} from './arcade-materials.mjs?v=095';
 import {drawPedestrianSprite} from './pedestrian-sprites.mjs?v=001';
 import {drawFryerSprite} from './friggitore-sprites.mjs?v=001';
+import {drawProfessionSprite} from './profession-sprites.mjs?v=001';
 import {drawExtraPedestrianSprite,EXTRA_PEDESTRIAN_NPC_START_KIND} from './extra-pedestrian-sprites.mjs?v=001';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
@@ -646,7 +647,8 @@ export function drawCityPeople(c,people,graph,clock,bounds,alpha=1){
   // Keep the previous procedural art if the optional sheet is not ready.
   const moving=!p.braking&&(p.prevX===undefined||Math.hypot(p.x-p.prevX,p.y-p.prevY)>.002);
   // The itinerant cook shares NPC AI, navigation and animation with locals.
-  if(p.isFryer&&drawFryerSprite(c,x,y,angle,clock,moving,p.speed,p.seed))continue;
+  if(p.profession&&drawProfessionSprite(c,x,y,angle,p.profession,clock,moving,p.speed,p.seed))continue;
+  if((p.profession==='friggitore'||p.isFryer)&&drawFryerSprite(c,x,y,angle,clock,moving,p.speed,p.seed))continue;
   if(p.kind>=EXTRA_PEDESTRIAN_NPC_START_KIND&&
     drawExtraPedestrianSprite(c,x,y,angle,p.kind-EXTRA_PEDESTRIAN_NPC_START_KIND+1,clock,moving,p.speed,p.seed))continue;
   if(drawPedestrianSprite(c,x,y,angle,p.kind,clock,moving,p.speed,p.seed))continue;

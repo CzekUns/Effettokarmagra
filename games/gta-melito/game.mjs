@@ -6,7 +6,7 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=145';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=146';
 import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=001';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=005';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
@@ -23,11 +23,13 @@ import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehi
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=128';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=129';
 import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS,CAR_PARKED_SPRITE_IDS} from './car-sprites.mjs?v=108';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
 import {loadFryerSprite} from './friggitore-sprites.mjs?v=001';
+import {loadProfessionSprites} from './profession-sprites.mjs?v=001';
+import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=001';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
@@ -35,7 +37,7 @@ import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,ve
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=096';
 import {handlingProfile,applyGrip} from './vehicle-handling.mjs?v=001';
 import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=004';
-import {nearestEnterableVehicle,starterMotorcycleCandidates} from './vehicle-entry.mjs?v=002';
+import {nearestEnterableVehicle,starterMotorcycleCandidates} from './vehicle-entry.mjs?v=003';
 import {PARKED_BIKE_TARGET,PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP,motorcycleParkingRoadOrder,motorcycleParkingCandidates,parkedBikeLabel} from './motorcycle-parking.mjs?v=001';
 import {guideCar} from './driving-assist.mjs?v=099';
 import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097';
@@ -324,17 +326,14 @@ function createCityPedestrians(){
  state.doors=[...new Set([...routine.flatMap(p=>[p.residentRoutine?.homeDoor,p.residentRoutine?.targetDoor]),
   ...state.commuters.flatMap(c=>[c.plan.homeDoor,c.plan.shopDoor])].filter(Boolean))];
  state.doorGrid=makeIndex(state.doors.map(d=>Object.assign(d,{p:[d.wallX-3,d.wallY-4,d.wallX+3,d.wallY+2]})));
- const walkers=createAgents(state.graph,170-routine.length,310,'walk',
-  [...state.cars,...state.traffic,...routine]);
- const people=[...routine,...walkers];
- // One already-simulated citizen acts as the fryer. No duplicate NPC,
- // new pathfinding or synthetic OSM shop/mission; normal routine remains.
- const van=state.cars.find(v=>v.model==='furgone-fritti');
- const target=van||{x:state.spawn[0],y:state.spawn[1]};
- const fryer=people.filter(p=>!p.commuter&&!p.indoors).sort((a,b)=>
-  Math.hypot(a.x-target.x,a.y-target.y)-Math.hypot(b.x-target.x,b.y-target.y))[0];
- if(fryer)fryer.isFryer=true;
- return people;
+ const professionWalkOK=at=>walkOK(at.x,at.y)&&
+  !state.cars.some(v=>Math.hypot(v.x-at.x,v.y-at.y)<6.1);
+ const professionals=createStreetProfessionActors(state.graph,state.foodVendors||[],state.cars,routine,
+  {walkerOK:professionWalkOK});
+ // Professional characters replace random foot traffic rather than adding to it.
+ const walkers=createAgents(state.graph,Math.max(0,112-routine.length-professionals.length),310,'walk',
+  [...state.cars,...state.traffic,...routine,...professionals]);
+ return [...routine,...professionals,...walkers];
 }
 function prepareMap(map,surveyData=[],infillCache=null,placement=null){
  if(!map||!Array.isArray(map.roads)||map.roads.length<20||!Array.isArray(map.border))throw Error('La mappa salvata non contiene una rete stradale valida');
@@ -445,8 +444,16 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
   state.cars.push(parked);k++;
   if(state.cars.length>=Math.min(PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP+parkedBikeCount))break;
  }
+ const border=toRing(state.map.border);
+ const sidewalkOK=at=>validWalk(at.x,at.y)&&inside([at.x,at.y],border)&&
+  (()=>{const r=nearest(at.x,at.y,24,state.roads,true);return !r||r.distance>visualRoadWidth(r.road)/2+.6;})();
+ state.foodVendors=placeStreetFoodVendors(state.graph,state.cars,{
+  vehicleOK:v=>!carBlocked(v.x,v.y,v.a,-1,v)&&!state.cars.some(other=>vehiclesOverlap(v,other)),
+  walkerOK:at=>sidewalkOK(at)&&!state.cars.some(v=>Math.hypot(at.x-v.x,at.y-v.y)<6)
+ });
+ state.cars.push(...state.foodVendors.map(v=>v.vehicle));
  state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
- state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
+ state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:trafficApeModel(i)||CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
@@ -891,7 +898,7 @@ function compareRoadWidths(){
  // street furniture, crosswalks and building-side storefront placements.
  state.graph=buildRoadGraph(state.roads);
  state.traffic=createAgents(state.graph,140,189,'car',state.cars,{motorcycleEvery:4});
- state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
+ state.traffic.forEach((v,i)=>{const bike=isMotorcycle(v);v.model=bike?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:trafficApeModel(i)||CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];v.rider=bike;});
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
@@ -1521,4 +1528,4 @@ function bind(){
  },{passive:false});
 }
 loadChurchWebp(()=>{staticTiles.clear();pendingTile=null;});
-loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSprites();loadFryerSprite();loadCarSprites();bind();requestAnimationFrame(frame);load();
+loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();

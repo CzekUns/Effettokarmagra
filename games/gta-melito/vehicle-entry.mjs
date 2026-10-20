@@ -12,7 +12,7 @@ export function nearestEnterableVehicle(vehicles,player){
   const v=vehicles[i];
   if(!v||!Number.isFinite(v.x)||!Number.isFinite(v.y))continue;
   // Q12: a scooter ridden by its owner is not up for grabs; parked, it can be stolen.
-  if(v.npcRider)continue;
+  if(v.npcRider||v.vendorStand)continue;
   const bike=v.vehicleType==='motorcycle',d=Math.hypot(v.x-player.x,v.y-player.y);
   if(d>(bike?MOTORCYCLE_ENTRY_RADIUS:CAR_ENTRY_RADIUS))continue;
   // Small mounting bonus only beyond arm's reach: standing directly at
