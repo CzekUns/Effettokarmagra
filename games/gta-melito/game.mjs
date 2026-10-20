@@ -21,6 +21,8 @@ import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWind
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker} from './traffic-collision.mjs?v=128';
 import {buildParkingBays,bayOffset,fitsParkingBay,nearestFreeStalls,parkInStall,insideParkingStrip,drawParkingBays} from './parking-bays.mjs?v=001';
 import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
+import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=001';
+import {prepareSignalPosts,drawStopLines,drawSignals,signalGlows} from './traffic-light-art.mjs?v=001';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
@@ -211,7 +213,7 @@ function createStreetObjects(){
  const border=toRing(state.map.border);
  const avoid=[...state.props.map(q=>({x:q.x,y:q.y,r:1.8})),...(state.doors||[]).map(d=>({x:d.x,y:d.y,r:2.6})),
   ...state.cars.map(v=>({x:v.x,y:v.y,r:3.6})),...state.bankEntrances.map(b=>({x:b.x,y:b.y,r:3})),
-  ...(state.shops||[]).map(s=>({x:s.x,y:s.y,r:3.2}))];
+  ...(state.shops||[]).map(s=>({x:s.x,y:s.y,r:3.2})),...(state.signalPosts||[]).map(q=>({x:q.x,y:q.y,r:1.8}))];
  return placeStreetObjects(state.roads,{roadWidth:visualRoadWidth,avoid,
   walkable:(x,y)=>validWalk(x,y)&&inside([x,y],border),
   carriageway:(x,y,margin)=>{const r=nearest(x,y,30,state.roads,true);return !!r&&r.distance<visualRoadWidth(r.road)/2+margin||inParkingBay(x,y,margin);}});
@@ -452,7 +454,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null){
   state.cars.push(parkInStall({type:k%5,vehicleType:k%3===1?'motorcycle':'car',model:k%3===1?MOTORCYCLE_IDS[(k+Math.floor(k/3)*5)%MOTORCYCLE_IDS.length]:k===2?'ape-car-azzurra':k===5?'furgone-fritti':k%8===1?'panda-fire-red':CAR_PARKED_SPRITE_IDS[(k*7)%CAR_PARKED_SPRITE_IDS.length]},stall));k++;
   if(state.cars.length>=Math.min(PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP+parkedBikeCount))break;
  }
- state.traffic=createTraffic();
+ state.traffic=createTraffic();prepareSignals();
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
@@ -571,7 +573,9 @@ function impactTraffic(dt){
   const attempt=isPlayerCar?source.impactProbe:null;
   const to=attempt||{x:source.x,y:source.y,a:source.a};
   const moved=Math.hypot(source.x-from.x,source.y-from.y);
-  const estimated=source.braking?Math.min((source.speed||0)*dt,1.5):0;
+  // BF07: a car waiting at a stop line (red light, right of way) or queued behind one is not pushing
+  // on: it never nudges the pedestrians who cross in front of it.
+  const estimated=source.braking&&!source.jHold&&!source.redQueue?Math.min((source.speed||0)*dt,1.5):0;
   // A blocked AI car can still make contact with a person standing in its
   // intended next position; do not require the AI to clip through them.
   if(!isPlayerCar&&moved<.1&&estimated>.1){
@@ -600,6 +604,24 @@ function impactTraffic(dt){
 // BF03: only vehicles really on their way, each with its own model from the start, so the spawn
 // checks use its whole body: clear of parked vehicles, of the player (on foot or at the wheel),
 // of walls and of the junctions (roads.mjs), never on a street that only ends at a one-way terminal.
+// BF07: semafori SIMULATI (nessun dato OSM): pali sul marciapiede degli incroci principali.
+function prepareSignals(){
+ const border=toRing(state.map.border);
+ state.signalPosts=prepareSignalPosts(state.graph,state.graph.signals,{
+  valid:(x,y)=>validWalk(x,y)&&inside([x,y],border)&&(()=>{const r=nearest(x,y,30,state.roads,true);return !r||r.distance>visualRoadWidth(r.road)/2+.35;})(),
+  avoid:[...state.props.map(q=>({x:q.x,y:q.y,r:1.6})),...state.cars.map(v=>({x:v.x,y:v.y,r:3.2}))]});
+ const note=$('signal-note');if(note)note.hidden=!SIGNALS_SIMULATED||!state.graph.signals?.length;
+}
+const signalSeconds=()=>clockSecondsFromMinutes(state.npcClockMinutes);
+// BF07: freccia degli NPC che svoltano: due luci ambra sul lato della svolta, lampeggio ~1,5 Hz.
+function drawBlinker(x,y,a,v){
+ if(!v.turnSignal||Math.floor((state.clock+(v.seed%7)*.07)*3)%2)return;
+ const moto=isMotorcycle(v),sh=vehicleShape(v),side=v.turnSignal==='right'?1:-1;
+ // Sugli spigoli della sagoma di collisione, che sta dentro la carrozzeria disegnata.
+ const ca=Math.cos(a),sa=Math.sin(a),along=sh.halfLength*(moto?.85:.92),out=(moto?.55:sh.halfWidth*.95)*side;
+ c.fillStyle='#ffb320';
+ for(const f of [1,-1])c.fillRect(x+ca*along*f-sa*out-.32,y+sa*along*f+ca*out-.32,.64,.64);
+}
 function trafficModel(i,type){
  return type==='motorcycle'?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:
   trafficApeModel(i)||CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];
@@ -941,7 +963,7 @@ function compareRoadWidths(){
  // Every consumer shares the same module instance, including roads/traffic,
  // street furniture, crosswalks and building-side storefront placements.
  state.graph=buildRoadGraph(state.roads);state.streetObjects=null;createParkingBays();
- state.traffic=createTraffic();
+ state.traffic=createTraffic();prepareSignals();
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
  state.props=buildStreetProps(state.roads).filter(obj=>!buildingAt(obj.x,obj.y));
@@ -1199,6 +1221,7 @@ function draw(dt=0){
   drawWetTiles([state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH],weather.wetness);
   drawPuddles(c,state.puddles||[],[x0,y0,x1,y1],weather.wetness,weather.rain,state.clock);
  }
+ drawStopLines(c,state.graph.signals,[x0,y0,x1,y1],state.zoom);
  drawRoofReveal(c,[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],roads,dt,[x0,y0,x1,y1]);
  if(state.zoom>1.75){
   c.font='3.6px monospace';c.fillStyle='#e5d9bc';c.textAlign='center';
@@ -1258,9 +1281,11 @@ function draw(dt=0){
   const y=ai.prevY===undefined?ai.y:ai.prevY+(ai.y-ai.prevY)*alpha;
   const a=ai.prevA===undefined?ai.a:ai.prevA+Math.atan2(Math.sin(ai.a-ai.prevA),Math.cos(ai.a-ai.prevA))*alpha;
   drawCar(x,y,a,ai.kind,false,ai.model,ai);
+  drawBlinker(x,y,a,ai);
  }
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);});
  drawPlayer();
+ drawSignals(c,state.graph.signals,[x0,y0,x1,y1],signalSeconds(),state.zoom);
  if(weather&&weather.cloud>.02)drawCloudShadows(c,[x0,y0,x1,y1],weather.cloud,state.clock);
  // Q04: night falls on the world, while hints and the bank marker stay readable above it.
  drawNightLighting([x0,y0,x1,y1],[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],ratio,cw,ch,dt);
@@ -1298,6 +1323,9 @@ function drawNightLighting([x0,y0,x1,y1],buildings,ratio,cw,ch,dt){
    lights.push(...headlightLights(kind,light.headlights));glows.push(...vehicleLamps(kind,light.headlights));
   }
  }
+ // BF07: le luci dei semafori (simulati) restano accese e colorano l'asfalto davanti alla linea.
+ const signalLight=signalGlows(state.graph.signals,[x0,y0,x1,y1],signalSeconds(),Math.max(light.lamps||0,light.darkness/NIGHT_DARKNESS));
+ lights.push(...signalLight.lights);glows.push(...signalLight.glows);
  // A faint halo keeps the protagonist readable on dark side streets.
  if(p.car<0)lights.push({x:p.x,y:p.y,r:4.5,strength:.35*light.darkness/NIGHT_DARKNESS});
  const w=Math.max(1,Math.ceil(canvas.width/2)),h=Math.max(1,Math.ceil(canvas.height/2));

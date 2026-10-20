@@ -2,6 +2,7 @@ import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
 import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=006';
 import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=128';
 import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=002';
+import {buildJunctions,chooseSignals,junctionDecision,pruneReservations,pedestrianMayCross,clockSecondsFromMinutes} from './junctions.mjs?v=001';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
  * Simulates moving traffic through intersections with legal one-way exits. */
@@ -70,7 +71,11 @@ export function buildRoadGraph(roads){
  const junctions=nodes.filter(n=>n.out.filter(e=>edges[e].car).length>=3).length;
  const liveCar=liveCarEdges(nodes,edges);
  const throughStarts=trafficStarts.filter(id=>liveCar[id]&&hasThroughExit({nodes,edges,liveCar},id));
- return {nodes,edges,trafficStarts,throughStarts,walkStarts,junctions,liveCar};
+ const graph={nodes,edges,trafficStarts,throughStarts,walkStarts,junctions,liveCar};
+ // BF07: incroci con linee d'arresto e precedenze; semafori SIMULATI sugli incroci principali.
+ graph.intersections=buildJunctions(graph);
+ graph.signals=chooseSignals(graph,graph.intersections);
+ return graph;
 }
 // BF03: car edges from which traffic can keep driving for ever (a U-turn at a two-way dead end
 // counts). An edge whose every route ends at a one-way terminal is a trap: in Melito a chain of
@@ -270,6 +275,24 @@ function nextPose(graph,agent,distance){
  }
  return {...route,...position(graph,route.edge,route.t,agent.body,route.side),vehicleType:agent.vehicleType,model:agent.model};
 }
+// BF07: the next junction on the route the car will really take: the same turns as nextPose
+// (chooseTurn on a copy of the route, so the agent's own seed is untouched).
+function nextJunction(graph,agent,maxDist){
+ const junctions=graph.intersections;if(!junctions||agent.edge==null)return null;
+ const route={edge:agent.edge,t:agent.t,seed:agent.seed,side:agent.side||1,body:agent.body,routine:agent.routine,home:agent.home,path:agent.path};
+ let dist=0;
+ for(let hops=0;hops<12;hops++){
+  const edge=graph.edges[route.edge];if(!edge)return null;
+  dist+=(1-route.t)*edge.len;
+  const J=junctions.byNode.get(edge.to);
+  const next=chooseTurn(graph,edge.to,route.edge,route,e=>e.car);
+  if(next==null)return null;
+  if(J)return {J,A:J.approaches.get(route.edge),dist,inEdge:route.edge,outEdge:next};
+  if(dist>maxDist)return null;
+  route.edge=next;route.t=0;
+ }
+ return null;
+}
 // BF01: reverse slowly along the current lane (never into another body), then wait.
 function backOff(graph,agent,elapsed,index){
  const e=graph.edges[agent.edge],step=Math.min(agent.backoff,2*elapsed);
@@ -298,6 +321,16 @@ export function unstickVehicle(agent,index,world,dt){
  agent.x=nx;agent.y=ny;agent.braking=true;agent.unstuck=(agent.unstuck||0)+1;
  return true;
 }
+// The pavement continuations a pedestrian can take at the end of its edge (and its route copy).
+function walkPlans(graph,agent,edge){
+ const plans=new Map();
+ for(const id of graph.nodes[edge.to].out){
+  if(!graph.edges[id].walk)continue;
+  const plan=sidewalkTurn(graph,agent.edge,id,agent.side||1);
+  if(plan)plans.set(id,plan);
+ }
+ return {plans,route:{seed:agent.seed,body:'walk',routine:agent.routine,home:agent.home,path:agent.path}};
+}
 export {position as lanePosition,sidewalkTurn,nextPose as previewNextPose};
 export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockMinutes=null,valid=null){
  if(!Number.isFinite(dt)||dt<=0||agent.impactTime>0||agent.needsRoutineRecovery)return;
@@ -320,14 +353,23 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
  let speed=agent.speed;
  if(agent.body==='walk'){
   if(agent.corner){stepSidewalkCorner(agent,speed*elapsed,index);return;}
-  if(agent.t*edge.len+speed*elapsed>=edge.len){
-   const plans=new Map();
-   for(const id of graph.nodes[edge.to].out){
-    if(!graph.edges[id].walk)continue;
-    const plan=sidewalkTurn(graph,agent.edge,id,agent.side||1);
-    if(plan)plans.set(id,plan);
+  // BF07: at a junction with (simulated) traffic lights a pedestrian who goes straight on crosses
+  // the side street only with the green of its own street; it waits on the kerb, before the road.
+  const signalled=graph.intersections?.byNode.get(edge.to);
+  if(signalled?.signal){
+   const left=(1-agent.t)*edge.len,kerb=signalled.r+1;
+   if(left>=kerb-.05&&left-speed*elapsed<kerb){
+    const {plans,route}=walkPlans(graph,agent,edge),chosen=chooseTurn(graph,edge.to,agent.edge,route,(_,id)=>plans.has(id));
+    const turn=chosen==null?0:Math.abs(Math.atan2(Math.sin(graph.edges[chosen].angle-edge.angle),Math.cos(graph.edges[chosen].angle-edge.angle)));
+    if(chosen!=null&&turn<.32&&!pedestrianMayCross(signalled,edge.angle,false,graph.intersections.clockSeconds)){
+     Object.assign(agent,position(graph,agent.edge,1-kerb/edge.len,'walk',agent.side),{t:1-kerb/edge.len,braking:true,signalWait:true});
+     return;
+    }
    }
-   const route={seed:agent.seed,body:'walk',routine:agent.routine,home:agent.home,path:agent.path};
+  }
+  agent.signalWait=false;
+  if(agent.t*edge.len+speed*elapsed>=edge.len){
+   const {plans,route}=walkPlans(graph,agent,edge);
    const chosen=chooseTurn(graph,edge.to,agent.edge,route,(_,id)=>plans.has(id));
    if(chosen!=null){
     const at=position(graph,agent.edge,1,'walk',agent.side);
@@ -340,28 +382,32 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
    agent.t=1;agent.braking=true;return;
   }
  }
- let profile=null;
+ let profile=null,limit=Infinity;
  if(agent.body==='car'){
   // BF05: crociera adatta al mezzo (Ape e furgoni più lenti) e spinta progressiva come il giocatore.
   profile=handlingProfile(agent);
   const cruise=npcCruise(profile,agent.speed);speed=cruise;
   // Following distance is checked only for traffic on this nearby segment.
   const near=index?nearbyColliders(index,agent.x,agent.y,18):others;
+  agent.follows=null;
   for(const other of near){
    if(other===agent||other.body!=='car'||other.edge!==agent.edge)continue;
    const ahead=(other.t-agent.t)*edge.len;
-   if(ahead>0&&ahead<12)speed=Math.min(speed,cruise*clamp((ahead-5)/7,0,1));
+   if(ahead>0&&ahead<12){const v=cruise*clamp((ahead-5)/7,0,1);if(v<speed){speed=v;agent.follows=other;}}
   }
+  // BF07: stop line of the next junction (red light, right of way, junction or exit not free).
+  if(Number.isFinite(agent.jLimit)){limit=Math.max(0,agent.jLimit);speed=Math.min(speed,Math.sqrt(2*4.5*limit));}
   speed=npcSpeedStep(profile,agent.v,speed,elapsed);
  }
+ if(limit<=1e-3){agent.braking=true;agent.blockedBy=null;if(profile)agent.v=0;return;}
  // Try reduced motion before stopping; this lets traffic queue naturally.
  // BF01: remember who blocks the move, so a mutual block at a junction can be untied.
  for(const factor of [1,.5,.25]){
-  const next=nextPose(graph,agent,speed*elapsed*factor);
+  const next=nextPose(graph,agent,Math.min(speed*elapsed*factor,limit));
   const blocker=index?trafficMoveBlocker(agent,next,agent.body,index,agent):null;
   if(blocker){agent.blockedBy=blocker;continue;}
   Object.assign(agent,next);agent.braking=false;agent.blockedBy=null;
-  if(profile)agent.v=speed*factor;
+  if(profile)agent.v=Math.min(speed*factor,limit/elapsed);
   return;
  }
  agent.braking=true;
@@ -460,6 +506,28 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
  const playerBody=player&&Number.isFinite(player.x)&&Number.isFinite(player.y)?
   {x:player.x,y:player.y,a:player.a||0,body:player.car>=0?'car':'walk',vehicleType:player.vehicleType||'car'}:null;
  const index=makeCollisionIndex([...agents,...(world.parked||[]),...(world.traffic||[]),...(world.people||[]),playerBody]);
+ // BF07: the next junction of every car, the cars approaching each junction, and the clock of the
+ // (simulated) traffic lights: game clock when given, otherwise the simulated time.
+ const junctions=graph.intersections;
+ let jctx=null;
+ if(junctions){
+  if(Number.isFinite(world.npcClockMinutes))junctions.clockSeconds=clockSecondsFromMinutes(world.npcClockMinutes);
+  else if(agents.some(a=>a.body==='car'))junctions.clockSeconds+=dt;
+  if(agents.some(a=>a.body==='car')){
+   jctx={approaching:new Map(),traffic:new Set(),index,player:playerBody,signalSeconds:junctions.clockSeconds,
+    time:(junctions.time=(junctions.time||0)+dt)};
+   for(const agent of agents){
+    if(agent.body!=='car'||agent.commuter||agent.stationary){continue;}
+    jctx.traffic.add(agent);
+    // Outside the map (varchi di confine, t oltre 0..1) there are no junctions to negotiate.
+    agent.jx=agent.impactTime>0||agent.needsRoutineRecovery||agent.gateMode||!(agent.t>=0&&agent.t<=1)?null:nextJunction(graph,agent,70);
+    if(!agent.jx){agent.turnSignal=null;continue;}
+    let list=jctx.approaching.get(agent.jx.J);if(!list)jctx.approaching.set(agent.jx.J,list=[]);
+    list.push(agent);
+   }
+   for(const J of junctions.list)if(J.reserved.size)pruneReservations(J);
+  }
+ }
  for(const agent of agents){
   const x=agent.x,y=agent.y;
   if(agent.impactTime>0){agent.braking=true;continue;}
@@ -495,9 +563,23 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
    if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);
    continue;
   }
+  agent.jLimit=Infinity;agent.jHold=null;
+  if(jctx&&agent.jx&&!(agent.backoff>0)&&!(agent.wait>0)){
+   const jx=agent.jx,shape=vehicleShape(agent);
+   // Where the whole car would stand once out of the junction (for "do not block the box").
+   jx.landing=jx.dist-shape.halfLength-jx.A.stop<25?nextPose(graph,agent,jx.dist+jx.J.r+shape.halfLength+1):null;
+   const decision=junctionDecision(graph,agent,jx,jctx);
+   agent.jLimit=decision.limit;agent.jHold=decision.reason;
+  }
   stepAgent(graph,agent,dt,agents,player,index,world.npcClockMinutes,world.validRecovery);
-  agent.stalled=Math.hypot(agent.x-x,agent.y-y)<.02?
-   (agent.stalled||0)+dt:0;
+  const moved=Math.hypot(agent.x-x,agent.y-y)>=.02;
+  if(agent.body==='car'){
+   agent.jWait=agent.jHold&&!moved?(agent.jWait||0)+dt:0;
+   // Waiting at a red light (or queued behind a car that is) is not a deadlock: no recovery.
+   const leader=agent.blockedBy||agent.follows;
+   agent.redQueue=!moved&&(agent.jHold==='rosso'||agent.jHold==='giallo'||!!(leader&&(leader.jHold==='rosso'||leader.redQueue)));
+  }
+  agent.stalled=!moved&&!agent.redQueue&&!agent.signalWait?(agent.stalled||0)+dt:0;
   if(agent.body==='car'){
    // BF01: two cars blocking each other (typically across a junction) for over 2,5 s: the one with
    // the higher seed yields and backs up a couple of metres; the other one can then pass.

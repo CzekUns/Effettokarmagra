@@ -468,3 +468,61 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** suite Node 22 **265/265**.
 - **Browser (Chrome headless, telefono 844×390 touch, prima/dopo):** prima ACCELERA y=172, FRENO 242; dopo FRENO 172, ACCELERA 242, RETRO 312. Con tocchi veri: ACCELERA porta l'auto a 38,3, FRENO la ferma a 0 senza retromarcia, RETRO −12 solo mentre premuto; due dita insieme su volante e ACCELERA funzionano; la pausa non lascia ACCELERA premuto; in banca i pedali spariscono e risalendo in auto l'ordine resta giusto; nessuna sovrapposizione con minimappa, missioni, volante, pausa, radio e pulsante azione; nessun errore JS.
 - **Non eseguiti / limiti:** telefono Android reale.
+
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF07 incroci con buon senso e semafori visibili (richiesta del committente)
+- **Richiesta (Simone, 20/10):** «serve la logica di buon senso per gli incroci. semafori visibili e lavavetri ai semafori che fanno routine sulle auto ferme avvicinandosi al lato guida». Questa voce copre incroci e semafori; i lavavetri sono BF08. Copre in parte anche la Q22 (riga di stato in `TODO.md`).
+- **Prima:** nessuna regola agli incroci. Le auto entravano tutte insieme e si fermavano solo quando si toccavano; nessun semaforo, nessuna freccia. Gli incastri li scioglievano solo il recupero di BF01 e lo spostamento fuori vista.
+- **Semafori SIMULATI, dichiarati:** `data/melito-map.json` non ha nodi `highway=traffic_signals` e dal server Overpass non risponde. Quindi i semafori sono posizionamenti di gioco: 8 sugli incroci principali, scelti con una regola (almeno 3 accessi, una strada terziaria o maggiore, nessun altro incrocio entro 20 m, almeno 130 m fra due semafori). `SIGNALS_SIMULATED`/`SIGNAL_NOTE` in `junctions.mjs`, README e una riga nella scheda PAUSA lo dicono: non sono i semafori reali di Melito.
+- **Logica (`junctions.mjs`, `roads.mjs`):**
+  - ogni auto e moto del traffico calcola il prossimo incrocio sul percorso che farà davvero (stesse svolte di `nextPose`, sul seme copiato);
+  - linea d'arresto dopo le strisce. Rosso: si ferma. Giallo: si ferma se ha lo spazio, altrimenti passa;
+  - non impegna l'incrocio se all'uscita non c'è posto per tutta la sagoma;
+  - un permesso per manovra: le traiettorie in conflitto passano una alla volta, i dritti opposti insieme;
+  - senza semaforo: precedenza al rango della strada, a parità a destra; chi gira a sinistra cede a chi arriva di fronte. Fra mezzi fermi passa chi aspetta da più tempo, e dopo 6 s si passa comunque se incrocio e uscita sono liberi;
+  - chi è già oltre la linea libera sempre l'incrocio; un permesso inutilizzato scade dopo 5 s;
+  - chi aspetta al rosso, e chi è in coda dietro di lui, non conta come «fermo» per il recupero fuori vista;
+  - frecce degli NPC negli ultimi 30 m prima della svolta;
+  - i pedoni che vanno dritti a un incrocio con semaforo aspettano sul cordolo (a r+1 m dal nodo) il verde della propria via.
+- **Grafica (`traffic-light-art.mjs`, `game.mjs`):**
+  - palo e lanterna in pixel art procedurale come i lampioni, sul marciapiede all'angolo destro di ogni accesso (21 pali), mai in un edificio, sulla carreggiata o addosso a lampioni e auto in sosta;
+  - tre luci, quella accesa con un bordo luminoso; di notte alone colorato e riflesso sull'asfalto;
+  - linea d'arresto bianca solo sulla corsia usata;
+  - frecce ambra sugli spigoli del lato della svolta, circa 1,5 Hz.
+  - Nessun nuovo PNG.
+- **Base:** ramo `integ` (BF01–BF06 insieme). La velocità degli NPC resta quella di BF05: la linea d'arresto limita solo la velocità obiettivo prima di `npcSpeedStep` e il passo massimo; le decisioni usano la velocità vera `agent.v`.
+- **Cache:** `game.mjs?v=158`, `roads.mjs?v=149` (anche in `npc-commute.mjs`), `npc-commute.mjs?v=004`; nuovi `junctions.mjs?v=001` e `traffic-light-art.mjs?v=001`.
+- **Test:** nuovo `bf07-junctions.test.mjs`, 10 test:
+  - fasi deterministiche, mai verde su entrambi gli assi, tutto rosso di sgombero;
+  - coda al rosso e partenza al verde in ordine;
+  - chi è già oltre la linea libera l'incrocio;
+  - precedenza a destra;
+  - rango che batte la destra;
+  - uscita occupata → attesa prima della linea;
+  - quattro auto insieme senza incidenti e senza attese oltre 12 s;
+  - frecce;
+  - pedone al semaforo;
+  - mappa reale: 6–12 semafori, cablaggio (anche: chi aspetta alla linea non urta i pedoni), nota PAUSA, README.
+
+  Suite **309/309** su `integ`.
+- **Node, mappa reale, 140 mezzi, prima → dopo:**
+  - con recupero fuori vista (180 s): km percorsi 267 → 265, ritiri 20 → 23, compenetrazioni 0 → 0, passaggi col rosso 0;
+  - senza recupero (120 s, caso peggiore): auto ferme da oltre 20 s 41 → 19–27 (dipende dal giro).
+- **Browser** (Chrome headless, 3 minuti: 90 s a piedi accanto al semaforo di Largo Cinque Via, poi 90 s di guida automatica dal punto di partenza), base `integ` → BF07:
+  - compenetrazioni 0 → 0;
+  - salti visibili 0 → 1 (un ritorno dopo un urto del giocatore, meccanismo di BF01);
+  - ritiri fuori vista 54 → 58;
+  - auto ferme in vista oltre 10 s senza rosso 0 → 2;
+  - code al rosso fino a 5 mezzi, 0 passaggi col rosso, 0 errori JS;
+  - guida automatica 1.510 → 1.169 m: le code ai semafori fermano anche il giocatore, che resta libero di aggirarle.
+
+  Foto: giorno, notte con pioggia (`?ora=21:30`) e telefono 844×390. I semafori si leggono; la coda al rosso è ferma alla linea e si vede la freccia di un'auto che svolta.
+- **Correzione emersa dalle prove:** in `impactTraffic` un'auto NPC «bloccata» spingeva in avanti i pedoni che aveva davanti. Ora non lo fa più se aspetta alla linea (rosso, precedenza) o è in coda dietro una che aspetta: chi attraversa sulle strisce davanti alle auto ferme non viene urtato.
+- **Limiti:**
+  - semafori non rilevati: vanno sostituiti con dati OSM veri se arriveranno;
+  - lo scooter dei pendolari (Q12) non rispetta semafori e precedenze;
+  - i pedoni aspettano solo agli incroci con semaforo e solo quando vanno dritti;
+  - la rete OSM spezzata (strade che si incrociano senza nodo comune) resta senza regole e la gestisce il recupero;
+  - i pali non hanno collisione, per non bloccare il giocatore;
+  - nessuna prova su telefono reale.
+- **Da fare:** BF08 (lavavetri ai semafori).

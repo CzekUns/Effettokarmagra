@@ -560,3 +560,24 @@ Aggiunto il renderer per l'atlante originale `npc-mestieri-4chars-4dir-4frames-2
 **Interfaccia:** nella colonna di guida a destra il pulsante rosso FRENO è ora in alto, il verde ACCELERA al centro e RETRO in basso; misure, colori e ombre invariati.
 
 **Verifiche:** foto Chrome headless sul telefono in orizzontale prima/dopo (stessa scena), con prova dei tre tasti a tocco vero e controllo che non coprano minimappa, missioni e volante. Non provato su un telefono reale.
+
+
+### 2026-10-20 — Claude — BF07 semafori di gioco, linee d'arresto e frecce degli NPC
+**Stile:**
+- palo e lanterna disegnati in pixel art procedurale con la stessa grammatica dei lampioni di `visuals.mjs`: base scura, palo sottile che sale verso l'alto dello schermo, ombra corta verso sud-est;
+- lanterna nera con bordo chiaro e tre luci (rosso in alto), spente in tinte scure;
+- la luce accesa ha un bordo luminoso di un pixel, così si legge anche con lo zoom largo dell'auto;
+- di notte alone colorato additivo (`paintGlows`) e riflesso sull'asfalto davanti alla linea d'arresto;
+- linea d'arresto bianca solo sulla corsia percorsa;
+- frecce ambra lampeggianti sugli spigoli del lato della svolta.
+- Nessun asset PNG nuovo.
+
+**Onestà:** i semafori sono **simulati** (nessun nodo OSM `traffic_signals`) e lo dichiarano codice, README e scheda PAUSA.
+
+**Verifiche:** foto Chrome headless dell'incrocio di Largo Cinque Via e Corso Europa:
+- di giorno, verde e rosso;
+- di notte con pioggia (`?ora=21:30`);
+- su telefono 844×390;
+- coda al rosso con un'auto alla linea e una freccia accesa (Corso Europa, nodo 552).
+
+I pali stanno sui marciapiedi e non coprono minimappa né comandi. Non provato su telefono reale.
