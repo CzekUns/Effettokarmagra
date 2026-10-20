@@ -1,0 +1,44 @@
+# GTA Melito — BUGFIX prioritari affidati al collaboratore
+**Apertura:** 20 ottobre 2026. **Repository:** `CzekUns/Effettokarmagra`. **Ambito:** solo `games/gta-melito/`.
+
+## Come usare questa coda
+I bug sono segnalazioni del committente sulla versione giocabile, non diagnosi o correzioni già eseguite. **BF01–BF06 vengono prima delle Q13–Q24 ancora aperte in `TODO.md`**, salvo nuova istruzione del committente. La coda Q non viene cancellata né spuntata per effetto dei bugfix. Una **PR per ogni BF**, branch aggiornato da `main`, test effettivi, descrizione prima/dopo e commit/log in `WORK_LOG.md`; non fare merge autonomamente. Se un BF non passa il collaudo, non marcarlo completato e non saltare al successivo. Il collaboratore riceve le istruzioni attraverso GitHub, ma l'assegnazione da sola non avvia una sessione dell'AI esterna.
+
+### [ ] BF01 — Collisioni tra veicoli NPC e giocatore: niente blocco irreversibile — P0
+**Segnalazione:** molte auto NPC si incastrano; urtandole si incastra anche il giocatore.
+**Diagnosi da effettuare:** riprodurre in `traffic-collision.mjs`, `roads.mjs` (`stepAgent` e `stepAgents`), `game.mjs` (`carBlocked`, `impactTraffic`), `car-rebound.mjs` e `impact-physics.mjs`. Identificare NPC bloccati da altri NPC, veicoli parcheggiati, incroci e geometrie OSM; verificare le dimensioni collisione di Ape e furgoni rispetto ai PNG. Distinguere soste naturali da deadlock.
+**Correzione:** nessuna sovrapposizione di corpi solidi o impulso numericamente instabile; arresto/frenata, piccolo disincastro geometrico quando consentito e ripartenza. In caso di urto, mantenere fisica non letale e possibilità del giocatore di sterzare, frenare, fare retromarcia e allontanarsi. Recuperare un NPC solo fuori dalla camera, sulla propria zona/routine, senza teletrasporto visibile. Evitare di curare gli incastri disattivando le collisioni o spostando il protagonista arbitrariamente.
+**Accettazione:** riprodurre e poi correggere almeno tre casi (incrocio affollato, NPC contro parcheggiato, urto giocatore-NPC), test automatici per penetrazione/ripartenza e prova browser con auto + moto e controlli touch.
+
+### [ ] BF02 — Fascia di parcheggio tra carreggiata e marciapiede — P0
+**Segnalazione:** la mappa richiede più spazio per le automobili ferme, senza occupare le corsie né i marciapiedi.
+**Stato da non confondere:** `road-widths.mjs` amplia già le strade *graficamente*; `data/melito-map.json` ha estensione cartografica circa 2146 × 2925 unità e i poligoni OSM sono la base. Non risulta una fascia distinta e continua per la sosta.
+**Correzione:** progettare un vero bordo/baia di sosta nel sistema di coordinate del gioco, tra corsia carrabile e marciapiede, con rendering coerente, limiti per collisioni e posizioni selezionabili dai veicoli; dimensione sufficiente per l'ingombro dell'auto o food truck, senza sacrificare le corsie. Se serve aumentare il terreno visivo *locale*, adattare in modo coerente asfalto, marciapiede, percorsi pedoni, collisioni, props e parcheggi. **Non ingrandire globalmente la cartografia né alterare ciecamente sagome/ID OSM**, città/missioni/POI o distanze: l'estensione richiesta è di *spazio utile per la sosta*, non una falsa espansione geografica. Prevedere fallback: se non c'è spazio reale/geometrico, niente stallo in quel punto.
+**Accettazione:** grafica e collisioni concordi su almeno Via Roma, Piazza Santo Stefano, Corso Europa; auto non in corsia, ingresso negozio libero, percorso pedonale libero, moto e banca accessibili; A/B con screenshots e test di clearance.
+
+### [ ] BF03 — Spawn veicoli: traffico già percorribile, parcheggi solo a bordo strada — P0
+**Segnalazione:** auto NPC e food truck appaiono fermi in mezzo alla strada.
+**Correzione:** separare `state.traffic` (veicoli effettivamente in viaggio su corsia valida) da `state.cars` (in sosta nelle baie BF02); controllare spawn contro mezzi, giocatore, incroci, semafori, edifici, impatti e direzioni della rete, per la *sagoma intera*, non soltanto il centro. Gli NPC possono essere fermi soltanto per situazioni di traffico/routine coerenti, non perché nati in un ostacolo o in un tratto senza uscita. Nei deadlock di spawn riprovare o ridurre il numero: vietati veicoli immobili piantati a metà corsia. Il food truck con banco aperto resta esclusivamente in sosta, salvo modello di viaggio davvero chiuso.
+**Accettazione:** controllo deterministico di spawn su OSM, nessun furgone commerciale stazionario in corsia, nessuna collisione iniziale, prova di guida continua e di recupero NPC fuori vista.
+
+### [ ] BF04 — Friggitore attaccato al proprio banco del food truck — P1
+**Segnalazione:** il friggitore appare distante dal furgone, non sul suo lato di servizio.
+**Correzione:** in `street-professions.mjs` sostituire l'attuale ricerca generica per `ahead=6.7/8.3` ed `extra=2.3/3.2/4.4` con ancoraggio geometrico al lato reale del banco visibile nello sprite (attenzione alla rotazione del PNG e alle differenze tra modelli); renderizzare il friggitore nel posto cliente/operatore corretto a distanza breve dal *bordo del veicolo*, guardando verso il banco. Mantenere `fryer.post` e ritorno dopo un urto non letale, proteggere collisioni, ingressi, marciapiedi, muri e zona di parcheggio. Nessun friggitore senza il proprio truck.
+**Accettazione:** screenshot per ciascun food truck generato e test di distanza dal lato di servizio (non solo dal centro), nessuna compenetrazione con carrozzeria e nessun personaggio in mezzo alla strada.
+
+### [ ] BF05 — Partenza progressiva tipo cambio automatico + prestazioni diverse per modello — P1
+**Segnalazione:** le auto schizzano appena si preme gas; vanno differenziate per spunto, ripresa, velocità massima e frenata.
+**Stato:** `vehicle-handling.mjs` possiede già profili per alcuni modelli (ma `CAR_HANDLING.accel=46` rende lo spunto eccessivo); `roads.mjs` assegna invece velocità costanti agli NPC (non applica necessariamente i profili dinamici).
+**Correzione:** adottare un modello *arcade* di trasmissione automatica: partenze dolci da fermo, accelerazione progressiva/sensibile alla velocità con cambi marcia impliciti o curva continua equivalente, senza pulsanti marce; distinzione esplicita per Punto, Panda Fire/moderna, Ypsilon, Uno, Smart, Seicento, Fiat 500, Ape, furgoni e moto secondo categoria. Per ogni profilo configurare spunto, accelerazione in ripresa, velocità massima, frenata, massa/risposta sterzo dove sostenibile; evitare dati reali dichiarati senza fonte. L'Ape e i veicoli commerciali devono essere più lenti. Considerare comportamento coerente di AI e veicolo guidato, incluse condizioni bagnate e retromarcia; non rompere volante e pedali.
+**Accettazione:** curva velocità-tempo documentata con confronti a gas tenuto 0–2–5–10 s su più modelli; tests su limite massimo, frenata, cambio automatico senza salti, velocità iniziale e differenze; prova da telefono.
+
+### [ ] BF06 — Invertire l'ordine dei pedali touch: FRENO sopra, ACCELERA sotto — P1
+**Segnalazione:** invertire acceleratore e freno nell'interfaccia del telefono.
+**Correzione:** in `index.html`, ordine verticale dei comandi da **FRENO → ACCELERA → RETRO** (dall'alto verso il basso); mantenere ID, nomi, colori, funzione dei pulsanti, supporto multi-touch e tasti tastiera invariati. Aggiornare eventuali testi guida, test su ordine DOM/visivo e snapshot.
+**Accettazione:** in orizzontale su touch, premere FRENO frena realmente, ACCELERA accelera realmente, RETRO inserisce la retro solo mentre premuto; nessuno dei tasti copre minimappa, missioni o sterzo. Controllare anche sessione pausa e uscita banca.
+
+## Procedura per ogni BF
+1. Leggere `AGENTS.md` root/locale, `TODO.md`, `HANDOFF_WORK_REALISMO.md`, `PIXEL_ART_MODUS.md` se asset, `WORK_LOG.md` e questa coda; ricontrollare `main` prima di iniziare.
+2. Eseguire la suite Node: `node --test games/gta-melito/*.test.mjs games/gta-melito/survey/*.test.mjs`, più test nuovi e smoke browser; provare su telefono/viewport orizzontale quando possibile.
+3. Aprire **una PR per BF**, senza commit diretti su `main`, e allegare scenari riproducibili, prove reali, screenshot prima/dopo ove grafico; aggiungere voci ai registri.
+4. Solo dopo merge/QA, segnare `[x]` sul BF; procedere al successivo. Completati BF01–BF06, riprendere la prima Q aperta (`Q13`) senza perdere le 12 attività preesistenti.
