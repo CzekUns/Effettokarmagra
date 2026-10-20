@@ -734,3 +734,10 @@ Schermata della slot in pixel art disegnata via codice. Griglia logica 192×128,
 - Scena a schermo intero vista dall'alto, come nei primi giochi di calcio. Campo a strisce con gli stessi verdi del campetto Q32, linee del calcio a 5, porte con rete a quadretti, recinzione con pali e fari.
 - Calciatori 7×9 pixel con maglia a due colori: ROSSI rosso e bianco, BLU blu e azzurro; portieri giallo e verde. Freccia gialla sul giocatore comandato; palla 3×3 pixel con ombra.
 - Sul telefono: levetta, TIRO, PASSA e CAMBIO; sul PC la riga dei tasti. Dove vederla: «E · GIOCA A CALCETTO» al cancello di un campetto (Via delle Palme (535, 1181) o Corso Europa (1010, 1878)), oppure PAUSA › NOVITÀ › `calcetto`.
+
+
+### 2026-10-20 — Asset quattro mestieri approvati e attivati nel renderer
+- **Approvazione utente:** uso dei nuovi sprite dalla *prima* reference pedoni approvato.
+- **PR:** #34 integrata con risoluzione dei conflitti preesistenti; cinque PNG trasparenti `npc-mestieri-prima-reference-384x160.png` + 4 ritagli 96×160 integrati. Il vecchio atlante è conservato.
+- **Nel gioco:** `profession-sprites.mjs` punta al nuovo atlante, versioni cache aggiornate in `city-art.mjs`, `game.mjs` e `index.html` (game v197). Quattro mestieri: friggitore, vigile, lavavetri e contrabbandiere.
+- **Controlli:** file/commit letti da GitHub; nuovo test Node per PNG e collegamenti aggiunto, **non eseguito** in questa sessione. Ancora da verificare rendering reale su Chrome/Android, alpha apparente su sfondi chiari e scuri, movimenti e pivot.
