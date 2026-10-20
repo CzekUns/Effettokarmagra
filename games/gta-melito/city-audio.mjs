@@ -192,6 +192,15 @@ export function createCityAudio({contextFactory=()=>new (globalThis.AudioContext
    return mix;
   },
   // Clacson a due toni (auto) o a un tono più acuto (scooter); pan e volume dalla posizione.
+  // Q24: colpo sordo di buche, dossi, tombini e cordoli (sintetico, breve).
+  thump(level=.5){
+   if(!ctx||!nodes||prefs.muted||!focused)return false;
+   const t=ctx.currentTime,gain=ctx.createGain(),o=ctx.createOscillator(),l=clamp(level,0,1);
+   o.type='sine';o.frequency.setValueAtTime(92,t);o.frequency.exponentialRampToValueAtTime(40,t+.15);
+   gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(.24*l,t+.008);gain.gain.exponentialRampToValueAtTime(.0005,t+.19);
+   o.connect(gain);gain.connect(nodes.master);o.start(t);o.stop(t+.21);
+   return true;
+  },
   horn(kind='auto',pan=0,level=1){
    if(!ctx||!nodes||prefs.muted||!focused)return false;
    const t=ctx.currentTime,gain=ctx.createGain(),tones=kind==='moto'?[610]:[405,510];

@@ -904,3 +904,16 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
   - danno del mezzo non persistente dopo il ricaricamento;
   - grafica provvisoria, da approvare;
   - touch e telefono reale non provati.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q24 buche, dossi e superfici stradali
+- **Cosa:** nuovo `road-surfaces.mjs` con buche, tombini, rappezzi, dossi rallentatori, pavé nelle piazze e sterrato sulle `track`. È tutta finzione arcade dichiarata (`SURFACE_FICTION`), posizionata in modo deterministico su tratti sicuri: lontano da ogni incrocio (≥ 20 m), dalle baie BF02, dal confine e dai bordi della carreggiata. Geometria OSM invariata.
+- **Effetti:**
+  - `roadSurfaceEffect` (ruote del mezzo e cooldown per elemento), `kerbEffect`;
+  - sobbalzo della camera e piccolo «sollevamento» dello sprite del giocatore;
+  - `thump` in `city-audio.mjs`;
+  - aderenza ridotta passata ad `applyGrip` come bagnato in più;
+  - NPC che rallentano prima dei dossi (`edge.bumps` in `roads.mjs`);
+  - `onSurfaceHit` per la Q23.
+- **Mezzi:** tabella `SURFACE_FEEL` per auto, Ape, scooter, moto e mezzi pesanti.
+- **Prove:** 7 test nuovi; suite 417/417; prova Chrome breve (56 FPS, 0 errori).
+- **Versioni:** `game.mjs?v=180`, `roads 161`, `city-audio 005`, `npc-commute 013`, `npc-reactions 005`, `npc-density 005`, `road-surfaces 001`.
+- **Limiti:** grafica provvisoria da approvare; pavé solo sui tratti di strada delle piazze; nessuna prova touch dedicata né su telefono reale.

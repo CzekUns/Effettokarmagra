@@ -6,8 +6,8 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition,balanceTraffic,createGateVehicle} from './roads.mjs?v=158';
-import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=012';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition,balanceTraffic,createGateVehicle} from './roads.mjs?v=161';
+import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=013';
 import {drawBorderGates,borderGateList,borderRing,distanceToBorder,GATE_RULES} from './border-gates.mjs?v=001';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=006';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
@@ -17,10 +17,10 @@ import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEv
 import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote,vendorShops} from './local-shops.mjs?v=002';
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
 import {buildingVolume} from './building-volume.mjs?v=088';
-import {createCityAudio} from './city-audio.mjs?v=004';
+import {createCityAudio} from './city-audio.mjs?v=005';
 import {createSocial,stepSocial} from './npc-social.mjs?v=003';
-import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=004';
-import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=002';
+import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=005';
+import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=005';
 import {trafficTargetAt} from './traffic-rush.mjs?v=001';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker} from './traffic-collision.mjs?v=128';
@@ -32,10 +32,10 @@ import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=004';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=002';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=131';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes,SANTA_MARIA_OSM_ID} from './city-art.mjs?v=131';
 import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
 import {loadCarSprites,drawCarSprite,carDrawSize,CAR_TRAFFIC_SPRITE_IDS,CAR_PARKED_SPRITE_IDS,APE_CAR_IDS} from './car-sprites.mjs?v=110';
-import {DAMAGE_RULES,DAMAGE_LABEL,addDamage,damageLevel,damagedProfile,repairCost,payRepair,repairMessage,healOutOfView,drawVehicleDamage,placeWorkshop,nearWorkshop,drawWorkshop} from './vehicle-damage.mjs?v=001';
+import {DAMAGE_RULES,DAMAGE_LABEL,addDamage,damagePoints,damageLevel,damagedProfile,repairCost,payRepair,repairMessage,healOutOfView,drawVehicleDamage,placeWorkshop,nearWorkshop,drawWorkshop} from './vehicle-damage.mjs?v=001';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
 import {loadFryerSprite} from './friggitore-sprites.mjs?v=001';
@@ -64,6 +64,7 @@ import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlas
 import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=001';
 import {createCarRadio} from './car-radio.mjs?v=003';
 import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=001';
+import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
 const $=id=>document.getElementById(id);
 // Q09: last radio status, read by the city sound to duck engines while a station plays.
 let radioStatus='off';
@@ -270,6 +271,20 @@ function createParkingBays(){
   ...(state.workshop?[{x:state.workshop.roadX,y:state.workshop.roadY,r:10,why:'officina'}]:[])];
  state.parkingBays=buildParkingBays(state.graph,{keepClear,blocked:pose=>carBlocked(pose.x,pose.y,pose.a,-1,{vehicleType:'car'})});
  state.bayGrid=makeIndex(state.parkingBays.strips);
+}
+// Q24: fictional potholes, speed bumps, manholes, patches, cobbles in the squares and dirt on the
+// OSM tracks, on safe stretches of the car network (no junctions, crossings, stalls or border).
+// Q23+Q24: una buca o un dosso presi forte lasciano un danno lieve, mai grave.
+onSurfaceHit(e=>{if((e.kind==='pothole'||e.kind==='bump')&&e.intensity>.6&&damagePoints(e.vehicle)<DAMAGE_RULES.severe-1)
+ addDamage(e.vehicle,Math.abs(e.speed),{x:e.vehicle.x+Math.cos(e.vehicle.a)*8,y:e.vehicle.y+Math.sin(e.vehicle.a)*8},{factor:.25,clock:state.clock});});
+function createRoadSurfaces(){
+ const ring=state.borderRingXY||(state.borderRingXY=borderRing(state.map.border));
+ const church=state.buildings.find(b=>b.id===SANTA_MARIA_OSM_ID);
+ const anchors=[...(state.map.pois||[]).filter(q=>['school','kindergarten','place_of_worship'].includes(q.k)).map(q=>({x:q.p[0],y:q.p[1],label:q.n||q.k})),
+  ...(church?[{x:church.p.filter((_,i)=>i%2===0).reduce((a,v,_,l)=>a+v/l.length,0),y:church.p.filter((_,i)=>i%2===1).reduce((a,v,_,l)=>a+v/l.length,0),label:'chiesa'}]:[])];
+ state.surfaces=placeRoadSurfaces(state.graph,{anchors,clear:(x,y)=>!buildingAt(x,y),inBay:inParkingBay,
+  nearBorder:(x,y)=>distanceToBorder(x,y,ring)<24});
+ state.surfaceMemory=new Map();
 }
 function inParkingBay(x,y,margin=0){
  if(!state.parkingBays)return false;
@@ -495,7 +510,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  // pavement; where there is no real room there is no parking (fewer vehicles, not worse ones).
  // Bollards of a previous load must not shape the stalls: street objects are placed afterwards.
  createEnclosures();
- state.cars=[];state.streetObjects=null;createWorkshop();createParkingBays();
+ state.cars=[];state.streetObjects=null;createWorkshop();createParkingBays();createRoadSurfaces();
  const free=(x,y,options)=>nearestFreeStalls(state.parkingBays,x,y,state.cars,vehiclesOverlap,options)[0]||null;
  const starterStall=free(point.x,point.y,{radius:60})||free(point.x,point.y);
  const nearCar=starterStall?parkInStall({type:0,model:'panda-modern-white'},starterStall):
@@ -1042,9 +1057,16 @@ function tick(dt){
    }
   }
   car.a=angle;
+  // Q24: buche, dossi, tombini, pavé e sterrato (finzione arcade): sobbalzo, un po' di velocità e di aderenza.
+  const wet=state.weather?.wetness||0;
+  const surface=state.surfaces?roadSurfaceEffect(state.surfaces,car,{speed,dt,wet,shape:bodyShape(car),memory:state.surfaceMemory,now:state.clock}):null;
+  if(surface){
+   speed*=surface.speedFactor;state.bump=Math.max(state.bump||0,surface.bump);
+   for(const hit of surface.hits){cityAudio.thump?.(hit.intensity);emitSurfaceHit({kind:hit.kind,intensity:hit.intensity,speed,vehicle:car});}
+  }
   // Q10: the body points where the wheel says, but it travels where grip allows (recoverable slides).
   const grip=car.recoil>0?{travel:car.a,slip:0,speed,sliding:false}:
-   applyGrip(car,{angle:car.a,speed,dt,handbrake:pressed.handbrake,profile:damagedProfile(handlingProfile(car),car),wet:state.weather?.wetness||0,steer:axes.x});
+   applyGrip(car,{angle:car.a,speed,dt,handbrake:pressed.handbrake,profile:damagedProfile(handlingProfile(car),car),wet:Math.min(1,wet+(surface?.gripLoss||0)),steer:axes.x});
   car.travel=grip.travel;car.slip=grip.slip;speed=grip.speed;
   if(grip.sliding&&speed>8)addSkidMarks(car);
   const nx=car.x+Math.cos(car.travel)*speed*dt,ny=car.y+Math.sin(car.travel)*speed*dt;
@@ -1081,6 +1103,13 @@ function tick(dt){
     speed=bounce.speed;car.recoil=bounce.recoil;car.turnGuide=null;car.assistRelease=.25;
    }
   }
+  // Q24: mounting or leaving the kerb gives a small jolt (once, with a short cooldown).
+  const kerbRoad=nearest(car.x,car.y,25,state.roads,true),onPavement=!!kerbRoad&&kerbRoad.distance>visualRoadWidth(kerbRoad.road)/2+.2;
+  if(car.onPavement!==undefined&&onPavement!==car.onPavement&&Math.abs(speed)>1.5&&!(state.clock-(car.kerbAt||-9)<.6)){
+   const kerb=kerbEffect(car,speed);speed*=kerb.speedFactor;car.kerbAt=state.clock;state.bump=Math.max(state.bump||0,kerb.bump);
+   cityAudio.thump?.(kerb.bump*.8);emitSurfaceHit({kind:'kerb',intensity:kerb.bump,speed,vehicle:car});
+  }
+  car.onPavement=onPavement;
   car.speed=speed;p.x=car.x;p.y=car.y;p.a=car.a;
   }
  }else{
@@ -1135,6 +1164,7 @@ function tick(dt){
  state.camera.x+=(targetX-state.camera.x)*follow;
  state.camera.y+=(targetY-state.camera.y)*follow;
  state.clock+=dt;state.hud+=dt;if(state.hud>.18){state.hud=0;updateHud();refreshCampaign();}
+ state.bump=Math.max(0,(state.bump||0)-dt*3.5); // Q24: the jolt fades in about a quarter of a second
 }
 
 function updateRoadWidthLabel(){
@@ -1149,7 +1179,7 @@ function compareRoadWidths(){
  setRoadWidthMode(getRoadWidthMode()==='before'?'wide':'before');
  // Every consumer shares the same module instance, including roads/traffic,
  // street furniture, crosswalks and building-side storefront placements.
- state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y),laneClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createEnclosures();createWorkshop();createParkingBays();
+ state.graph=buildRoadGraph(state.roads,{border:state.map.border,gateClear:(x,y)=>!buildingAt(x,y),laneClear:(x,y)=>!buildingAt(x,y)});state.streetObjects=null;createEnclosures();createWorkshop();createParkingBays();createRoadSurfaces();
  state.traffic=createTraffic(state.npcClockMinutes);prepareSignals();
  state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;
@@ -1218,9 +1248,13 @@ function drawCar(x,y,a,type,drive=false,model=null,vehicle=null){
    jacket:drive?'#b7343b':vehicle.kind%3===0?'#406b87':'#86896e'});
   return;
  }
+ // Q24: the player's car "lifts" a little over a pothole or a bump (top-down: a small scale pulse).
+ const lift=drive&&state.bump>.01?1+.055*state.bump:1;
+ if(lift!==1){c.save();c.translate(x,y);c.scale(lift,lift);c.translate(-x,-y);}
  if(!drawCarSprite(c,x,y,a,model,drive))drawCityCar(c,x,y,a,type,drive,state.clock);
  // Q23: graffi, ammaccature, vetro incrinato e fumo, nelle coordinate dello sprite (seguono la scala).
  if(vehicle?.damage)drawVehicleDamage(c,vehicle,x,y,a,carDrawSize(model),state.clock);
+ if(lift!==1)c.restore();
 }
 function drawParkedMotorcycleHints(){
  // Only near the walking player: avoid labeling the entire street scene.
@@ -1289,6 +1323,7 @@ function paintStaticScene(ctx,bounds,zoom){
  if(nearBorder(x0,y0,x1,y1,GATE_RULES.mouth+4)){ctx.save();borderPath(ctx);ctx.clip();drawCityStreets(ctx,roads,zoom);ctx.restore();drawGateMouths(ctx,bounds);}
  else drawCityStreets(ctx,roads,zoom);
  if(state.parkingBays)drawParkingBays(ctx,query(state.parkingBays.strips,state.bayGrid,x0,y0,x1,y1),zoom);
+ drawRoadSurfaces(ctx,state.surfaces,bounds,zoom);
  drawEnclosureWalls(ctx,state.enclosures,bounds,zoom);
  drawCityBuildings(ctx,[...inferred,...buildings],zoom);
  // The road remains below the entire roof, including the authored church art.
@@ -1328,6 +1363,7 @@ function drawRoofReveal(ctx,buildings,roads,dt,bounds){
   if(nearBorder(art.x0-22,art.y0-22,art.x1+22,art.y1+22)){ctx.save();borderPath(ctx);ctx.clip();drawCityStreets(ctx,roads,state.zoom);ctx.restore();}
   else drawCityStreets(ctx,roads,state.zoom);
   if(state.parkingBays)drawParkingBays(ctx,query(state.parkingBays.strips,state.bayGrid,art.x0-22,art.y0-22,art.x1+22,art.y1+22),state.zoom);
+  drawRoadSurfaces(ctx,state.surfaces,[art.x0-22,art.y0-22,art.x1+22,art.y1+22],state.zoom);
   drawEnclosureWalls(ctx,state.enclosures,[art.x0-22,art.y0-22,art.x1+22,art.y1+22],state.zoom);
   ctx.globalAlpha=1-.72*amount;
   drawCityBuildings(ctx,[b],state.zoom);
@@ -1441,6 +1477,8 @@ function draw(dt=0){
  if(state.bankInterior){drawBankInterior(c,cw,ch,state.clock,state.bankInterior.bank,state.bankInterior.player,interiorZoom(),state.bankInterior.camera);return;}
  const p=state.player;
  c.translate(cw/2,ch/2);c.scale(state.zoom,state.zoom);c.translate(-state.camera.x,-state.camera.y);
+ // Q24: a light camera shake while the car jolts over a pothole, a bump or the kerb.
+ if(state.bump>.01){const t=state.clock*57;c.translate(Math.sin(t)*state.bump*.42,Math.cos(t*1.37)*state.bump*.42);}
  const [x0,y0,x1,y1]=visibleBounds();
  const buildings=query(state.buildings,state.buildingGrid,x0,y0,x1,y1);
  const roads=query(state.roads,state.roadGrid,x0,y0,x1,y1);
@@ -1450,6 +1488,7 @@ function draw(dt=0){
  if(weather&&weather.wetness>.01){
   drawWetTiles([state.camera.x-halfW,state.camera.y-halfH,state.camera.x+halfW,state.camera.y+halfH],weather.wetness);
   drawPuddles(c,state.puddles||[],[x0,y0,x1,y1],weather.wetness,weather.rain,state.clock);
+  drawSurfacePuddles(c,state.surfaces,[x0,y0,x1,y1],weather.wetness,weather.rain,state.clock);
  }
  drawStopLines(c,state.graph.signals,[x0,y0,x1,y1],state.zoom);
  drawMarketGround(c,state.market,[x0,y0,x1,y1],state.zoom);

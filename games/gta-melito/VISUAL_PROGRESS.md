@@ -671,3 +671,8 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
   - Danno grave: tre sbuffi di fumo grigio dal cofano.
 - **Cartello «OFFICINA · DI GIOCO»** sul marciapiede di Via Roma vicino alla partenza: insegna verde con la chiave inglese, nessun marchio.
 - **Dove vederli:** urta un muro o un'auto in Via Roma vicino alla partenza; l'officina è pochi metri più avanti, intorno a (1240, 1380).
+### 2026-10-20 — Q24 superfici stradali (grafica PROVVISORIA, da approvare)
+- Buche irregolari scure con bordo chiaro e crepe; tombini tondi a grata; rappezzi d'asfalto più scuro.
+- Dossi a strisce gialle e nere di traverso sulla carreggiata; pavé a pietre sfalsate con estremità arrotondate; sterrato marrone con due solchi.
+- Con la pioggia le buche diventano pozzanghere con riflesso e cerchi delle gocce.
+- Dove guardarli: dosso «vicino a chiesa» in Via Lavinaio (1120, 1142); buche e tombini in Vico Orefici (1147, 1218); pavé in Piazza Guglielmo Marconi; sterrato sulle 4 strade `track` OSM.

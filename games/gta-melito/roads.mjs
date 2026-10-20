@@ -492,6 +492,8 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
   agent.yieldPed=yieldPed;agent.yieldWait=yieldPed&&!(agent.v>.5)?(agent.yieldWait||0)+elapsed:0;
   // BF07: stop line of the next junction (red light, right of way, junction or exit not free).
   if(Number.isFinite(agent.jLimit)){limit=Math.max(0,agent.jLimit);speed=Math.min(speed,Math.sqrt(2*4.5*limit));}
+  // Q24: a (fictional) speed bump ahead on this segment: slow down to cross it gently.
+  if(edge.bumps){const at=agent.t*edge.len;for(const d of edge.bumps){const ahead=d-at;if(ahead>-2.5&&ahead<18)speed=Math.min(speed,ahead<2?3.2:3.2+(ahead-2)*.7);}}
   speed=npcSpeedStep(profile,agent.v,speed,elapsed);
  }
  if(limit<=1e-3){agent.braking=true;agent.blockedBy=null;if(profile)agent.v=0;return;}
