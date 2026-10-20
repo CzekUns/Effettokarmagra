@@ -32,7 +32,7 @@ import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=001';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=130';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes} from './city-art.mjs?v=131';
 import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
 import {loadCarSprites,drawCarSprite,CAR_TRAFFIC_SPRITE_IDS,CAR_PARKED_SPRITE_IDS} from './car-sprites.mjs?v=108';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
@@ -60,6 +60,7 @@ import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,return
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=001';
+import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=001';
 import {createCarRadio} from './car-radio.mjs?v=002';
 const $=id=>document.getElementById(id);
 // Q09: last radio status, read by the city sound to duck engines while a station plays.
@@ -428,6 +429,9 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  state.enclosureData=enclosureData;state.enclosures=null;
  // BF12: glass buildings (galleria Atlante) keep their OSM polygon, only the art changes.
  markGlassBuildings(state.buildings,enclosureData);
+ // BF12: Municipio complex: the ruin of the former pool and the chequered water tower (landmark).
+ markRuinPool(state.buildings,enclosureData);
+ state.waterTowers=prepareWaterTowers(enclosureData);state.towerReveal=new Map();
  const terracotta=applyApprovedArcadeRoofStyle(state.buildings);
  applyPiazzaRoofStudies(state.buildings);
  console.info('Melito visual city scan: '+survey.applied+'/'+survey.total+' buildings styled, '+survey.verified+' photo-verified');
@@ -1442,6 +1446,7 @@ function draw(dt=0){
  drawStreetObjects(c,state.streetObjects,[x0,y0,x1,y1],state.zoom);
  drawEnclosureGates(c,state.enclosures,[x0,y0,x1,y1],state.zoom,{...enclosureTime(),clock:state.clock});
  drawMarketStalls(c,state.market,[x0,y0,x1,y1],state.clock);
+ if(state.weather?.wetness>.12)for(const b of buildings)if(b.art?.ruinPool)drawRuinPoolPuddles(c,b,state.weather.wetness,state.clock);
  drawLostItem(c,state.events,state.player.car<0?state.player:null,state.clock);
  // BF08: un lavavetri al finestrino si disegna sopra l'auto se le sta davanti (più in basso sullo
  // schermo): per questo disegno è saltato qui (indoors solo durante la chiamata) e ridisegnato dopo le auto.
@@ -1475,9 +1480,17 @@ function draw(dt=0){
  if(inFront.length)drawCityPeople(c,inFront,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  drawWasherEffects(c,state.people,state.clock);
  drawSignals(c,state.graph.signals,[x0,y0,x1,y1],signalSeconds(),state.zoom);
+ // BF12: the water tower stands above the city; it fades while the player is under or beside it.
+ for(const t of state.waterTowers||[]){
+  if(t.x<x0-70||t.x>x1+70||t.y<y0-70||t.y>y1+70)continue;
+  const target=towerRevealTarget(t,[p.car>=0?state.cars[p.car]:p]),now=state.towerReveal.get(t.id)??1;
+  const eased=now+(target-now)*Math.min(1,(dt||0)*6);state.towerReveal.set(t.id,eased);
+  drawWaterTower(c,t,{alpha:eased,zoom:state.zoom});
+ }
  if(weather&&weather.cloud>.02)drawCloudShadows(c,[x0,y0,x1,y1],weather.cloud,state.clock);
  // Q04: night falls on the world, while hints and the bank marker stay readable above it.
  drawNightLighting([x0,y0,x1,y1],[...buildings,...query(state.inferredBuildings,state.inferredGrid,x0,y0,x1,y1)],ratio,cw,ch,dt);
+ for(const t of state.waterTowers||[])drawWaterTowerLight(c,t,{darkness:state.light?.darkness||0,clock:state.clock,alpha:state.towerReveal.get(t.id)??1});
  if(weather&&weather.rain>.02)drawRain(c,state.clock,canvas.width,canvas.height,weather.rain);
  drawCityEventOverlay(c,state.events,state.player.car<0?state.player:null,state.zoom);
  drawParkedMotorcycleHints();

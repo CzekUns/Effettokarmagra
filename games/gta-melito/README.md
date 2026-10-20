@@ -222,4 +222,8 @@ Le strade carrabili che OpenStreetMap continua oltre il confine ISTAT vengono ta
 - **Notte:** dalle 22 alle 6 le sbarre dei recinti privati sono abbassate per il giocatore e si alzano per i mezzi NPC; i pedoni passano sempre.
 - **Mancanti:** il «Parco Prima Casa» non è disegnato perché non è stato localizzato. Le fonti sono in `RECINTI_MELITO.md`.
 
+- **Complesso del Municipio** (`municipio-landmarks.mjs`):
+  - la **torre del serbatoio idrico a fungo, a scacchi**, simbolo del quartiere, è un landmark. È trasparente quando ci passi vicino e di notte ha una luce rossa. Posizione dalla foto aerea; colori e altezza stimati;
+  - l'**ex piscina comunale di via Madrid** è un rudere con la vasca interrata vuota e crepata.
+
 Riferimento visivo: Esri World Imagery (consultata il 20/10/2026), usata solo per stime a vista delle coordinate; nessuna immagine satellitare è inclusa nel repository.

@@ -646,3 +646,11 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 - **Profondità e trasparenza:** la tela è sollevata sopra il palo (2.5D) e passa sopra persone e veicoli. Quando il giocatore è sotto o accanto sfuma all'80%, come i tetti.
 - **Banchi:** segnaposto semplici con bancone di legno, telo, merce stilizzata a blocchi nei colori del foglio e furgone-negozio per salumi e porchetta. Durante il montaggio ci sono cassette per terra; fuori orario restano i posteggi gialli numerati.
 - **Foto guardate:** montaggio, pieno, vuoto, notte con pioggia, pioggia, telefono, R01 a piedi e in auto.
+## 2026-10-20 — BF12, complesso del Municipio (Claude)
+- **Torre del serbatoio a fungo**, landmark sopra la città, alzata nella stessa direzione dei tetti:
+  - fusto e vasca a scacchi rosso/bianco (colori stimati), con il lato destro in ombra;
+  - cappello chiaro a spicchi, come sulla foto aerea, e ombra lunga verso sud-est;
+  - trasparente sotto e accanto al giocatore; luce rossa di notte.
+- **Rudere dell'ex piscina comunale:** muri bassi in calcestruzzo con macchie, copertura crollata attorno alla vasca e la vasca interrata vuota, con piastrelle azzurre sbiadite, crepe, erbacce e scaletta; con la pioggia, pozzanghere e cerchi.
+- **Verifiche:** foto su PC di giorno, di notte (23:30, con la pioggia casuale di Q08) e sotto pioggia forzata; telefono 844×390; trasparenza con il giocatore sotto la vasca.
+

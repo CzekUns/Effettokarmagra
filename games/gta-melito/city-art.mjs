@@ -10,6 +10,7 @@ import {drawPedestrianSprite} from './pedestrian-sprites.mjs?v=001';
 import {drawFryerSprite} from './friggitore-sprites.mjs?v=001';
 import {drawProfessionSprite} from './profession-sprites.mjs?v=001';
 import {drawExtraPedestrianSprite,EXTRA_PEDESTRIAN_NPC_START_KIND} from './extra-pedestrian-sprites.mjs?v=001';
+import {drawRuinPool} from './municipio-landmarks.mjs?v=001';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
  * are original artistic interpretations: they do not claim photographic fidelity.
@@ -588,6 +589,8 @@ export function drawCityBuildings(c,buildings,zoom){
    }
    continue;
   }
+  // BF12: the former municipal pool (via Madrid) is a ruin with the sunken empty pool, not a block.
+  if(a.ruinPool){drawRuinPool(c,b,{exposedFacade,shiftColor});continue;}
   const v=buildingVolume(b);
   if(!v)continue;
   const seed=a.seed;
