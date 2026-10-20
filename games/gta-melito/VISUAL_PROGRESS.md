@@ -676,3 +676,9 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 - Dossi a strisce gialle e nere di traverso sulla carreggiata; pavé a pietre sfalsate con estremità arrotondate; sterrato marrone con due solchi.
 - Con la pioggia le buche diventano pozzanghere con riflesso e cerchi delle gocce.
 - Dove guardarli: dosso «vicino a chiesa» in Via Lavinaio (1120, 1142); buche e tombini in Vico Orefici (1147, 1218); pavé in Piazza Guglielmo Marconi; sterrato sulle 4 strade `track` OSM.
+### 2026-10-20 — Q18 veicoli di servizio (grafica provvisoria)
+- Nuovo `assets/vehicles/servizio-16-rgba.png` (208×368, 4×4 da 52×92), tavola `sources/servizio-16-sheet.png` e generatore `sources/servizio-16-genera.py`. Vista esattamente dall'alto, muso in alto.
+- **Furgone del corriere:** bianco, bianco con fascia blu, bianco con fascia verde, argento, grigio scuro, blu notte, azzurro, bianco vissuto.
+- **Camion della nettezza urbana:** verde, bianco-verde, bianco-blu, arancio, grigio, verde scuro, bianco-arancio, verde vissuto.
+- Livree inventate, senza marchi né scritte. Pixel art provvisoria: da far approvare a Simone.
+

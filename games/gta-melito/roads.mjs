@@ -1,7 +1,7 @@
 import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
-import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=006';
-import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=128';
-import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=003';
+import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=007';
+import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=129';
+import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=004';
 import {buildJunctions,chooseSignals,junctionDecision,pruneReservations,pedestrianMayCross,clockSecondsFromMinutes,crosswalkYield} from './junctions.mjs?v=003';
 import {findBorderGates,gateMouthClear,borderRing,GATE_RULES} from './border-gates.mjs?v=001';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).

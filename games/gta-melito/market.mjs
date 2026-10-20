@@ -9,7 +9,7 @@
  * marciapiedi delle quattro vie all'esterno). Compaiono e spariscono solo fuori vista. */
 import {easeRoofReveal} from './roof-reveal.mjs?v=120';
 import {NPC_DAY_MINUTES,npcDay,npcWeekday} from './npc-agenda.mjs?v=002';
-import {addToCollisionIndex,moveInCollisionIndex} from './traffic-collision.mjs?v=128';
+import {addToCollisionIndex,moveInCollisionIndex} from './traffic-collision.mjs?v=129';
 
 // Stessi dati di data/market-area.json (il test lo verifica): il gioco non legge quel file a runtime.
 export const MARKET_AREA=Object.freeze({

@@ -917,3 +917,14 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Prove:** 7 test nuovi; suite 417/417; prova Chrome breve (56 FPS, 0 errori).
 - **Versioni:** `game.mjs?v=180`, `roads 161`, `city-audio 005`, `npc-commute 013`, `npc-reactions 005`, `npc-density 005`, `road-surfaces 001`.
 - **Limiti:** grafica provvisoria da approvare; pavé solo sui tratti di strada delle piazze; nessuna prova touch dedicata né su telefono reale.
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q18 furgone del corriere e camion della nettezza urbana
+- **Arte:** atlante `servizio-16-rgba.png`, 8 + 8 varianti disegnate via codice, con alpha reale verificata e contorno senza alone. Grafica provvisoria.
+- **Integrazione:**
+  - `car-sprites.mjs`: `SERVICE_VARIANTS`, `COURIER_IDS`, `REFUSE_TRUCK_IDS`, dimensioni di disegno;
+  - `traffic-collision.mjs`: sagome `corriere-` e `nettezza-`;
+  - `vehicle-handling.mjs`: `TRUCK_HANDLING`; il furgone usa VAN;
+  - `game.mjs`: traffico NPC, sosta (camion solo dove sta), corpo e sonde proprie con `ownBody`, che sostituisce `isApe`.
+- **Cache:** `game.mjs?v=171`, `car-sprites 111`, `traffic-collision 129`, `vehicle-handling 004` e i moduli che li importano.
+- **Test:** `q18-service-vehicles.test.mjs`; suite completa 412/412. Browser breve e stress di 60 s senza errori né compenetrazioni.
+- **Limiti:** routine di lavoro rimandate alla Q20; non provato su un telefono reale.
+

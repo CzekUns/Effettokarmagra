@@ -2,8 +2,8 @@
  * OSM roads define the real geometry; vendor locations and job identities
  * are artistic placements, NOT surveyed shops, licensed stalls or traffic lights.
  * No new map features, traffic signal claims or synthetic street geometry. */
-import {MARKET_VARIANTS} from './car-sprites.mjs?v=110';
-import {vehicleHitsPedestrian} from './traffic-collision.mjs?v=128';
+import {MARKET_VARIANTS} from './car-sprites.mjs?v=111';
+import {vehicleHitsPedestrian} from './traffic-collision.mjs?v=129';
 import {washerSpots} from './window-washers.mjs?v=004';
 export const TRAFFIC_APES=Object.freeze([
  'ape-azzurra-vuota','ape-azzurra-ferro','ape-verde-vuota','ape-verde-ferro'
