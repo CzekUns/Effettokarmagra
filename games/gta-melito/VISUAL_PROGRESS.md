@@ -581,3 +581,16 @@ Aggiunto il renderer per l'atlante originale `npc-mestieri-4chars-4dir-4frames-2
 - coda al rosso con un'auto alla linea e una freccia accesa (Corso Europa, nodo 552).
 
 I pali stanno sui marciapiedi e non coprono minimappa né comandi. Non provato su telefono reale.
+
+
+### 2026-10-20 — Claude — BF08 lavavetri al finestrino ai semafori di gioco
+**Sprite:** è quello già presente nell'atlante dei mestieri (colonne 8–11). Nessuna nuova arte; la tavola resta «da rivedere» secondo PIXEL_ART_MODUS.
+- Durante il lavaggio il lavavetri è fermo sul frame d'appoggio, rivolto all'auto: nessun «camminare sul posto».
+- Il movimento del lavaggio è un piccolo tergivetro disegnato sul parabrezza (manico scuro, gomma azzurra) che va avanti e indietro sul lato guida, con tre gocce chiare che brillano.
+- Quando sta davanti all'auto (più in basso sullo schermo) si disegna sopra di lei; quando sta dietro, l'auto lo copre in parte, come vuole la vista 2.5D.
+
+**Verifiche:** foto Chrome headless del lavavetri al finestrino:
+- di un'utilitaria NPC ferma al rosso in Via Signorelli;
+- dell'auto del giocatore in Corso Europa, su PC e su telefono 844×390.
+
+Il lavavetri resta sul lato guida e il tergivetro si vede sul parabrezza. Non copre comandi né minimappa. Non provato su telefono reale.

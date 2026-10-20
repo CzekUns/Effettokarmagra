@@ -23,6 +23,7 @@ import {buildParkingBays,bayOffset,fitsParkingBay,nearestFreeStalls,parkInStall,
 import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
 import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=001';
 import {prepareSignalPosts,drawStopLines,drawSignals,signalGlows} from './traffic-light-art.mjs?v=001';
+import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=001';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
@@ -32,7 +33,7 @@ import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=001';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=001';
 import {loadFryerSprite} from './friggitore-sprites.mjs?v=001';
 import {loadProfessionSprites} from './profession-sprites.mjs?v=001';
-import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=003';
+import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=004';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=043';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
@@ -592,6 +593,8 @@ function impactTraffic(dt){
    if(target===source||target.impactLock>0||
       (target===p&&p.car>=0)||
       (isPlayerCar&&target===p))continue;
+   // BF08: an NPC car waits for the washer crossing in front of it, it does not shove him.
+   if(!isPlayerCar&&target.scripted)continue;
    if(!sweptVehicleContact(source,target,from,to))continue;
    const hit=applyNonlethalImpact({...source,speed},target,speed);
    if(!hit)continue;
@@ -646,6 +649,11 @@ function updateTraffic(dt){
  stepAgents(state.graph,state.people,elapsed,state.player,{parked:state.cars,traffic:state.traffic,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes});
  stepAgents(state.graph,state.traffic,elapsed,state.player,{parked:state.cars,people:state.people,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes});
  impactTraffic(elapsed);
+ // BF08: lavavetri ai semafori, dopo il traffico dello stesso passo (le auto sono appena ferme o ripartite).
+ const pc=state.player.car>=0?state.cars[state.player.car]:null;
+ const washCtx={graph:state.graph,signalSeconds:signalSeconds(),traffic:state.traffic,playerCar:pc&&!isMotorcycle(pc)?pc:null,
+  index:state.dynamicCollision,say:(agent,text)=>cityEventBubble(state.events,agent,text)};
+ for(const w of state.people)if(w.washer)stepWasher(w,elapsed,washCtx);
  for(const agent of [...state.people,...state.traffic])if(Math.hypot(agent.x-agent.prevX,agent.y-agent.prevY)>15){
   agent.prevX=agent.x;agent.prevY=agent.y;agent.prevA=agent.a;
  }
@@ -1270,7 +1278,12 @@ function draw(dt=0){
  drawSkidMarks([x0,y0,x1,y1]);
  drawStreetObjects(c,state.streetObjects,[x0,y0,x1,y1],state.zoom);
  drawLostItem(c,state.events,state.player.car<0?state.player:null,state.clock);
+ // BF08: un lavavetri al finestrino si disegna sopra l'auto se le sta davanti (più in basso sullo
+ // schermo): per questo disegno è saltato qui (indoors solo durante la chiamata) e ridisegnato dopo le auto.
+ const inFront=state.people.filter(q=>q.scripted&&q.washer?.car&&!q.indoors&&q.y>q.washer.car.y);
+ for(const q of inFront)q.indoors=true;
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
+ for(const q of inFront)q.indoors=false;
  if(weather&&weather.rain>.3)for(const person of state.people){
   if(person.indoors||person.x<x0||person.x>x1||person.y<y0||person.y>y1)continue;
   drawUmbrella(c,person.prevX===undefined?person.x:person.prevX+(person.x-person.prevX)*alpha,
@@ -1285,6 +1298,8 @@ function draw(dt=0){
  }
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1)drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);});
  drawPlayer();
+ if(inFront.length)drawCityPeople(c,inFront,state.graph,state.clock,[x0,y0,x1,y1],alpha);
+ drawWasherEffects(c,state.people,state.clock);
  drawSignals(c,state.graph.signals,[x0,y0,x1,y1],signalSeconds(),state.zoom);
  if(weather&&weather.cloud>.02)drawCloudShadows(c,[x0,y0,x1,y1],weather.cloud,state.clock);
  // Q04: night falls on the world, while hints and the bank marker stay readable above it.
