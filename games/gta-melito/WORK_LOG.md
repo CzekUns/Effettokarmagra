@@ -815,3 +815,12 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
   - caserma non identificata;
   - non provato su telefono reale.
 
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q14 collaudo radio e interfaccia mobile
+- **Stream (curl dal server, 14:40 e 14:56; poi Chrome headless):** tutti e 6 rispondono 200. **Difetto:** il vecchio URL di Nuova San Giorgio (`ice15.fluidstream.net/sangiorgio.aac`) reindirizzava a «Radio Italia Charleroy». Ora si usa lo stream del player ufficiale (`nr8.newradio.it:19675/stream?ext=.mp3`, trovato aprendo `play5.newradio.it/player/index/3070`). Radio Napoli passa all'URL del suo player ufficiale. In browser, dopo il gesto, tutte e 6 vanno in `playing` in 0,5–1,6 s e `currentTime` avanza; R, SHIFT+R, T, discesa e risalita dall'auto, scheda nascosta (si ferma, «TOCCA ▶», riparte con un tocco), RADIO 0% e SUONI OFF verificati.
+- **Nuovo:** `carRadio.duck()`. In PAUSA la radio è muta ma collegata, e alla chiusura torna al volume scelto (prima continuava a suonare nel menu).
+- **Autoplay:** emulata la regola di Chrome contando solo eventi utente veri (`isTrusted`), perché le chiamate puppeteer contano già come gesto. Senza tocco compare «TOCCA ▶ PER ASCOLTARE», con il tocco parte.
+- **Diritti:** nessun permesso esplicito per siti di terzi sui sei siti; la funzione resta di prova. Fonti in `RADIO_DIRITTI.md` e numeri in `radio-collaudo.csv`.
+- **HUD mobile:** 7 viewport in orizzontale con tocco emulato. 0 sovrapposizioni e 0 elementi fuori schermo, a piedi e alla guida; ordine pedali BF06 rispettato. Guida con tocchi veri e multi-touch volante+gas; START apre la pausa; verticale con «RUOTA LO SCHERMO»; desktop BF11 senza scorrimento. FPS 12–35 con il server carico.
+- **Test:** nuovo `q14-radio.test.mjs` (5 test). **Cache:** `car-radio.mjs?v=003`, `game.mjs?v=165`.
+- **Non eseguito:** Android reale (checklist in TODO sotto Q14), ascolto effettivo dell'audio, consenso delle emittenti.
