@@ -1,0 +1,125 @@
+{
+ "version": 1,
+ "id": "mercato-settimanale-rione-219",
+ "status": "da-arredare",
+ "used_by_game": false,
+ "name": "Area del mercato settimanale (rione 219)",
+ "verified": {
+  "location": true,
+  "day": false,
+  "hours": false,
+  "stalls": false,
+  "current_use": false
+ },
+ "streets": [
+  "Via Praga",
+  "Via Dublino",
+  "Via Budapest",
+  "Via Ginevra",
+  "Via Berlino"
+ ],
+ "polygon_game": [
+  [
+   1137,
+   925
+  ],
+  [
+   1199,
+   923
+  ],
+  [
+   1200,
+   970
+  ],
+  [
+   1139,
+   975
+  ]
+ ],
+ "polygon_wgs84": [
+  [
+   14.23081,
+   40.924249
+  ],
+  [
+   14.231547,
+   40.924267
+  ],
+  [
+   14.231559,
+   40.923844
+  ],
+  [
+   14.230834,
+   40.923799
+  ]
+ ],
+ "centre_game": [
+  1168,
+  948
+ ],
+ "centre_wgs84": [
+  14.231179,
+  40.924042
+ ],
+ "osm": {
+  "canopies_building_roof": [
+   733703612,
+   733703644
+  ],
+  "note": "nessun amenity=marketplace in OSM (consultato il 2026-10-20); dentro l'isolato due tettoie building=roof e aree landuse=grass/natural=scrub"
+ },
+ "schedule": {
+  "day": "venerdì",
+  "hours": "08:00-13:00",
+  "verified": false,
+  "note": "giorno da due elenchi non ufficiali (Italia Ambulante, oraridiapertura24 con indirizzo del Municipio): da confermare con il SUAP del Comune; orario indicativo di gioco"
+ },
+ "stalls_count": null,
+ "works": {
+  "note": "riqualificazione in corso (cantiere recintato a ottobre 2025), fine lavori prevista il 2027-09-30: spazio polifunzionale per mercati, fiere ed eventi; nel frattempo il mercato potrebbe svolgersi altrove (non verificato)",
+  "budget_eur": 2858704
+ },
+ "secondary_area": {
+  "name": "Mercato ortofrutticolo comunale",
+  "address": "Corso Europa 496 (da Waze, non verificato su fonti ufficiali)",
+  "note": "struttura con stand in concessione; posizione esatta sulla mappa di gioco da verificare"
+ },
+ "sources": [
+  {
+   "title": "Melitonline, Avviata la riqualificazione del mercatino: 2,8 mln per un nuovo spazio polifunzionale (28/10/2025)",
+   "url": "https://www.melitonline.net/giornale/mercatino-melito-riqualificazione/",
+   "consulted": "2026-10-20"
+  },
+  {
+   "title": "Melitonline, Melito davanti al bivio: rilanciare il commercio per ridisegnare la città (09/04/2026)",
+   "url": "https://www.melitonline.net/giornale/melito-bivio-commercio-ridisegnare-citta/",
+   "consulted": "2026-10-20"
+  },
+  {
+   "title": "Melitonline, Mercato ortofrutticolo, prorogata l'occupazione degli stand (20/04/2026)",
+   "url": "https://www.melitonline.net/giornale/melito-mercato-ortofrutticolo-prorogata-loccupazione-degli-stand-scadenza-fissata-per-il-5-maggio/",
+   "consulted": "2026-10-20"
+  },
+  {
+   "title": "oraridiapertura24, Mercato Settimanale Melito di Napoli",
+   "url": "https://www.oraridiapertura24.it/filiale/Melito%2520di%2520Napoli-Mercato%2520Settimanale-663728S.html",
+   "consulted": "2026-10-20"
+  },
+  {
+   "title": "Italia Ambulante, mercati in provincia di Napoli (visto solo come estratto di ricerca, sito non raggiungibile)",
+   "url": "http://www.italiambulante.it/mercati/elenco.php?id_provincia=napoli",
+   "consulted": "2026-10-20"
+  },
+  {
+   "title": "Waze, Mercato Ortofrutticolo Melito, Corso Europa 496",
+   "url": "https://www.waze.com/live-map/directions/it/campania/melito-di-napoli/mercato-ortofrutticolo-melito?to=place.ChIJGVuFs1UGOxMRH9-kqu8bBZI",
+   "consulted": "2026-10-20"
+  },
+  {
+   "title": "OpenStreetMap, dati © OpenStreetMap contributors (ODbL), API 0.6 bbox 14.2300,40.9232,14.2322,40.9250",
+   "url": "https://www.openstreetmap.org/#map=19/40.92404/14.23118",
+   "consulted": "2026-10-20"
+  }
+ ]
+}

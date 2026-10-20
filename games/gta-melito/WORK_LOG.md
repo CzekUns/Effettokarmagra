@@ -468,3 +468,16 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** suite Node 22 **265/265**.
 - **Browser (Chrome headless, telefono 844×390 touch, prima/dopo):** prima ACCELERA y=172, FRENO 242; dopo FRENO 172, ACCELERA 242, RETRO 312. Con tocchi veri: ACCELERA porta l'auto a 38,3, FRENO la ferma a 0 senza retromarcia, RETRO −12 solo mentre premuto; due dita insieme su volante e ACCELERA funzionano; la pausa non lascia ACCELERA premuto; in banca i pedali spariscono e risalendo in auto l'ordine resta giusto; nessuna sovrapposizione con minimappa, missioni, volante, pausa, radio e pulsante azione; nessun errore JS.
 - **Non eseguiti / limiti:** telefono Android reale.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Area mercatale di Melito da arredare: dati e fogli per i banchi (proposta Q42)
+- **Richiesta del committente:** individuare l'area mercatale, segnarla come zona «da arredare» e proporre al proprietario un foglio descrittivo per creare i banchi, con ombrelloni grandi che diventano trasparenti quando il giocatore ci passa sotto.
+- **Area trovata:** il mercato settimanale del rione 219, nell'isolato tra Via Praga, Via Dublino, Via Budapest e Via Ginevra, con Via Berlino che parte dall'angolo sud-est. Fonti: Melitonline 28/10/2025 («tra via Dublino e via Praga, nel rione 219») e 09/04/2026 («via Berlino»), OSM con due tettoie `building=roof` al centro. Non c'è nessun `amenity=marketplace` in OSM. La riqualificazione è in corso fino al 30/09/2027. Il giorno (venerdì) viene solo da elenchi non ufficiali: non verificato. Il numero di posteggi non è stato trovato. Seconda area: mercato ortofrutticolo comunale in Corso Europa 496 (da Waze).
+- **File:**
+  - `MERCATO_MELITO.md`: fonti, area, coordinate di gioco e WGS84, stato DA ARREDARE, regole proposte;
+  - `data/market-area.json`: non usato dal gioco, `used_by_game:false`, `verified` per voce;
+  - `mercato-banchi.csv`: 14 tipi di banco, 23 banchi indicativi;
+  - `mercato-requisiti.csv`: R01–R16, con R01 gli ombrelloni trasparenti come i tetti di `roof-reveal.mjs` e R16 le tettoie OSM da rendere pensilina;
+  - in `TODO.md` la proposta **Q42**, `[ ]`.
+- **Test:** nuovo `mercato-dati.test.mjs` (2 test: dati validi, strade presenti nella mappa, nessun vertice stradale dentro l'area, CSV coerenti, R01 presente). Suite **304/304**.
+- **Browser (Chrome headless, PC e telefono):** oggi l'area è una piazzetta pavimentata con due alberi, circondata da baie di sosta. Le tettoie al centro sono disegnate come un edificio pieno e non sono camminabili.
+- **Non eseguito:** conferma con il SUAP del Comune di giorno, orari, posteggi e sede provvisoria durante i lavori; nessun banco o ombrellone implementato (lo farà la Q42).
