@@ -38,14 +38,14 @@ import {riderPickups,riderDestinations,riderOffers,riderVehicleCheck,acceptOffer
 import {openGoriziana,isGorizianaOpen} from './minigame-goriziana.mjs?v=001';
 import {openPoolMachine,isPoolOpen} from './minigame-pool.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes,SANTA_MARIA_OSM_ID} from './city-art.mjs?v=132';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes,SANTA_MARIA_OSM_ID} from './city-art.mjs?v=133';
 import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
 import {loadCarSprites,drawCarSprite,carDrawSize,CAR_TRAFFIC_SPRITE_IDS,CAR_PARKED_SPRITE_IDS,APE_CAR_IDS,COURIER_IDS,REFUSE_TRUCK_IDS,TOW_TRUCK_IDS,BUS_IDS} from './car-sprites.mjs?v=113';
 import {DAMAGE_RULES,DAMAGE_LABEL,addDamage,damagePoints,damageLevel,damagedProfile,repairCost,payRepair,repairMessage,healOutOfView,drawVehicleDamage,placeWorkshop,nearWorkshop,drawWorkshop} from './vehicle-damage.mjs?v=001';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=002';
 import {loadExtraPedestrianSprites} from './extra-pedestrian-sprites.mjs?v=002';
 import {loadFryerSprite} from './friggitore-sprites.mjs?v=002';
-import {loadProfessionSprites} from './profession-sprites.mjs?v=002';
+import {loadProfessionSprites} from './profession-sprites.mjs?v=003';
 import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=007';
 import {prepareStorefronts,drawStorefronts} from './storefronts.mjs?v=044';
 import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
