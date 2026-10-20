@@ -852,3 +852,12 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Test:** nuovo `q15-consolidamento.test.mjs` (4 test, falliscono senza le correzioni); resi tolleranti 1 controllo di BF09 e le versioni cache. Suite completa a fine lavoro.
 - **Cache:** `game.mjs?v=168`, `roads.mjs?v=154`, `junctions.mjs?v=002`, `camera-zoom.mjs?v=101`, `npc-commute.mjs?v=009`, `npc-density.mjs?v=002`, `npc-reactions.mjs?v=002`, `traffic-light-art.mjs?v=002`, `window-washers.mjs?v=002`, `street-professions.mjs?v=005`.
 - **Residui (Q15 resta `[ ]`):** sagome OSM sulla carreggiata visuale fuori zona (Via Papa Giovanni XXIII, Via Lago di Como), un'auto parcheggiata dentro una sagoma a (1308,1305), pedoni rasenti la chiesa nella sagoma, raggio di salita in auto di 9,5 m, telecamera veloce nelle inversioni a U. Non eseguiti per la regola di prove brevi: notte/pioggia e telefono completi, partita integrata di 5 minuti. Android reale non disponibile.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q28 slot machine arcade (nucleo del minigioco)
+- **Nuovo:** `minigame-slot.mjs`, «SLOT DEL VESUVIO». Pixel art disegnata via codice con cornice a luci, 3 rulli e 8 simboli napoletani di fantasia; giro di 1,25 s con i rulli che si fermano in sequenza; risultati a schermo; regole sempre visibili. Controlli da tastiera (SPAZIO/INVIO, ←/→, ESC) e touch.
+- **Crediti solo virtuali**, separati dagli euro della Q06. Non si comprano e non c'è ricarica a pagamento. A crediti finiti si «ricomincia da 50» gratis. Nessuna chiamata di rete né collegamento a scommesse.
+- **Generatore con seme** (mulberry32, seme salvato e numero del giro). Il saldo si salva prima dell'animazione, quindi un reload non duplica nulla. Ritorno medio di circa 0,9 crediti per credito.
+- **Nel gioco:** sotto la slot il mondo resta in pausa e la radio si abbassa. Si apre da PAUSA › STRUMENTI › «PROVA SLOT» o con `?minigioco=slot`. L'aggancio per il cabinato della Q27 è `openSlotGame()`.
+- **Cache:** `game.mjs?v=182`, `minigame-slot.mjs?v=001`.
+- **Test:** `q28-slot.test.mjs` (7 test). Browser breve su PC e telefono: giro, saldo, pausa, uscita, 0 errori JS.
+- **Limiti:** grafica provvisoria da approvare; cabinato del bar in attesa della Q27; nessun suono; Android reale non provato.

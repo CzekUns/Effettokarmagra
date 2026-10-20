@@ -662,3 +662,6 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 ### 2026-10-20 — Q17 banco degli ambulanti
 - Nessuna nuova arte. Il pannello acquisti, lo stesso dei negozi Q06, ora si apre anche al banco dei furgoncini, con l'intestazione «AMBULANTE · MELITO». Sulla plancia PC compare la scritta «E · COMPRA · NOME DEL BANCO». Foto: banco «Zeppole e panzerotti» in Via Roma.
 
+
+### 2026-10-20 — Q28 «SLOT DEL VESUVIO» (provvisoria, da approvare)
+Schermata della slot in pixel art disegnata via codice. Griglia logica 192×128, ingrandita senza sfocature. Cornice rosso scuro e oro con luci che si alternano; tre rulli bianchi con simboli 16×16 ingranditi ×2 (limone, caffè, pizza, babà, sfogliatella, Pulcinella, Vesuvio, cornetto rosso), riga vincente rossa e pannello crediti. È un segnaposto di stile: il proprietario può sostituire i simboli con sprite propri lasciando invariate le regole.

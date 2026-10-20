@@ -82,7 +82,7 @@ test('Q06 game wiring: counter opens with the action, pauses the world, money an
  assert.match(game,/import \{offersFor,nearestShop,buyOffer[^}]*\} from '\.\/local-shops\.mjs\?v=\d+'/);
  assert.match(game,/from '\.\/campaign\.mjs\?v=\d+'/,'campaign.mjs changed: its import carries a cache version');
  assert.ok(game.indexOf('const shop=nearestCounter(p)')>0&&game.indexOf('const shop=nearestCounter(p)')<game.indexOf('const entrance=nearestBankEntrance(state.bankEntrances,p)'),'counter before bank and vehicles');
- assert.match(game,/\|\|state\.shopOpen\)\{/,'the world pauses while shopping');
+ assert.match(game,/\|\|state\.shopOpen(?:\|\|isSlotOpen\(\))?\)\{/,'the world pauses while shopping');
  assert.match(game,/if\(result\.ok\)\{\n  saveProgress\(localStorage,state\.progress\);refreshCampaign\(\);/,'saved and HUD money refreshed right away');
  assert.match(game,/\$\('shop-balance'\)\.textContent='SALDO: € '\+money/);
  assert.match(game,/\*boostFactor\(state\.boost,state\.clock\)/,'the walking speed uses the boost');
