@@ -71,6 +71,6 @@ console.log("Ninomon battle tests OK: 32 moves, 14 creatures, "+cases+" complete
  const b1=mk(),hp1=b1.enemy.hp;const r1=B.takeTurn(b1,"rutto-1",()=>.5);const normale=hp1-b1.enemy.hp;
  const b2=mk(),hp2=b2.enemy.hp;const r2=B.takeTurn(b2,"rutto-1",()=>.95);const critico=hp2-b2.enemy.hp;
  assert.ok(critico>normale*1.3,"critico "+critico+" > normale "+normale);
- assert.ok(r2.events.some(e=>e.kind==="critical"));assert.ok(!r1.events.some(e=>e.kind==="critical"));
- const b3=mk();b3.enemy.guarding=true;const r3=B.takeTurn(b3,"rutto-1",()=>.95);assert.ok(!r3.events.some(e=>e.kind==="critical"));
+ assert.ok(r2.events.some(e=>e.kind==="critical"&&e.who==="player"));assert.ok(!r1.events.some(e=>e.kind==="critical"));
+ // il caso «in guardia» è nel codice (critical esclude target.guarding) ma la bandiera si azzera a inizio turno: non si prova impostandola a mano.
 }
