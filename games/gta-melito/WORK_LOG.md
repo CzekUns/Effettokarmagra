@@ -383,3 +383,9 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Decisioni:** BF01 collisioni, BF02 fascia sosta, BF03 spawn traffico/vendor, BF04 ancoraggio friggitore, BF05 cambio automatico e caratteri per modello, BF06 ordine FRENO/ACCELERA touch; un BF per PR, niente merge diretto del collaboratore.
 - **Verifiche:** lettura reale dei file e della coda GitHub; issue assegnata verificata. **Non eseguiti** test Node/browser/Android/deploy perché l'intervento registra solo bug e incarichi, non li corregge.
 - **Prossimo passo:** avviare esplicitamente l'AI collaboratrice sul suo account leggendo issue #32; sviluppare BF01 e sottoporla a revisione, poi proseguire; Q13–Q24 non toccate.
+
+### 2026-10-20 — Regola vincolante: primo sheet pedoni come reference per tutti i personaggi
+- Su richiesta dell'utente è stato stabilito che **qualsiasi nuova generazione/variazione di personaggi deve iniziare aprendo visivamente** `assets/people/pedoni-4x4frames-24x40-rgba.png` della repository; il PNG è reference primaria di proporzioni, ombreggiatura, stile, scala, prospettiva e animazioni.
+- Documentazione aggiornata in `PIXEL_ART_MODUS.md` e richiamo esplicito in `AGENTS.md` per gli altri agenti. Seconda tavola pedoni solo secondaria; vecchio friggitore e mestieri/PR #33 non approvati come modello artistico.
+- Specificati formato 4 persone × 4 direzioni × 4 frame (384×160, cella 24×40), confronto visivo affiancato e blocco della generazione se il file originale non è accessibile.
+- Intervento **solo di documentazione**: PNG/renderer/routine, deploy, CI e giocabilità invariati; test tecnici non eseguiti perché non sono stati modificati.

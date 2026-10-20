@@ -44,6 +44,9 @@ In auto e moto, sul lato sinistro della visuale deve comparire **il volante fisi
 
 **Prima di creare, ritagliare, caricare o sostituire edifici, persone o veicoli, leggere integralmente [PIXEL_ART_MODUS.md](./PIXEL_ART_MODUS.md).** È lo schema condiviso di stile, prospettiva, crop, alpha, pivot, animazioni, integrazione e prove. Include la regola fondamentale emersa con la Chiesa di Santa Maria delle Grazie: preservare l'immagine master e **non troncare le appendici posteriori**; se il crop viene ampliato, ricalibrare il renderer evitando di riesumare la struttura procedurale sottostante. Per le auto resta valido anche [VEHICLE_ART_GUIDE.md](./VEHICLE_ART_GUIDE.md).
 
+
+**REFERENCE GRAFICA PERSONAGGI — VINCOLANTE:** prima di generare o modificare **qualsiasi persona/NPC/protagonista**, aprire visivamente **[il primo spritesheet originale dei pedoni](./assets/people/pedoni-4x4frames-24x40-rgba.png)**, usarlo come **riferimento artistico primario** per sagome, proporzioni, palette, dettaglio, prospettiva e frame, e confrontare affiancati i risultati. Il friggitore storico e le precedenti tavole dei quattro mestieri **non sono reference prioritarie**: se divergono dal primo sheet, rifarli secondo il primo sheet. Se non si può aprire il PNG, non iniziare la generazione di persone. Dettagli e checklist obbligatoria nel paragrafo `PERSONE` di `PIXEL_ART_MODUS.md`.
+
 ## Modus operandi veicoli — confermato e permanente
 
 Per ogni nuovo veicolo segui rigorosamente [VEHICLE_ART_GUIDE.md](./VEHICLE_ART_GUIDE.md): automobili reali come riferimento, **solo vista dall'alto**, un sheet per modello con colori d'epoca verificabili, ritagli PNG individuali **trasparenti**, scala corretta e introduzione effettiva nel gioco. Lo standard è approvato sulla Panda moderna e Panda Fire già integrate: non tornare ad auto SVG generiche e non generare viste prospettiche per gli sprite definitivi.

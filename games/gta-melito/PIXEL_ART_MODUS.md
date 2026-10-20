@@ -24,10 +24,10 @@ Questi sono **file realmente presenti in questa repository**. I link relativi so
 | Categoria | Immagini di esempio da aprire | Dove vedere l'integrazione |
 | --- | --- | --- |
 | **Edificio speciale** | [Chiesa Santa Maria delle Grazie — WebP](./assets/buildings/chiesa-santa-maria-delle-grazie-game.webp) | [city-art.mjs](./city-art.mjs), [building-volume.mjs](./building-volume.mjs) |
-| **Persona / NPC** | [Prima tavola: quattro pedoni, quattro direzioni](./assets/people/pedoni-4x4frames-24x40-rgba.png) | [pedestrian-sprites.mjs](./pedestrian-sprites.mjs) |
+| **PERSONAGGI — REFERENCE PRIMARIA OBBLIGATORIA** | [Prima tavola: quattro pedoni, quattro direzioni](./assets/people/pedoni-4x4frames-24x40-rgba.png) | [pedestrian-sprites.mjs](./pedestrian-sprites.mjs) |
 | **Protagonista / nuovi NPC** | [Seconda tavola con protagonista in felpa rossa](./assets/people/pedoni-secondo-lotto-4x4frames-24x40-rgba.png) | [extra-pedestrian-sprites.mjs](./extra-pedestrian-sprites.mjs) |
 | **Personaggio professionale** | [Friggitore in camice bianco: 4 direzioni](./assets/people/friggitore-bianco-4dir-4frames-24x40.png) | [friggitore-sprites.mjs](./friggitore-sprites.mjs) |
-| **Quattro nuovi NPC di mestiere (sheet 4×4 pose/personaggio)** | [Tavola trasparente: friggitore, vigile, lavavetri, contrabbandiere](./assets/people/npc-mestieri-4chars-4dir-4frames-24x40.png) | Asset predisposto per future integrazioni; il vecchio [friggitore-sprites.mjs](./friggitore-sprites.mjs) rimane in uso e non è sostituito. |
+| **Quattro mestieri — bozza NON approvata come stile** | [Vecchia tavola da correggere](./assets/people/npc-mestieri-4chars-4dir-4frames-24x40.png) | Deve essere rifatta confrontandola con la **prima tavola pedoni**, prima di essere integrata. |
 | **Auto approvata** | [Fiat Panda moderna bianca — PNG](./assets/vehicles/panda-modern-white.png) e [Panda Fire rossa — PNG](./assets/vehicles/panda-fire-red.png) | [car-sprites.mjs](./car-sprites.mjs), [VEHICLE_ART_GUIDE.md](./VEHICLE_ART_GUIDE.md) |
 | **Atlante auto** | [Punto / Ypsilon — colori, PNG con alpha](./assets/vehicles/punto-ypsilon-16colors-rgba.png) | [car-sprites.mjs](./car-sprites.mjs) |
 | **Moto e scooter** | [16 varianti — atlante PNG](./assets/vehicles/moto-16-40x68-256.png) | [motorcycles.mjs](./motorcycles.mjs) |
@@ -87,6 +87,23 @@ Se un'immagine è troppo stretta si **espande il crop**, non si ridisegna obblig
 
 ## 3. PERSONE — protagonista e NPC
 
+### REGOLA OBBLIGATORIA — reference madre per QUALSIASI personaggio
+
+**Prima di disegnare, generare con ImageGen, trasformare, ritagliare, animare o approvare qualsiasi sprite umano** (NPC, protagonista, mestiere, antagonista, personaggio speciale, passante), **APRIRE E OSSERVARE PER PRIMO** questo file della repository:
+
+**[REFERENCE UFFICIALE E VINCOLANTE — PRIMO SPRITESHEET DEI PERSONAGGI](./assets/people/pedoni-4x4frames-24x40-rgba.png)**
+
+URL diretto: https://github.com/CzekUns/Effettokarmagra/blob/main/games/gta-melito/assets/people/pedoni-4x4frames-24x40-rgba.png
+
+Il primo sheet è la **fonte di verità artistica** per silhouette, proporzioni anatomiche, dimensioni testa/torace/braccia/gambe, postura vista dall'alto 2.5D, palette, ombreggiatura, livello di dettaglio e animazioni. **Non basta leggere le istruzioni: occorre aprire visivamente il PNG originale e confrontare i nuovi sprite affiancati alla stessa scala**, anche prima di preparare un prompt ImageGen. Nel prompt e nel handoff citare espressamente il file di riferimento; ove possibile passarne anche l'immagine come input.
+
+- **Struttura tecnica da replicare:** celle `24×40 px`; un personaggio ha quattro direzioni `up, down, left, right` e quattro frame reali per ciascuna; un foglio con quattro personaggi è `384×160 px` (16 colonne × 4 righe). Pixel art netta e PNG con trasparenza reale, stessi allineamenti/pivot.
+- **Gerarchia reference:** ① **primo sheet pedoni = obbligatorio e prioritario**; ② [secondo sheet pedoni](./assets/people/pedoni-secondo-lotto-4x4frames-24x40-rgba.png) = verifica aggiuntiva; ③ friggitore vecchio e sheet mestieri = esempi storici/bozze, **mai** base grafica primaria se discordanti con il primo sheet.
+- **Gate prima della consegna:** confrontare immagini alla scala effettiva del gioco, controllo di proporzioni, silhouette, palette, dettaglio, pose (4×4), animazione e trasparenza. **Se lo stile non coincide, rigenerare/ridisegnare usando la reference originale prima di caricare/integrare**. Non dichiarare un nuovo sheet approvato solo perché le dimensioni corrispondono.
+- **Caso concreto da non ripetere (ottobre 2026):** friggitore, vigile, lavavetri e contrabbandiere sono stati prodotti con uno stile diverso; poi è stata fatta una bozza ripartendo dal *friggitore storico*, ma quella fonte è più schematica. Quei quattro NPC **non sono il campione stilistico approvato** e richiedono ancora la verifica/ricreazione basata sul **primo sheet pedoni**. La bozza PR #33 non prevale su questa regola.
+
+**Se la reference originale non è accessibile, sospendere la generazione grafica di persone e recuperare il file: non sostituirla con una descrizione testuale o un altro personaggio.**
+
 1. Creare soggetti coerenti con il quartiere: abiti credibili, variabilità di età, corporatura, professione, accessori, ma **stessa scala** e prospettiva per tutti. Non usare il volto “da ritratto frontale” in una mappa vista dall'alto.
 2. **Spritesheet completo per personaggio:** quattro direzioni `up, down, left, right` e almeno **4 frame di camminata** per direzione. Una posa da fermo non deve “camminare sul posto”. Se servono altre azioni (salire, sedersi, lavorare), aggiungere stati espliciti e nuovi frame.
 3. Nei frame della stessa direzione: testa/torso omogenei, scarpe e mani **dentro la cella** senza tagli, braccia/gambe alternate visibilmente; piedi allineati alla **stessa riga/pivot** per evitare saltellamenti.
@@ -98,7 +115,7 @@ Se un'immagine è troppo stretta si **espande il crop**, non si ridisegna obblig
 
 ### Tavola NPC a quattro identità — esempio mestieri (20 ottobre 2026)
 
-La nuova [tavola 384×160 in PNG RGBA](./assets/people/npc-mestieri-4chars-4dir-4frames-24x40.png) contiene **4 personaggi × 4 direzioni × 4 frame di camminata = 64 celle** da `24×40 px`. Le **16 colonne** si dividono in quattro gruppi successivi da quattro frame; le **quattro righe** sono `up`, `down`, `left`, `right`, nell'ordine già adottato dal gioco.
+**ATTENZIONE: tavola precedente, DA RIVEDERE prima di usarla come modello artistico. Confronto obbligatorio con la prima tavola pedoni indicata sopra.** La [tavola 384×160 in PNG RGBA](./assets/people/npc-mestieri-4chars-4dir-4frames-24x40.png) contiene **4 personaggi × 4 direzioni × 4 frame di camminata = 64 celle** da `24×40 px`. Le **16 colonne** si dividono in quattro gruppi successivi da quattro frame; le **quattro righe** sono `up`, `down`, `left`, `right`, nell'ordine già adottato dal gioco.
 
 | Colonne (zero-based) | Identità | Dettagli identificativi |
 | --- | --- | --- |
