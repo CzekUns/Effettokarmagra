@@ -1,6 +1,6 @@
 import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=043';
 import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=005';
-import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked} from './traffic-collision.mjs?v=126';
+import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation} from './traffic-collision.mjs?v=127';
 /* GTA Melito — real OSM road topology (no invented rectangular street grid).
  * OSM ways share survey nodes; quantized coordinates preserve intersections.
  * Simulates moving traffic through intersections with legal one-way exits. */
@@ -217,13 +217,43 @@ function nextPose(graph,agent,distance){
   }
   route.edge=next;route.t=0;
  }
- return {...route,...position(graph,route.edge,route.t,agent.body,route.side),vehicleType:agent.vehicleType};
+ return {...route,...position(graph,route.edge,route.t,agent.body,route.side),vehicleType:agent.vehicleType,model:agent.model};
 }
-export {position as lanePosition,sidewalkTurn};
+// BF01: reverse slowly along the current lane (never into another body), then wait.
+function backOff(graph,agent,elapsed,index){
+ const e=graph.edges[agent.edge],step=Math.min(agent.backoff,2*elapsed);
+ const t=Math.max(0,agent.t-step/e.len),lane=position(graph,agent.edge,t,'car');
+ const pose={x:lane.x,y:lane.y,a:agent.a,vehicleType:agent.vehicleType,model:agent.model};
+ if(t<agent.t-1e-9&&!(index&&trafficMoveBlocked(agent,pose,'car',index,agent))){
+  agent.x=pose.x;agent.y=pose.y;agent.t=t;agent.backoff-=step;agent.braking=false;
+ }else agent.backoff=0;
+ if(agent.backoff<=1e-6){agent.backoff=0;agent.wait=Math.max(agent.wait||0,1.5);agent.blockedBy=null;agent.braking=true;}
+}
+// BF01: a vehicle overlapping another one (after a shove or a spawn) slides out of it a little at a
+// time, along the shortest way out, never into a wall; it does not drive on until it is free.
+export function unstickVehicle(agent,index,world,dt){
+ let px=0,py=0,count=0;
+ for(const other of nearbyColliders(index,agent.x,agent.y,9)){
+  if(other===agent||(other.body||'car')!=='car')continue;
+  const sep=vehicleSeparation(agent,other);
+  if(!sep)continue;
+  px+=sep.nx*sep.depth;py+=sep.ny*sep.depth;count++;
+ }
+ if(!count)return false;
+ const len=Math.hypot(px,py);
+ if(len<1e-6)return false;
+ const step=Math.min(len+.02,2.5*Math.min(dt,.1)),nx=agent.x+px/len*step,ny=agent.y+py/len*step;
+ if(world.validRecovery&&!world.validRecovery(nx,ny,agent)){agent.braking=true;return true;}
+ agent.x=nx;agent.y=ny;agent.braking=true;agent.unstuck=(agent.unstuck||0)+1;
+ return true;
+}
+export {position as lanePosition,sidewalkTurn,nextPose as previewNextPose};
 export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockMinutes=null,valid=null){
  if(!Number.isFinite(dt)||dt<=0||agent.impactTime>0||agent.needsRoutineRecovery)return;
  const elapsed=Math.min(dt,.1);
  if(agent.residentRoutine){stepResidentRoutine(graph,agent,elapsed,index,clockMinutes,valid);return;}
+ // BF01: the yielding car of a mutual block backs up along its own lane, then waits a moment.
+ if(agent.body==='car'&&agent.backoff>0){backOff(graph,agent,elapsed,index);return;}
  if(agent.wait>0){agent.wait=Math.max(0,agent.wait-elapsed);return;}
  const edge=graph.edges[agent.edge];if(!edge||!(agent.body==='car'?edge.car:edge.walk))return;
  let speed=agent.speed;
@@ -259,10 +289,12 @@ export function stepAgent(graph,agent,dt,others=[],player=null,index=null,clockM
   }
  }
  // Try reduced motion before stopping; this lets traffic queue naturally.
+ // BF01: remember who blocks the move, so a mutual block at a junction can be untied.
  for(const factor of [1,.5,.25]){
   const next=nextPose(graph,agent,speed*elapsed*factor);
-  if(index&&trafficMoveBlocked(agent,next,agent.body,index,agent))continue;
-  Object.assign(agent,next);agent.braking=false;return;
+  const blocker=index?trafficMoveBlocker(agent,next,agent.body,index,agent):null;
+  if(blocker){agent.blockedBy=blocker;continue;}
+  Object.assign(agent,next);agent.braking=false;agent.blockedBy=null;return;
  }
  agent.braking=true;
 }
@@ -318,10 +350,15 @@ export function restoreAgentRoutine(graph,agent,dt,world={},index=null){
  }
  const distance=Math.min(len,(agent.body==='car'?5.5:3.8)*Math.min(dt,.1));
  const nx=agent.x+dx/len*distance,ny=agent.y+dy/len*distance;
+ // BF01: moves that take it out of a body it already overlaps are allowed (before, every step
+ // still touched it and the NPC stayed stuck in plain view).
+ // A car slides back keeping the direction of its lane (turning sideways next to another car
+ // would sink a corner into it); a pedestrian simply walks there.
+ const heading=agent.body==='car'?pose.a:Math.atan2(dy,dx);
  if((!world.validRecovery||world.validRecovery(nx,ny,agent))&&
-    (!index||!collidesWithTraffic({x:nx,y:ny,a:Math.atan2(dy,dx),
-     vehicleType:agent.vehicleType},agent.body,index,agent))){
-  agent.x=nx;agent.y=ny;agent.a=Math.atan2(dy,dx);
+    (!index||!trafficMoveBlocked(agent,{x:nx,y:ny,a:heading,
+     vehicleType:agent.vehicleType,model:agent.model},agent.body,index,agent))){
+  agent.x=nx;agent.y=ny;agent.a=heading;
  }
  agent.recoverySeconds=(agent.recoverySeconds||0)+dt;
  // If a building blocks a clear return route, defer the final reset until
@@ -343,6 +380,9 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
  for(const agent of agents){
   const x=agent.x,y=agent.y;
   if(agent.impactTime>0){agent.braking=true;continue;}
+  if(agent.body==='car'&&unstickVehicle(agent,index,world,dt)){
+   agent.stalled=0;if(agent.x!==x||agent.y!==y)moveInCollisionIndex(index,agent,x,y);continue;
+  }
   // Vendors and junction-side washers hold an actual foot position, but after
   // nonlethal impacts they step back towards it instead of snapping on screen.
   if(agent.stationary){
@@ -373,26 +413,33 @@ export function stepAgents(graph,agents,dt,player=null,world={}){
   agent.stalled=Math.hypot(agent.x-x,agent.y-y)<.02?
    (agent.stalled||0)+dt:0;
   if(agent.body==='car'){
+   // BF01: two cars blocking each other (typically across a junction) for over 2,5 s: the one with
+   // the higher seed yields and backs up a couple of metres; the other one can then pass.
+   const other=agent.blockedBy;
+   if(other&&agent.stalled>2.5&&!(agent.backoff>0)&&other.blockedBy===agent&&other.body==='car'&&
+      agent.edge!=null&&(agent.seed|0)>(other.seed|0))agent.backoff=2.5;
    // Retire a genuine deadlock only when both the old and replacement car
    // are outside the camera. The player never sees a vehicle teleport.
    const view=world.view;
    if(agent.stalled>8&&view&&
       (x<view[0]-15||x>view[2]+15||y<view[1]-15||y>view[3]+15)){
-    const options=agent.home?.returnEdges?.length?agent.home.returnEdges:
+    const options=agent.home?.returnEdges?.length&&(agent.respawnFails||0)<2?agent.home.returnEdges:
      (graph.throughStarts?.length?graph.throughStarts:graph.trafficStarts);
     for(let attempt=0;attempt<32;attempt++){
      const edgeId=options[hash(agent.seed+attempt*3253)%options.length];
      const t=.15+rand(agent.seed+attempt*1459)*.7;
-     const at={...position(graph,edgeId,t,'car'),vehicleType:agent.vehicleType};
-     if(agent.home&&Math.hypot(at.x-agent.home.x,at.y-agent.home.y)>agent.home.radius*.65)continue;
+     const at={...position(graph,edgeId,t,'car'),vehicleType:agent.vehicleType,model:agent.model};
+     if(agent.home&&(agent.respawnFails||0)<2&&Math.hypot(at.x-agent.home.x,at.y-agent.home.y)>agent.home.radius*.65)continue;
      if(at.x>=view[0]-15&&at.x<=view[2]+15&&at.y>=view[1]-15&&at.y<=view[3]+15)continue;
      if(collidesWithTraffic(at,'car',index,agent)||[...nearbyColliders(index,at.x,at.y,10)].some(other=>
        other!==agent&&(other.body||'car')==='car'&&Math.hypot(at.x-other.x,at.y-other.y)<9))continue;
      Object.assign(agent,at,{edge:edgeId,t,seed:agent.seed+attempt+1,wait:0,stalled:0,
-      prevX:at.x,prevY:at.y,prevA:at.a,braking:false});
+      prevX:at.x,prevY:at.y,prevA:at.a,braking:false,respawnFails:0,blockedBy:null,backoff:0});
      break;
     }
-    if(agent.stalled>8)agent.stalled=6;
+    // BF01: after two failed rounds (e.g. a one-way dead end far from any free lane at home) the
+    // home-radius limit is relaxed, so the car does not stay parked there forever.
+    if(agent.stalled>8){agent.stalled=6;agent.respawnFails=(agent.respawnFails||0)+1;}
    }
   }else if(!agent.residentRoutine&&agent.stalled>12&&world.view&&
    (x<world.view[0]-15||x>world.view[2]+15||y<world.view[1]-15||y>world.view[3]+15)){

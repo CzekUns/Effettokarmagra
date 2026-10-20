@@ -6,8 +6,8 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=043';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=146';
-import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=001';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=147';
+import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=002';
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=005';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock} from './npc-agenda.mjs?v=001';
@@ -18,7 +18,7 @@ import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=002';
 import {createSocial,stepSocial} from './npc-social.mjs?v=002';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=001';
-import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape} from './traffic-collision.mjs?v=126';
+import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked} from './traffic-collision.mjs?v=127';
 import {placeStreetObjects,stepStreetObjects,drawStreetObjects,bollardBlocksVehicle,bollardBlocksWalker} from './street-objects.mjs?v=001';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=090';
 import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=001';
@@ -45,7 +45,7 @@ import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=099';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=120';
 import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=006';
-import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=002';
+import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=003';
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
@@ -545,8 +545,15 @@ function toggleBigMap(){
    state.progress?activeTarget(state.progress,state.landmarks):null);
 }
 
-function canKnockbackMove(x,y){
- return validWalk(x,y)&&inside([x,y],toRing(state.map.border));
+function canKnockbackMove(x,y,actor){
+ if(!(validWalk(x,y)&&inside([x,y],toRing(state.map.border))))return false;
+ // BF01: a shoved vehicle stops against other vehicles instead of sinking into them
+ // (it may still move away from one it already touches).
+ if(actor&&state.dynamicCollision&&(actor.body==='car'||state.cars.includes(actor))){
+  const pose={x,y,a:actor.a,vehicleType:isMotorcycle(actor)?'motorcycle':'car',model:actor.model};
+  if(trafficMoveBlocked({...actor,vehicleType:pose.vehicleType},pose,'car',state.dynamicCollision,actor))return false;
+ }
+ return true;
 }
 function impactTraffic(dt){
  // The index limits contacts to adjacent street cells; no quadratic scan
@@ -721,8 +728,12 @@ function carBlocked(x,y,a,which,vehicle=state.cars[which]){
  }
  // Q07: cast-iron bollards stop the car like a wall.
  if(state.streetObjects&&bollardBlocksVehicle(state.streetObjects,{x,y,a},bodyShape(vehicle)))return true;
- return !!(state.dynamicCollision&&collidesWithTraffic(
-  {x,y,a,vehicleType:bike?'motorcycle':'car'},'car',state.dynamicCollision,vehicle));
+ // BF01: touching another vehicle already (after a crash), every move that separates them is
+ // allowed: the player can always reverse or steer away instead of staying pinned.
+ if(!state.dynamicCollision)return false;
+ const type=bike?'motorcycle':'car',pose={x,y,a,vehicleType:type,model:vehicle?.model};
+ return vehicle?trafficMoveBlocked({...vehicle,vehicleType:type},pose,'car',state.dynamicCollision,vehicle):
+  !!collidesWithTraffic(pose,'car',state.dynamicCollision,null);
 }
 function toRing(border){
  if(state.borderRing)return state.borderRing;

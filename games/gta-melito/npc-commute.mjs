@@ -7,8 +7,8 @@
  * Se lo scooter manca (rubato o portato via) se ne accorge, aspetta un po' e va a piedi su un
  * percorso di marciapiedi; al giro dopo riprende lo scooter se è tornato vicino a casa.
  * Nessun teletrasporto: ogni spostamento è continuo, anche nelle curve. */
-import {lanePosition} from './roads.mjs?v=145';
-import {trafficMoveBlocked,nearbyColliders,vehicleHitsPedestrian} from './traffic-collision.mjs?v=126';
+import {lanePosition} from './roads.mjs?v=147';
+import {trafficMoveBlocked,nearbyColliders,vehicleHitsPedestrian} from './traffic-collision.mjs?v=127';
 import {makeResidentAgenda,residentDepartureWindow} from './npc-agenda.mjs?v=001';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export const COMMUTE_RULES=Object.freeze({walkSpeed:1.05,rideSpeed:9.5,rideAccel:5,parkSpeed:2.4,

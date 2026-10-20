@@ -5,7 +5,7 @@
  * outing ends behind another one; it walks from the pavement to the threshold, vanishes
  * only there (agent.indoors: not drawn, not collidable), stays inside, and comes out of
  * the same door. Doors of named OSM shops are marked 'osm-poi', the others 'inventata'. */
-import {makeCollisionIndex,addToCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked} from './traffic-collision.mjs?v=126';
+import {makeCollisionIndex,addToCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked} from './traffic-collision.mjs?v=127';
 import {makeResidentAgenda,residentDepartureWindow} from './npc-agenda.mjs?v=001';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const hash=n=>{let x=(Number(n)||1)|0;x=Math.imul(x^x>>>16,2246822519);x=Math.imul(x^x>>>13,3266489917);return (x^x>>>16)>>>0;};
