@@ -631,3 +631,11 @@ Titolo, barra di stato, comandi, confronto strade e crediti sono nel menu PAUSA,
 - **Galleria Atlante:** facciate a vetrata continua con montanti, traversi e un riflesso diagonale; tetto rosato con atrio vetrato, come sulla foto aerea.
 - **Verifiche:** foto Chrome headless di villa, Municipio (cancelli e lato nord), recinto di fronte al mercato e galleria, di giorno e alle 23:30 con pioggia, su PC e su telefono 844×390. Telefono reale non provato.
 
+## 2026-10-20 — BF12, complesso del Municipio (Claude)
+- **Torre del serbatoio a fungo**, landmark sopra la città, alzata nella stessa direzione dei tetti:
+  - fusto e vasca a scacchi rosso/bianco (colori stimati), con il lato destro in ombra;
+  - cappello chiaro a spicchi, come sulla foto aerea, e ombra lunga verso sud-est;
+  - trasparente sotto e accanto al giocatore; luce rossa di notte.
+- **Rudere dell'ex piscina comunale:** muri bassi in calcestruzzo con macchie, copertura crollata attorno alla vasca e la vasca interrata vuota, con piastrelle azzurre sbiadite, crepe, erbacce e scaletta; con la pioggia, pozzanghere e cerchi.
+- **Verifiche:** foto su PC di giorno, di notte (23:30, con la pioggia casuale di Q08) e sotto pioggia forzata; telefono 844×390; trasparenza con il giocatore sotto la vasca.
+

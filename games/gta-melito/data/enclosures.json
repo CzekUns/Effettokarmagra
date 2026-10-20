@@ -142,10 +142,10 @@
    },
    "cancelli": [],
    "guardiola": true,
-   "fonte": "OSM: nodo 5515667279 «Municipio di Melito di Napoli», edificio 733703600; stima da foto aerea Esri World Imagery (consultata 20/10/2026): isolato verde recintato con l'edificio del Municipio, un edificio tondo con cupola (probabile piscina comunale, in disuso secondo la segnalazione), un grande edificio a tetto piatto e un lotto demolito",
+   "fonte": "OSM: nodo 5515667279 «Municipio di Melito di Napoli», edificio 733703600; edificio tondo OSM 733703519 su Via Madrid; Melitonline, 23/02/2025, «Completata la bonifica del rudere dell'ex piscina comunale di via Madrid»; elenchi pubblici (reteimprese, virgilio): Carabinieri Tenenza in Via Salvatore Di Giacomo 38, Municipio in Via Salvatore Di Giacomo 7; stima da foto aerea Esri World Imagery (consultata 20/10/2026): isolato verde recintato con il Municipio, l'edificio tondo con la torre del serbatoio a fungo, un edificio a tetto piatto e un lotto demolito",
    "verificato": false,
    "metodo": "ricalco a vista + bordo dell'isolato (alberi sopra le mura)",
-   "note": "La posizione della caserma dei Carabinieri e della piscina non è in OSM: le funzioni dei singoli edifici restano da verificare. Il tipo «privato» qui significa accesso controllato (sbarra notturna e guardiola), non proprietà privata."
+   "note": "Il tipo «privato» qui significa accesso controllato (sbarra notturna e guardiola), non proprietà privata. Carabinieri: la Tenenza è in Via Salvatore Di Giacomo 38 secondo elenchi pubblici, ma l'edificio non è identificato con certezza: nessuna insegna nel gioco. Piscina e serbatoio: vedi la sezione «landmark»."
   },
   {
    "id": "recinto-fronte-mercato",
@@ -231,6 +231,45 @@
    "fonte": "OSM way 794814541 (building=commercial) accanto al «Parco Atlante» (OSM 794814538) e all'«Ufficio Postale Melito 2» (OSM node 7434108725); foto aerea Esri World Imagery (consultata 20/10/2026): atrio centrale vetrato a V e torrette tonde vetrate",
    "verificato": false,
    "metodo": "ricalco a vista: identificazione dell'edificio, poligono OSM invariato"
+  }
+ ],
+ "landmark": [
+  {
+   "id": "serbatoio-municipio",
+   "tipo": "torre-serbatoio",
+   "nome": "Torre del serbatoio idrico «a scacchi» (a fungo)",
+   "x": 1313.5,
+   "y": 824.5,
+   "altezza": 40,
+   "raggioFusto": 2.3,
+   "raggioVasca": 12,
+   "vascaDa": 0.64,
+   "colori": [
+    "#c3392d",
+    "#f0ebdf"
+   ],
+   "fonte": "posizione e forma: foto aerea Esri World Imagery (consultata 20/10/2026), dove si vedono la vasca a fungo con copertura a spicchi (circa 27 m di diametro) e il fusto al centro dell'edificio tondo OSM 733703519; segnalazione del committente («una torre un po' simbolo, fatta a scacchi»)",
+   "verificato": false,
+   "metodo": "ricalco a vista",
+   "note": "I colori della scacchiera (rosso e bianco) e l'altezza sono STIME: non ho trovato foto pubbliche consultabili. La luce rossa notturna in cima è un dettaglio artistico."
+  },
+  {
+   "id": "ex-piscina-via-madrid",
+   "tipo": "piscina-rudere",
+   "nome": "Ex piscina comunale di via Madrid (rudere, interrata)",
+   "edificio": 733703519,
+   "vasca": {
+    "x": 1313.5,
+    "y": 835.5,
+    "lunghezza": 22,
+    "larghezza": 8,
+    "angolo": 0,
+    "profondita": 2.6
+   },
+   "fonte": "Melitonline, 23/02/2025: «Completata la bonifica del rudere dell'ex piscina comunale di via Madrid» (lavori dal 16/09/2024 al 15/01/2025, rimozione di rifiuti e amianto; la struttura non è mai stata usata come impianto sportivo); edificio tondo OSM 733703519 (building=industrial) su Via Madrid; segnalazione del committente (piscina interrata che ospita il serbatoio)",
+   "verificato": false,
+   "metodo": "fonte giornalistica + foto aerea; vasca stimata",
+   "note": "Forma e posizione della vasca dentro l'edificio sono stimate. Sulla foto aerea l'edificio ha un tetto piano scuro: nel gioco la copertura è disegnata in parte crollata sopra la vasca, per mostrarla. È una scelta grafica, non un rilievo."
   }
  ]
 }

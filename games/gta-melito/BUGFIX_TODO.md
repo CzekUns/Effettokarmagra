@@ -94,4 +94,8 @@ I bug sono segnalazioni del committente sulla versione giocabile, non diagnosi o
   - **Recinto di fronte all'area mercatale:** forse il «Parco GB»; ricalcato a vista, con il lato nord sul muro OSM 404895514, un cancello stimato e la guardiola; da verificare.
   - **Galleria Atlante:** probabilmente l'edificio OSM 794814541, accanto all'Ufficio Postale Melito 2; facciate e atrio di vetro.
   - **Parco Prima Casa:** NON disegnato, perché non è stato localizzato.
+  - **Complesso Municipio, secondo commit (richiesta del committente: «vedi su internet il complesso del municipio/piscina/carabinieri e capisci. la piscina abbandonata è interrata e ospita anche l'acquedotto/serbatoio che è diciamo una torre un po' simbolo, fatta a scacchi»):**
+    - **torre del serbatoio a fungo:** landmark a scacchi rosso/bianco con ombra lunga, trasparenza vicino al giocatore e luce notturna; posizione dalla foto aerea, colori e altezza stimati;
+    - **ex piscina comunale di via Madrid:** rudere con la vasca interrata vuota e crepata e le pozzanghere quando piove; fonte Melitonline 23/02/2025 (bonifica conclusa), vasca stimata;
+    - **Carabinieri:** Tenenza in Via Salvatore Di Giacomo 38 secondo elenchi pubblici, ma edificio non identificato, quindi nessuna insegna.
   - **Non ancora fatto:** la piscina in rovina non è disegnata; il gioco non ha ponti; le porte dei residenti dentro i recinti non generano residenti; non è stato provato su un telefono reale.

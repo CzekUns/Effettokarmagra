@@ -716,3 +716,28 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
   - la guardia è un placeholder;
   - non provato su telefono reale.
 
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — BF12, secondo commit: complesso del Municipio (torre del serbatoio a scacchi, piscina interrata in rovina, caserma)
+- **Richiesta del committente:** capire il complesso del Municipio. La piscina abbandonata è interrata e ospita il serbatoio, una torre simbolo «fatta a scacchi».
+- **Ricerca web:**
+  - Melitonline, 23/02/2025: bonifica del **rudere dell'ex piscina comunale di via Madrid** conclusa (lavori dal 16/09/2024 al 15/01/2025, rifiuti e amianto). La struttura non è mai stata usata come impianto sportivo; un progetto di centro polivalente con piscina in via Madrid risale a qualche anno fa.
+  - Elenchi pubblici: Carabinieri Tenenza in Via Salvatore Di Giacomo 38, Municipio in Via Salvatore Di Giacomo 7.
+  - Nessuna foto consultabile della torre: Melitonline risponde 403 al download delle immagini.
+- **Foto aerea Esri (z19):**
+  - si riconosce il **serbatoio pensile a fungo**: vasca con copertura a spicchi di circa 27 m, fusto al centro dell'edificio tondo OSM 733703519 (building=industrial) su Via Madrid. Quell'edificio è la piscina;
+  - a sud c'è un edificio a tetto piatto (OSM 733703560) e a est una costruzione piccola (OSM 733703551), forse un accesso: funzioni non verificate.
+- **`municipio-landmarks.mjs` (nuovo):**
+  - torre disegnata sopra la città, con lo stesso sollevamento dei tetti: fusto a scacchi su due colonne, una in luce e una in ombra; vasca a tronco di cono a scacchi; cappello a spicchi; ombra lunga;
+  - trasparenza al 30% quando il giocatore è sotto la vasca o accanto al fusto; luce rossa lampeggiante di notte (dettaglio artistico);
+  - rudere della piscina al posto del blocco: muri bassi spezzati, copertura in parte crollata, vasca interrata (bordo, parete lontana in luce, piastrelle sbiadite e crepate, erbacce, scaletta arrugginita) e pozzanghere con cerchi di pioggia quando l'asfalto è bagnato.
+
+  Poligono OSM invariato: resta un ostacolo, nessuno ci cade dentro.
+- **Dati e documenti:** sezione `landmark` in `data/enclosures.json`, tutto `verificato:false` con le fonti; `RECINTI_MELITO.md` aggiornato. Carabinieri: nessuna insegna, perché l'edificio non è identificato.
+- **Cache:** `game.mjs?v=164`, `city-art.mjs?v=131`, `municipio-landmarks.mjs?v=001` (nuovo).
+- **Test:** nuovo `bf12-municipio.test.mjs` con 4 test: dati sull'edificio vero, vasca dentro il rudere e fuori dal fusto; sollevamento, scacchiera, trasparenza e disegno della torre su un canvas di prova; rudere e pozzanghere solo col bagnato; cablaggio. Suite **352/352**, eseguita con `nice -n 15`.
+- **Browser** (Chrome headless, una prova alla volta con `nice -n 15`, server con carico medio 11–13): complesso di giorno, alle 23:30 e con la pioggia su PC, di giorno su telefono 844×390, più la trasparenza sotto la torre. **FPS 13–27, cioè in parte sotto 20 per il carico**, 0 errori JavaScript. Prova di stress BF01 da 90 s: 0 compenetrazioni, 0 NPC fermi, 0 trappole, 0 errori.
+- **Limiti:**
+  - colori e altezza della torre stimati;
+  - vasca e copertura crollata sono scelte grafiche: sulla foto aerea il tetto c'è;
+  - caserma non identificata;
+  - non provato su telefono reale.
+
