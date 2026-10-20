@@ -53,7 +53,7 @@ test('Q26 game wiring: COMPRA at the counter opens the Q06 panel, nothing sells 
  assert.match(game,/const shop=nearestShop\(state\.outdoorShops\|\|state\.shops,p\)/);
  assert.match(game,/nearestShopEntrance\(state\.shopEntrances,p\)\|\|entranceAtSign\(state\.shopEntrances,p\)/);
  assert.match(game,/if\(counter\)\{\n   inner\.greet=[^\n]*\n   openShop\(inner\.shop\);return;/);
- assert.match(game,/boardPrompt\(counter\?'COMPRA · '\+counter\.label:'ESCI DAL NEGOZIO'\)/);
+ assert.match(game,/boardPrompt\(counter\?'COMPRA · '\+counter\.label:(game\?game\.label:)?'ESCI DAL NEGOZIO'\)/,'Q27: games may sit between the counter and the exit');
  assert.match(game,/function leaveShop\(\)\{\n[^\n]*\n if\(state\.shopOpen\)closeShop\(\);/);
  assert.match(game,/if\(!interiorCounterNear\(inner\)\)\{inner\.greeted=false;if\(state\.shopOpen\)closeShop\(\);\}/);
  // the bank keeps its own entrance, untouched

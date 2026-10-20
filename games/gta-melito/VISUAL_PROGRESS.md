@@ -720,3 +720,7 @@ Schermata della slot in pixel art disegnata via codice. Griglia logica 192×128,
 ## 2026-10-20 — Q32 campetti (grafica PROVVISORIA, da approvare)
 - Campi in erba sintetica a strisce, linee bianche (calcio a 5: area a semicerchio, centro; calcio a 11: aree FIFA), porte con rete, recinzione a rete verde scuro con pali ogni 3 m, cancello socchiuso, fari ai quattro angoli. Disegno procedurale nel livello a terra, sotto i tetti.
 - Dove guardarli: Via delle Palme (550, 1198) e (528, 1276); Corso Europa (1026, 1882).
+
+### 2026-10-20 — Q27 arredi dei bar e cabinati (Claude / `ilconsulentelogistico-hue`) — grafica provvisoria
+- Bar grande 80×60: bancone, vetrina dolci, 4 sgabelli rossi, 2 tavolini con sedie, cabinato slot (tre rulli) e cabinato video poker (carte su panno verde) contro la parete destra, tavolo da biliardo con sponde in legno, sei buche, biglie e stecca. Bar piccolo 64×50: bancone, sgabelli, due tavolini, un cabinato, niente biliardo. Punto luminoso davanti a ogni gioco. Pixel art procedurale con palette e ombre della banca; arredi e giochi inventati.
+- **Non verificato a schermo** (nessuna foto in questa sessione): da far vedere e approvare a Simone.

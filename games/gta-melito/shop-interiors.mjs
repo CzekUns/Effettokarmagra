@@ -25,27 +25,97 @@ export const INTERIOR_TEMPLATES=Object.freeze({
 });
 export const INTERIOR_OVERRIDES={};
 
+/* Q27: due allestimenti di bar, scelti in modo deterministico per tipo e superficie.
+ * - «grande» (80×60): bancone, sgabelli, tavolini, cabinato slot e video poker e, solo se c'è
+ *   davvero spazio libero intorno, un tavolo da biliardo;
+ * - «piccolo» (64×50, 1/6 della banca): bancone, sgabelli, due tavolini e un solo cabinato,
+ *   niente tavolo ingombrante.
+ * Caffetterie (cafe) sempre piccole; i bar secondo l'area della sagoma OSM dietro al portone
+ * (≥ BAR_BIG_FOOTPRINT m²), grandi se l'area non è nota. INTERIOR_OVERRIDES[id].layout forza la scelta.
+ * Arredi e giochi sono SCENOGRAFIA INVENTATA: nessuna pretesa che quel bar reale abbia slot o biliardo. */
+export const BAR_BIG_FOOTPRINT=200;
+export const BAR_LAYOUTS=Object.freeze({
+ grande:Object.freeze({width:80,height:60,size:'medio'}),
+ piccolo:Object.freeze({width:64,height:50,size:'piccolo'})
+});
+export const GAME_RADIUS=2.6;
+// Hotspot dei giochi: etichetta del comando, funzione del minigioco (Q28–Q30, da altri rami) e avviso.
+export const BAR_GAMES=Object.freeze({
+ slot:Object.freeze({label:'GIOCA SLOT',fn:'openSlotGame',soon:'SLOT MACHINE · IN ARRIVO'}),
+ poker:Object.freeze({label:'GIOCA VIDEO POKER',fn:'openPokerGame',soon:'VIDEO POKER · IN ARRIVO'}),
+ pool:Object.freeze({label:'GIOCA A BILIARDO',fn:'openPoolGame',soon:'BILIARDO · IN ARRIVO'})
+});
+const idSeed=shop=>Math.abs(Math.round(Number(shop?.id)||0));
+export function footprintArea(points){
+ if(!Array.isArray(points)||points.length<6)return null;
+ let s=0;for(let i=0,j=points.length-2;i<points.length;j=i,i+=2)s+=points[j]*points[i+1]-points[i]*points[j+1];
+ return Math.abs(s/2);
+}
+export function barLayoutFor(shop,footprint=shop?.footprint){
+ const own=INTERIOR_OVERRIDES[shop?.id]?.layout;
+ if(BAR_LAYOUTS[own])return own;
+ if(shop?.kind==='cafe')return 'piccolo';
+ if(Number.isFinite(footprint))return footprint>=BAR_BIG_FOOTPRINT?'grande':'piccolo';
+ return 'grande';
+}
+const overlaps=(a,b)=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
+const stoolsAt=(xs,y)=>xs.map(x=>[x-.8,y,x+.8,y+1.6]);
+const tableWithChairs=(x0,y0,x1,y1)=>({table:[x0,y0,x1,y1],chairs:[[x0-3.5,y0+1,x0-1.5,y1-1],[x1+1.5,y0+1,x1+3.5,y1-1]]});
+// Cabinato contro la parete destra, rivolto verso la sala: l'hotspot è davanti allo schermo.
+const cabinet=(type,x1,y0)=>({type,box:[x1-5,y0,x1,y0+5],x:x1-5-1.6,y:y0+2.5,label:BAR_GAMES[type].label});
+// Il biliardo entra solo se il tavolo, con 3 unità per la stecca su ogni lato, sta dentro i muri,
+// non tocca altri arredi né il passaggio porta→bancone e l'hotspot davanti resta libero.
+export function poolFits(room,box,solids,aisle){
+ const pad=3,area=[box[0]-pad,box[1]-pad,box[2]+pad,box[3]+pad];
+ if(area[0]<WALL||area[1]<WALL||area[2]>room.width-WALL||area[3]>room.height-WALL)return false;
+ if(aisle&&overlaps(area,aisle))return false;
+ return !solids.some(s=>overlaps(area,s));
+}
+function furnishBar(layout,width,height,shop){
+ const door={x0:width/2-DOOR_WIDTH/2,x1:width/2+DOOR_WIDTH/2,y:height-WALL};
+ if(layout==='piccolo'){
+  const counter={box:[6,9,40,15],x:23,y:18.5,label:'BANCONE'};
+  const tables=[tableWithChairs(8,26,15,32),tableWithChairs(44,30,51,36)];
+  const games=[cabinet(idSeed(shop)%2?'poker':'slot',width-WALL,13)];
+  const stools=stoolsAt([11,17,29,35],16.2);
+  return {door,layout,counter,clerk:{x:23,y:6.4,kind:0},shelf:[6,3.2,34],pastry:null,tables,stools,games,pool:null,
+   solids:[counter.box,...stools,...tables.flatMap(t=>[t.table,...t.chairs]),...games.map(g=>g.box)],decor:'bar'};
+ }
+ const counter={box:[8,10,52,17],x:30,y:20.5,label:'BANCONE'},pastry=[56,10,72,16];
+ const tables=[tableWithChairs(10,28,18,34),tableWithChairs(10,42,18,48)];
+ const games=[cabinet('slot',width-WALL,22),cabinet('poker',width-WALL,30)];
+ const stools=stoolsAt([13,20,40,47],18.2);
+ const solids=[counter.box,pastry,...stools,...tables.flatMap(t=>[t.table,...t.chairs]),...games.map(g=>g.box)];
+ const room={width,height},poolBox=[48,38,68,49],aisle=[door.x0,counter.y,door.x1,height];
+ let pool=null;
+ if(poolFits(room,poolBox,solids,aisle)){
+  pool={box:poolBox};solids.push(poolBox);
+  games.push({type:'pool',box:poolBox,x:(poolBox[0]+poolBox[2])/2,y:poolBox[3]+2.4,label:BAR_GAMES.pool.label});
+ }
+ return {door,layout,counter,clerk:{x:30,y:7.2,kind:0},shelf:[8,3.2,44],pastry,tables,stools,games,pool,solids,decor:'bar'};
+}
 // Arredi solidi (x0,y0,x1,y1) in coordinate della stanza; il bancone ha il punto di servizio
 // (aggancio per la Q26: COMPRA / PARLA al bancone) e il commesso dietro.
 function furnish(template,width,height){
  const door={x0:width/2-DOOR_WIDTH/2,x1:width/2+DOOR_WIDTH/2,y:height-WALL};
- if(template==='bar')return {door,
-  counter:{box:[8,10,52,17],x:30,y:20.5,label:'BANCONE'},clerk:{x:30,y:7.2,kind:0},
-  solids:[[8,10,52,17],[56,10,72,16],[13,33,21,39],[35,33,43,39],[57,31,65,37],[10,34,12,38],[22,34,24,38],[32,34,34,38],[44,34,46,38],[54,32,56,36],[66,32,68,36]],
-  decor:'bar'};
  if(template==='bottega')return {door,
   counter:{box:[6,11,48,17],x:27,y:20.5,label:'BANCONE'},clerk:{x:24,y:7.6,kind:1},
-  solids:[[6,11,48,17],[52,11,58,30],[6,26,14,34]],
+  solids:[[6,11,48,17],[52,11,58,30],[6,26,14,34]],games:[],
   decor:'bottega'};
  return {door,
   counter:{box:[8,40,26,45],x:17,y:48.5,label:'CASSA'},clerk:{x:17,y:37,kind:2},
-  solids:[[8,40,26,45],[30,12,34,38],[44,12,48,38],[58,12,62,38],[70,6,77,46],[6,8,24,13]],
+  solids:[[8,40,26,45],[30,12,34,38],[44,12,48,38],[58,12,62,38],[70,6,77,46],[6,8,24,13]],games:[],
   decor:'minimarket'};
 }
-export function interiorFor(shop){
+export function interiorFor(shop,{footprint=shop?.footprint}={}){
  const template=SHOP_INTERIOR_KINDS[shop?.kind];
  if(!template)return null;
  const base=INTERIOR_TEMPLATES[template],own=INTERIOR_OVERRIDES[shop.id]||{};
+ if(template==='bar'){
+  const layout=barLayoutFor(shop,footprint),dims=BAR_LAYOUTS[layout];
+  return {template,size:dims.size,floor:base.floor,width:dims.width,height:dims.height,footprint:Number.isFinite(footprint)?footprint:null,
+   ...furnishBar(layout,dims.width,dims.height,shop)};
+ }
  const width=own.width||base.width,height=own.height||base.height;
  return {template,size:own.size||base.size,floor:base.floor,width,height,...furnish(template,width,height)};
 }
@@ -53,7 +123,7 @@ export function interiorFor(shop){
 /* Portone di ogni negozio: sulla facciata davanti all'insegna o un poco di lato, raggiungibile dal
  * marciapiede, mai in carreggiata e abbastanza lontano dall'insegna perché ENTRA e COMPRA non si
  * confondano. probe(origin,normal) è probeDoor del gioco (muro dritto, percorso libero). */
-export function resolveShopEntrances(shops,{probe,isWalkable=()=>true,onRoad=()=>false}={}){
+export function resolveShopEntrances(shops,{probe,isWalkable=()=>true,onRoad=()=>false,footprintAt=null}={}){
  const entrances=[];
  for(const shop of shops||[]){
   const room=interiorFor(shop);
@@ -68,7 +138,10 @@ export function resolveShopEntrances(shops,{probe,isWalkable=()=>true,onRoad=()=
    found=door;break;
   }
   if(!found||entrances.some(e=>Math.hypot(e.x-found.x,e.y-found.y)<2.5))continue;
-  entrances.push({shop,x:found.x,y:found.y,a:Math.atan2(-found.ny,-found.nx),nx:found.nx,ny:found.ny,room});
+  // Q27: superficie della sagoma subito dietro al portone (la normale del portone punta fuori).
+  const footprint=typeof footprintAt==='function'?footprintAt(found.x-found.nx*2,found.y-found.ny*2):null;
+  const own=Number.isFinite(footprint)?interiorFor(shop,{footprint}):room;
+  entrances.push({shop,x:found.x,y:found.y,a:Math.atan2(-found.ny,-found.nx),nx:found.nx,ny:found.ny,room:own});
  }
  return entrances;
 }
@@ -140,6 +213,40 @@ export function interiorCounterNear(interior,radius=COUNTER_RADIUS){
  const c=interior?.room?.counter,p=interior?.player;
  return c&&p&&Math.hypot(p.x-c.x,p.y-c.y)<=radius?c:null;
 }
+/* Q27: cabinati e biliardo. L'hotspot è davanti al singolo oggetto. I minigiochi (Q28–Q30) arrivano
+ * da altri rami: il gioco li passa in `launchers` solo se definiti; altrimenti avviso «in arrivo».
+ * La posizione nel bar viene salvata e ripristinata all'uscita dal minigioco (onExit). */
+export function interiorGameNear(interior,radius=GAME_RADIUS){
+ const p=interior?.player;let best=null;
+ for(const game of interior?.room?.games||[]){
+  const d=p?Math.hypot(p.x-game.x,p.y-game.y):Infinity;
+  if(d<=radius&&(!best||d<best.d))best={game,d};
+ }
+ return best?.game||null;
+}
+export function startBarGame(interior,game,launchers={},{clock=0,onExit=null}={}){
+ if(!interior||!game)return {ok:false,reason:'nessun-gioco'};
+ const p=interior.player,launch=launchers?.[game.type];
+ if(typeof launch!=='function'){
+  interior.notice={text:BAR_GAMES[game.type]?.soon||'IN ARRIVO',x:game.x,y:game.y,until:clock+3};
+  return {ok:false,reason:'in-arrivo'};
+ }
+ interior.gameReturn={x:p.x,y:p.y,a:p.a};interior.playing=game.type;p.moving=false;
+ const exit=()=>typeof onExit==='function'?onExit(interior):endBarGame(interior);
+ try{launch({game:game.type,shop:interior.shop,from:'bar',onExit:exit,onClose:exit});}
+ catch(error){
+  endBarGame(interior);
+  interior.notice={text:'GIOCO NON DISPONIBILE',x:game.x,y:game.y,until:clock+3};
+  return {ok:false,reason:'errore',error};
+ }
+ return {ok:true};
+}
+export function endBarGame(interior){
+ const back=interior?.gameReturn;
+ if(back)Object.assign(interior.player,{x:back.x,y:back.y,a:back.a,moving:false});
+ if(interior){interior.gameReturn=null;interior.playing=null;}
+ return interior;
+}
 export function shopInteriorCamera(room,player,width,height,zoom,previous=null,dt=0){
  const z=Math.max(.1,Number(zoom)||6.6),halfX=Math.max(1,width)/(2*z),halfY=Math.max(1,height)/(2*z);
  const px=Number.isFinite(player?.x)?player.x:room.width/2,py=Number.isFinite(player?.y)?player.y:room.height-6;
@@ -193,25 +300,88 @@ function clerk(ctx,c,clock){
  ctx.fillStyle='#2b3438';ctx.fillRect(c.x-1.1,c.y-1,2.2,2.5);
  ctx.fillStyle='#caac88';ctx.fillRect(c.x-.75,c.y-2.4,1.5,1.3);
 }
+// Q27: cabinato visto dall'alto, schermo verso la sala (a sinistra): mobile scuro, luce in cima,
+// schermo con tre rulli (slot) o cinque carte (video poker). Grafica originale, nessuna marca.
+function drawCabinet(ctx,game,clock){
+ const [x0,y0,x1,y1]=game.box,w=x1-x0,h=y1-y0;
+ block(ctx,x0,y0,w,h,'#2b2f3a','#171a22',1.2);
+ ctx.fillStyle='#454b5c';ctx.fillRect(x0+.4,y0+.4,w-.8,.7);
+ const blink=Math.sin(clock*5+y0)>0;
+ ctx.fillStyle=game.type==='slot'?(blink?'#ffcf4a':'#d0582e'):(blink?'#7fe0ff':'#3a8fd0');
+ ctx.fillRect(x0+w-1.3,y0+.6,.8,h-1.2);
+ ctx.fillStyle='#0e1414';ctx.fillRect(x0+.5,y0+.8,2.9,h-1.6);
+ if(game.type==='slot'){
+  for(let i=0;i<3;i++){ctx.fillStyle='#efe6d2';ctx.fillRect(x0+.8,y0+1+i*1.05,2.3,.85);
+   ctx.fillStyle=['#c8352e','#e0b13a','#5e9a52'][(i+Math.floor(clock*2))%3];ctx.fillRect(x0+1.6,y0+1.15+i*1.05,.7,.55);}
+ }else{
+  ctx.fillStyle='#1f6b45';ctx.fillRect(x0+.6,y0+.9,2.7,h-1.8);
+  for(let i=0;i<4;i++){ctx.fillStyle='#f4efe2';ctx.fillRect(x0+.9,y0+1.1+i*.75,1.1,.55);ctx.fillStyle=i%2?'#c8352e':'#222';ctx.fillRect(x0+1.15,y0+1.25+i*.75,.3,.25);}
+ }
+ // pulsantiera davanti allo schermo
+ ctx.fillStyle='#5b4a3c';ctx.fillRect(x0-.6,y0+1,.6,h-2);
+ ctx.fillStyle='#e6503c';ctx.fillRect(x0-.5,y0+1.4,.4,.4);ctx.fillStyle='#f0d04a';ctx.fillRect(x0-.5,y0+2.3,.4,.4);
+}
+// Q27: tavolo da biliardo dall'alto: sponde in legno, panno verde, sei buche, biglie e una stecca.
+function drawPoolTable(ctx,box){
+ const [x0,y0,x1,y1]=box,w=x1-x0,h=y1-y0;
+ block(ctx,x0,y0,w,h,'#6b4630','#3f2a1d',1.8);
+ ctx.fillStyle='#8a5e3e';ctx.fillRect(x0,y0,w,.6);
+ ctx.fillStyle='#2f7d4f';ctx.fillRect(x0+1.2,y0+1.2,w-2.4,h-2.4);
+ ctx.fillStyle='#3b8d5c';for(let y=y0+1.2;y<y1-1.2;y+=2)ctx.fillRect(x0+1.2,y,w-2.4,.5);
+ ctx.fillStyle='#111';
+ for(const [px,py] of [[x0+.9,y0+.9],[x0+w/2,y0+.6],[x1-.9,y0+.9],[x0+.9,y1-.9],[x0+w/2,y1-.6],[x1-.9,y1-.9]]){ctx.beginPath();ctx.arc(px,py,.75,0,Math.PI*2);ctx.fill();}
+ ctx.fillStyle='#f2efe4';ctx.beginPath();ctx.arc(x0+w*.28,y0+h/2,.55,0,Math.PI*2);ctx.fill();
+ const rack=[[0,0],[.95,-.55],[.95,.55],[1.9,-1.1],[1.9,0],[1.9,1.1]],tones=['#e0b13a','#2f5fae','#c8352e','#6a3b8c','#e07b2c','#1d1d1d'];
+ rack.forEach(([dx,dy],i)=>{ctx.fillStyle=tones[i];ctx.beginPath();ctx.arc(x0+w*.68+dx,y0+h/2+dy,.5,0,Math.PI*2);ctx.fill();});
+ ctx.strokeStyle='#d8b98a';ctx.lineWidth=.35;ctx.beginPath();ctx.moveTo(x0+w*.28-1,y0+h/2+.3);ctx.lineTo(x0+w*.28-8,y0+h/2+2.6);ctx.stroke();
+}
 function drawBar(ctx,room,clock){
  // mensole di bottiglie sulla parete di fondo
- block(ctx,8,3.2,44,2.6,'#6f5541','#4a3a2d',.6);
- for(let i=0;i<20;i++){ctx.fillStyle=['#5e8a6a','#b98a4c','#9c4b3f','#d9cfa8'][i%4];ctx.fillRect(9+i*2.1,3.4,1,1.8);}
+ const [sx,sy,sw]=room.shelf||[8,3.2,44];
+ block(ctx,sx,sy,sw,2.6,'#6f5541','#4a3a2d',.6);
+ for(let i=0;i<Math.floor(sw/2.2);i++){ctx.fillStyle=['#5e8a6a','#b98a4c','#9c4b3f','#d9cfa8'][i%4];ctx.fillRect(sx+1+i*2.1,sy+.2,1,1.8);}
  // bancone in legno con piano chiaro, macchina del caffè e tazzine
- block(ctx,8,10,44,7,'#8a6547','#5a4332',2.2);
- ctx.fillStyle='#c9b48d';ctx.fillRect(8,10,44,1.1);
- block(ctx,13,11.2,7,4,'#b7bcb4','#6e7570',.8);ctx.fillStyle='#2d3330';ctx.fillRect(14,12,5,1.2);
- for(let i=0;i<5;i++){ctx.fillStyle='#efe6d2';ctx.fillRect(24+i*3.2,12.6,1.3,1);}
- // vetrina dei dolci
- block(ctx,56,10,16,6,'#9bb3ad','#4f625e',1.6);
- for(let i=0;i<6;i++){ctx.fillStyle=['#d79a5b','#e8c487','#a8573f'][i%3];ctx.fillRect(57.5+i*2.3,12,1.6,1.4);}
- // tavolini con sedie
- for(const [x,y] of [[13,33],[35,33],[57,31]]){
-  block(ctx,x,y,8,6,'#a07a55','#5d4634',1.2);ctx.fillStyle='#d7c39d';ctx.fillRect(x+2.6,y+2.2,2.8,1.4);
-  for(const sx of [x-3,x+9])block(ctx,sx,y+1,2,4,'#6d5a48','#3f3329',.8);
+ const [cx0,cy0,cx1,cy1]=room.counter.box,cw=cx1-cx0;
+ block(ctx,cx0,cy0,cw,cy1-cy0,'#8a6547','#5a4332',2.2);
+ ctx.fillStyle='#c9b48d';ctx.fillRect(cx0,cy0,cw,1.1);
+ block(ctx,cx0+5,cy0+1.2,7,4,'#b7bcb4','#6e7570',.8);ctx.fillStyle='#2d3330';ctx.fillRect(cx0+6,cy0+2,5,1.2);
+ for(let i=0;i<5;i++){ctx.fillStyle='#efe6d2';ctx.fillRect(cx0+16+i*3.2,cy0+2.6,1.3,1);}
+ // vetrina dei dolci (solo nel bar grande)
+ if(room.pastry){
+  const [px0,py0,px1,py1]=room.pastry;
+  block(ctx,px0,py0,px1-px0,py1-py0,'#9bb3ad','#4f625e',1.6);
+  for(let i=0;i<6;i++){ctx.fillStyle=['#d79a5b','#e8c487','#a8573f'][i%3];ctx.fillRect(px0+1.5+i*2.3,py0+2,1.6,1.4);}
  }
- // sgabelli davanti al bancone (decorativi, bassi: non bloccano il passaggio)
- for(let i=0;i<4;i++){ctx.fillStyle='#3d3430';ctx.beginPath();ctx.arc(16+i*8,19,1,0,Math.PI*2);ctx.fill();}
+ // sgabelli davanti al bancone (solidi, ma lasciano libero il punto di servizio)
+ for(const [x0,y0,x1] of room.stools||[]){
+  const x=(x0+x1)/2,y=y0+.8;
+  ctx.fillStyle='#162220a6';ctx.beginPath();ctx.arc(x+.4,y+.7,1,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#4b3a2e';ctx.fillRect(x-.25,y,.5,1);
+  ctx.fillStyle='#a8352e';ctx.beginPath();ctx.arc(x,y-.1,.85,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#d0584a';ctx.fillRect(x-.4,y-.6,.5,.3);
+ }
+ // tavolini con sedie
+ for(const {table:[x0,y0,x1,y1],chairs} of room.tables||[]){
+  block(ctx,x0,y0,x1-x0,y1-y0,'#a07a55','#5d4634',1.2);ctx.fillStyle='#d7c39d';ctx.fillRect(x0+2.6,y0+2.2,2.8,1.4);
+  for(const [a,b,c,d] of chairs)block(ctx,a,b,c-a,d-b,'#6d5a48','#3f3329',.8);
+ }
+ if(room.pool)drawPoolTable(ctx,room.pool.box);
+ for(const game of room.games||[])if(game.type!=='pool')drawCabinet(ctx,game,clock);
+}
+function drawHotspots(ctx,room,interior,clock){
+ // Punto luminoso davanti a ogni gioco (come i portoni): mostra dove premere E.
+ for(const game of room.games||[]){
+  const pulse=.75+.25*Math.sin(clock*4+game.x);
+  ctx.globalAlpha=.18+.1*pulse;ctx.fillStyle='#ffe08a';ctx.beginPath();ctx.arc(game.x,game.y,1.6*pulse,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+ }
+ const note=interior.notice;
+ if(note&&clock<note.until){
+  ctx.font='bold 1.6px monospace';ctx.textAlign='center';
+  const w=Math.max(10,note.text.length*1.05),bx=clamp(note.x,w/2+WALL,room.width-WALL-w/2),by=clamp(note.y-5.5,WALL,room.height-WALL-3);
+  ctx.fillStyle='#fff3c4';ctx.fillRect(bx-w/2,by,w,2.6);ctx.strokeStyle='#2c3430';ctx.lineWidth=.2;ctx.strokeRect(bx-w/2,by,w,2.6);
+  ctx.fillStyle='#2c3430';ctx.fillText(note.text,bx,by+1.85);
+ }
 }
 function drawBottega(ctx,room,clock){
  // scaffali del pane a parete
@@ -257,6 +427,7 @@ export function drawShopInterior(ctx,width,height,clock,interior,zoom=6.6,camera
  else drawMinimarket(ctx,room,clock);
  clerk(ctx,room.clerk,clock);
  drawWalls(ctx,room);
+ if(room.games?.length)drawHotspots(ctx,room,interior,clock);
  const p=interior.player;
  drawCityPlayer(ctx,{x:p.x,y:p.y,a:p.a??-Math.PI/2,car:-1},clock,!!p.moving);
  if(interior.greet&&clock<interior.greet.until){
@@ -276,7 +447,7 @@ export function drawShopInterior(ctx,width,height,clock,interior,zoom=6.6,camera
  ctx.fillStyle='#f2d18a';ctx.textAlign='center';ctx.font='bold 12px monospace';
  ctx.fillText(String(interior.shop?.name||'NEGOZIO').toUpperCase().slice(0,36),width/2,18);
  ctx.fillStyle='#c0c9b7';ctx.font='9px monospace';
- ctx.fillText('MELITO · INTERNO DI FANTASIA',width/2,28);
+ ctx.fillText(room.games?.length?'MELITO · INTERNO E GIOCHI DI FANTASIA':'MELITO · INTERNO DI FANTASIA',width/2,28);
  // I comandi (PARLA al bancone, ESCI) stanno sulla plancia e sul pulsante azione, non qui sopra.
  ctx.restore();
 }

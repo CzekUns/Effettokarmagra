@@ -1047,3 +1047,11 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Gioco:** nuovo `football-pitches.mjs`, con dati, cancello sul lato raggiungibile (ricerca a griglia fino a una strada), collisioni, hotspot e disegno; cablato in `validWalk`, `carBlocked`, `canKnockbackMove`, nel disegno a terra e nel tetto trasparente, al caricamento e al cambio di larghezza strade; prompt e tasto E «GIOCA A CALCETTO»; avviso temporaneo `state.notice`. Cache `game.mjs?v=185`.
 - **Prove:** 6 test nuovi e suite completa; Chrome headless su PC e telefono, una prova breve, 51–60 FPS, 0 errori.
 - **Limiti:** grafica provvisoria da far approvare; partita della Q33 non ancora presente; Android reale non provato.
+
+### 2026-10-20 — Claude (account `ilconsulentelogistico-hue`) — Q27 arredi dei bar e cabinati
+- `shop-interiors.mjs?v=003`: due allestimenti di bar (grande 80×60, piccolo 64×50) scelti in modo deterministico (caffè sempre piccoli; bar per area della sagoma OSM dietro al portone, soglia 200 m²; override per id). Arredi solidi: bancone, sgabelli, tavolini, 1–2 cabinati; biliardo solo nel grande e solo se `poolFits` trova spazio. Nuove funzioni `barLayoutFor`, `footprintArea`, `poolFits`, `interiorGameNear`, `startBarGame`, `endBarGame`; disegno pixel art di cabinati slot/poker, biliardo, sgabelli, hotspot e fumetto «IN ARRIVO».
+- `game.mjs`: `footprintAt` passato a `resolveShopEntrances`; hotspot «E · GIOCA SLOT / VIDEO POKER / A BILIARDO» con pulsante GIOCA; `openSlotGame/openPokerGame/openPoolGame` chiamati solo se definiti (arrivano con Q28–Q30), il gioco riceve `{game,shop,from:'bar',onExit}`; durante il gioco il protagonista è fermo, `returnFromBarGame` lo rimette nello stesso punto (anche con Esc). HUD «DENTRO · BAR GRANDE/PICCOLO».
+- Cache: `game.mjs?v=188`, `shop-interiors.mjs?v=003`.
+- Test: nuovo `q27-bar-arredi.test.mjs` (8); reso tollerante 1 controllo di cablaggio Q26; suite completa una volta.
+- Non eseguito: prova nel browser e su telefono (scadenza 30 minuti); non verificato quale bar reale esca grande o piccolo. Grafica provvisoria da far approvare a Simone. Riprendere da Q28 (slot) usando il contratto `onExit`.
+

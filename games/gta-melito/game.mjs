@@ -60,7 +60,7 @@ import {canDriveProbe} from './road-clearance.mjs?v=100';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=121';
 import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=010';
 import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=006';
-import {resolveShopEntrances,nearestShopEntrance,drawShopEntrance,enterShop,stepShopInteriorPlayer,shopInteriorCamera,interiorCounterNear,drawShopInterior,outdoorShops,entranceAtSign} from './shop-interiors.mjs?v=002';
+import {resolveShopEntrances,nearestShopEntrance,drawShopEntrance,enterShop,stepShopInteriorPlayer,shopInteriorCamera,interiorCounterNear,drawShopInterior,outdoorShops,entranceAtSign,interiorGameNear,startBarGame,endBarGame,footprintArea} from './shop-interiors.mjs?v=003';
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
@@ -444,7 +444,9 @@ function createShopEntrances(){
   const door=probeDoor(origin,normal,buildingAt,walkOK,{source:DOOR_SOURCE.OSM_POI,label:shop.name,kind:shop.kind});
   return door.valid?door:null;
  };
- state.shopEntrances=resolveShopEntrances(state.shops||[],{probe,isWalkable:walkOK,onRoad:onCarriageway});
+ // Q27: the OSM footprint behind the door picks the small or the large bar layout.
+ const footprintAt=(x,y)=>{const b=buildingAt(x,y);return b?.p?footprintArea(b.p):null;};
+ state.shopEntrances=resolveShopEntrances(state.shops||[],{probe,isWalkable:walkOK,onRoad:onCarriageway,footprintAt});
  // Q26: the shops with an interior sell only inside, at the counter.
  state.outdoorShops=outdoorShops(state.shops||[],state.shopEntrances);
  state.shopInterior=null;
@@ -1013,6 +1015,27 @@ function leaveShop(){
  p.x=inner.outside.x;p.y=inner.outside.y;p.a=inner.outside.a;
  state.camera.x=p.x;state.camera.y=p.y;updateHud();
 }
+/* Q27: cabinets and pool table of the bars. The minigames (Q28 slot, Q29 video poker, Q30 pool) come
+ * from other branches: each is called only if defined, otherwise the bar shows an «in arrivo» notice.
+ * The minigame gets {game,shop,from:'bar',onExit}; onExit puts the player back on the same spot. */
+function barGameLaunchers(){
+ return {slot:typeof openSlotGame==='function'?openSlotGame:null,
+  poker:typeof openPokerGame==='function'?openPokerGame:null,
+  pool:typeof openPoolGame==='function'?openPoolGame:null};
+}
+function playBarGame(game){
+ const inner=state.shopInterior;if(!inner||inner.playing)return;
+ for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
+ startBarGame(inner,game,barGameLaunchers(),{clock:state.clock,onExit:returnFromBarGame});
+ updateHud();
+}
+function returnFromBarGame(inner){
+ if(!inner)return;
+ endBarGame(inner);state.shopInterior=inner;
+ for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
+ inner.camera=shopInteriorCamera(inner.room,inner.player,canvas.clientWidth,canvas.clientHeight,interiorZoom());
+ canvas.focus?.({preventScroll:true});updateHud();
+}
 function closeShop(){state.shopOpen=null;$('shop-panel').hidden=true;canvas.focus?.({preventScroll:true});updateHud();}
 // Q21: passaggi. Un passante anonimo «autostoppista» accanto al mezzo fermo sale su un posto libero
 // (E · DAI UN PASSAGGIO); con qualcuno a bordo la prima E lo fa scendere, con la mancia se è arrivato.
@@ -1066,6 +1089,9 @@ function toggleVehicle(){
    inner.greet={text:inner.greeted?'Altro?':'Buongiorno! Dica pure.',until:state.clock+2.6};inner.greeted=true;
    openShop(inner.shop);return;
   }
+  if(inner.playing)return;
+  const game=interiorGameNear(inner);
+  if(game){playBarGame(game);return;}
   leaveShop();return;
  }
  if(p.car<0){
@@ -1232,7 +1258,8 @@ function tick(dt){
  animateSteeringWheel(dt);
  if(state.shopInterior){
   const inner=state.shopInterior;
-  if(stepShopInteriorPlayer(inner,moveAxes(),pressed.run,dt)==='exit'){leaveShop();return;}
+  // Q27: during a minigame the player stays put at the cabinet or table.
+  if(!inner.playing&&stepShopInteriorPlayer(inner,moveAxes(),pressed.run,dt)==='exit'){leaveShop();return;}
   // Q26: walking away from the counter closes its panel (no buying across the room).
   if(!interiorCounterNear(inner)){inner.greeted=false;if(state.shopOpen)closeShop();}
   inner.camera=shopInteriorCamera(inner.room,inner.player,canvas.clientWidth,canvas.clientHeight,interiorZoom(),inner.camera,dt);
@@ -1427,11 +1454,11 @@ function updateHud(){
  stage?.classList.toggle('driving',driving);
  document.querySelector?.('.controls')?.classList.toggle('driving',driving);
  if(state.shopInterior){
-  const inner=state.shopInterior,counter=interiorCounterNear(inner);
-  $('vehicle').textContent='DENTRO · '+(inner.room.size==='piccolo'?'BOTTEGA':'LOCALE');$('street').textContent=inner.shop.name.toUpperCase();
+  const inner=state.shopInterior,counter=interiorCounterNear(inner),game=counter?null:interiorGameNear(inner);
+  $('vehicle').textContent='DENTRO · '+(inner.room.template==='bar'?'BAR '+(inner.room.layout==='piccolo'?'PICCOLO':'GRANDE'):inner.room.size==='piccolo'?'BOTTEGA':'LOCALE');$('street').textContent=inner.shop.name.toUpperCase();
   $('action').classList.remove('idle');$('action').setAttribute('aria-disabled','false');
-  $('action').textContent=counter?'COMPRA':'ESCI';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
-  boardPrompt(counter?'COMPRA · '+counter.label:'ESCI DAL NEGOZIO');
+  $('action').textContent=counter?'COMPRA':game?'GIOCA':'ESCI';$('sprint').textContent='CORRI';$('sprint').setAttribute('aria-label','Corri');
+  boardPrompt(counter?'COMPRA · '+counter.label:game?game.label:'ESCI DAL NEGOZIO');
   $('camera-mode').textContent='INTERNO · '+interiorZoom().toFixed(1)+'×';return;
  }
  if(state.bankInterior){
@@ -2131,7 +2158,7 @@ function bind(){
   if(carRadioAvailable&&e.key.toLowerCase()==='t'&&!e.repeat){
    e.preventDefault();carRadio.toggle();
   }
-  if(e.key==='Escape'){if(state.bankInterior){toggleVehicle();return;}if(state.shopInterior){leaveShop();return;}$('fullmap').hidden=true;state.mapOpen=false;$('dialog').hidden=true;if(!pause.hidden)closePause();else openPause();}
+  if(e.key==='Escape'){if(state.bankInterior){toggleVehicle();return;}if(state.shopInterior?.playing){returnFromBarGame(state.shopInterior);return;}if(state.shopInterior){leaveShop();return;}$('fullmap').hidden=true;state.mapOpen=false;$('dialog').hidden=true;if(!pause.hidden)closePause();else openPause();}
   // BF11: on a PC the PAUSE menu holds everything that used to sit around the board; P opens and closes it too.
   if(e.key.toLowerCase()==='p'&&!e.repeat&&!state.shopOpen){e.preventDefault();$('fullmap').hidden=true;state.mapOpen=false;if(!pause.hidden)closePause();else openPause();}
  });
