@@ -6,13 +6,13 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=044';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition,balanceTraffic,createGateVehicle} from './roads.mjs?v=163';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition,balanceTraffic,createGateVehicle} from './roads.mjs?v=164';
 import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=014';
 import {drawBorderGates,borderGateList,borderRing,distanceToBorder,GATE_RULES} from './border-gates.mjs?v=002';
-import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=010';
+import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=011';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock,npcWeekday} from './npc-agenda.mjs?v=002';
-import {createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols,loadMarketArt} from './market.mjs?v=006';
+import {createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols,loadMarketArt} from './market.mjs?v=007';
 import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=002';
 import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote,vendorShops} from './local-shops.mjs?v=003';
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
@@ -38,12 +38,12 @@ import {riderPickups,riderDestinations,riderOffers,riderVehicleCheck,acceptOffer
 import {openGoriziana,isGorizianaOpen} from './minigame-goriziana.mjs?v=001';
 import {openPoolMachine,isPoolOpen} from './minigame-pool.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes,SANTA_MARIA_OSM_ID} from './city-art.mjs?v=136';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes,SANTA_MARIA_OSM_ID} from './city-art.mjs?v=137';
 import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
 import {loadCarSprites,drawCarSprite,carDrawSize,CAR_TRAFFIC_SPRITE_IDS,CAR_TRAFFIC_STRIDE,CAR_PARKED_SPRITE_IDS,APE_CAR_IDS,COURIER_IDS,REFUSE_TRUCK_IDS,TOW_TRUCK_IDS,BUS_IDS} from './car-sprites.mjs?v=118';
 import {DAMAGE_RULES,DAMAGE_LABEL,addDamage,damagePoints,damageLevel,damagedProfile,repairCost,payRepair,repairMessage,healOutOfView,drawVehicleDamage,placeWorkshop,nearWorkshop,drawWorkshop} from './vehicle-damage.mjs?v=001';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=002';
-import {loadExtraPedestrianSprites,loadPedestrianSheets} from './extra-pedestrian-sprites.mjs?v=005';
+import {loadExtraPedestrianSprites,loadPedestrianSheets} from './extra-pedestrian-sprites.mjs?v=006';
 import {loadFryerSprite} from './friggitore-sprites.mjs?v=002';
 import {loadProfessionSprites} from './profession-sprites.mjs?v=003';
 import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=007';
@@ -77,7 +77,7 @@ import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
 import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=011';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=012';
 // Lotto 15: dialoghi con volto (prototipo per la storyline, PROVVISORIO): barra in basso + riquadro del personaggio.
 import {openDialogue,isDialogueOpen,DEMO_DIALOGUE} from './dialogue.mjs?v=001';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';

@@ -4,9 +4,13 @@
  * proprietario può rifarla nello stile originale. Ogni voce sa dove trovare un esempio vero nella
  * mappa (VAI A VEDERE: posto, ora, meteo); i giudizi MI PIACE / DA RIFARE restano solo in questo
  * browser e si copiano come testo. Tenere allineato con NOVITA_DA_APPROVARE.md. */
-import {LOTTO2_PEDESTRIAN_NPC_START_KIND,pedestrianSheet} from './extra-pedestrian-sprites.mjs?v=005';
+import {LOTTO2_PEDESTRIAN_NPC_START_KIND,pedestrianSheet} from './extra-pedestrian-sprites.mjs?v=006';
 const LOTTO10_12_FIRST_KIND=pedestrianSheet('lotto10').startKind;// lotti 10–12: kind 11–22
+const LOTTO10_12_LAST_KIND=pedestrianSheet('lotto12').startKind+3;
 const LOTTO13_14_FIRST_KIND=pedestrianSheet('lotto13').startKind;// lotti 13–14: kind 23–30
+const LOTTO13_14_LAST_KIND=pedestrianSheet('lotto14').startKind+3;
+const LOTTO17_20_FIRST_KIND=pedestrianSheet('lotto17').startKind;// lotti 17–20: kind 31–46
+const LOTTO17_20_LAST_KIND=pedestrianSheet('lotto20').startKind+3;
 export const NOVITA_AUTORE='Claude · ilconsulentelogistico-hue';
 export const NOVITA_STATO='PROVVISORIO · da approvare';
 export const NOVITA_STORAGE_KEY='gta-melito-novita-giudizi-v1';
@@ -148,10 +152,13 @@ export const NOVITA=Object.freeze([
   trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO9.test(v?.model||'')),s)},
  {id:'lotto10-12-pedoni',nome:'Lotti 10–12: 12 pedoni nuovi (anziani, giovani, adulti con borse, zaini, telefono, bastone)',lavoro:'Lotti 10–12 · CODEX-GH',pr:'in revisione',
   cosa:'Tre fogli di CODEX-GH, frame adattati a zone dalla tavola madre (stesse pose, piedi e scala), vestiti e colori nuovi. Lotto 10: signora anziana col cappotto e la borsa della spesa, ragazzo con felpa e zaino, donna con giacca chiara e borsa a tracolla, uomo in giacca con cravatta e valigetta. Lotto 11: ragazza col telefono, uomo robusto con maglietta a righe, donna col vestito corallo, sportivo in tuta. Lotto 12: nonno con coppola e bastone, nonna col vestito a fiori, ragazzo con le cuffie, ragazza con la giacca di jeans. Si mescolano alla gente in strada (residenti, passanti, clienti): guardali camminare su Via Roma nelle quattro direzioni. Grafica PROVVISORIA.',
-  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO10_12_FIRST_KIND),s)||roadMiddle(s,'Via Roma')},
+  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO10_12_FIRST_KIND&&q.kind<=LOTTO10_12_LAST_KIND),s)||roadMiddle(s,'Via Roma')},
  {id:'lotto13-14-pedoni',nome:'Lotti 13–14: 8 pedoni nuovi (operaio, signora col carrello, ragazzino, barista, uomo estivo, signora elegante, studente, donna con velo)',lavoro:'Lotti 13–14 · CODEX-GH',pr:'in revisione',
   cosa:'Due fogli di CODEX-GH, frame adattati a zone dalla tavola madre (stesse pose, piedi e scala), vestiti e colori nuovi. Lotto 13: operaio con gilet arancione, signora col carrello della spesa a quadri (davanti o di lato secondo la direzione), ragazzino con felpa verde e pallone sotto il braccio (più basso degli altri, di proposito), barista con camicia bianca e grembiule nero. Lotto 14: uomo estivo in canottiera e bermuda, signora elegante con cappello a falda e vestito blu, studente con giacca salvia, occhiali e cartellina, donna con velo corallo e abito lungo petrolio. Si mescolano alla gente in strada (residenti, passanti, clienti): guardali camminare su Via Roma nelle quattro direzioni. Grafica PROVVISORIA.',
-  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO13_14_FIRST_KIND),s)||roadMiddle(s,'Via Roma')},
+  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO13_14_FIRST_KIND&&q.kind<=LOTTO13_14_LAST_KIND),s)||roadMiddle(s,'Via Roma')},
+ {id:'lotto17-20-pedoni',nome:'Lotti 17–20: 16 pedoni nuovi (mestieri, famiglie e passanti)',lavoro:'Lotti 17–20 · CODEX-GH',pr:'in revisione',
+  cosa:'Quattro fogli di CODEX-GH, kind 31–46: postino, pizzaiolo, netturbino, prete; turista, ragazzo con skateboard, donna in tailleur, anziano col giornale; mamma col bambino, ragazza col cane, uomo in sedia a rotelle, ragazzo delivery; nonna con scopa, scolaro, uomo in tuta col telefono, donna col carrello. Frame adattati dalla tavola madre, scala e pivot degli altri pedoni. Si vedono fra passanti, residenti e clienti del mercato; VAI A VEDERE cerca il più vicino su Via Roma. Grafica PROVVISORIA, da approvare da Simone.',
+  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO17_20_FIRST_KIND&&q.kind<=LOTTO17_20_LAST_KIND),s)||roadMiddle(s,'Via Roma')},
  {id:'dialogo-volti',nome:'Lotto 15: dialoghi con volto — barra di testo in basso e riquadro del personaggio (6 volti artwork)',lavoro:'Lotto 15 · CODEX-GH',pr:'in revisione',
   cosa:'Prototipo per i dialoghi delle missioni (decisione di Simone del 21/10): una barra scura nella parte bassa dello schermo con il nome in maiuscolo e il testo che scorre a macchina da scrivere, e accanto il riquadro con il volto di chi parla (illustrazioni cel-shaded di CODEX-GH: nonna severa, meccanico, ragazza con le cuffie, vigile urbano, barista anziano, ragazzo quindicenne; personaggi inventati). PROVA apre un dialogo di esempio di 6 battute: un tocco sulla barra, INVIO/SPAZIO o AVANTI completano la riga o passano alla battuta dopo; mentre è aperto i comandi di movimento sono fermi ma il paese va avanti. Non ancora agganciato alle missioni. Grafica PROVVISORIA.',
   prova:'dialogo',trova:null}

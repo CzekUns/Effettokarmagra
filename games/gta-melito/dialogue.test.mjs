@@ -149,6 +149,6 @@ test('lotto 15: collegamento nel gioco, HTML con gli id, registri e versioni ugu
   for(const src of sources)for(const m of src.matchAll(new RegExp('\\./'+mod+'\\.mjs\\?v=(\\d+)','g')))found.add(m[1]);
   assert.equal(found.size,1,mod+'.mjs importato con una sola versione: '+[...found].join(','));
  }
- assert.match(game,/novita\.mjs\?v=011/);assert.match(game,/dialogue\.mjs\?v=001/);
+ assert.ok(Number((game.match(/novita\.mjs\?v=(\d+)/)||[])[1])>=12);assert.match(game,/dialogue\.mjs\?v=001/);
  assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=209,'game.mjs?v= aggiornato');
 });

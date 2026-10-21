@@ -62,14 +62,14 @@ const extent=(img,column,row)=>{
  return {top,lowest,opaque};
 };
 
-test('lotti 13–14: tabella dei fogli extra con 6 fogli, 8 identità nuove in coda, kind 23–30, totale 31',()=>{
- assert.deepEqual(PEDESTRIAN_SHEETS.map(s=>s.id),['lotto2','lotto10','lotto11','lotto12','lotto13','lotto14']);
+test('lotti 13–14: fogli e kind 23–30 invariati dopo i lotti successivi',()=>{
+ assert.deepEqual(PEDESTRIAN_SHEETS.slice(0,6).map(s=>s.id),['lotto2','lotto10','lotto11','lotto12','lotto13','lotto14']);
  assert.equal(PEDESTRIAN_SHEET_START_KIND,7);assert.equal(LOTTO2_PEDESTRIAN_NPC_START_KIND,7);assert.equal(EXTRA_PEDESTRIAN_NPC_START_KIND,4);
  const fresh=PEDESTRIAN_SHEETS.filter(s=>NEW_SHEETS.includes(s.id));
  assert.equal(fresh.length,2);
  assert.equal(fresh.reduce((n,s)=>n+s.identities.length,0),8,'8 identità nuove');
  assert.deepEqual(fresh.map(s=>s.startKind),[23,27]);
- assert.equal(PEDESTRIAN_KIND_COUNT,31);
+ assert.ok(PEDESTRIAN_KIND_COUNT>=31);
  for(const s of PEDESTRIAN_SHEETS){
   assert.equal(s.identities.length,4);
   assert.ok(Object.isFrozen(s)&&Object.isFrozen(s.identities));
@@ -81,7 +81,7 @@ test('lotti 13–14: tabella dei fogli extra con 6 fogli, 8 identità nuove in c
  assert.deepEqual([...pedestrianSheet('lotto13').identities],['operaio-gilet','signora-carrello','ragazzino-pallone','barista-grembiule']);
  assert.deepEqual([...pedestrianSheet('lotto14').identities],['uomo-canottiera','signora-elegante-cappello','studente-occhiali','donna-velo']);
  assert.equal(pedestrianSheet('lotto13').startKind+2,KID_KIND,'il ragazzino è il kind 25');
- for(const k of [0,3,4,6,31,-1,1.5,'23'])assert.equal(pedestrianSheetForKind(k),null,'kind fuori dai fogli extra: '+k);
+ for(const k of [0,3,4,6,PEDESTRIAN_KIND_COUNT,-1,1.5,'23'])assert.equal(pedestrianSheetForKind(k),null,'kind fuori dai fogli extra: '+k);
  // i fogli precedenti non si spostano
  assert.deepEqual(PEDESTRIAN_SHEETS.slice(0,4).map(s=>s.startKind),[7,11,15,19]);
 });
@@ -176,10 +176,10 @@ test('lotti 13–14: ogni foglio si carica a parte e disegna la cella giusta, al
   assert.equal(frames.size,4,'4 frame distinti per la signora col carrello (kind 24)');
   // ogni foglio usa la propria immagine; lotto 13 e 14 diverse dalle precedenti
   const images=PEDESTRIAN_SHEETS.map(s=>{drawSheetPedestrianSprite(ctx,0,0,0,s.startKind,0,false);return ctx.last[0];});
-  assert.equal(new Set(images).size,6,'sei cache separate');
+  assert.equal(new Set(images).size,PEDESTRIAN_SHEETS.length,'una cache per foglio');
   assert.ok(images[4]instanceof MockImage&&images[5]instanceof MockImage);
   assert.match(images[4].src,/pedoni-lotto13-4x4frames-24x40-rgba\.png$/);assert.match(images[5].src,/pedoni-lotto14-4x4frames-24x40-rgba\.png$/);
-  for(const k of [0,4,6,31,-1])assert.equal(drawSheetPedestrianSprite(ctx,0,0,0,k),false,'kind '+k+' non è dei fogli extra');
+  for(const k of [0,4,6,PEDESTRIAN_KIND_COUNT,-1])assert.equal(drawSheetPedestrianSprite(ctx,0,0,0,k),false,'kind '+k+' non è dei fogli extra');
   assert.equal(drawLotto2PedestrianSprite(ctx,22,33,0,2,0,false),true);assert.equal(ctx.last[1],8*24,'lotto 2 identità 2 come prima');
  }finally{
   if(original===undefined)delete globalThis.Image;else globalThis.Image=original;
@@ -227,7 +227,7 @@ test('lotti 13–14: collegamento nel gioco, voce NOVITÀ, registri e versioni u
   for(const src of sources)for(const m of src.matchAll(new RegExp('\\./'+mod+'\\.mjs\\?v=(\\d+)','g')))found.add(m[1]);
   assert.equal(found.size,1,mod+'.mjs importato con una sola versione: '+[...found].join(','));
  }
- assert.match(game,/extra-pedestrian-sprites\.mjs\?v=005/);
- assert.match(game,/novita\.mjs\?v=011/);
+ assert.match(game,/extra-pedestrian-sprites\.mjs\?v=006/);
+ assert.match(game,/novita\.mjs\?v=012/);
  assert.ok(Number((page.match(/game\.mjs\?v=(\d+)/)||[])[1])>=208,'game.mjs?v= aggiornato');
 });

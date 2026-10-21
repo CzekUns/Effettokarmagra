@@ -10,7 +10,7 @@ import {drawPedestrianSprite} from './pedestrian-sprites.mjs?v=002';
 import {PERSON_SCALE} from './world-scale.mjs?v=001';
 import {drawFryerSprite} from './friggitore-sprites.mjs?v=002';
 import {drawProfessionSprite} from './profession-sprites.mjs?v=003';
-import {drawExtraPedestrianSprite,EXTRA_PEDESTRIAN_NPC_START_KIND,drawSheetPedestrianSprite,PEDESTRIAN_SHEET_START_KIND} from './extra-pedestrian-sprites.mjs?v=005';
+import {drawExtraPedestrianSprite,EXTRA_PEDESTRIAN_NPC_START_KIND,drawSheetPedestrianSprite,PEDESTRIAN_SHEET_START_KIND} from './extra-pedestrian-sprites.mjs?v=006';
 import {drawRuinPool} from './municipio-landmarks.mjs?v=003';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
