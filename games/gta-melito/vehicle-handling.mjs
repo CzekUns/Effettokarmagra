@@ -44,6 +44,13 @@ const CAR_MODELS={
  // Lotto 6: Clio IV drives like the Grande Punto (same class, a hair lighter); Golf VII a bit faster and steadier.
  'clio-iv-2012':{accel:14.2,top:41,brake:50},
  'golf-vii-2012':{accel:14.8,top:44,brake:53,grip:7.8},
+ // Lotto 7: Corsa E and Peugeot 208 drive like the Clio IV (same supermini class).
+ 'corsa-e-2014':{accel:14.2,top:41,brake:50},
+ 'peugeot-208-2012':{accel:14.2,top:41,brake:50},
+ // Lotto 8: Qashqai J11 and Duster, taller and heavier crossovers: slower off the line, top 40, a slightly
+ // slower steering and the standard grip 7.0 (they lean a bit in the corners).
+ 'qashqai-j11-2013':{accel:12.6,top:40,brake:48,steer:2.3,grip:7},
+ 'duster-2010':{accel:12.2,top:40,brake:47,steer:2.3,grip:7},
  'seicento-1998':{accel:10.4,top:35,steer:2.6,brake:44},
  'fiat-500-2007':{accel:11.5,top:37,steer:2.55},
  'fiat-uno-1983':{accel:9.6,top:36,brake:40,grip:6.2,launch:.38},

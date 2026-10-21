@@ -3,6 +3,7 @@
  * Lotto 1: Grande Punto 2005 and Ypsilon III 2011, same 4x4 40x60 grid (atlas by CODEX-GH).
  * Lotto 5: Tipo hatchback 2016 and 500L 2012, same grid (atlas by CODEX-GH).
  * Lotto 6: Renault Clio IV 2012 and Volkswagen Golf VII 2012, same grid (atlas by CODEX-GH).
+ * Lotto 7: Opel Corsa E 2014 and Peugeot 208 2012; lotto 8: Nissan Qashqai J11 2013 and Dacia Duster 2010 (CODEX-GH).
  * Body colors are illustrative, not all factory paint codes verified.
  */
 export const CAR_SPRITES=Object.freeze({
@@ -34,6 +35,12 @@ export const EXTRA_CAR_ATLASES=Object.freeze({
  // Lotto 6 (CODEX-GH, 2026-10-21): Renault Clio IV 2012 and Volkswagen Golf VII 2012, RGBA atlas drawn by code
  // (sources/clio4-golf7-16-genera.py, notes in clio4-golf7-16-NOTE.md). PROVISIONAL art, to be approved by Simone.
  '@clio4-golf7-atlas':'./assets/vehicles/clio4-golf7-16-rgba.png',
+ // Lotto 7 (CODEX-GH, 2026-10-21): Opel Corsa E 2014 and Peugeot 208 2012, RGBA atlas drawn by code
+ // (sources/corsa-e-208-16-genera.py, notes in corsa-e-208-16-NOTE.md). PROVISIONAL art, to be approved by Simone.
+ '@corsa-e-208-atlas':'./assets/vehicles/corsa-e-208-16-rgba.png',
+ // Lotto 8 (CODEX-GH, 2026-10-21): Nissan Qashqai J11 2013 and Dacia Duster 2010, RGBA atlas drawn by code
+ // (sources/qashqai-duster-16-genera.py, notes in qashqai-duster-16-NOTE.md). PROVISIONAL art, to be approved by Simone.
+ '@qashqai-duster-atlas':'./assets/vehicles/qashqai-duster-16-rgba.png',
 });
 const EXTRA_MODELS=Object.freeze([
  {model:'seicento-1998',atlas:'@seicento-500-atlas',offset:0,colors:['white','red','blue','silver','black','yellow','green','champagne']},
@@ -46,6 +53,10 @@ const EXTRA_MODELS=Object.freeze([
  {model:'fiat-500l-2012',atlas:'@tipo-500l-atlas',offset:8,colors:['white','red','silver','graphite','black','blue','yellow','green']},
  {model:'clio-iv-2012',atlas:'@clio4-golf7-atlas',offset:0,colors:['white','red','blue','silver','graphite','black','yellow','brown']},
  {model:'golf-vii-2012',atlas:'@clio4-golf7-atlas',offset:8,colors:['white','red','silver','grey','black','nightblue','pacificblue','sunsetred']},
+ {model:'corsa-e-2014',atlas:'@corsa-e-208-atlas',offset:0,colors:['white','red','blue','silver','graphite','black','yellow','orange']},
+ {model:'peugeot-208-2012',atlas:'@corsa-e-208-atlas',offset:8,colors:['white','red','silver','sharkgrey','black','virtualblue','darkblue','orangepower']},
+ {model:'qashqai-j11-2013',atlas:'@qashqai-duster-atlas',offset:0,colors:['white','red','silver','graphite','black','blue','bronze','burgundy']},
+ {model:'duster-2010',atlas:'@qashqai-duster-atlas',offset:8,colors:['white','beige','darkgreen','silver','graphite','black','blue','brown']},
 ]);
 export const EXTRA_CAR_VARIANTS=Object.freeze(Object.fromEntries(
  EXTRA_MODELS.flatMap(({model,atlas,offset,colors})=>
@@ -108,7 +119,8 @@ export const STREET_VENDOR_VEHICLES=Object.freeze(['ape-car-azzurra','furgone-fr
 export const CAR_TRAFFIC_SPRITE_IDS=Object.freeze([...CAR_ATLAS_VARIANT_IDS,...Object.keys(EXTRA_CAR_VARIANTS),...STREET_VENDOR_VEHICLES]);
 export const CAR_PARKED_SPRITE_IDS=Object.freeze([...CAR_TRAFFIC_SPRITE_IDS,...MARKET_VARIANT_IDS]);
 // Lotto 6: the traffic walks the id list with a fixed stride (game.mjs trafficModel). With 98 ids a stride of 7 would
-// spawn only 14 models, so the stride is the first odd number from 7 that is coprime with the list length (9 today).
+// spawn only 14 models, so the stride is the first odd number from 7 that is coprime with the list length
+// (9 with 98 ids; 7 again since lotti 7-8 brought the list to 130 ids).
 const gcd=(a,b)=>b?gcd(b,a%b):a;
 export const CAR_TRAFFIC_STRIDE=[7,9,11,13,17,19,23].find(s=>gcd(s,CAR_TRAFFIC_SPRITE_IDS.length)===1);
 const MODEL_DRAW_SIZE=Object.freeze({
@@ -123,6 +135,11 @@ const MODEL_DRAW_SIZE=Object.freeze({
  // Lotto 6: Clio IV a touch longer than the Punto 188, Golf VII the widest/longest of the hatchbacks; CODEX-GH's
  // own prudent proposals, kept as they are so both stay inside the lane.
  'clio-iv-2012':[5.4,8.9],'golf-vii-2012':[5.6,9.2],
+ // Lotto 7: Corsa E and 208 are Punto 188-sized superminis (CODEX-GH's prudent proposals, kept as they are).
+ 'corsa-e-2014':[5.5,8.9],'peugeot-208-2012':[5.4,8.8],
+ // Lotto 8: Qashqai J11 and Duster are crossovers, a bit wider and longer than every hatchback but still narrower
+ // than the furgone-ambulante (7.9), so they stay inside their lane (CODEX-GH's proposals).
+ 'qashqai-j11-2013':[5.8,9.4],'duster-2010':[5.7,9.2],
  'ape-car-azzurra':[4.1,6.25],'furgone-fritti':[5.65,8.65],
  'ape-mercato':[5.7,6.9],'furgone-ambulante':[7.9,9.3],'ape-classica':[5.7,6.9],
  // Q18: whole 52x92 cell; the van body is then ~5,7 x 9,4 and the refuse truck ~6,3 x 12,4.
