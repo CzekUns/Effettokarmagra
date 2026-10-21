@@ -763,3 +763,9 @@ Secondo screenshot e correzione dell'utente, **mantenere la torre molto grande e
 - I 4 teli T1–T4 del foglio non sono usati nel gioco (nessun piano di telo da sostituire); restano nell'atlante.
 - Dove guardarli: mercato del rione 219, centro (1168, 948), `?mercato=1&ora=10:30`; PAUSA › NOVITÀ › `lotto3-banchi`. Anteprima 4× con l'Ape ortofrutta alla stessa scala: `assets/market/sources/mercato-banchi-anteprima-4x.png`.
 - Verificato in Chrome headless (una prova breve, PC) con screenshot del mercato; **non verificato su Android**; da approvare da Simone. Da giudicare in gioco la profondità del piano rispetto al venditore.
+
+### 2026-10-21 — Lotto 4 grafica: sfondo della schermata di caricamento (CODEX-GH + Claude) — grafica PROVVISORIA, da approvare
+- La schermata «CARICO MELITO…» mostra un render vero del gioco (Via Roma alle 19:10, vista dall'alto, pixel netti) post-prodotto da CODEX-GH: segnaposto del giocatore tolto, vignetta leggera, fascia scura graduale in basso. Due immagini: `assets/ui/loading-1280x720.png` per il PC e `assets/ui/loading-844x390.png` per il telefono orizzontale (`background-size:cover`, centrata). NOTE in `assets/ui/sources/loading-NOTE.md`.
+- Titolo, testo e una barra di caricamento decorativa (solo CSS, scorrimento continuo) stanno in basso sulla fascia scura, con ombra al testo per la leggibilità; nessun testo è dentro le immagini.
+- Dove guardarla: basta ricaricare la pagina (PC e telefono); `NOVITA_DA_APPROVARE.md` › `lotto4-caricamento`. Screenshot della prova in Chrome headless (PC 1280×720 e telefono 844×390) nella PR; **non verificato su Android**; da approvare da Simone.
+
