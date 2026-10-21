@@ -1292,3 +1292,12 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - Generati due piccoli fogli pixel art con `assets/animals/sources/animali-genera.py`: piccioni 8×8 grigi/bianchi (beccano e volano), gatti 12×8 tigrati/neri/bianchi-rossi (camminano e siedono). Entrambi RGBA con sfondo trasparente.
 - `animali.mjs` deriva stormi da piazze OSM, chiese, mercato e villa; gatti da auto parcheggiate e muretti. Punti filtrati fuori carreggiata e ingressi. Fino a 60 piccioni e 20 gatti; fuga dei piccioni a circa 2 m con volo e atterraggio 10–15 m più in là, fuga calma dei gatti a 1,5 m. Animali solo grafici, senza collisioni né danni.
 - Voce NOVITÀ `animali-di-strada`, test `animali.test.mjs`, screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-animali/`. **PROVVISORIO, da approvare da Simone**.
+
+
+### 2026-10-21 — ChatGPT/GitHub — Merge completi grafica CODEX-GH, PR #74–#85
+
+- **Richiesta:** «Fai tutti i merge disponibili». Esaminate tutte le 12 PR GTA Melito aperte #74–#85, ognuna con sole modifiche in `games/gta-melito/`. Le PR erano impilate in sequenza; per ciascuna, in ordine, verificata mergeability e head SHA, cambiata la base in `main` dopo la precedente, poi effettuato il merge con il controllo SHA. **Tutte e 12 le PR risultano su GitHub `merged:true` e `closed`**, nessuna PR aperta rimasta al momento della verifica.
+- **PR integrate e contenuti:** #74 Grande Punto/Ypsilon III; #75 quattro pedoni dalla tavola madre; #76 banchi mercato con sprite; #77 sfondo schermata caricamento; #78 Tipo/500L; #79 Clio IV/Golf VII; #80 Corsa E/208/Qashqai/Duster; #81 Doblò/Fiorino; #82 dodici pedoni lotti 10–12; #83 otto pedoni lotti 13–14; #84 demo dialoghi con 6 ritratti; #85 sedici pedoni lotti 17–20.
+- **Ultimo commit merge:** #85 `a4ef6cc8926c4d57283f8d55280b549d44eb6225`; `index.html` ora importa `game.mjs?v=210`.
+- **Verifiche:** GitHub API per elenco file, compatibilità delle PR e stato `merged:true`; dichiarazioni dell'autore: suite Node fino a **655/655** e prove Chrome headless mirate ai singoli lotti. **Non rieseguiti qui** i 655 test, nessuna prova diretta Android/desktop, nessuna verifica della pubblicazione GitHub Pages o della qualità estetica. Grafica CODEX-GH indicata PROVVISORIA in ciascuna PR; l'approvazione precedente dell'utente all'uso di nuovi asset non equivale necessariamente a giudizio su ogni nuovo modello: raccogliere i giudizi da PAUSA → NOVITÀ.
+- **Nota su dialoghi:** #84 è solo dimostrazione tramite menu NOVITÀ; non equivale al collegamento con le missioni `campaign.mjs`.
