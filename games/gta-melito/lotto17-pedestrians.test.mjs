@@ -42,12 +42,12 @@ const pixels=(img,col,row)=>{
 };
 
 test('lotti 17–20: quattro fogli nuovi in sequenza, 16 identità, kind 31–46',()=>{
- assert.deepEqual(PEDESTRIAN_SHEETS.slice(-4).map(s=>s.id),IDS);
+ assert.deepEqual(PEDESTRIAN_SHEETS.filter(s=>IDS.includes(s.id)).map(s=>s.id),IDS);
  assert.deepEqual(IDS.map(id=>pedestrianSheet(id).startKind),[31,35,39,43]);
- assert.equal(PEDESTRIAN_KIND_COUNT,47);
+ assert.ok(PEDESTRIAN_KIND_COUNT>=47);
  for(const id of IDS){const s=pedestrianSheet(id);assert.equal(s.identities.length,4);assert.ok(Object.isFrozen(s));
   for(let k=s.startKind;k<s.startKind+4;k++)assert.equal(pedestrianSheetForKind(k),s);}
- for(const k of [0,4,6,47,-1,1.5,'31'])assert.equal(pedestrianSheetForKind(k),null);
+ for(const k of [0,4,6,PEDESTRIAN_KIND_COUNT,-1,1.5,'31'])assert.equal(pedestrianSheetForKind(k),null);
  assert.equal(new Set(PEDESTRIAN_SHEETS.flatMap(s=>s.identities)).size,PEDESTRIAN_KIND_COUNT-7);
 });
 
@@ -85,7 +85,7 @@ test('caricamento separato e disegno dei kind 31–46 con pivot e scala comuni',
    assert.deepEqual(ctx.last.slice(1,5),[288,80,24,40]);
   }
   assert.equal(new Set(images).size,4);
-  assert.equal(drawSheetPedestrianSprite(ctx,0,0,0,47),false);
+  assert.equal(drawSheetPedestrianSprite(ctx,0,0,0,PEDESTRIAN_KIND_COUNT),false);
  }finally{if(original===undefined)delete globalThis.Image;else globalThis.Image=original;}
 });
 
@@ -93,7 +93,7 @@ test('kind 31–46 disponibili nella rotazione dei passanti e VAI A VEDERE cerca
  const graph=buildRoadGraph([{id:1,n:'Via Roma',t:'residential',w:8,p:[0,0,450,0,900,0]},{id:2,n:'Traversa',t:'residential',w:6,p:[450,-200,450,0,450,200]}]);
  const people=createAgents(graph,160,310,'walk',[]),kinds=new Set(people.map(p=>p.kind));
  for(let k=31;k<=46;k++)assert.ok(kinds.has(k),'kind '+k+' nasce tra i passanti');
- assert.ok(people.every(p=>p.kind>=0&&p.kind<47));
+ assert.ok(people.every(p=>p.kind>=0&&p.kind<PEDESTRIAN_KIND_COUNT));
  const entry=NOVITA.find(e=>e.id==='lotto17-20-pedoni');assert.ok(entry);
  assert.match(entry.cosa,/PROVVISORIA/);
  const s={spawn:[100,100],people:[{x:105,y:100,kind:30},{x:140,y:100,kind:43},{x:110,y:100,kind:39,indoors:true},{x:900,y:900,kind:46}],roads:[]};
@@ -106,7 +106,7 @@ test('sorgenti, registri e versioni dei moduli aggiornati',async()=>{
  for(const text of [work,visual,approvare])assert.ok(/[Ll]otti 17–20/.test(text)&&text.includes('PROVVISORIO'));
  for(const id of IDS)assert.ok(modus.includes(`pedoni-${id}-4x4frames-24x40-rgba.png`));
  assert.ok(novita.includes("id:'lotto17-20-pedoni'")&&novita.includes("roadMiddle(s,'Via Roma')"));
- assert.match(game,/extra-pedestrian-sprites\.mjs\?v=006/);assert.match(game,/novita\.mjs\?v=013/);assert.match(html,/game\.mjs\?v=211/);
+ assert.match(game,/extra-pedestrian-sprites\.mjs\?v=007/);assert.match(game,/novita\.mjs\?v=014/);assert.match(html,/game\.mjs\?v=212/);
  const names=(await readdir(new URL('./',import.meta.url))).filter(f=>(f.endsWith('.mjs')&&!f.endsWith('.test.mjs'))||f==='index.html');
  const sources=await Promise.all(names.map(read));
  for(const mod of ['extra-pedestrian-sprites','city-art','roads','resident-routines','market','novita','game']){

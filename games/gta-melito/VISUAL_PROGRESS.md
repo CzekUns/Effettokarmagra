@@ -818,3 +818,8 @@ Secondo screenshot e correzione dell'utente, **mantenere la torre molto grande e
 - Sei coppie JPEG 1280×720 e 844×390 in `assets/ui/loading-art-*`, oltre ai due PNG del render del gioco già presenti. La festa patronale grande è ricompressa sotto 400 KB; nessuna scena del Municipio.
 - `loading-screens.mjs` alterna i sette sfondi senza ripetere l’ultimo; `.loading` conserva titolo, testo e barra HTML e aggiunge credito in una fascia scura sfumata in basso. La voce NOVITÀ `caricamento-artwork` offre PROVA e TORNA AL GIOCO.
 - Da giudicare: fedeltà e atmosfera di Melito, qualità dei ritagli su PC e telefono e leggibilità dei testi. Screenshot di prova in `/home/ubuntu/codex-gh-lavoro/sim-caricamento/`. Nessuna verifica su telefono vero; approvazione di Simone necessaria.
+
+### 2026-10-21 — Varianti di colore dei pedoni (CODEX-GH) — PROVVISORIO, da approvare da Simone
+- 22 atlanti 384×160 RGBA, due varianti per la tavola madre, lotto 2 e lotti 10–14 e 17–20. Ogni pixel opaco resta nello stesso posto: camminata, sagoma, accessori e piedi non cambiano. Ricolorati a zone capelli, giacche/maglie e pantaloni; carnagioni e contorni invariati. Il generatore riproducibile è `assets/people/sources/varianti-genera.py`.
+- 88 kind nuovi (47–134) entrano nella rotazione di passanti, residenti e clienti; gli esistenti 0–46 restano stabili. I 22 file aggiungono 765.427 byte. Nessuna trasformazione cromatica per frame: il renderer usa i PNG già pronti.
+- Vedere PAUSA › NOVITÀ › `varianti-pedoni` › VAI A VEDERE su Via Roma e lo screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-varianti/`. Giudicare varietà di vestiti e capelli, leggibilità alla scala reale e coerenza con gli altri pedoni. Grafica **PROVVISORIA, da approvare da Simone**; telefono reale non provato.

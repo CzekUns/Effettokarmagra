@@ -133,3 +133,11 @@ Volti in `assets/portraits/` (PNG 256×256 dai JPG 1024×1024 di CODEX-GH; promp
 | `caricamento-artwork` | Sei artwork (mercato, campetto, villa comunale, Via Roma con pizzeria, mercato all’alba, festa patronale) più il render del gioco, alternati all’avvio | Caricamento · CODEX-GH / ramo `caricamento`, PR a cura di Claude | PAUSA › NOVITÀ › `caricamento-artwork` › PROVA; riaprire il gioco per vedere la rotazione | PC 1280×720; telefono orizzontale 844×390 | Coerenza con Melito, varietà delle scene, leggibilità di titolo e barra in basso; le artwork sono **PROVVISORIE, da approvare da Simone**. |
 
 I file sono in `assets/ui/loading-art-*`; la scena del Municipio è esclusa perché la torre raffigurata non è corretta. `loading-screens.mjs` conserva l’ultimo id nel browser e seleziona un’altra scena all’avvio successivo. `loading` resta HTML; la fascia scura è CSS.
+
+### Varianti di colore dei pedoni (21 ottobre 2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+
+| id | Elemento | Lavoro / PR | Dove guardare | Ora / parametri | Cosa giudicare |
+|---|---|---|---|---|---|
+| `varianti-pedoni` | Due varianti di abiti e capelli per 11 fogli di pedoni già presenti; 88 kind nuovi, 47–134 | Varianti pedoni · CODEX-GH / ramo `varianti`, PR a cura di Claude | PAUSA › NOVITÀ › `varianti-pedoni` › VAI A VEDERE cerca il nuovo pedone più vicino su Via Roma | giorno, scala normale e screenshot 3× | Colori distinguibili, coerenza con la pixel art, leggibilità in camminata e carnagioni lasciate come nell'originale. **PROVVISORIO, da approvare da Simone**. |
+
+I 22 PNG stanno in `assets/people/`; il generatore unico è `assets/people/sources/varianti-genera.py`. Peso dei nuovi PNG: 765.427 byte, sotto 1 MB. I kind precedenti 0–46 restano invariati; il gioco legge già `PEDESTRIAN_KIND_COUNT` per passanti, residenti e clienti.

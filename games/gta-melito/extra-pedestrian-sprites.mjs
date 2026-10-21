@@ -34,14 +34,15 @@ export function drawExtraPedestrianSprite(ctx,x,y,angle,identity=0,clock=0,movin
  * adattati a zone dalla tavola madre (stesse pose, pivot e scala). I kind degli NPC proseguono in
  * sequenza dopo i 4 originali e i 3 del secondo lotto: lotto 2 = 7–10, lotto 10 = 11–14,
  * lotto 11 = 15–18, lotto 12 = 19–22, lotto 13 = 23–26, lotto 14 = 27–30,
- * lotti 17–20 = 31–46. I ragazzini dei lotti 13 e 20 sono più bassi nella cella.
+ * lotti 17–20 = 31–46. Le varianti cromatiche dei fogli esistenti iniziano da 47.
+ * I ragazzini dei lotti 13 e 20 sono più bassi nella cella.
  * Una cache per immagine: se un PNG manca, i suoi kind
  * ricadono sui fogli precedenti (city-art.mjs). Grafica PROVVISORIA, da approvare da Simone. */
 export const PEDESTRIAN_SHEET_CELL=Object.freeze({width:24,height:40,columns:16,rows:4});
 export const PEDESTRIAN_SHEET_SIZE=Object.freeze({width:384,height:160});
 // NPC kinds 0–3: first sheet, 4–6: second sheet (identities 1–3), from 7 on: the extra sheets below.
 export const PEDESTRIAN_SHEET_START_KIND=EXTRA_PEDESTRIAN_NPC_START_KIND+EXTRA_PEDESTRIAN_IDENTITIES.length-1;
-const SHEET_LIST=[
+const BASE_SHEET_LIST=[
  ['lotto2',['signora-anziana-borsa','ragazzo-zaino','uomo-giacca-lavoro','ragazza-cappotto-rosso']],
  ['lotto10',['signora-anziana-cappotto-borsa','ragazzo-felpa-zaino','donna-giacca-tracolla','uomo-giacca-cravatta-valigetta']],
  ['lotto11',['ragazza-telefono','uomo-robusto-righe','donna-vestito-corallo','sportivo-tuta']],
@@ -53,7 +54,11 @@ const SHEET_LIST=[
  ['lotto19',['mamma-bambino','ragazza-cane','uomo-sedia-rotelle','ragazzo-delivery']],
  ['lotto20',['nonna-grembiule-scopa','ragazzino-scuola','uomo-tuta-telefono','donna-carrello-mercato']]
 ];
-export const PEDESTRIAN_SHEETS=Object.freeze(SHEET_LIST.reduce((out,[id,identities])=>{
+export const PEDESTRIAN_VARIANT_FIRST_KIND=PEDESTRIAN_SHEET_START_KIND+BASE_SHEET_LIST.length*4;
+const VARIANT_SOURCES=[['madre',['man-blue','woman-red','elder-beige','rider-yellow']],...BASE_SHEET_LIST];
+const VARIANT_SHEET_LIST=[1,2].flatMap(variant=>VARIANT_SOURCES.map(([source,identities])=>
+ [source+'-var'+variant,identities.map(name=>name+'-var'+variant)]));
+export const PEDESTRIAN_SHEETS=Object.freeze([...BASE_SHEET_LIST,...VARIANT_SHEET_LIST].reduce((out,[id,identities])=>{
  const previous=out[out.length-1];
  const startKind=previous?previous.startKind+previous.identities.length:PEDESTRIAN_SHEET_START_KIND;
  out.push(Object.freeze({id,path:'./assets/people/pedoni-'+id+'-4x4frames-24x40-rgba.png',startKind,identities:Object.freeze(identities)}));
@@ -62,8 +67,10 @@ export const PEDESTRIAN_SHEETS=Object.freeze(SHEET_LIST.reduce((out,[id,identiti
 const LAST_SHEET=PEDESTRIAN_SHEETS[PEDESTRIAN_SHEETS.length-1];
 export const PEDESTRIAN_KIND_COUNT=LAST_SHEET.startKind+LAST_SHEET.identities.length;
 export const pedestrianSheet=id=>PEDESTRIAN_SHEETS.find(s=>s.id===id)||null;
+const KIND_TO_SHEET=Array.from({length:PEDESTRIAN_KIND_COUNT},(_,kind)=>
+ PEDESTRIAN_SHEETS.find(s=>kind>=s.startKind&&kind<s.startKind+s.identities.length)||null);
 export const pedestrianSheetForKind=kind=>Number.isInteger(kind)?
- PEDESTRIAN_SHEETS.find(s=>kind>=s.startKind&&kind<s.startKind+s.identities.length)||null:null;
+ KIND_TO_SHEET[kind]||null:null;
 const sheets=new Map();
 export function loadPedestrianSheets(){
  if(typeof Image==='undefined')return;

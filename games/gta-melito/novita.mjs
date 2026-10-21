@@ -4,7 +4,7 @@
  * proprietario può rifarla nello stile originale. Ogni voce sa dove trovare un esempio vero nella
  * mappa (VAI A VEDERE: posto, ora, meteo); i giudizi MI PIACE / DA RIFARE restano solo in questo
  * browser e si copiano come testo. Tenere allineato con NOVITA_DA_APPROVARE.md. */
-import {LOTTO2_PEDESTRIAN_NPC_START_KIND,pedestrianSheet} from './extra-pedestrian-sprites.mjs?v=006';
+import {LOTTO2_PEDESTRIAN_NPC_START_KIND,PEDESTRIAN_VARIANT_FIRST_KIND,pedestrianSheet} from './extra-pedestrian-sprites.mjs?v=007';
 const LOTTO10_12_FIRST_KIND=pedestrianSheet('lotto10').startKind;// lotti 10–12: kind 11–22
 const LOTTO10_12_LAST_KIND=pedestrianSheet('lotto12').startKind+3;
 const LOTTO13_14_FIRST_KIND=pedestrianSheet('lotto13').startKind;// lotti 13–14: kind 23–30
@@ -159,6 +159,9 @@ export const NOVITA=Object.freeze([
  {id:'lotto17-20-pedoni',nome:'Lotti 17–20: 16 pedoni nuovi (mestieri, famiglie e passanti)',lavoro:'Lotti 17–20 · CODEX-GH',pr:'in revisione',
   cosa:'Quattro fogli di CODEX-GH, kind 31–46: postino, pizzaiolo, netturbino, prete; turista, ragazzo con skateboard, donna in tailleur, anziano col giornale; mamma col bambino, ragazza col cane, uomo in sedia a rotelle, ragazzo delivery; nonna con scopa, scolaro, uomo in tuta col telefono, donna col carrello. Frame adattati dalla tavola madre, scala e pivot degli altri pedoni. Si vedono fra passanti, residenti e clienti del mercato; VAI A VEDERE cerca il più vicino su Via Roma. Grafica PROVVISORIA, da approvare da Simone.',
   trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO17_20_FIRST_KIND&&q.kind<=LOTTO17_20_LAST_KIND),s)||roadMiddle(s,'Via Roma')},
+ {id:'varianti-pedoni',nome:'Varianti di colore: più volti nella popolazione',lavoro:'Varianti pedoni · CODEX-GH',pr:'in revisione',
+  cosa:'Due varianti di vestiti e capelli per la tavola madre, il lotto 2 e i lotti 10–14 e 17–20. Sono 22 fogli pronti, senza ricolorazione durante il gioco: pose, trasparenza, carnagioni e kind originali restano uguali. Le nuove identità si mescolano a passanti, residenti e clienti del mercato. Grafica PROVVISORIA, da approvare da Simone.',
+  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=PEDESTRIAN_VARIANT_FIRST_KIND),s)||roadMiddle(s,'Via Roma')},
  {id:'caricamento-artwork',nome:'Schermate di caricamento: sei artwork di Melito e il render del gioco',lavoro:'Caricamento · CODEX-GH',pr:'in revisione',
   cosa:'Sette sfondi a rotazione: Via Roma nel gioco, mercato, campetto, villa comunale, pizzeria di Via Roma, mercato all’alba e festa patronale. L’ultima schermata vista non ricompare subito. PROVA mostra l’anteprima successiva senza lasciare il gioco; la fascia scura mantiene leggibili titolo, testo e barra. Artwork PROVVISORIE, da approvare da Simone.',
   prova:'caricamento',trova:null},

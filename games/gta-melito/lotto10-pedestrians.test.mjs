@@ -157,7 +157,7 @@ test('lotti 10–12: ogni foglio si carica a parte e disegna la cella giusta; ki
 
 test('lotti 10–12: i kind nuovi (11–22) compaiono davvero fra i pedoni generati, insieme a tutti gli altri',()=>{
  const graph=buildRoadGraph([{id:1,n:'Via Roma',t:'residential',w:8,p:[0,0,450,0,900,0]},{id:2,n:'Traversa',t:'residential',w:6,p:[450,-200,450,0,450,200]}]);
- const people=createAgents(graph,120,310,'walk',[]);
+ const people=createAgents(graph,PEDESTRIAN_KIND_COUNT+20,310,'walk',[]);
  assert.ok(people.length>=46,'abbastanza passanti per vedere tutti i kind: '+people.length);
  const kinds=new Set(people.map(p=>p.kind));
  for(let k=0;k<PEDESTRIAN_KIND_COUNT;k++)assert.ok(kinds.has(k),'kind '+k+' presente');
