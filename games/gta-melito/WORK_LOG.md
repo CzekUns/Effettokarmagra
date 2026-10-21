@@ -1257,6 +1257,42 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - **Da fare:** Claude valuta gli screenshot, pubblica la PR e chiede a Simone il giudizio. Attenzione speciale alla leggibilità di bambino, cane, ruote e scolaro su telefono vero.
 - **Riferimenti:** ramo `lotto17`, commit da indicare in consegna; sorgenti originali `/home/ubuntu/codex-gh-lavoro/lotto17`–`lotto20`, screenshot `/home/ubuntu/codex-gh-lavoro/sim-lotto17/`.
 
+### 2026-10-21 — CODEX-GH — caricamento: sette schermate a rotazione; artwork PROVVISORIE, da approvare da Simone
+- **Fatto:** aggiunti sei sfondi illustrati in due formati (PC 1280×720, telefono 844×390) ai render del gioco già presenti. Escluso il Municipio con la torre sbagliata. Tutti i file pesano meno di 400 KB.
+- **Come/dove:** JPEG `assets/ui/loading-art-*`; `loading-screens.mjs` sceglie all’avvio e conserva l’ultimo id in localStorage, poi alterna senza ripetizioni immediate. CSS di `.loading` con fascia scura in basso; titolo, testo e barra restano HTML. PAUSA › NOVITÀ › `caricamento-artwork` › PROVA apre l’anteprima con pulsante di ritorno. Cache: `novita.mjs?v=013`, `game.mjs?v=211`, nuovo `loading-screens.mjs?v=001`.
+- **Verifiche/stato:** test `loading-screens.test.mjs` per file, dimensioni, peso, rotazione, DOM e collegamento; suite completa `nice -n 15 node --test games/gta-melito/*.test.mjs games/gta-melito/survey/*.test.mjs`: **659/659 passati, fail 0**. Prova Chrome headless breve: PC con Via Roma e telefono orizzontale con mercato all’alba, sfondi e testi visibili negli screenshot in `sim-caricamento/`; nessun errore JavaScript (solo 404 di una risorsa, presumibilmente favicon). Nessun push o pubblicazione da questo clone.
+- **Da fare:** Claude pubblica la PR; Simone giudica stile, fedeltà ai luoghi e leggibilità. Artwork **PROVVISORIE, da approvare da Simone**; non testato su telefono reale.
+- **Riferimenti:** ramo `caricamento` derivato da `lotto17`; screenshot in `/home/ubuntu/codex-gh-lavoro/sim-caricamento/`.
+
+### 2026-10-21 — CODEX-GH — varianti di colore dei pedoni; PROVVISORIO, da approvare da Simone
+- **Fatto:** due varianti di colore per ciascuno degli 11 fogli richiesti (tavola madre, lotto 2, lotti 10–14 e 17–20): 22 PNG nuovi, 88 kind aggiunti dal 47 al 134. I kind 0–46 restano invariati. Abiti e capelli cambiano, carnagioni, trasparenza e pose restano uguali. Grafica **PROVVISORIA, da approvare da Simone**.
+- **Come/dove:** `assets/people/sources/varianti-genera.py` produce i PNG `assets/people/pedoni-*-var[12]-4x4frames-24x40-rgba.png`; `extra-pedestrian-sprites.mjs` li carica una volta come fogli pronti e usa una tabella kind→foglio per il disegno. Nessuna ricolorazione durante i frame. Passanti, residenti e clienti del mercato usano `PEDESTRIAN_KIND_COUNT=135`.
+- **Peso:** 765.427 byte per i 22 nuovi PNG, sotto il limite di 1 MB. La tavola originale e le vecchie varianti non vengono duplicate nel pacchetto.
+- **Verifiche/stato:** `varianti-pedoni.test.mjs` controlla i 22 file, dimensioni, 64 celle, alpha e carnagioni uguali all'originale, differenza di colore, kind e collegamenti. Suite completa `nice -n 15 node --test games/gta-melito/*.test.mjs games/gta-melito/survey/*.test.mjs`: **662/662 passati, fail 0**; dopo l'ultimo rafforzamento del test, anche `varianti-pedoni.test.mjs` 3/3. Prova Chrome headless di 5,55 s con 16 kind delle due varianti forzati su Via Roma: tutti i fogli caricati, screenshot normale e 3× in `sim-varianti/`; nessun errore JavaScript (solo 404 di una risorsa, presumibilmente favicon). Nessun push dal clone.
+- **Da fare:** Claude pubblica la PR; Simone giudica i colori in scala reale. Nessuna verifica su telefono vero.
+- **Riferimenti:** ramo `varianti` da `caricamento`; screenshot in `/home/ubuntu/codex-gh-lavoro/sim-varianti/`.
+
+### 2026-10-21 — CODEX-GH — vita di quartiere con persone ferme; PROVVISORIO, da approvare da Simone
+- **Fatto:** gruppetti fermi davanti a bar/caffè/pizzerie, alle due chiese e al mercato; due anziani davanti al Municipio; persone sole o a coppie sulle panchine già disegnate. Nessun nuovo sprite. Le posizioni derivano da POI/edifici e vie OSM, dai banchi e dalle panchine del gioco, poi sono scartate se cadono in carreggiata, su un ingresso o in area non calpestabile. Nei dati caricati non risultano un circolo né tavolini esterni: nessuna posizione inventata per questi casi.
+- **Come/dove:** `npc-idle.mjs` crea al massimo 40 figure separate da `state.people` e dall'indice collisioni; `drawCityPeople` usa gli atlanti già caricati. Pose ferme, coppie rivolte l'una verso l'altra, sguardo aggiornato ogni 3–6 s, passo laterale su area libera se il giocatore passa vicino. Densità: 1 di notte, fino a 36 alle 10–13 e 38 alle 17–21. `novita.mjs` offre VAI A VEDERE alle 11:00.
+- **Verifiche/stato:** `npc-idle.test.mjs` controlla punti, fasce orarie, strada, ingressi, spostamento, collegamento e versioni. Suite completa `nice -n 15 node --test games/gta-melito/*.test.mjs games/gta-melito/survey/*.test.mjs`: **666/666 test passati, fail 0**. Prova Chrome headless alle 11:00: 39 posti creati, 36 attivi (19 chat, 2 civici, 4 chiese, 6 mercato, 8 panchine); dopo il controllo visivo, aumentato il margine dalla facciata per evitare sporgenze grafiche. Screenshot normale e 3× in `sim-quartiere/`; nessun errore JavaScript (solo 404 di una risorsa, presumibilmente favicon). Grafica **PROVVISORIA, da approvare da Simone**; nessun push da questo clone.
+- **Da fare:** Claude pubblica la PR e Simone giudica densità, pose da panchina e collocazione dei gruppi. Il circolo richiede un riferimento/POI verificabile prima di aggiungerlo.
+- **Riferimenti:** ramo `quartiere` da `varianti`; screenshot in `/home/ubuntu/codex-gh-lavoro/sim-quartiere/`.
+
+### 2026-10-21 — CODEX-GH — pose ferme della vita di quartiere; PROVVISORIO, da approvare da Simone
+- Generati 34 fogli `pose-*.png` dai frame dei pedoni già presenti (4 personaggi × 4 pose, 24×40). Peso complessivo 227 KB. Seduti sulle panchine; rilassati con due frame lenti nei gruppetti; alcuni appoggiati davanti ai locali. Nessun nuovo kind, nessuna collisione.
+- Generatore riutilizzabile `assets/people/sources/pose-genera.py`; test `pose-pedoni.test.mjs`; voce NOVITÀ `pose-fermi`. Screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-pose/`. **PROVVISORIO, da approvare da Simone**.
+
+### 2026-10-21 — CODEX-GH — giochi di strada; PROVVISORIO, da approvare da Simone
+- Bambini a pallone nella villa, nei campetti liberi e in 2–3 slarghi pedonali; kind 25 e 44 più varianti. Passaggi ogni 1–3 s, corse brevi fra punti verificati fuori strada, pausa se il giocatore è vicino. Durante il minigioco calcetto, le scene di pallone si fermano.
+- Due tavolini a carte con anziani seduti nella villa e davanti al Municipio. Luoghi da recinti/POI OSM, campetti e grafo pedonale; nessuna coordinata cittadina scritta a mano. Orari da `npc-agenda.mjs`: bambini 16–20 nei giorni di scuola, 10–20 nel weekend; anziani 9–12 e 16–19.
+- Modulo `npc-giochi.mjs`, test, voce NOVITÀ `giochi-di-strada`, screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-giochi/`. Figure solo decorative, fuori dall'indice collisioni. **PROVVISORIO, da approvare da Simone**.
+
+### 2026-10-21 — CODEX-GH — animali di strada; PROVVISORIO, da approvare da Simone
+- Generati due piccoli fogli pixel art con `assets/animals/sources/animali-genera.py`: piccioni 8×8 grigi/bianchi (beccano e volano), gatti 12×8 tigrati/neri/bianchi-rossi (camminano e siedono). Entrambi RGBA con sfondo trasparente.
+- `animali.mjs` deriva stormi da piazze OSM, chiese, mercato e villa; gatti da auto parcheggiate e muretti. Punti filtrati fuori carreggiata e ingressi. Fino a 60 piccioni e 20 gatti; fuga dei piccioni a circa 2 m con volo e atterraggio 10–15 m più in là, fuga calma dei gatti a 1,5 m. Animali solo grafici, senza collisioni né danni.
+- Voce NOVITÀ `animali-di-strada`, test `animali.test.mjs`, screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-animali/`. **PROVVISORIO, da approvare da Simone**.
+
 
 ### 2026-10-21 — ChatGPT/GitHub — Merge completi grafica CODEX-GH, PR #74–#85
 

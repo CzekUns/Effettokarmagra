@@ -192,3 +192,18 @@ Ritagli singoli: [friggitore](./assets/people/npc-friggitore-4dir-4frames.png), 
 
 ### Torre del serbatoio di Via Madrid — nuova grafica (20 ottobre 2026)
 La [pixel art rossa/crema](./assets/buildings/serbatoio-melito-scacchi-rossi.png) (PNG RGBA 1254×1254) è stata prodotta per la torre a fungo di Via Madrid. Il **rosso** è la correzione esplicita del committente; dettagli e altezza restano interpretazioni, senza foto pubblica diretta verificata. Il vecchio **placeholder procedurale è sostituito**, non disegnato sotto il nuovo asset. Crop in `municipio-landmarks.mjs`: `x=350,y=62,width=555,height=1128`, nearest-neighbor, ancorato al basamento OSM con proiezione in alto-sinistra. Restano ombra dinamica, fade passando sotto e luce di notte. Verificare scala e occlusioni su browser/Android.
+
+### Varianti cromatiche pedoni, 21 ottobre 2026 (CODEX-GH)
+`assets/people/sources/varianti-genera.py` legge gli 11 fogli madre indicati nel codice e crea due PNG per foglio (`pedoni-<id>-var1/var2-4x4frames-24x40-rgba.png`). Preserva alpha, contorno, pose, piedi e carnagioni; ricolora per zone capelli, parte alta degli abiti e pantaloni modulando i toni chiari e scuri. Formato 384×160 RGBA, celle 24×40; 22 nuovi file per 765.427 byte. `PEDESTRIAN_SHEETS` assegna kind 47–134 ai fogli pronti; nessuna ricolorazione a runtime. Grafica PROVVISORIA, da approvare da Simone.
+
+### Pose ferme dei pedoni (21/10/2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+- `assets/people/sources/pose-genera.py` ricava da ogni foglio di camminata 4 pose statiche per personaggio, celle 24×40: seduto, rilassato A, rilassato B, appoggiato. Output `assets/people/pose-<foglio>.png` 96×160 RGBA. Usare pixel netti, margini trasparenti e colori dei fogli originali; nessun ritocco runtime.
+- Le pose sono adattamenti procedurali del frame fermo, quindi accessori voluminosi (carrello, cane, sedia a rotelle) potrebbero richiedere rifinitura manuale dopo il giudizio di Simone. **PROVVISORIO, da approvare da Simone**.
+
+### Giochi di strada (21/10/2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+- Il pallone è un piccolo disegno a rettangoli netti 4×4 circa, senza texture esterne. Tavolini 2.5D con bordo scuro, piano legno a due toni, carte chiare. Bambini dai fogli esistenti, anziani dalle pose sedute; il gesto della carta sovrappone un frammento del frame rilassato.
+- Le scene non generano collisioni e sono nascoste fuori orario. **PROVVISORIO, da approvare da Simone**.
+
+### Animali di strada (21/10/2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+- `assets/animals/sources/animali-genera.py`: `piccioni-8x8.png` 32×16 (2 mantelli × 4 frame), `gatti-12x8.png` 36×24 (3 mantelli × 3 frame), RGBA. Contorni scuri, ombre a due toni, pixel netti. Il disegno usa nearest neighbor nel canvas del gioco.
+- Animali decorativi, niente collisioni o danni; i piccioni possono volare sopra la strada ma si posano solo in area calpestabile fuori carreggiata. **PROVVISORIO, da approvare da Simone**.

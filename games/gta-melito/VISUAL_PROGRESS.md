@@ -813,3 +813,30 @@ Secondo screenshot e correzione dell'utente, **mantenere la torre molto grande e
 ### 2026-10-21 — Lotti 17–20: 16 pedoni aggiunti alla popolazione (CODEX-GH) — PROVVISORIO, da approvare da Simone
 - Quattro fogli RGBA 384×160 a celle 24×40 entrano in `PEDESTRIAN_SHEETS` con kind 31–46, insieme ai pedoni precedenti. Vestiti e accessori sono adattati ai frame della tavola madre; la sedia a rotelle sostituisce i passi con quattro posizioni dei raggi, lo scolaro è più basso nella cella. Numero totale degli NPC invariato: cambia la varietà dei kind.
 - Vedi PAUSA › NOVITÀ › `lotto17-20-pedoni` › VAI A VEDERE, vicino a Via Roma; giudicare soprattutto bambino, cane e sedia a rotelle alla scala reale. Screenshot di prova in `/home/ubuntu/codex-gh-lavoro/sim-lotto17/`. Esito dei test e della prova nel WORK_LOG. **Non verificato su Android vero; approvazione di Simone ancora necessaria.**
+
+### 2026-10-21 — Schermate di caricamento a rotazione (CODEX-GH) — PROVVISORIO, da approvare da Simone
+- Sei coppie JPEG 1280×720 e 844×390 in `assets/ui/loading-art-*`, oltre ai due PNG del render del gioco già presenti. La festa patronale grande è ricompressa sotto 400 KB; nessuna scena del Municipio.
+- `loading-screens.mjs` alterna i sette sfondi senza ripetere l’ultimo; `.loading` conserva titolo, testo e barra HTML e aggiunge credito in una fascia scura sfumata in basso. La voce NOVITÀ `caricamento-artwork` offre PROVA e TORNA AL GIOCO.
+- Da giudicare: fedeltà e atmosfera di Melito, qualità dei ritagli su PC e telefono e leggibilità dei testi. Screenshot di prova in `/home/ubuntu/codex-gh-lavoro/sim-caricamento/`. Nessuna verifica su telefono vero; approvazione di Simone necessaria.
+
+### 2026-10-21 — Varianti di colore dei pedoni (CODEX-GH) — PROVVISORIO, da approvare da Simone
+- 22 atlanti 384×160 RGBA, due varianti per la tavola madre, lotto 2 e lotti 10–14 e 17–20. Ogni pixel opaco resta nello stesso posto: camminata, sagoma, accessori e piedi non cambiano. Ricolorati a zone capelli, giacche/maglie e pantaloni; carnagioni e contorni invariati. Il generatore riproducibile è `assets/people/sources/varianti-genera.py`.
+- 88 kind nuovi (47–134) entrano nella rotazione di passanti, residenti e clienti; gli esistenti 0–46 restano stabili. I 22 file aggiungono 765.427 byte. Nessuna trasformazione cromatica per frame: il renderer usa i PNG già pronti.
+- Vedere PAUSA › NOVITÀ › `varianti-pedoni` › VAI A VEDERE su Via Roma e lo screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-varianti/`. Giudicare varietà di vestiti e capelli, leggibilità alla scala reale e coerenza con gli altri pedoni. Grafica **PROVVISORIA, da approvare da Simone**; telefono reale non provato.
+
+### 2026-10-21 — Vita di quartiere, persone ferme (CODEX-GH) — PROVVISORIO, da approvare da Simone
+- Sprite pedoni già presenti per coppie e piccoli gruppi davanti ai locali OSM, alle due chiese e al mercato; due anziani al Municipio; posa frontale ferma sulle panchine del gioco. Nessun asset nuovo. `npc-idle.mjs` usa solo coordinate ricavate dai dati già caricati, valida su marciapiede e lascia liberi gli ingressi.
+- Fino a 40 figure nell'intero comune, più visibili alle 10–13 e 17–21, quasi assenti di notte; non entrano nella collisione e si spostano brevemente quando il giocatore è vicino. Sguardi dei gruppi aggiornati ogni 3–6 secondi.
+- Da giudicare in PAUSA › NOVITÀ › `vita-di-quartiere` › VAI A VEDERE (porta alle 11:00) e nello screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-quartiere/`. Nessun circolo localizzabile né tavolino esterno nei dati caricati: non rappresentati. **PROVVISORIO, da approvare da Simone**.
+
+### 2026-10-21 — Pose ferme per vita di quartiere (CODEX-GH) — PROVVISORIO, da approvare da Simone
+- 34 fogli 96×160: seduto, in piedi rilassato in due frame, appoggiato lateralmente. I fogli derivano dai personaggi esistenti; colori e identità restano coerenti. Peso complessivo 227 KB.
+- Da vedere in PAUSA › NOVITÀ › `pose-fermi` › VAI A VEDERE alle 11:00 e negli screenshot 3× di panchina e gruppetto in `/home/ubuntu/codex-gh-lavoro/sim-pose/`. **PROVVISORIO, da approvare da Simone**.
+
+### 2026-10-21 — Giochi di strada (CODEX-GH) — PROVVISORIO, da approvare da Simone
+- Ragazzini con pallone pixel art 4×4, corse brevi e passaggi nella villa, sui campetti e in slarghi pedonali; anziani seduti con carte a due tavolini semplici in villa e al Municipio.
+- PAUSA › NOVITÀ › `giochi-di-strada` › VAI A VEDERE porta alle 17:30; screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-giochi/`. **PROVVISORIO, da approvare da Simone**.
+
+### 2026-10-21 — Animali di strada (CODEX-GH) — PROVVISORIO, da approvare da Simone
+- Piccioni grigi e bianchi in gruppi piccoli, con due frame a terra e due in volo; gatti di tre mantelli, seduti o in passo. Le posizioni seguono piazze, chiese, mercato, villa e parcheggi già presenti nella mappa.
+- PAUSA › NOVITÀ › `animali-di-strada` › VAI A VEDERE; screenshot 3× di stormo e gatto in `/home/ubuntu/codex-gh-lavoro/sim-animali/`. **PROVVISORIO, da approvare da Simone**.

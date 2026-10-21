@@ -6,21 +6,24 @@
  */
 import {visualRoadWidth,setRoadWidthMode,getRoadWidthMode} from './road-widths.mjs?v=044';
 import {fetchOverpass,inside} from './osm.mjs';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition,balanceTraffic,createGateVehicle} from './roads.mjs?v=164';
-import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=014';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition,balanceTraffic,createGateVehicle} from './roads.mjs?v=165';
+import {createCommuter,stepCommuter,kerbSpot,carEdgeFor,planRoute,routeLength} from './npc-commute.mjs?v=015';
 import {drawBorderGates,borderGateList,borderRing,distanceToBorder,GATE_RULES} from './border-gates.mjs?v=002';
-import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=011';
+import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=012';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock,npcWeekday} from './npc-agenda.mjs?v=002';
-import {createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols,loadMarketArt} from './market.mjs?v=007';
+import {createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols,loadMarketArt} from './market.mjs?v=008';
 import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=002';
 import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote,vendorShops} from './local-shops.mjs?v=003';
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
 import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=006';
 import {createSocial,stepSocial} from './npc-social.mjs?v=004';
-import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=006';
-import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=006';
+import {createIdlePeople,stepIdlePeople,drawIdlePeople,loadIdlePoseSheets} from './npc-idle.mjs?v=003';
+import {createStreetGames,stepStreetGames,drawStreetGames} from './npc-giochi.mjs?v=001';
+import {createAnimals,stepAnimals,drawAnimals,loadAnimalSprites} from './animali.mjs?v=001';
+import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=007';
+import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=007';
 import {trafficTargetAt} from './traffic-rush.mjs?v=001';
 import {daylightAt,paintLightMap,paintGlows,headlightLights,vehicleLamps,litWindowPath,nightQuality,NIGHT_DARKNESS} from './daylight.mjs?v=002';
 import {makeCollisionIndex,collidesWithTraffic,vehiclesOverlap,nearbyColliders,vehicleShape,trafficMoveBlocked,trafficMoveBlocker,addToCollisionIndex} from './traffic-collision.mjs?v=131';
@@ -38,12 +41,13 @@ import {riderPickups,riderDestinations,riderOffers,riderVehicleCheck,acceptOffer
 import {openGoriziana,isGorizianaOpen} from './minigame-goriziana.mjs?v=001';
 import {openPoolMachine,isPoolOpen} from './minigame-pool.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
-import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes,SANTA_MARIA_OSM_ID} from './city-art.mjs?v=137';
+import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes,SANTA_MARIA_OSM_ID} from './city-art.mjs?v=138';
 import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
 import {loadCarSprites,drawCarSprite,carDrawSize,CAR_TRAFFIC_SPRITE_IDS,CAR_TRAFFIC_STRIDE,CAR_PARKED_SPRITE_IDS,APE_CAR_IDS,COURIER_IDS,REFUSE_TRUCK_IDS,TOW_TRUCK_IDS,BUS_IDS} from './car-sprites.mjs?v=118';
 import {DAMAGE_RULES,DAMAGE_LABEL,addDamage,damagePoints,damageLevel,damagedProfile,repairCost,payRepair,repairMessage,healOutOfView,drawVehicleDamage,placeWorkshop,nearWorkshop,drawWorkshop} from './vehicle-damage.mjs?v=001';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=002';
-import {loadExtraPedestrianSprites,loadPedestrianSheets} from './extra-pedestrian-sprites.mjs?v=006';
+import {loadExtraPedestrianSprites,loadPedestrianSheets,PEDESTRIAN_KIND_COUNT} from './extra-pedestrian-sprites.mjs?v=007';
+import {applyLoadingScreen} from './loading-screens.mjs?v=001';
 import {loadFryerSprite} from './friggitore-sprites.mjs?v=002';
 import {loadProfessionSprites} from './profession-sprites.mjs?v=003';
 import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=007';
@@ -61,13 +65,13 @@ import {buildTurnGuides,guideIntersection} from './intersection-assist.mjs?v=097
 import {reboundCar,advanceRecoil} from './car-rebound.mjs?v=098';
 import {canDriveProbe} from './road-clearance.mjs?v=100';
 import {roofRevealTarget,easeRoofReveal,traceRoofCover} from './roof-reveal.mjs?v=121';
-import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=011';
+import {resolveBankEntrances,nearestBankEntrance,drawBankEntrance,drawBankInterior,stepBankInteriorPlayer,bankInteriorCamera,BANK_FOOT_ZOOM_MULTIPLIER} from './bank-interior.mjs?v=012';
 import {applyNonlethalImpact,advanceNonlethalImpact,sweptVehicleContact,slowImpactSource,IMPACT_MIN_SPEED} from './impact-physics.mjs?v=006';
-import {resolveShopEntrances,nearestShopEntrance,drawShopEntrance,enterShop,stepShopInteriorPlayer,shopInteriorCamera,interiorCounterNear,drawShopInterior,outdoorShops,entranceAtSign,interiorGameNear,startBarGame,endBarGame,footprintArea} from './shop-interiors.mjs?v=004';
+import {resolveShopEntrances,nearestShopEntrance,drawShopEntrance,enterShop,stepShopInteriorPlayer,shopInteriorCamera,interiorCounterNear,drawShopInterior,outdoorShops,entranceAtSign,interiorGameNear,startBarGame,endBarGame,footprintArea} from './shop-interiors.mjs?v=005';
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
-import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=002';
+import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=003';
 import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches,PITCH_RULES} from './football-pitches.mjs?v=001';
 import {GARAGES,nearestGarage,canStoreVehicle,depositVehicle,takeVehicle,vehicleFromEntry,chooseExitSpot,garageMessage,vehicleLabel,ownedEntry,ownedCount,garageById,GARAGE_SLOTS,drawGarage} from './garages.mjs?v=001';
 import {paintOptions,paintName,PERF_LEVELS,perfPrice,PAINT_PRICE,NEON_PRICE,NEON_COLORS,tunedProfile,buyTuning,tuningMessage,drawNeonUnderglow,neonNightGlows} from './tuning.mjs?v=001';
@@ -77,7 +81,7 @@ import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
 import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=012';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=018';
 // Lotto 15: dialoghi con volto (prototipo per la storyline, PROVVISORIO): barra in basso + riquadro del personaggio.
 import {openDialogue,isDialogueOpen,DEMO_DIALOGUE} from './dialogue.mjs?v=001';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
@@ -188,7 +192,7 @@ function openPoolGame(){
  return openPoolMachine({storage:globalThis.localStorage,onExit:()=>{carRadio.duck(false);canvas.focus?.({preventScroll:true});updateHud();}});
 }
 const FORCED_WEATHER=(()=>{const w=new URLSearchParams(globalThis.location?.search||'').get('meteo');return ['pioggia','nuvoloso','sereno'].includes(w)?w:null;})();
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],idle:null,streetGames:null,animals:null,dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 // BF14: the world scale in use (read by the PAUSE › NOVITÀ entry and by the tests).
 state.worldScale=Object.freeze({vehicle:VEHICLE_SCALE,person:PERSON_SCALE});
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
@@ -499,6 +503,25 @@ function createMelitoMarket(){
   ...(state.doors||[]).map(d=>({x:d.x,y:d.y,r:2.6})),...state.cars.map(v=>({x:v.x,y:v.y,r:vs(3.4),walkR:vs(2.4),crown:vs(3.2)})),
   ...(state.signalPosts||[]).map(q=>({x:q.x,y:q.y,r:1.4}))];
  return createMarket({roads:state.roads,walkable,carriageway,obstacles,roadHalf:road=>visualRoadWidth(road)/2});
+}
+function createNeighbourhoodIdle(){
+ const idleStand=(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y);
+ state.idle=createIdlePeople({map:state.map,graph:state.graph,props:state.props,market:state.market,
+  doors:state.doors||[],canStand:idleStand,onRoad:onCarriageway,kindCount:PEDESTRIAN_KIND_COUNT});
+ stepIdlePeople(state.idle,0,{minutes:state.npcClockMinutes,player:state.player,
+  canStand:idleStand,onRoad:onCarriageway,doors:state.doors||[]});
+}
+function createNeighbourhoodGames(){
+ const safe=(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y);
+ state.streetGames=createStreetGames({map:state.map,enclosures:state.enclosures,pitches:state.pitches,
+  graph:state.graph,doors:state.doors||[],canStand:safe,onRoad:onCarriageway});
+ stepStreetGames(state.streetGames,0,{minutes:state.npcClockMinutes,player:state.player,
+  canStand:safe,onRoad:onCarriageway,matchOpen:isFootballOpen()});
+}
+function createNeighbourhoodAnimals(){
+ const safe=(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y);
+ state.animals=createAnimals({map:state.map,roads:state.roads,enclosures:state.enclosures,
+  market:state.market,parked:state.cars,doors:state.doors||[],canStand:safe,onRoad:onCarriageway});
 }
 function stepMelitoMarket(dt){
  if(!state.market)return;
@@ -842,7 +865,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  }
  state.traffic=createTraffic(START_MINUTE);prepareSignals();
  createShopEntrances();
- state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();state.service=createServices();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();state.service=createServices();createNeighbourhoodIdle();createNeighbourhoodGames();createNeighbourhoodAnimals();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
@@ -1139,6 +1162,12 @@ function updateTraffic(dt){
   say:(agent,text)=>state.events&&cityEventBubble(state.events,agent,text)};
  stepAgents(state.graph,state.people.filter(a=>!a.frozen),elapsed,state.player,{parked:state.cars,traffic:state.traffic,view,validRecovery:canKnockbackMove,npcClockMinutes:state.npcClockMinutes,
   kerbWait:agent=>kerbWait(state.reactions,agent,state.graph,life)});
+ stepIdlePeople(state.idle,elapsed,{minutes:state.npcClockMinutes,player:state.player,
+  canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,doors:state.doors||[]});
+ stepStreetGames(state.streetGames,elapsed,{minutes:state.npcClockMinutes,player:state.player,
+  canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,matchOpen:isFootballOpen()});
+ stepAnimals(state.animals,elapsed,{player:state.player,vehicles:[...state.traffic,...state.cars],
+  canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,doors:state.doors||[]});
  // Q13: rush hours. The hour curve sets how many vehicles drive; BF09 balanceTraffic is the one place
  // that adds and removes them, through the border gates.
  state.trafficTarget=trafficTargetAt(state.npcClockMinutes,TRAFFIC_COUNT);
@@ -1775,6 +1804,7 @@ function compareRoadWidths(){
  state.propsGrid=makeIndex(state.props);
  state.shops=prepareStorefronts(state.map.pois||[],state.roads);
  state.shopGrid=makeIndex(state.shops);
+ createNeighbourhoodIdle();createNeighbourhoodGames();createNeighbourhoodAnimals();
  updateRoadWidthLabel();
  roofReveal.clear();
 }
@@ -2198,6 +2228,9 @@ function draw(dt=0){
  const inFront=state.people.filter(q=>q.scripted&&q.washer?.car&&!q.indoors&&q.y>q.washer.car.y);
  for(const q of inFront)q.indoors=true;
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
+ if(state.idle)drawIdlePeople(c,state.idle,state.clock,[x0,y0,x1,y1],alpha);
+ if(state.streetGames)drawStreetGames(c,state.streetGames,state.clock,[x0,y0,x1,y1]);
+ if(state.animals)drawAnimals(c,state.animals,[x0,y0,x1,y1]);
  if(state.market)drawCityPeople(c,state.market.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  // Q20: autista del corriere e operatore della nettezza urbana (figure di servizio, non NPC della città).
  if(state.service?.figures.length)drawCityPeople(c,state.service.figures,state.graph,state.clock,[x0,y0,x1,y1],1);
@@ -2597,7 +2630,15 @@ function bind(){
   renderNovita($('novita-list'),{state,judgements:novitaJudgements,
    onGo:entry=>{if(goToNovita(entry))closePause();},
    // Lotto 15: PROVA apre il dialogo di esempio con i sei volti (nessun aggancio alle missioni).
-   onProva:entry=>{if(entry.prova==='dialogo'){closePause();openDialogue(DEMO_DIALOGUE);}},
+   onProva:entry=>{
+    if(entry.prova==='dialogo'){closePause();openDialogue(DEMO_DIALOGUE);}
+    if(entry.prova==='caricamento'){
+     closePause();applyLoadingScreen();
+     $('loading-title').textContent='MELITO IN ARTWORK';
+     $('loading-text').textContent='Una scena diversa a ogni avvio.';
+     $('retry').hidden=true;$('loading-preview-close').hidden=false;$('loading').hidden=false;
+    }
+   },
    onJudge:(id,value)=>{novitaJudgements=toggleJudgement(novitaJudgements,id,value);saveJudgements(globalThis.localStorage,novitaJudgements);refreshNovita();}});
   const done=Object.keys(novitaJudgements).length,total=NOVITA.filter(e=>!e.futura).length;
   $('novita-count').textContent=done+' giudicate su '+total;
@@ -2702,6 +2743,7 @@ function bind(){
  }
 
  $('retry').addEventListener('click',load);
+ $('loading-preview-close').addEventListener('click',()=>{$('loading-preview-close').hidden=true;$('loading').hidden=true;});
  $('zoom-in').addEventListener('click',()=>{state.zoomBias=clamp(state.zoomBias*1.17,.62,1.35);});
  $('zoom-out').addEventListener('click',()=>{state.zoomBias=clamp(state.zoomBias/1.17,.62,1.35);});
  $('zoom-auto').addEventListener('click',()=>{state.zoomBias=1;});
@@ -2716,4 +2758,4 @@ function bind(){
  },{passive:false});
 }
 loadChurchWebp(()=>{staticTiles.clear();pendingTile=null;});
-loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSheets();loadMarketArt();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();
+applyLoadingScreen();loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSheets();loadIdlePoseSheets();loadAnimalSprites();loadMarketArt();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();

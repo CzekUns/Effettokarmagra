@@ -125,3 +125,45 @@ Volti in `assets/portraits/` (PNG 256×256 dai JPG 1024×1024 di CODEX-GH; promp
 | id | Elemento | Lavoro / PR | Dove guardare | Ora / parametri | Cosa giudicare |
 |---|---|---|---|---|---|
 | `lotto17-20-pedoni` | Sedici personaggi nei fogli 17–20: postino, pizzaiolo, netturbino, prete; turista, ragazzo con skateboard, donna in tailleur, anziano col giornale; mamma col bambino, ragazza col cane, uomo in sedia a rotelle, delivery; nonna con scopa, scolaro, uomo in tuta col telefono, donna col carrello | Lotti 17–20 · CODEX-GH / ramo `lotto17`, PR da aprire da Claude | Via Roma: PAUSA › NOVITÀ › VAI A VEDERE cerca il pedone dei kind 31–46 più vicino | giorno | Stile e leggibilità dei 16 soggetti; in particolare bambino e cane nella cella 24×40, sedia a rotelle con ruote animate, scolaro più basso; pose nelle quattro direzioni e scala accanto agli altri passanti. Grafica **PROVVISORIA, da approvare da Simone**. |
+
+### Schermate di caricamento a rotazione — artwork di Melito (21 ottobre 2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+
+| id | Elemento | Lavoro / PR | Dove guardare | Ora / parametri | Cosa giudicare |
+|---|---|---|---|---|---|
+| `caricamento-artwork` | Sei artwork (mercato, campetto, villa comunale, Via Roma con pizzeria, mercato all’alba, festa patronale) più il render del gioco, alternati all’avvio | Caricamento · CODEX-GH / ramo `caricamento`, PR a cura di Claude | PAUSA › NOVITÀ › `caricamento-artwork` › PROVA; riaprire il gioco per vedere la rotazione | PC 1280×720; telefono orizzontale 844×390 | Coerenza con Melito, varietà delle scene, leggibilità di titolo e barra in basso; le artwork sono **PROVVISORIE, da approvare da Simone**. |
+
+I file sono in `assets/ui/loading-art-*`; la scena del Municipio è esclusa perché la torre raffigurata non è corretta. `loading-screens.mjs` conserva l’ultimo id nel browser e seleziona un’altra scena all’avvio successivo. `loading` resta HTML; la fascia scura è CSS.
+
+### Varianti di colore dei pedoni (21 ottobre 2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+
+| id | Elemento | Lavoro / PR | Dove guardare | Ora / parametri | Cosa giudicare |
+|---|---|---|---|---|---|
+| `varianti-pedoni` | Due varianti di abiti e capelli per 11 fogli di pedoni già presenti; 88 kind nuovi, 47–134 | Varianti pedoni · CODEX-GH / ramo `varianti`, PR a cura di Claude | PAUSA › NOVITÀ › `varianti-pedoni` › VAI A VEDERE cerca il nuovo pedone più vicino su Via Roma | giorno, scala normale e screenshot 3× | Colori distinguibili, coerenza con la pixel art, leggibilità in camminata e carnagioni lasciate come nell'originale. **PROVVISORIO, da approvare da Simone**. |
+
+I 22 PNG stanno in `assets/people/`; il generatore unico è `assets/people/sources/varianti-genera.py`. Peso dei nuovi PNG: 765.427 byte, sotto 1 MB. I kind precedenti 0–46 restano invariati; il gioco legge già `PEDESTRIAN_KIND_COUNT` per passanti, residenti e clienti.
+
+### Vita di quartiere — persone ferme (21 ottobre 2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+
+| id | Elemento | Lavoro / PR | Dove guardare | Ora / parametri | Cosa giudicare |
+|---|---|---|---|---|---|
+| `vita-di-quartiere` | Gruppi di 2–3 davanti ai locali, alle chiese e al mercato; panchine occupate; due anziani al Municipio | Vita di quartiere · CODEX-GH / ramo `quartiere`, PR a cura di Claude | PAUSA › NOVITÀ › `vita-di-quartiere` › VAI A VEDERE, gruppetto più vicino | 11:00, più presenze 10–13 e 17–21 | Densità, naturalezza delle pose e dei cambi di sguardo, assenza di ostacoli su strada e ingressi. **PROVVISORIO, da approvare da Simone**. |
+
+`npc-idle.mjs` prende gli ancoraggi dai dati OSM caricati e dalle panchine/banchi già costruiti dal gioco. Non sono stati trovati un circolo localizzabile o tavolini all'aperto; non sono stati inventati. Le figure non entrano nelle collisioni e usano gli sprite già approvati o provvisori.
+
+### Pose ferme per vita di quartiere (21 ottobre 2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+
+| Voce | Cosa guardare | Lavoro | Dove | Quando | Stato |
+|---|---|---|---|---|---|
+| `pose-fermi` | Seduti sulle panchine, gesto alternato nei gruppetti, alcuni appoggiati ai bar | Pose ferme · CODEX-GH / ramo `pose`, PR a cura di Claude | PAUSA › NOVITÀ › `pose-fermi` › VAI A VEDERE | 11:00 | 34 fogli derivati, 227 KB totali; **PROVVISORIO, da approvare da Simone**. |
+
+### Giochi di strada (21 ottobre 2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+
+| Voce | Cosa guardare | Lavoro | Dove | Quando | Stato |
+|---|---|---|---|---|---|
+| `giochi-di-strada` | Bambini che si passano il pallone e anziani seduti a carte | Giochi di strada · CODEX-GH / ramo `giochi-strada`, PR a cura di Claude | PAUSA › NOVITÀ › `giochi-di-strada` › VAI A VEDERE | 17:30; bambini 16–20 scuola / 10–20 weekend, carte 9–12 e 16–19 | Posizioni e leggibilità da giudicare; **PROVVISORIO, da approvare da Simone**. |
+
+### Animali di strada (21 ottobre 2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+
+| Voce | Cosa guardare | Lavoro | Dove | Quando | Stato |
+|---|---|---|---|---|---|
+| `animali-di-strada` | Piccioni nelle piazze che si alzano in volo; gatti presso muretti e auto in sosta | Animali di strada · CODEX-GH / ramo `animali`, PR a cura di Claude | PAUSA › NOVITÀ › `animali-di-strada` › VAI A VEDERE | Sempre | Sprite e densità da giudicare; **PROVVISORIO, da approvare da Simone**. |

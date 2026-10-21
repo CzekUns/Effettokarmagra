@@ -188,7 +188,7 @@ test('lotti 13–14: ogni foglio si carica a parte e disegna la cella giusta, al
 
 test('lotti 13–14: i kind nuovi (23–30) compaiono davvero fra i pedoni generati, insieme a tutti gli altri',()=>{
  const graph=buildRoadGraph([{id:1,n:'Via Roma',t:'residential',w:8,p:[0,0,450,0,900,0]},{id:2,n:'Traversa',t:'residential',w:6,p:[450,-200,450,0,450,200]}]);
- const people=createAgents(graph,120,310,'walk',[]);
+ const people=createAgents(graph,PEDESTRIAN_KIND_COUNT+20,310,'walk',[]);
  assert.ok(people.length>=62,'abbastanza passanti per vedere tutti i kind: '+people.length);
  const kinds=new Set(people.map(p=>p.kind));
  for(let k=0;k<PEDESTRIAN_KIND_COUNT;k++)assert.ok(kinds.has(k),'kind '+k+' presente');
@@ -227,7 +227,7 @@ test('lotti 13–14: collegamento nel gioco, voce NOVITÀ, registri e versioni u
   for(const src of sources)for(const m of src.matchAll(new RegExp('\\./'+mod+'\\.mjs\\?v=(\\d+)','g')))found.add(m[1]);
   assert.equal(found.size,1,mod+'.mjs importato con una sola versione: '+[...found].join(','));
  }
- assert.match(game,/extra-pedestrian-sprites\.mjs\?v=006/);
- assert.match(game,/novita\.mjs\?v=012/);
+ assert.match(game,/extra-pedestrian-sprites\.mjs\?v=007/);
+ assert.match(game,/novita\.mjs\?v=018/);
  assert.ok(Number((page.match(/game\.mjs\?v=(\d+)/)||[])[1])>=208,'game.mjs?v= aggiornato');
 });

@@ -4,7 +4,7 @@
  * proprietario può rifarla nello stile originale. Ogni voce sa dove trovare un esempio vero nella
  * mappa (VAI A VEDERE: posto, ora, meteo); i giudizi MI PIACE / DA RIFARE restano solo in questo
  * browser e si copiano come testo. Tenere allineato con NOVITA_DA_APPROVARE.md. */
-import {LOTTO2_PEDESTRIAN_NPC_START_KIND,pedestrianSheet} from './extra-pedestrian-sprites.mjs?v=006';
+import {LOTTO2_PEDESTRIAN_NPC_START_KIND,PEDESTRIAN_VARIANT_FIRST_KIND,pedestrianSheet} from './extra-pedestrian-sprites.mjs?v=007';
 const LOTTO10_12_FIRST_KIND=pedestrianSheet('lotto10').startKind;// lotti 10–12: kind 11–22
 const LOTTO10_12_LAST_KIND=pedestrianSheet('lotto12').startKind+3;
 const LOTTO13_14_FIRST_KIND=pedestrianSheet('lotto13').startKind;// lotti 13–14: kind 23–30
@@ -159,6 +159,25 @@ export const NOVITA=Object.freeze([
  {id:'lotto17-20-pedoni',nome:'Lotti 17–20: 16 pedoni nuovi (mestieri, famiglie e passanti)',lavoro:'Lotti 17–20 · CODEX-GH',pr:'in revisione',
   cosa:'Quattro fogli di CODEX-GH, kind 31–46: postino, pizzaiolo, netturbino, prete; turista, ragazzo con skateboard, donna in tailleur, anziano col giornale; mamma col bambino, ragazza col cane, uomo in sedia a rotelle, ragazzo delivery; nonna con scopa, scolaro, uomo in tuta col telefono, donna col carrello. Frame adattati dalla tavola madre, scala e pivot degli altri pedoni. Si vedono fra passanti, residenti e clienti del mercato; VAI A VEDERE cerca il più vicino su Via Roma. Grafica PROVVISORIA, da approvare da Simone.',
   trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO17_20_FIRST_KIND&&q.kind<=LOTTO17_20_LAST_KIND),s)||roadMiddle(s,'Via Roma')},
+ {id:'varianti-pedoni',nome:'Varianti di colore: più volti nella popolazione',lavoro:'Varianti pedoni · CODEX-GH',pr:'in revisione',
+  cosa:'Due varianti di vestiti e capelli per la tavola madre, il lotto 2 e i lotti 10–14 e 17–20. Sono 22 fogli pronti, senza ricolorazione durante il gioco: pose, trasparenza, carnagioni e kind originali restano uguali. Le nuove identità si mescolano a passanti, residenti e clienti del mercato. Grafica PROVVISORIA, da approvare da Simone.',
+  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=PEDESTRIAN_VARIANT_FIRST_KIND),s)||roadMiddle(s,'Via Roma')},
+ {id:'vita-di-quartiere',nome:'Vita di quartiere: persone ferme presso bar, chiese, mercato e panchine',lavoro:'Vita di quartiere · CODEX-GH',pr:'in revisione',
+  cosa:'Piccoli gruppi fermi davanti ai locali OSM, alle due chiese e ai banchi del mercato; persone sulle panchine già disegnate e due anziani davanti al Municipio. Più presenti alle 10–13 e 17–21, quasi assenti di notte. Non bloccano il giocatore e si scostano quando passa vicino. Nessun tavolino all’aperto o circolo localizzato nei dati caricati. Grafica PROVVISORIA, da approvare da Simone.',
+  ora:11*60,trova:s=>near((s?.idle?.spots||[]).slice(0,36),s)||roadMiddle(s,'Via Roma')},
+ {id:'pose-fermi',nome:'Pose ferme: seduti, in chiacchiera e appoggiati',lavoro:'Pose ferme · CODEX-GH',pr:'in revisione',
+  cosa:'Le persone della vita di quartiere ora hanno pose dedicate: gambe piegate sulle panchine, un piccolo gesto che alterna due frame nei gruppetti, postura laterale appoggiata presso alcuni bar. Fogli derivati da tutti i pedoni esistenti, comprese le varianti; nessun nuovo kind. Grafica PROVVISORIA, da approvare da Simone.',
+  ora:11*60,trova:s=>near((s?.idle?.spots||[]).filter(q=>q.activity==='bench'||q.pose==='leaning'),s)||near(s?.idle?.spots,s)||roadMiddle(s,'Via Roma')},
+ {id:'giochi-di-strada',nome:'Giochi di strada: bambini a pallone e anziani a carte',lavoro:'Giochi di strada · CODEX-GH',pr:'in revisione',
+  cosa:'Nella villa comunale, nei campetti e negli slarghi pedonali alcuni ragazzini si passano un pallone; nella villa e davanti al Municipio due tavolini ospitano anziani che giocano a carte. Si fermano un attimo se il giocatore passa in mezzo, senza collisioni. Bambini 16–20 nei giorni di scuola e 10–20 nel weekend; carte 9–12 e 16–19. Grafica PROVVISORIA, da approvare da Simone.',
+  ora:17*60+30,trova:s=>near((s?.streetGames?.ballGroups||[]).map(g=>g.center),s)||
+   near((s?.streetGames?.cardTables||[]).map(t=>t.center),s)||roadMiddle(s,'Via Roma')},
+ {id:'animali-di-strada',nome:'Animali di strada: piccioni e gatti',lavoro:'Animali di strada · CODEX-GH',pr:'in revisione',
+  cosa:'Piccoli stormi di piccioni grigi e bianchi nelle piazze, presso le chiese, il mercato e la villa; se il giocatore o un’auto arriva vicino, volano via e poi si posano. Gatti tigrati, neri e bianchi/rossi vicino ai muretti e alle auto parcheggiate; si allontanano con calma. Non bloccano e non feriscono nessuno. Grafica PROVVISORIA, da approvare da Simone.',
+  ora:11*60,trova:s=>near((s?.animals?.flocks||[]).map(f=>f.center),s)||near(s?.animals?.cats,s)||roadMiddle(s,'Via Roma')},
+ {id:'caricamento-artwork',nome:'Schermate di caricamento: sei artwork di Melito e il render del gioco',lavoro:'Caricamento · CODEX-GH',pr:'in revisione',
+  cosa:'Sette sfondi a rotazione: Via Roma nel gioco, mercato, campetto, villa comunale, pizzeria di Via Roma, mercato all’alba e festa patronale. L’ultima schermata vista non ricompare subito. PROVA mostra l’anteprima successiva senza lasciare il gioco; la fascia scura mantiene leggibili titolo, testo e barra. Artwork PROVVISORIE, da approvare da Simone.',
+  prova:'caricamento',trova:null},
  {id:'dialogo-volti',nome:'Lotto 15: dialoghi con volto — barra di testo in basso e riquadro del personaggio (6 volti artwork)',lavoro:'Lotto 15 · CODEX-GH',pr:'in revisione',
   cosa:'Prototipo per i dialoghi delle missioni (decisione di Simone del 21/10): una barra scura nella parte bassa dello schermo con il nome in maiuscolo e il testo che scorre a macchina da scrivere, e accanto il riquadro con il volto di chi parla (illustrazioni cel-shaded di CODEX-GH: nonna severa, meccanico, ragazza con le cuffie, vigile urbano, barista anziano, ragazzo quindicenne; personaggi inventati). PROVA apre un dialogo di esempio di 6 battute: un tocco sulla barra, INVIO/SPAZIO o AVANTI completano la riga o passano alla battuta dopo; mentre è aperto i comandi di movimento sono fermi ma il paese va avanti. Non ancora agganciato alle missioni. Grafica PROVVISORIA.',
   prova:'dialogo',trova:null}
