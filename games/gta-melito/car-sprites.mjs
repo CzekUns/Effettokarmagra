@@ -1,5 +1,6 @@
 /* GTA Melito — compact top-down PNG vehicle skins. Panda PNGs unchanged.
  * Punto 188 and Ypsilon 2003: 16 recolored cars, clean transparent 4x4 PNG atlas, 40x60/cell.
+ * Lotto 1: Grande Punto 2005 and Ypsilon III 2011, same 4x4 40x60 grid (atlas by CODEX-GH).
  * Body colors are illustrative, not all factory paint codes verified.
  */
 export const CAR_SPRITES=Object.freeze({
@@ -22,12 +23,17 @@ export const CAR_ATLAS_VARIANT_IDS=Object.freeze(Object.keys(CAR_ATLAS_VARIANTS)
 export const EXTRA_CAR_ATLASES=Object.freeze({
  '@seicento-500-atlas':'./assets/vehicles/seicento-500-16colors-rgba.png',
  '@uno-smart-atlas':'./assets/vehicles/uno-smart-16colors-rgba.png',
+ // Lotto 1 (CODEX-GH, 2026-10-21): Fiat Grande Punto 2005 and Lancia Ypsilon III 2011, RGBA atlas drawn by
+ // code (sources/grande-punto-ypsilon3-16-genera.py). PROVISIONAL art, to be approved by Simone.
+ '@grande-punto-ypsilon3-atlas':'./assets/vehicles/grande-punto-ypsilon3-16-rgba.png',
 });
 const EXTRA_MODELS=Object.freeze([
  {model:'seicento-1998',atlas:'@seicento-500-atlas',offset:0,colors:['white','red','blue','silver','black','yellow','green','champagne']},
  {model:'fiat-500-2007',atlas:'@seicento-500-atlas',offset:8,colors:['white','black','red','lightblue','blue','silver','cream','graphite']},
  {model:'fiat-uno-1983',atlas:'@uno-smart-atlas',offset:0,colors:['white','red','blue','silver','graphite','black','green','champagne']},
  {model:'smart-fortwo-2007',atlas:'@uno-smart-atlas',offset:8,colors:['white','black','red','lightblue','blue','silver','yellow','green']},
+ {model:'grande-punto-2005',atlas:'@grande-punto-ypsilon3-atlas',offset:0,colors:['white','red','blue','silver','graphite','black','lightblue','beige']},
+ {model:'ypsilon-2011',atlas:'@grande-punto-ypsilon3-atlas',offset:8,colors:['white','red','silver','graphite','black','blue','beige','purple']},
 ]);
 export const EXTRA_CAR_VARIANTS=Object.freeze(Object.fromEntries(
  EXTRA_MODELS.flatMap(({model,atlas,offset,colors})=>
@@ -93,6 +99,8 @@ const MODEL_DRAW_SIZE=Object.freeze({
  'punto-188':[5.45,8.75],'ypsilon-2003':[5.25,8.55],
  'seicento-1998':[4.9,7.6],'fiat-500-2007':[5.15,8],
  'fiat-uno-1983':[5.1,8.15],'smart-fortwo-2007':[4.7,6.45],
+ // Lotto 1: same footprint as the Punto 188 / Ypsilon 2003 they stand beside.
+ 'grande-punto-2005':[5.45,8.75],'ypsilon-2011':[5.25,8.55],
  'ape-car-azzurra':[4.1,6.25],'furgone-fritti':[5.65,8.65],
  'ape-mercato':[5.7,6.9],'furgone-ambulante':[7.9,9.3],'ape-classica':[5.7,6.9],
  // Q18: whole 52x92 cell; the van body is then ~5,7 x 9,4 and the refuse truck ~6,3 x 12,4.

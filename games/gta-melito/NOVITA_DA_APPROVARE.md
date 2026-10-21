@@ -47,3 +47,10 @@
 
 ### Torre del serbatoio a scacchi rossi (20 ottobre 2026)
 Al Municipio in Via Madrid (circa x=1314, y=825), PAUSA › NOVITÀ › TORRE: il PNG rosso/crema sostituisce integralmente il precedente rendering procedurale. Giudicare posizione, scala e trasparenza al passaggio; nessuna nuova geometria è stata aggiunta. I colori rossi sono stati richiesti dall'utente; i dettagli sono artistici.
+
+### Lotto 1 grafica — Fiat Grande Punto e Lancia Ypsilon III (2026-10-21, Claude + CODEX-GH) — grafica PROVVISORIA, da approvare da Simone
+| id | Elemento | Lavoro / PR | Dove guardare (esempio) | Ora / parametri | Cosa giudicare |
+|---|---|---|---|---|---|
+| `lotto1-auto` | Fiat Grande Punto (2005) e Lancia Ypsilon III (2011): 8 tinte ciascuna nel traffico e nei parcheggi | Lotto 1 · CODEX-GH / ramo `lotto1` | Via Roma, in mezzo alla strada (VAI A VEDERE porta lì, le auto passano davanti) | giorno | sagome dall'alto (musetto arrotondato e fari a goccia della Grande Punto; fianchi stretti e lunotto piccolo della Ypsilon), tinte e somiglianza con lo stile degli altri atlanti; tinte interpretate, non codici vernice |
+
+Atlante `assets/vehicles/grande-punto-ypsilon3-16-rgba.png` (160×240, 16 celle 40×60) disegnato da codice da CODEX-GH (`assets/vehicles/sources/grande-punto-ypsilon3-16-genera.py`, anteprima `grande-punto-ypsilon3-16-sheet.png`). Collegato nel gioco da Claude; se Simone boccia le sagome, il generatore si corregge e si rigenera l'atlante.

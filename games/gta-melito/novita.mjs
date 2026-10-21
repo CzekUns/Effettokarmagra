@@ -25,6 +25,7 @@ const bayPoint=s=>{const d=(s.from+s.to)/2,nx=-s.uy,ny=s.ux;
  return {x:s.ax+s.ux*d+nx*s.offset*s.side,y:s.ay+s.uy*d+ny*s.offset*s.side};};
 const vehicles=state=>[...(state?.cars||[]),...(state?.traffic||[])];
 const SERVICE_VAN=/corriere|courier/i, REFUSE_TRUCK=/nettezza|rifiut|compatt|refuse|garbage/i;
+const LOTTO1=/^(grande-punto-2005|ypsilon-2011)-/;
 const hasPassengers=v=>(Array.isArray(v?.passengers)&&v.passengers.length>0)||(Array.isArray(v?.occupants)&&v.occupants.length>0);
 
 /* Le voci: chi l'ha fatta, in quale PR, cosa guardare e dove (trova → punto da inquadrare).
@@ -104,6 +105,10 @@ export const NOVITA=Object.freeze([
  {id:'passeggeri',nome:'Passeggeri su auto e scooter',lavoro:'Q21',pr:'in arrivo',futura:true,
   cosa:'Passeggeri visibili in marcia, «E · DAI UN PASSAGGIO».',
   disponibile:s=>vehicles(s).some(hasPassengers),trova:s=>near(vehicles(s).filter(hasPassengers),s)},
+ {id:'lotto1-auto',nome:'Lotto 1: Fiat Grande Punto e Lancia Ypsilon III nel traffico',lavoro:'Lotto 1 · CODEX-GH',pr:'in revisione',
+  cosa:'Due modelli nuovi tra le auto del traffico e dei parcheggi, 8 tinte ciascuno (atlante pixel art disegnato da codice da CODEX-GH; tinte interpretate, non codici vernice). Guarda la fila di auto in Via Roma: musetto arrotondato e fari a goccia per la Grande Punto, fianchi stretti e lunotto piccolo per la Ypsilon.',
+  disponibile:s=>vehicles(s).some(v=>LOTTO1.test(v?.model||''))||!s?.traffic,
+  trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO1.test(v?.model||'')),s)},
  {id:'gare',nome:'Gare clandestine arcade: partenza, anelli, frecce e avversari',lavoro:'Q34',pr:'in revisione',
   cosa:'Bandiera a scacchi e cerchio alla partenza in periferia, 3 avversari fermi in griglia; in auto «E · GARA»: anelli gialli, frecce sull’asfalto, percorso in minimappa, cronometro e posizione. Evento di finzione, solo nel gioco.',
   disponibile:s=>!!s?.races?.routes?.length,trova:s=>near((s?.races?.routes||[]).map(r=>r.start),s)}
