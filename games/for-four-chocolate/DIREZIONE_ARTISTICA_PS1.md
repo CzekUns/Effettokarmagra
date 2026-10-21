@@ -1,5 +1,7 @@
 # DIREZIONE ARTISTICA VINCOLANTE — FOR FOUR CHOCOLATE
-**Aggiornamento: 21 ottobre 2026 · Correzione esplicita dell'utente dopo il primo vertical slice**
+**Aggiornamento originario: 21 ottobre 2026 · Correzione successiva: 22 ottobre 2026**
+
+> **GERARCHIA GRAFICA — 22 OTTOBRE:** l'unica reference grafica approvata è **[questa tavola](./references/gameplay-mgs-vr-artboard.webp)**, obbligatoria come descritto in **[AGENTS.md](./AGENTS.md)**. Tutti i riferimenti a Metal Gear/VR Missions qui sotto valgono solo per **telecamera, gameplay e proporzioni**, senza sostituire colori vivi, texture dense, personaggi definiti e illuminazione dell'immagine unica. Qualsiasi vecchia copertina, screenshot, tavola di stile, precedente render 3D o pixel art è storico e non approvato come alternativa.
 
 > **Target: Metal Gear Solid per PlayStation 1 (1998), non Commodore 64.**
 > La versione con pavimento a scacchiera, sprite 24×40, palette 20 colori, bordi netti e blocchi dall'alto è stata respinta come **troppo rudimentale**. È un prototipo di LOGICA utile per le meccaniche, non il riferimento estetico. Non usare più quei vincoli grafici come specifiche definitive.
@@ -11,7 +13,7 @@ Ricreare il *feeling* della telecamera e dei livelli stealth di **Metal Gear Sol
 Riferimenti concettuali (non copiare asset, personaggi, interfaccia o materiale protetto):
 - **Metal Gear Solid (PS1):** inquadratura dall'alto obliqua, ambienti low-poly reali, lettura tattica dei corridoi, pattuglie, controllo della visuale e tensione stealth;
 - un **supermercato realmente riconoscibile nella Repubblica Ceca**, corsie di generi alimentari con confezioni e cartelli cechi;
-- la copertina illustrata precedentemente generata nella conversazione (atmosfera, densità scenica, insegne ceche, protagonista con cappello), usata come *mood reference*, non come screenshot di gameplay né come asset di gioco.
+- **solo** l'artboard [gameplay-mgs-vr-artboard.webp](./references/gameplay-mgs-vr-artboard.webp) per **colori, texture, personaggi, luci, densità delle confezioni e ambiente**. Tutte le altre illustrazioni precedenti sono escluse.
 
 ## 2. Requisiti di resa
 
