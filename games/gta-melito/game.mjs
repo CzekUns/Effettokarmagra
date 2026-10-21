@@ -12,7 +12,7 @@ import {drawBorderGates,borderGateList,borderRing,distanceToBorder,GATE_RULES} f
 import {createRoutineResidents,createDoorVisitors,attachDoorToPavement} from './resident-routines.mjs?v=009';
 import {probeDoor,doorFacesViewer,drawDoorSteps,drawDoorFronts,DOOR_SOURCE} from './building-doors.mjs?v=001';
 import {NPC_START_MINUTE,advanceNpcClock,formatNpcClock,npcWeekday} from './npc-agenda.mjs?v=002';
-import {createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols} from './market.mjs?v=004';
+import {createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols,loadMarketArt} from './market.mjs?v=005';
 import {createCityEvents,stepCityEvents,cityEventAction,interactCityEvent,cityEventBubble,drawLostItem,drawCityEventOverlay} from './city-events.mjs?v=002';
 import {offersFor,nearestShop,buyOffer,addBoost,boostFactor,boostSecondsLeft,purchaseMessage,shopNote,vendorShops} from './local-shops.mjs?v=003';
 import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPuddles,drawUmbrella} from './weather.mjs?v=001';
@@ -77,7 +77,7 @@ import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
 import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=003';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=004';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
 import {PASSENGER_RULES,seatCapacity,ensureSeats,occupantsOf,freeSeat,boardPassenger,alightPassenger,hitchhikersNear,liftCandidate,liftDestination,alightSpot,doorSpots,trafficOccupants,lookOf,drawCabinOccupants} from './passengers.mjs?v=001';
 import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
@@ -2707,4 +2707,4 @@ function bind(){
  },{passive:false});
 }
 loadChurchWebp(()=>{staticTiles.clear();pendingTile=null;});
-loadMotorcycleSprites();loadExtraPedestrianSprites();loadLotto2PedestrianSprites();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();
+loadMotorcycleSprites();loadExtraPedestrianSprites();loadLotto2PedestrianSprites();loadMarketArt();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();
