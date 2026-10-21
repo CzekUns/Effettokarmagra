@@ -7,6 +7,7 @@
  * the same door. Doors of named OSM shops are marked 'osm-poi', the others 'inventata'. */
 import {makeCollisionIndex,addToCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked} from './traffic-collision.mjs?v=131';
 import {makeResidentAgenda,residentDepartureWindow} from './npc-agenda.mjs?v=002';
+import {PEDESTRIAN_KIND_COUNT} from './extra-pedestrian-sprites.mjs?v=003';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const hash=n=>{let x=(Number(n)||1)|0;x=Math.imul(x^x>>>16,2246822519);x=Math.imul(x^x>>>13,3266489917);return (x^x>>>16)>>>0;};
 const rand=n=>hash(n)/4294967295;
@@ -79,7 +80,7 @@ function residentAgent(graph,plan,seed,i,kindIndex=i){
  if(door){plan.lateral=door.lateral;plan.lateralGoal=door.lateral;}
  const start=door?{x:door.x,y:door.y,a:Math.atan2(-door.ny,-door.nx)}:at;
  return {...start,edge:plan.edge,t:plan.homeT,speed:.85+rand(seed+i*19)*.34,
-  kind:kindIndex%7,seed:seed+i*17,wait:1.1+rand(seed+i*17)*2.3,body:'walk',side:plan.side,
+  kind:kindIndex%PEDESTRIAN_KIND_COUNT,seed:seed+i*17,wait:1.1+rand(seed+i*17)*2.3,body:'walk',side:plan.side,
   routine:'resident',segments:0,residentRoutine:plan,braking:true,indoors:!!door,
   home:{x:at.x,y:at.y,edge:plan.edge,side:plan.side,radius:90,returnEdges:[plan.edge]}};
 }
