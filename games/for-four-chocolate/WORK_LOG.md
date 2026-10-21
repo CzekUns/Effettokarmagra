@@ -50,3 +50,10 @@
 - **Verifiche:** test Node della nuova logica e del vecchio prototipo; Chromium desktop 1200×930 e viewport mobile 390×844, WebGL avviato, nessun errore JavaScript, tastiera funzionante, nessun overflow mobile. Screenshot reali in `assets/ps1-sample-desktop.png` e `assets/ps1-sample-mobile.png`.
 - **Limitazioni:** **grafica provvisoria, da approvare da Simone**. Personaggi e prodotti sono modelli geometrici di esempio, senza uso di volti fotografici; su dispositivo Android reale resta da verificare il frame rate. Bottino, secondo agente, storia e punteggio seguono solo dopo il giudizio visivo. Il catalogo resta «anteprima».
 - **Riferimento:** ramo `ffc-ps1-campione`, PR separata da sottoporre a Simone senza merge autonomo.
+
+## 2026-10-21 — ChatGPT / merge campione PS1
+- **Fatto:** unita la PR #97 su `main`, mantenendo la scena 3D in `sample-ps1.html` separata da `index.html` (vertical slice 2D preesistente) e il catalogo in stato `preview`.
+- **Come e dove:** merge commit `f5b8e6c501d460bfd0ed379cafab4b85fab31d55`; nuovi file `ps1-sample.mjs`, `ps1-sample-logic.mjs`, CSS, test, screenshot e Three.js locale con licenza MIT.
+- **Verifiche:** GitHub conferma PR #97 merged e nessuna PR aperta; screenshot desktop e mobile della PR esaminati. Test automatici e gameplay Android **non rieseguiti qui**. Al controllo subito dopo il merge, i workflow di deploy erano `in_progress`.
+- **Da fare:** valutazione grafica dell'utente e test Android del campione, prima di estendere il rendering 3D al gioco intero. Non presentare questo esempio come grafica definitiva né sostituire automaticamente la pagina principale.
+- **Riferimenti:** https://github.com/CzekUns/Effettokarmagra/pull/97 · https://czekuns.github.io/Effettokarmagra/games/for-four-chocolate/sample-ps1.html
