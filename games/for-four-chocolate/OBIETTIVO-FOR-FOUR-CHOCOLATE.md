@@ -21,6 +21,14 @@ Arcade stealth umoristico **For Four Chocolate**, con protagonista **Domenico �
 5. Se viene scoperto, Ipno è **catturato e accompagnato in una stanza**. Un poliziotto dice in **ceco**, con eventuali sottotitoli italiani: **«Za čtyři čokolády jste urazil Českou republiku!»** (= «Per quattro cioccolate hai offeso la Repubblica Ceca!»), seguito dalla battuta volutamente inglese **«For four chocolate?»**. La formulazione ceca potrà essere rifinita prima dell'implementazione audio.
 6. Epilogo comico del fallimento: Ipno **sale la scala mobile ammanettato**, esce e riceve **la multa**; in contemporanea compare il cameo di **Totore Capellone** che esce dal supermercato con un salame usato da cintura.
 
+## 3A. Regole stealth aggiornate (22 ottobre 2026) — PRIORITÀ ALTA
+- Ipno può **essere visto mentre cammina**: trovarsi nel supermercato non comporta una cattura automatica. La visibilità ordinaria non equivale a furto in flagrante.
+- **La cioccolata si preleva dagli scaffali**, usando un'interazione e un'animazione, mai raccogliendo oggetti sparsi sul pavimento.
+- La condizione di rischio reale è **essere visto nel momento del prelievo**. Il giocatore deve scegliere l'istante in cui guardie e CCTV non possono vederlo; se già esposto, il prelievo può essere negato; se viene visto durante l'azione, scatta un intervento/cattura.
+- Le zone hanno sorveglianza **eterogenea**; una zona può essere più/meno sicura a seconda di pattuglie, orari e telecamere.
+- **Dopo ogni prelievo alcune zone diventano più sorvegliate**, specialmente quella interessata, con pattuglie/campi CCTV aggiornati. Lo stealth è adattivo e progressivo.
+- Per i dettagli grafici e mobile vedi **[REFERENCE_GAMEPLAY.md](./REFERENCE_GAMEPLAY.md)**; Metal Gear Solid **VR Missions** è la guida principale per le proporzioni e la camera.
+
 ## 4. Specifiche future (non ancora implementate)
 - **Visuale e collisioni:** telecamera obliqua **3D in stile MGS PS1**; la logica tile-based del prototipo può essere riutilizzata, ma non impone resa a quadrettoni né sprite 24×40 in output. Il movimento finale dovrà risultare fluido.
 - **Stealth:** NPC con direzione di sguardo, ostacoli opachi, triangoli/coni di visione per agenti e telecamere, stati calmo/sospetto/allarme/inseguimento.
