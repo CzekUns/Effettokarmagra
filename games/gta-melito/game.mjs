@@ -20,7 +20,7 @@ import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=006';
 import {createSocial,stepSocial} from './npc-social.mjs?v=004';
 import {createIdlePeople,stepIdlePeople,drawIdlePeople,loadIdlePoseSheets} from './npc-idle.mjs?v=003';
-import {createStreetGames,stepStreetGames,drawStreetGames} from './npc-giochi.mjs?v=001';
+import {createStreetGames,stepStreetGames,drawStreetGames} from './npc-giochi.mjs?v=002';
 import {createAnimals,stepAnimals,drawAnimals,loadAnimalSprites} from './animali.mjs?v=001';
 import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=007';
 import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=007';
@@ -34,7 +34,7 @@ import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=003';
 import {prepareSignalPosts,drawStopLines,drawSignals,signalGlows} from './traffic-light-art.mjs?v=004';
 import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=004';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=091';
-import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=003';
+import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=004';
 import {openSlotMachine,isSlotOpen} from './minigame-slot.mjs?v=001';
 import {openPokerMachine,isPokerOpen} from './minigame-poker.mjs?v=001';
 import {riderPickups,riderDestinations,riderOffers,riderVehicleCheck,acceptOffer,cancelJob,stepJob,completeDelivery,riderStats,riderRoute,routeLookahead,PICKUP_RADIUS,DELIVERY_RADIUS} from './rider.mjs?v=001';
@@ -75,13 +75,14 @@ import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlas
 import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches,PITCH_RULES} from './football-pitches.mjs?v=001';
 import {GARAGES,nearestGarage,canStoreVehicle,depositVehicle,takeVehicle,vehicleFromEntry,chooseExitSpot,garageMessage,vehicleLabel,ownedEntry,ownedCount,garageById,GARAGE_SLOTS,drawGarage} from './garages.mjs?v=001';
 import {paintOptions,paintName,PERF_LEVELS,perfPrice,PAINT_PRICE,NEON_PRICE,NEON_COLORS,tunedProfile,buyTuning,tuningMessage,drawNeonUnderglow,neonNightGlows} from './tuning.mjs?v=001';
-import {openFootballGame,isFootballOpen,recordFootballResult,footballReturnPoint,footballRecordText} from './minigame-football.mjs?v=001';
+import {recordFootballResult,footballRecordText} from './minigame-football.mjs?v=002';
+import {createWorldFootball,stepWorldFootball,footballWorldPlayer,footballHud,drawWorldFootball,loadFootballSprites} from './football-overworld.mjs?v=001';
 import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,loadWaterTowerSprite,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=003';
 import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
 import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=018';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=019';
 // Lotto 15: dialoghi con volto (prototipo per la storyline, PROVVISORIO): barra in basso + riquadro del personaggio.
 import {openDialogue,isDialogueOpen,DEMO_DIALOGUE} from './dialogue.mjs?v=001';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
@@ -112,6 +113,8 @@ let tileRoadMode=null,pendingTile=null;
 const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false,accelerate:false,brake:false,reverse:false};
 const stick={x:0,y:0};
+const footballInput={shoot:false,pass:false};
+const isFootballOpen=()=>!!state.football;
 function moveAxes(){return {x:Math.abs(stick.x)>.08?stick.x:Number(pressed.right)-Number(pressed.left),y:Math.abs(stick.y)>.08?stick.y:Number(pressed.down)-Number(pressed.up)};}
 const wheel={angle:0,held:false,pointerId:null,pointerAngle:0};
 function driveAxes(){
@@ -192,7 +195,7 @@ function openPoolGame(){
  return openPoolMachine({storage:globalThis.localStorage,onExit:()=>{carRadio.duck(false);canvas.focus?.({preventScroll:true});updateHud();}});
 }
 const FORCED_WEATHER=(()=>{const w=new URLSearchParams(globalThis.location?.search||'').get('meteo');return ['pioggia','nuvoloso','sereno'].includes(w)?w:null;})();
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],idle:null,streetGames:null,animals:null,dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+const state={football:null,map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],idle:null,streetGames:null,animals:null,dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 // BF14: the world scale in use (read by the PAUSE › NOVITÀ entry and by the tests).
 state.worldScale=Object.freeze({vehicle:VEHICLE_SCALE,person:PERSON_SCALE});
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
@@ -286,34 +289,50 @@ function createPitches(){
   nearStreet:(x,y)=>{const r=nearest(x,y,24,state.roads);return !!r&&r.distance<=visualRoadWidth(r.road)/2+2;}});
  if(state.pitches.failed.length)console.warn('Campetti non collocati: '+state.pitches.failed.map(f=>f.id+' ('+f.reason+')').join(', '));
 }
-// Q33: the calcetto match opens over the city, which stays paused underneath (tick/draw skip it);
-// after the final whistle or ESC the player is back at the gate of the pitch, in the same pose.
-// Only the finished result (win/draw/loss) goes into the campaign save, once per match id.
-function openFootballMatch(pitch){
- if(isFootballOpen()||!state.ready)return false;
- const p=state.player,entry={x:p.x,y:p.y,a:p.a};
- for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;resetDrivingControls();
- $('stick-knob').style.transform='translate(0,0)';
- carRadio.duck(true);
- const opened=openFootballGame({pitch,record:()=>state.progress?.football,
-  sound:{get muted(){return cityAudio.muted;},get volume(){return cityAudio.effectsVolume;}},
-  onResult:result=>{
+// Q33: the match uses the Q32 field already painted in the city. The player is always red #4.
+function showFootballBanner(text,seconds=1.5){
+ const el=$('football-banner');el.textContent=text;el.hidden=false;state.footballBannerUntil=state.clock+seconds;
+}
+function updateFootballHud(){
+ const el=$('football-hud'),world=state.football;
+ if(!world){el.hidden=!(state.footballFinalUntil>state.clock);$('football-touch').hidden=true;return;}
+ const h=footballHud(world);el.hidden=false;$('football-score').textContent=h.score;$('football-clock').textContent=h.clock;
+ $('football-touch').hidden=false;
+ if(h.phase==='kickoff')showFootballBanner('CALCIO D’INIZIO · '+Math.max(1,Math.ceil(world.match.timer)),.3);
+}
+function closeFootballMatch(abandoned=false){
+ if(!state.football)return false;
+ if(abandoned&&!globalThis.confirm('Abbandonare la partita di calcetto? Il risultato non sarà salvato.'))return false;
+ state.football=null;footballInput.shoot=false;footballInput.pass=false;
+ $('football-touch').hidden=true;$('football-hud').hidden=true;$('football-banner').hidden=true;
+ for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
+ if(abandoned){state.notice={text:'CALCETTO · PARTITA ABBANDONATA',until:state.clock+4};}
+ canvas.focus?.({preventScroll:true});updateHud();return true;
+}
+function footballEvents(events){
+ for(const e of events){
+  if(e.type==='goal')showFootballBanner('GOL! '+(e.team===0?'ROSSI':'BLU'),2.2);
+  if(e.type==='restart')showFootballBanner('RIMESSA '+(e.kind==='laterale'?'LATERALE':e.kind==='angolo'?"D’ANGOLO":'DAL FONDO'));
+  if(e.type==='end'){
+   const result=e.result;
    if(state.progress&&recordFootballResult(state.progress,result)){saveProgress(localStorage,state.progress);refreshCampaign();}
-  },
-  onExit:({result})=>{
-   const back=footballReturnPoint(pitch,entry,PITCH_RULES.hotspot);
-   p.x=back.x;p.y=back.y;p.a=back.a;p.car=-1;p.vehicleType=null;
-   p.impactTime=0;p.impactVX=0;p.impactVY=0;p.impactLock=0;
-   state.camera.x=p.x;state.camera.y=p.y;state.last=0;
+   const word={vittoria:'VITTORIA',pareggio:'PAREGGIO',sconfitta:'SCONFITTA'}[result.outcome];
+   showFootballBanner('FISCHIO FINALE · '+word,5);
+   state.notice={text:'CALCETTO · '+word+' '+result.home+'–'+result.away+' · BILANCIO '+footballRecordText(state.progress?.football),until:state.clock+5};
+   state.footballFinalUntil=state.clock+5;state.football=null;$('football-touch').hidden=true;
    for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
-   carRadio.duck(false);
-   const word=result?{vittoria:'VITTORIA',pareggio:'PAREGGIO',sconfitta:'SCONFITTA'}[result.outcome]+' '+result.home+'–'+result.away:'PARTITA ABBANDONATA';
-   state.notice={text:'CALCETTO · '+word+' · BILANCIO '+footballRecordText(state.progress?.football),until:state.clock+5};
-   cityEventBubble(state.events,p,result?word:'Partita abbandonata');
    canvas.focus?.({preventScroll:true});updateHud();
-  }});
- if(!opened)carRadio.duck(false);
- return opened;
+  }
+ }
+}
+function openFootballMatch(pitch){
+ if(isFootballOpen()||!state.ready||state.player.car>=0)return false;
+ const seed=(Date.now()>>>0),world=createWorldFootball(pitch,{seed});if(!world)return false;
+ for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;resetDrivingControls();
+ $('stick-knob').style.transform='translate(0,0)';state.football=world;state.footballFinalUntil=0;
+ const at=footballWorldPlayer(world);Object.assign(state.player,{...at,car:-1,vehicleType:null,impactTime:0});
+ state.camera.x=at.x;state.camera.y=at.y;
+ showFootballBanner('CALCIO D’INIZIO',1.3);updateFootballHud();updateHud();return true;
 }
 // Q36: the driven profile is always the model's BASE profile (BF05) plus the owned car's tuning.
 function vehicleProfile(car){
@@ -516,7 +535,7 @@ function createNeighbourhoodGames(){
  state.streetGames=createStreetGames({map:state.map,enclosures:state.enclosures,pitches:state.pitches,
   graph:state.graph,doors:state.doors||[],canStand:safe,onRoad:onCarriageway});
  stepStreetGames(state.streetGames,0,{minutes:state.npcClockMinutes,player:state.player,
-  canStand:safe,onRoad:onCarriageway,matchOpen:isFootballOpen()});
+  canStand:safe,onRoad:onCarriageway,matchPitchId:state.football?.pitch.id});
 }
 function createNeighbourhoodAnimals(){
  const safe=(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y);
@@ -1165,7 +1184,7 @@ function updateTraffic(dt){
  stepIdlePeople(state.idle,elapsed,{minutes:state.npcClockMinutes,player:state.player,
   canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,doors:state.doors||[]});
  stepStreetGames(state.streetGames,elapsed,{minutes:state.npcClockMinutes,player:state.player,
-  canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,matchOpen:isFootballOpen()});
+  canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,matchPitchId:state.football?.pitch.id});
  stepAnimals(state.animals,elapsed,{player:state.player,vehicles:[...state.traffic,...state.cars],
   canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,doors:state.doors||[]});
  // Q13: rush hours. The hour curve sets how many vehicles drive; BF09 balanceTraffic is the one place
@@ -1421,6 +1440,7 @@ function dropPassengers(vehicle){
 }
 function toggleVehicle(){
  if(!state.ready)return;
+ if(isFootballOpen()){footballInput.shoot=true;return;}
  if(state.shopOpen){closeShop();return;}
  if(state.garageOpen){closeGarage();return;}
  const p=state.player;
@@ -1608,7 +1628,7 @@ function drawSkidMarks([x0,y0,x1,y1]){
 }
 function tick(dt){
  if(!state.ready)return;
- if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||isFootballOpen()||state.shopOpen||state.garageOpen||state.riderOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen()){
+ if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||state.shopOpen||state.garageOpen||state.riderOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen()){
   for(const key of Object.keys(pressed))pressed[key]=false;
   stick.x=0;stick.y=0;
   return;
@@ -1640,7 +1660,11 @@ function tick(dt){
   return;
  }
  const p=state.player;
- if(p.car>=0){
+ if(state.football){
+  const axes=moveAxes(),events=stepWorldFootball(state.football,dt,{...axes,...footballInput});
+  footballInput.shoot=false;footballInput.pass=false;
+  Object.assign(p,footballWorldPlayer(state.football));footballEvents(events);updateFootballHud();
+ }else if(p.car>=0){
   const car=state.cars[p.car];
   const axes=driveAxes();
   car.prevX=car.x;car.prevY=car.y;car.prevA=car.a;
@@ -1833,6 +1857,7 @@ function updateHud(){
   boardPrompt('ESCI DALLA BANCA');
   $('camera-mode').textContent='INTERNO · '+interiorZoom().toFixed(1)+'×';return;
  }
+ if(state.football){$('vehicle').textContent='CALCETTO · ROSSI';$('street').textContent=state.football.pitch.nome.toUpperCase();$('action').textContent='TIRO';$('action').classList.remove('idle');$('action').setAttribute('aria-disabled','false');$('sprint').textContent='PASSA';boardPrompt('TIRO');return;}
  const boostLeft=boostSecondsLeft(state.boost,state.clock);
  const myCar=p.car>=0?state.cars[p.car]:null,dmg=myCar?DAMAGE_LABEL[damageLevel(myCar)]:'';
  const ride=myCar,aboard=ride?occupantsOf(ride).length:0;
@@ -1952,6 +1977,7 @@ function drawLiftHints(){
  c.restore();
 }
 function drawPlayer(){
+ if(state.football){drawWorldFootball(c,state.football,state.clock);return;}
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
  drawCityPlayer(c,state.player,state.clock,moving||state.player.impactTime>0);
 }
@@ -2389,7 +2415,7 @@ function drawMini(){
 function updateCityAudio(){
  if(!cityAudio.started||!state.ready)return;
  const p=state.player,car=p.car>=0?state.cars[p.car]:null;
- const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen||!!state.garageOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen()||isFootballOpen();
+ const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen||!!state.garageOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen();
  const traffic=[...state.traffic.filter(v=>v.body==='car'),...(state.commuters||[]).filter(c=>c.bike.rider).map(c=>c.bike)];
  cityAudio.update({paused,interior:!!state.bankInterior||!!state.shopInterior,radioLive:radioStatus==='live',
   player:{x:p.x,y:p.y,inVehicle:!!car,vehicleType:car&&isMotorcycle(car)?'motorcycle':'car',model:car?.model||'',speed:car?car.speed:0,throttle:pressed.up||pressed.accelerate?1:0},
@@ -2472,9 +2498,8 @@ function soundLabel(){
 }
 function frame(now){
  const dt=state.last?Math.min(.05,(now-state.last)/1000):0;state.last=now;
- // Q33: during a calcetto match the city is paused and hidden under the full-screen scene.
- if(isFootballOpen()){updateCityAudio();requestAnimationFrame(frame);return;}
- tick(dt);draw(dt);drawMini();updateCityAudio();updateDrive(dt);requestAnimationFrame(frame);
+ tick(dt);draw(dt);drawMini();updateCityAudio();updateDrive(dt);
+ if(state.footballBannerUntil<=state.clock)$('football-banner').hidden=true;updateFootballHud();requestAnimationFrame(frame);
 }
 async function load(){
  if(state.loading)return;
@@ -2542,6 +2567,12 @@ function bind(){
   if(isDialogueOpen()&&$('pause-menu').hidden)return;
   const dir={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];
   if(dir){e.preventDefault();pressed[dir]=true;}
+  if(isFootballOpen()){
+   if(e.code==='Space'||e.key.toLowerCase()==='e'){e.preventDefault();if(!e.repeat)footballInput.shoot=true;}
+   if(e.key.toLowerCase()==='x'||e.key==='Shift'){e.preventDefault();if(!e.repeat)footballInput.pass=true;}
+   if(e.key==='Escape'&&!e.repeat){e.preventDefault();closeFootballMatch(true);}
+   return;
+  }
   if(e.key==='Shift')pressed.run=true;
   if(e.code==='Space'){e.preventDefault();pressed.handbrake=true;}
   if(state.riderOpen){
@@ -2688,6 +2719,10 @@ function bind(){
   for(const name of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(name,()=>{pressed[key]=false;btn.classList.remove('pressed');});
  });
  $('action').addEventListener('click',toggleVehicle);
+ $('football-shoot').addEventListener('pointerdown',e=>{e.preventDefault();footballInput.shoot=true;});
+ $('football-pass').addEventListener('pointerdown',e=>{e.preventDefault();footballInput.pass=true;});
+ $('football-exit').addEventListener('click',()=>closeFootballMatch(true));
+ $('sprint').addEventListener('pointerdown',()=>{if(isFootballOpen())footballInput.pass=true;});
  $('radio-prev').addEventListener('click',()=>carRadio.previous());
  $('radio-next').addEventListener('click',()=>carRadio.next());
  $('radio-toggle').addEventListener('click',()=>carRadio.toggle());
@@ -2758,4 +2793,4 @@ function bind(){
  },{passive:false});
 }
 loadChurchWebp(()=>{staticTiles.clear();pendingTile=null;});
-applyLoadingScreen();loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSheets();loadIdlePoseSheets();loadAnimalSprites();loadMarketArt();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();
+applyLoadingScreen();loadMotorcycleSprites();loadFootballSprites();loadExtraPedestrianSprites();loadPedestrianSheets();loadIdlePoseSheets();loadAnimalSprites();loadMarketArt();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();

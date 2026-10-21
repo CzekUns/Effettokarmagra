@@ -1,11 +1,5 @@
-/* GTA Melito — Q33: partita di calcetto 5 contro 5, minigioco «dall'alto» come i primi giochi di calcio.
- * Si apre dal cancello di un campetto Q32 (openFootballMatch in game.mjs) come scena a schermo intero
- * sopra la città, che resta in pausa sotto; all'uscita (fischio finale o ESC) si torna al cancello.
- * Due squadre inventate da cinque, portiere compreso: ROSSI (comandata dal giocatore, attacca verso
- * destra) contro BLU. Campo con le misure tipiche del calcio a 5 (40×20 m, porte da 3 m, area a 6 m).
- * Sopra: la logica pura e deterministica (seme), provata in Node. Sotto: la scena DOM/canvas con
- * tastiera e comandi touch. Nella campagna si salva SOLO il bilancio vittorie / pareggi / sconfitte,
- * una volta per partita (id), mai la partita in corso. Grafica provvisoria, da approvare. */
+/* Q33: motore deterministico del calcetto. Coordinate locali 40×20; la scena della città usa
+ * football-overworld.mjs per convertirle nel campetto Q32. Nessun pannello a schermo intero. */
 export const FOOTBALL_RULES=Object.freeze({
  length:40,width:20,goalWidth:3,goalDepth:1,areaRadius:6,centreRadius:3,
  realSeconds:120,      // durata reale della partita (tempo di gioco effettivo)
@@ -24,7 +18,7 @@ export const FOOTBALL_TEAMS=Object.freeze([
  Object.freeze({name:'ROSSI',shirt:'#d33b33',trim:'#f3eee2',shorts:'#f3eee2',socks:'#d33b33',keeper:'#e8c447',keeperTrim:'#2a2a2a'}),
  Object.freeze({name:'BLU',shirt:'#2d5fc4',trim:'#a9d6ff',shorts:'#1b2b55',socks:'#2d5fc4',keeper:'#4fb46a',keeperTrim:'#173a24'})
 ]);
-export const FOOTBALL_KEYS='FRECCE/WASD muovi · SPAZIO tiro · X o SHIFT passaggio · Q cambio giocatore · ESC esci';
+export const FOOTBALL_KEYS='FRECCE/WASD muovi · SPAZIO tiro · X o SHIFT passaggio · ESC esci';
 const ROLES=['gk','fixo','alaA','alaB','pivot'];
 // Posizioni base nel «verso d'attacco» della squadra (u verso la porta avversaria, v di traverso).
 const SPOTS={gk:{u:-19.1,v:0},fixo:{u:-11,v:0},alaA:{u:-4.5,v:-5.5},alaB:{u:-4.5,v:5.5},pivot:{u:3,v:0}};
@@ -44,11 +38,11 @@ export function makeRng(seed){
 }
 
 // ---- partita ------------------------------------------------------------------------------------
-export function createMatch({seed=1,id=null,pitchName=''}={}){
+export function createMatch({seed=1,id=null,pitchName='',fixedPlayer=false}={}){
  const players=[];
  for(const team of [0,1])ROLES.forEach((role,k)=>players.push({i:team*5+k,team,role,x:0,y:0,vx:0,vy:0,fx:teamDir(team),fy:0,
   anim:0,cooldown:0,tackle:0,protect:0,stun:0,hold:0,think:0,dive:0,kick:0,mustPass:false,look:((seed>>>0)+team*3+k*7)%20}));
- const m={rules:R,id:id||('calcetto-'+((seed>>>0)||1).toString(36)),seed,rng:makeRng(seed),pitchName,
+ const m={rules:R,fixedPlayer,id:id||('calcetto-'+((seed>>>0)||1).toString(36)),seed,rng:makeRng(seed),pitchName,
   phase:'intro',timer:0,time:0,score:[0,0],players,active:4,restart:null,events:[],result:null,lastGoalTeam:-1,
   ball:{x:0,y:0,vx:0,vy:0,owner:-1,lastTouch:0,lastKicker:-1,passTarget:-1,saveTried:false,shot:false,blockedBy:-1,inNet:false,spin:0},
   stats:{shots:[0,0],passes:[0,0],saves:[0,0],steals:[0,0]}};
@@ -68,7 +62,7 @@ function setKickoff(m,team){
  Object.assign(m.ball,{x:0,y:0,vx:0,vy:0,owner:-1,lastTouch:team,lastKicker:-1,passTarget:-1,saveTried:false,shot:false,blockedBy:-1,inNet:false});
  const taker=team*5+4;
  m.restart={kind:'kickoff',team,taker};m.phase='kickoff';m.timer=R.kickoffFreeze;
- if(team===0)m.active=taker;
+ if(team===0&&!m.fixedPlayer)m.active=taker;
  m.events.push({type:'kickoff',team});
 }
 /* Rimessa semplice: palla ferma sul punto, il compagno più vicino (il portiere per la rimessa dal
@@ -88,7 +82,7 @@ function setRestart(m,kind,team,x,y){
   if(dd<R.restartDistance){const k=dd>.01?R.restartDistance/dd:0;q.x=x+(dd>.01?dx*k:-d*R.restartDistance);q.y=y+(dd>.01?dy*k:0);}
  }
  m.restart={kind,team,taker,x,y};m.phase='restart';m.timer=R.restartFreeze;
- if(team===0&&p.role!=='gk')m.active=taker;
+ if(team===0&&p.role!=='gk'&&!m.fixedPlayer)m.active=taker;
  m.events.push({type:'restart',kind,team});
 }
 function nearestOutfield(m,team,x,y,exclude=-1){
@@ -100,7 +94,7 @@ function giveBall(m,i,{protect=.35}={}){
  const b=m.ball,p=m.players[i],from=b.owner>=0?m.players[b.owner].team:b.lastTouch;
  b.owner=i;b.lastTouch=p.team;b.passTarget=-1;b.saveTried=false;b.shot=false;b.blockedBy=-1;
  p.hold=0;p.protect=protect;p.think=.12+m.rng()*.18;
- if(p.team===0&&p.role!=='gk')m.active=i;
+ if(p.team===0&&p.role!=='gk'&&!m.fixedPlayer)m.active=i;
  else if(p.team===1&&from===0){
   // ball lost: the nearest of our players takes over (only if clearly nearer than the current one)
   const n=nearestOutfield(m,0,b.x,b.y),act=m.players[m.active];
@@ -158,7 +152,7 @@ function userPass(m,p,fx,fy){
   let blocked=0;for(const o of m.players)if(o.team===1&&segDist(o.x,o.y,p.x,p.y,q.x,q.y)<.8)blocked++;
   const s=cos*2-dd*.06-blocked;if(s>bs){bs=s;best=q.i;}
  }
- if(best>=0){passTo(m,p,best,{lead:false});m.active=best;m.events.push({type:'switch',to:best,auto:true});}
+ if(best>=0){passTo(m,p,best,{lead:false});if(!m.fixedPlayer){m.active=best;m.events.push({type:'switch',to:best,auto:true});}}
  else kick(m,p,fx*10,fy*10);
 }
 function userTackle(m,p){
@@ -178,6 +172,7 @@ function steal(m,q,o){
 /* Cambio giocatore: il compagno di movimento più vicino alla palla (mai il portiere). Chi ha la palla
  * resta attivo. Restituisce l'indice del calciatore ora comandato. */
 export function switchPlayer(m){
+ if(m.fixedPlayer)return m.active;
  if(m.ball.owner===m.active)return m.active;
  let best=-1,bd=Infinity;
  for(const p of m.players)if(p.team===0&&p.role!=='gk'&&p.i!==m.active){const dd=dist(p,m.ball);if(dd<bd){bd=dd;best=p.i;}}
@@ -421,8 +416,8 @@ export function matchResult(m){
  const [h,a]=m.score;
  return {id:m.id,home:h,away:a,outcome:h>a?'vittoria':h===a?'pareggio':'sconfitta',pitch:m.pitchName||''};
 }
-/* Un passo di gioco. input: {x,y} direzione (−1…1) del calciatore attivo, shoot/pass/switch = tasto
- * appena premuto. Nessun effetto sulla città: la scena è separata dal movimento GTA. */
+/* Un passo di gioco locale. input: {x,y,shoot,pass}; fixedPlayer tiene il protagonista rosso
+ * sempre al numero 4 mentre gli altri nove seguono l'IA. */
 export function stepMatch(m,input={},dt=R.step){
  if(m.phase==='intro'||m.phase==='end')return m;
  tickTimers(m,dt);
@@ -454,7 +449,7 @@ export function stepMatch(m,input={},dt=R.step){
   return m;
  }
  // ---- play
- if(input.switch)switchPlayer(m);
+ if(input.switch&&!m.fixedPlayer)switchPlayer(m);
  const me=m.players[m.active];
  if(il>.2){me.fx=ix/il;me.fy=iy/il;}
  const owns=m.ball.owner===me.i;
@@ -501,255 +496,3 @@ export function footballReturnPoint(pitch,entry,hotspot=3){
  if(!g||!Number.isFinite(g.x)||Math.hypot(e.x-g.x,e.y-g.y)<=hotspot)return e;
  return {x:g.x,y:g.y,a:Math.atan2(g.y-pitch.cy,g.x-pitch.cx)};
 }
-
-// ---- disegno (pixel art semplice) -----------------------------------------------------------------
-const PAL={out:'#1d2b24',ground:'#25352d',runoff:'#2f6e3c',grass:['#3f8a4a','#4a9654'],line:'#eef3e6',fence:'#20372c',post:'#4a5a54',
- net:'#c8d1cb',frame:'#ffffff',shadow:'rgba(0,0,0,.32)',marker:'#ffe14a',ball:'#f7f5ee',ballDark:'#2b2b2b',boot:'#161616',lamp:'#d8e2db'};
-const SKINS=['#e6b98f','#c98f63','#a06a43','#f1cba6'],HAIRS=['#2a1d14','#4b2f1a','#151515','#6e4a2b','#b98d4e'];
-function rect(c,x,y,w,h,col){c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h);}
-function plotArc(c,cx,cy,r,a0,a1,col){
- c.fillStyle=col;const n=Math.max(8,Math.ceil(Math.abs(a1-a0)*r*1.6));let lx=null,ly=null;
- for(let k=0;k<=n;k++){const a=a0+(a1-a0)*k/n,x=Math.round(cx+Math.cos(a)*r),y=Math.round(cy+Math.sin(a)*r);if(x!==lx||y!==ly){c.fillRect(x,y,1,1);lx=x;ly=y;}}
-}
-export function footballView(cssW,cssH){
- const W=cssW>0?cssW:844,H=cssH>0?cssH:390,top=Math.min(46,H*.11);
- const s=Math.min(W/(R.length+5.5),(H-top)/(R.width+5));        // CSS px per metre
- const P=clamp(Math.round(s/8.5),1,4);                           // CSS px per art pixel
- const cw=Math.ceil(W/P),ch=Math.ceil(H/P);
- return {P,W:cw,H:ch,ppm:s/P,ox:Math.round(cw/2),oy:Math.round((top+(H-top)/2)/P),cssW:W,cssH:H};
-}
-export function drawFootballField(c,v){
- const X=x=>v.ox+x*v.ppm,Y=y=>v.oy+y*v.ppm,k=v.ppm;
- rect(c,0,0,v.W,v.H,PAL.out);
- const fm=2.3;                                                  // fence 2,3 m outside the lines
- rect(c,X(-HL-fm-1.2),Y(-HW-fm-1.2),(R.length+2*fm+2.4)*k,(R.width+2*fm+2.4)*k,PAL.ground);
- rect(c,X(-HL-fm),Y(-HW-fm),(R.length+2*fm)*k,(R.width+2*fm)*k,PAL.runoff);
- const bands=10;
- for(let i=0;i<bands;i++){const x0=Math.round(X(-HL+i*R.length/bands)),x1=Math.round(X(-HL+(i+1)*R.length/bands));rect(c,x0,Y(-HW),x1-x0,Math.round(R.width*k),PAL.grass[i%2]);}
- // lines
- const L=PAL.line,x0=Math.round(X(-HL)),x1=Math.round(X(HL)),y0=Math.round(Y(-HW)),y1=Math.round(Y(HW));
- rect(c,x0,y0,x1-x0+1,1,L);rect(c,x0,y1,x1-x0+1,1,L);rect(c,x0,y0,1,y1-y0+1,L);rect(c,x1,y0,1,y1-y0+1,L);
- rect(c,Math.round(X(0)),y0,1,y1-y0+1,L);
- plotArc(c,X(0),Y(0),R.centreRadius*k,0,Math.PI*2,L);rect(c,Math.round(X(0))-1,Math.round(Y(0))-1,2,2,L);
- for(const s of [-1,1]){
-  const gx=X(s*HL),r=R.areaRadius*k;
-  // calcio a 5 area: two quarter circles from the posts joined by a straight line
-  if(s>0){plotArc(c,gx,Y(-GH),r,Math.PI,Math.PI*1.5,L);plotArc(c,gx,Y(GH),r,Math.PI/2,Math.PI,L);}
-  else{plotArc(c,gx,Y(-GH),r,-Math.PI/2,0,L);plotArc(c,gx,Y(GH),r,0,Math.PI/2,L);}
-  rect(c,Math.round(gx-s*r),Math.round(Y(-GH)),1,Math.round(R.goalWidth*k)+1,L);
-  rect(c,Math.round(X(s*(HL-6))),Math.round(Y(0)),1,1,L);rect(c,Math.round(X(s*(HL-10))),Math.round(Y(0)),1,1,L);
-  // goal: hatched net behind the line, white frame and posts
-  const nx0=Math.round(Math.min(X(s*HL),X(s*(HL+R.goalDepth)))),nx1=Math.round(Math.max(X(s*HL),X(s*(HL+R.goalDepth))));
-  const ny0=Math.round(Y(-GH)),ny1=Math.round(Y(GH));
-  c.fillStyle=PAL.net;for(let yy=ny0;yy<=ny1;yy++)for(let xx=nx0;xx<=nx1;xx++)if((xx+yy)%2===0)c.fillRect(xx,yy,1,1);
-  rect(c,nx0,ny0,nx1-nx0+1,1,PAL.frame);rect(c,nx0,ny1,nx1-nx0+1,1,PAL.frame);
-  rect(c,s>0?nx1:nx0,ny0,1,ny1-ny0+1,PAL.frame);
-  rect(c,Math.round(gx)-1,ny0-1,2,2,PAL.frame);rect(c,Math.round(gx)-1,ny1,2,2,PAL.frame);
- }
- // fence with posts every 3 m and four floodlights, as on the Q32 pitch in the city
- const fx0=Math.round(X(-HL-fm)),fx1=Math.round(X(HL+fm)),fy0=Math.round(Y(-HW-fm)),fy1=Math.round(Y(HW+fm));
- rect(c,fx0,fy0,fx1-fx0+1,1,PAL.fence);rect(c,fx0,fy1,fx1-fx0+1,1,PAL.fence);rect(c,fx0,fy0,1,fy1-fy0+1,PAL.fence);rect(c,fx1,fy0,1,fy1-fy0+1,PAL.fence);
- for(let x=-HL-fm;x<=HL+fm+.01;x+=3){rect(c,X(x),fy0-2,1,3,PAL.post);rect(c,X(x),fy1-2,1,3,PAL.post);}
- for(let y=-HW-fm;y<=HW+fm+.01;y+=3){rect(c,fx0,Y(y)-2,1,3,PAL.post);rect(c,fx1,Y(y)-2,1,3,PAL.post);}
- for(const [x,y] of [[fx0,fy0],[fx1,fy0],[fx0,fy1],[fx1,fy1]]){rect(c,x,y-6,1,6,PAL.post);rect(c,x-1,y-7,3,2,PAL.lamp);}
-}
-/* Calciatore 7×9 pixel visto dall'alto di tre quarti: capelli, viso, maglia a due colori, pantaloncini,
- * calzettoni e scarpe; le gambe si alternano quando corre. */
-function drawFootballer(c,X,Y,p,team,{active=false,celebrate=0,owner=false}={}){
- const T=FOOTBALL_TEAMS[p.team],gk=p.role==='gk',shirt=gk?T.keeper:T.shirt,trim=gk?T.keeperTrim:T.trim;
- const skin=SKINS[p.look%SKINS.length],hair=HAIRS[(p.look>>1)%HAIRS.length];
- const x=Math.round(X)-3,y=Math.round(Y)-9-(celebrate>0&&Math.floor(p.anim*2)%2?2:0);
- rect(c,x+1,Math.round(Y),5,1,PAL.shadow);rect(c,x+2,Math.round(Y)+1,3,1,PAL.shadow);
- if(gk&&p.dive>0){                                              // keeper stretching sideways
-  const s=p.vy>=0?1:-1;
-  rect(c,x,y+5,7,2,shirt);rect(c,x+(s>0?0:5),y+4,2,2,skin);rect(c,x+(s>0?5:0),y+7,2,2,T.shorts);return;
- }
- const up=p.fy<-.55&&Math.abs(p.fy)>Math.abs(p.fx),side=!up&&Math.abs(p.fx)>Math.abs(p.fy)*1.2,flip=side&&p.fx<0;
- const px=(dx,dy,w,h,col)=>rect(c,flip?x+7-dx-w:x+dx,y+dy,w,h,col);
- // head
- px(2,0,3,1,hair);
- if(up){px(1,1,5,2,hair);}
- else if(side){px(1,1,2,2,hair);px(3,1,3,2,skin);}
- else{px(1,1,1,1,hair);px(5,1,1,1,hair);px(2,1,3,2,skin);}
- // shirt (two colours: body and a trim stripe / collar)
- px(1,3,5,3,shirt);px(3,3,1,3,trim);px(1,3,5,1,shirt);px(2,3,3,1,trim);
- const swing=Math.floor(p.anim)%2,moving=Math.hypot(p.vx,p.vy)>.4;
- // arms
- px(0,moving&&swing?3:4,1,2,skin);px(6,moving&&!swing?3:4,1,2,skin);
- // shorts, socks, boots
- px(2,6,3,1,T.shorts);
- if(moving){
-  px(2,7,1,1,T.socks);px(4,7,1,1,T.socks);
-  if(swing){px(2,8,1,1,PAL.boot);px(4,7,1,1,PAL.boot);}else{px(2,7,1,1,PAL.boot);px(4,8,1,1,PAL.boot);}
- }else{px(2,7,1,1,T.socks);px(4,7,1,1,T.socks);px(2,8,1,1,PAL.boot);px(4,8,1,1,PAL.boot);}
- if(p.kick>0)px(side?5:3,8,1,1,PAL.boot);
- if(active){                                                    // yellow arrow over the controlled player
-  rect(c,x+1,y-5,5,1,PAL.marker);rect(c,x+2,y-4,3,1,PAL.marker);rect(c,x+3,y-3,1,1,PAL.marker);
-  rect(c,x,Math.round(Y)+1,1,1,PAL.marker);rect(c,x+6,Math.round(Y)+1,1,1,PAL.marker);
- }
-}
-function drawBall(c,X,Y,b){
- // 3×3 pixels with a dark outline-free patch that turns as it rolls: readable on a phone too
- const x=Math.round(X)-1,y=Math.round(Y)-2;
- rect(c,x,y+3,3,1,PAL.shadow);rect(c,x,y,3,3,PAL.ball);
- const s=Math.floor(b.spin)%4;rect(c,x+(s===1||s===2?2:0),y+(s>=2?2:0),1,1,PAL.ballDark);rect(c,x+1,y+1,1,1,PAL.ballDark);
-}
-export function drawFootballScene(c,m,v,field=null){
- if(field)c.drawImage(field,0,0);else drawFootballField(c,v);
- const X=x=>v.ox+x*v.ppm,Y=y=>v.oy+y*v.ppm,b=m.ball;
- const items=m.players.map(p=>({y:p.y,p}));items.push({y:b.y+.01,ball:true});
- items.sort((a,q)=>a.y-q.y);
- for(const it of items){
-  if(it.ball)drawBall(c,X(b.x),Y(b.y),b);
-  else drawFootballer(c,X(it.p.x),Y(it.p.y),it.p,it.p.team,{active:it.p.i===m.active&&m.phase!=='end',celebrate:m.phase==='goal'&&it.p.team===m.lastGoalTeam?1:0,owner:b.owner===it.p.i});
- }
-}
-
-// ---- scena a schermo intero sopra la città ----------------------------------------------------------
-let session=null,audio=null;
-export const isFootballOpen=()=>!!session;
-function whistle(sound,kind){
- if(!sound||sound.muted)return;
- try{
-  const AC=globalThis.AudioContext||globalThis.webkitAudioContext;if(!AC)return;
-  audio||=new AC();if(audio.state==='suspended')audio.resume?.();
-  const t=audio.currentTime,vol=.1*clamp(Number(sound.volume??.7),0,1);
-  const blasts=kind==='end'?[[0,.3],[.42,.3],[.84,.75]]:kind==='goal'?[[0,.55]]:[[0,.35]];
-  for(const [s,len] of blasts){
-   const o=audio.createOscillator(),lfo=audio.createOscillator(),lg=audio.createGain(),g=audio.createGain();
-   o.type='sine';o.frequency.value=2850;lfo.frequency.value=27;lg.gain.value=150;lfo.connect(lg);lg.connect(o.frequency);
-   g.gain.setValueAtTime(0,t+s);g.gain.linearRampToValueAtTime(vol,t+s+.02);g.gain.setValueAtTime(vol,t+s+len-.05);g.gain.linearRampToValueAtTime(0,t+s+len);
-   o.connect(g);g.connect(audio.destination);o.start(t+s);lfo.start(t+s);o.stop(t+s+len+.03);lfo.stop(t+s+len+.03);
-  }
- }catch(_){}
-}
-function ensurePanel(doc){
- let panel=doc.getElementById('football-panel');if(panel)return panel;
- panel=doc.createElement('section');panel.id='football-panel';panel.className='football';panel.hidden=true;
- panel.setAttribute('role','dialog');panel.setAttribute('aria-label','Partita di calcetto 5 contro 5');
- panel.oncontextmenu=e=>e.preventDefault?.();             // no long-press menu on the touch buttons
- panel.innerHTML='<canvas id="fb-canvas" aria-label="Campo di calcetto visto dall\'alto"></canvas>'+
-  '<div class="fb-top"><button id="fb-exit" type="button" aria-label="Esci dalla partita e torna al campetto">ESCI</button>'+
-  '<div class="fb-score" aria-live="polite"><span class="fb-chip fb-home">ROSSI</span><b id="fb-score">0 – 0</b><span class="fb-chip fb-away">BLU</span><span id="fb-clock" class="fb-clock">0\'</span></div></div>'+
-  '<div id="fb-banner" class="fb-banner" hidden></div>'+
-  '<div id="fb-card" class="fb-card"><h2 id="fb-title">CALCETTO 5 CONTRO 5</h2><p id="fb-text"></p><button id="fb-go" type="button">CALCIO D\'INIZIO</button></div>'+
-  '<div class="fb-stick" id="fb-stick" role="application" aria-label="Levetta: muovi il calciatore con la freccia gialla"><div class="fb-knob" id="fb-knob"></div></div>'+
-  '<div class="fb-buttons"><button id="fb-switch" type="button" aria-label="Cambia giocatore">CAMBIO</button><button id="fb-pass" type="button" aria-label="Passaggio">PASSA</button><button id="fb-shoot" type="button" aria-label="Tiro">TIRO</button></div>'+
-  '<p class="fb-keys">'+FOOTBALL_KEYS+'</p>';
- (doc.body||doc.documentElement).appendChild(panel);
- return panel;
-}
-const DIRS={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'};
-const BANNERS={goal:e=>e.own?'AUTOGOL! '+FOOTBALL_TEAMS[e.team].name:'GOL! '+FOOTBALL_TEAMS[e.team].name,post:()=>'PALO! NIENTE GOL',save:()=>'PARATA!',
- out:e=>e.kind==='laterale'?'RIMESSA LATERALE':e.kind==='angolo'?'CALCIO D\'ANGOLO':'FUORI · RIMESSA DAL FONDO'};
-/* Apre la partita. pitch: campetto Q32; record(): bilancio della campagna; onResult(result): una
- * volta al fischio finale; onExit({result,abandoned}): all'uscita (risultato null se abbandonata). */
-export function openFootballGame({pitch=null,seed=(Date.now()>>>0),id=null,record=()=>null,onResult=()=>{},onExit=()=>{},sound=null,
- doc=globalThis.document,raf=globalThis.requestAnimationFrame?.bind(globalThis),caf=globalThis.cancelAnimationFrame?.bind(globalThis),now=()=>globalThis.performance?.now?.()??Date.now()}={}){
- if(session||!doc||!raf)return false;
- const panel=ensurePanel(doc),$=k=>doc.getElementById(k),canvas=$('fb-canvas'),c=canvas.getContext('2d');
- const m=createMatch({seed,id:id||('calcetto-'+(pitch?.id||'campetto')+'-'+(seed>>>0).toString(36)),pitchName:pitch?.nome||''});
- const keys={up:false,down:false,left:false,right:false},stick={x:0,y:0,id:null},edges={shoot:false,pass:false,switch:false};
- let rafId=0,last=null,acc=0,view=null,field=null,banner=0,reported=false,lastScore='',lastClock='',lastPhase='';
- const recordText=()=>footballRecordText(record?.()||null);
- const showCard=(title,text,button)=>{$('fb-title').textContent=title;$('fb-text').textContent=text;$('fb-go').textContent=button;$('fb-card').hidden=false;};
- showCard('CALCETTO 5 CONTRO 5',(pitch?.nome?pitch.nome.toUpperCase()+' · ':'')+'TU SEI I ROSSI (ATTACCHI VERSO DESTRA), CONTRO I BLU. 2 MINUTI, CRONOMETRO ACCELERATO. '+
-  'GOL SOLO TRA I PALI. BILANCIO: '+recordText()+'.',"CALCIO D'INIZIO");
- const resize=()=>{
-  const w=panel.clientWidth||globalThis.innerWidth||844,h=panel.clientHeight||globalThis.innerHeight||390;
-  if(view&&view.cssW===w&&view.cssH===h)return;
-  view=footballView(w,h);canvas.width=view.W;canvas.height=view.H;
-  // whole art pixels: the canvas is P CSS px per pixel (it may exceed the screen by < P px)
-  if(canvas.style){canvas.style.width=view.W*view.P+'px';canvas.style.height=view.H*view.P+'px';}
-  field=null;
-  try{field=doc.createElement('canvas');field.width=view.W;field.height=view.H;const fc=field.getContext('2d');if(fc){fc.imageSmoothingEnabled=false;drawFootballField(fc,view);}else field=null;}catch(_){field=null;}
- };
- const action=kind=>{
-  if(m.phase==='intro'){if(kind!=='switch'){startMatch(m);$('fb-card').hidden=true;whistle(sound,'start');}return;}
-  if(m.phase==='end'){if(kind!=='switch')close();return;}
-  if(kind in edges)edges[kind]=true;
- };
- const input=first=>{
-  let x=Math.abs(stick.x)>.12?stick.x:Number(keys.right)-Number(keys.left),y=Math.abs(stick.y)>.12?stick.y:Number(keys.down)-Number(keys.up);
-  const out={x,y,shoot:first&&edges.shoot,pass:first&&edges.pass,switch:first&&edges.switch};
-  if(first){edges.shoot=false;edges.pass=false;edges.switch=false;}
-  return out;
- };
- const events=()=>{
-  for(const e of m.events){
-   const text=BANNERS[e.type]?.(e);
-   if(text){$('fb-banner').textContent=text;$('fb-banner').hidden=false;banner=e.type==='goal'?2.2:1.3;}
-   if(e.type==='goal')whistle(sound,'goal');
-   if(e.type==='end'){
-    if(!reported){reported=true;try{onResult(m.result);}catch(err){console.error('Calcetto: salvataggio del risultato',err);}}
-    whistle(sound,'end');
-    const r=m.result,word=r.outcome==='vittoria'?'VITTORIA!':r.outcome==='pareggio'?'PAREGGIO':'SCONFITTA';
-    $('fb-banner').hidden=true;
-    showCard('FISCHIO FINALE · '+word,'ROSSI '+r.home+' – '+r.away+' BLU. BILANCIO NELLA CAMPAGNA: '+recordText()+'.','TORNA AL CAMPETTO');
-   }
-  }
-  m.events.length=0;
- };
- const hud=()=>{
-  const sc=m.score[0]+' – '+m.score[1],cl=matchClockLabel(m);
-  if(sc!==lastScore){$('fb-score').textContent=sc;lastScore=sc;}
-  if(cl!==lastClock){$('fb-clock').textContent=cl;lastClock=cl;}
-  if(m.phase!==lastPhase){panel.classList?.toggle?.('fb-playing',m.phase!=='intro'&&m.phase!=='end');lastPhase=m.phase;}
- };
- const frame=t=>{
-  rafId=0;if(session?.match!==m)return;
-  const dt=last===null?0:Math.min(.1,Math.max(0,(t-last)/1000));last=t;acc+=dt;
-  let n=0;
-  while(acc>=R.step&&n<8){stepMatch(m,input(n===0),R.step);acc-=R.step;n++;}
-  if(n===8)acc=0;
-  events();
-  if(banner>0){banner-=dt;if(banner<=0)$('fb-banner').hidden=true;}
-  resize();c.imageSmoothingEnabled=false;drawFootballScene(c,m,view,field);hud();
-  rafId=raf(frame);
- };
- const onKey=e=>{
-  e.stopImmediatePropagation?.();
-  if(e.key==='Escape'){e.preventDefault?.();close();return;}
-  const dir=DIRS[e.key];if(dir){e.preventDefault?.();keys[dir]=true;return;}
-  if(e.code==='Space'||e.key===' '){e.preventDefault?.();if(!e.repeat)action('shoot');return;}
-  if(e.key==='x'||e.key==='X'||e.key==='Shift'){e.preventDefault?.();if(!e.repeat)action('pass');return;}
-  if(e.key==='q'||e.key==='Q'){e.preventDefault?.();if(!e.repeat)action('switch');return;}
-  if(e.key==='Enter'||e.key==='e'||e.key==='E'){e.preventDefault?.();if(!e.repeat)action('confirm');}
- };
- const onKeyUp=e=>{const dir=DIRS[e.key];if(dir)keys[dir]=false;};
- const onBlur=()=>{keys.up=keys.down=keys.left=keys.right=false;stick.x=stick.y=0;};
- const knob=$('fb-knob'),stickEl=$('fb-stick');
- const moveStick=e=>{
-  const box=stickEl.getBoundingClientRect?.();if(!box)return;
-  const cx=box.left+box.width/2,cy=box.top+box.height/2,r=box.width*.34;
-  let dx=e.clientX-cx,dy=e.clientY-cy;const l=Math.hypot(dx,dy);if(l>r){dx*=r/l;dy*=r/l;}
-  stick.x=dx/r;stick.y=dy/r;if(knob)knob.style.transform='translate('+dx+'px,'+dy+'px)';
- };
- const releaseStick=e=>{if(stick.id!==e.pointerId)return;stick.id=null;stick.x=0;stick.y=0;if(knob)knob.style.transform='translate(0,0)';};
- stickEl.onpointerdown=e=>{e.preventDefault?.();stick.id=e.pointerId;try{stickEl.setPointerCapture(e.pointerId);}catch(_){}moveStick(e);};
- stickEl.onpointermove=e=>{if(stick.id===e.pointerId)moveStick(e);};
- stickEl.onpointerup=stickEl.onpointercancel=stickEl.onlostpointercapture=releaseStick;
- for(const [btn,kind] of [['fb-shoot','shoot'],['fb-pass','pass'],['fb-switch','switch']]){
-  const el=$(btn);
-  el.onpointerdown=e=>{e.preventDefault?.();el.classList?.add?.('pressed');action(kind);};
-  el.onpointerup=el.onpointercancel=el.onpointerleave=()=>el.classList?.remove?.('pressed');
- }
- $('fb-go').onclick=()=>action('confirm');
- $('fb-exit').onclick=()=>close();
- const close=()=>{
-  if(!session)return;session=null;
-  if(rafId&&caf)caf(rafId);rafId=0;
-  doc.removeEventListener('keydown',onKey,true);doc.removeEventListener('keyup',onKeyUp,true);globalThis.removeEventListener?.('blur',onBlur);
-  panel.hidden=true;$('fb-banner').hidden=true;
-  const result=m.phase==='end'?m.result:null;
-  try{onExit({result,abandoned:!result,score:[...m.score],minute:matchMinute(m)});}catch(err){console.error('Calcetto: uscita',err);}
- };
- doc.addEventListener('keydown',onKey,true);doc.addEventListener('keyup',onKeyUp,true);globalThis.addEventListener?.('blur',onBlur);
- session={close,match:m};
- panel.hidden=false;$('fb-banner').hidden=true;$('fb-score').textContent='0 – 0';$('fb-clock').textContent="0'";
- try{doc.activeElement?.blur?.();}catch(_){}
- resize();drawFootballScene(c,m,view,field);hud();
- rafId=raf(frame);
- return true;
-}
-export function footballDebug(){return session?{match:session.match}:null;}

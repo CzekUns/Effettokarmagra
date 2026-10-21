@@ -840,3 +840,9 @@ Secondo screenshot e correzione dell'utente, **mantenere la torre molto grande e
 ### 2026-10-21 — Animali di strada (CODEX-GH) — PROVVISORIO, da approvare da Simone
 - Piccioni grigi e bianchi in gruppi piccoli, con due frame a terra e due in volo; gatti di tre mantelli, seduti o in passo. Le posizioni seguono piazze, chiese, mercato, villa e parcheggi già presenti nella mappa.
 - PAUSA › NOVITÀ › `animali-di-strada` › VAI A VEDERE; screenshot 3× di stormo e gatto in `/home/ubuntu/codex-gh-lavoro/sim-animali/`. **PROVVISORIO, da approvare da Simone**.
+
+## 2026-10-21 — Q33 calcetto nell’overworld (CODEX-GH, PROVVISORIO)
+
+- La partita usa il campetto Q32 realmente disegnato sulla mappa, con la telecamera e lo zoom a piedi della città. Rimosso il pannello a schermo intero. Coordinate 40×20 del motore adattate alle linee 52×32 di Via delle Palme e 30×17 di Corso Europa.
+- Quattro kit (rossi, blu, portiere giallo, portiere verde) nel foglio `assets/people/calcetto-4squadre-4dir-4frames-24x40.png`, derivati e ricolorati dalla prima tavola dei pedoni, con identico pivot 24×40 e contorni. Sorgente `assets/people/sources/calcetto-genera.py`. La palla ha ombra e pixel netti. Grafica **PROVVISORIA, da approvare da Simone**.
+- HUD leggero con punteggio e cronometro in alto; TIRO/PASSA sul telefono. A Corso Europa dieci figure alla scala del protagonista sono fitte sul campo piccolo: non sono state ridotte artificialmente. Screenshot PC e telefono in `/home/ubuntu/codex-gh-lavoro/sim-calcetto/`; nessuna foto esterna incorporata.

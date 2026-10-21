@@ -139,6 +139,10 @@ Ritagli singoli: [friggitore](./assets/people/npc-friggitore-4dir-4frames.png), 
 - **QA residuo:** collaudo visivo con browser Android reale, proporzioni e direzioni in marcia/idle da verificare sul campo. L'approvazione per l'utilizzo non sostituisce automaticamente la prova di giocabilità.
 
 
+### Calciatori del calcetto nell’overworld (21 ottobre 2026, PROVVISORIO)
+
+`assets/people/calcetto-4squadre-4dir-4frames-24x40.png` deriva dai frame della prima tavola dei pedoni e ne mantiene direzioni, trasparenza, pivot e scala. Le quattro identità sono rosso, blu, portiere giallo e portiere verde; il generatore è `assets/people/sources/calcetto-genera.py`. È grafica provvisoria da approvare da Simone.
+
 ## 4. VEICOLI — automobili, moto, Ape, furgoni
 
 ### Standard predefinito sheet veicoli: 16 sprite, 8 per modello

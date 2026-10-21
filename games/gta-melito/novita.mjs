@@ -100,7 +100,7 @@ export const NOVITA=Object.freeze([
   cosa:'Sul telefono, a piedi lontano da veicoli, negozi e porte, il pulsante azione è spento invece di dire «ENTRA IN AUTO».',
   trova:null},
  {id:'calcetto',nome:'Campetti e partita di calcetto 5 contro 5',lavoro:'Q32 · Q33',pr:'in revisione',
-  cosa:'Campetto con erba a strisce, porte, rete e fari; al cancello «E · GIOCA A CALCETTO» apre la partita vista dall’alto (ROSSI contro BLU, 2 minuti): campo, calciatori in pixel art semplice, maglie e comandi touch sono provvisori.',
+  cosa:'Partita sul campetto, nella città: al cancello «E · GIOCA A CALCETTO» entrano in campo ROSSI e BLU; il protagonista resta fra i Rossi, con TIRO e PASSA. Maglie e comandi touch sono provvisori.',
   distanza:[2,3],trova:s=>near((s?.pitches?.list||[]).filter(p=>p.kind==='calcetto').map(p=>p.gate),s)},
  {id:'scala',nome:'Veicoli e persone più piccoli, parcheggi fuori dalle corsie',lavoro:'BF14',pr:'in arrivo',futura:true,
   cosa:'Auto, moto e persone rimpicciolite rispetto alle strade (zoom adeguato), stalli che non occupano più la carreggiata.',

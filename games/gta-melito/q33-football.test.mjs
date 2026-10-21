@@ -2,8 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {FOOTBALL_RULES as R,FOOTBALL_TEAMS,createMatch,startMatch,stepMatch,switchPlayer,classifyBallCrossing,scorerAt,matchClockLabel,matchMinute,
- matchResult,freshFootballSave,sanitizeFootballSave,recordFootballResult,footballRecordText,footballReturnPoint,footballView,drawFootballScene,
- openFootballGame,isFootballOpen,passSpeed} from './minigame-football.mjs';
+ matchResult,freshFootballSave,sanitizeFootballSave,recordFootballResult,footballRecordText,passSpeed} from './minigame-football.mjs';
 import {freshProgress,readProgress,saveProgress,SAVE_KEY} from './campaign.mjs';
 
 const read=f=>readFile(new URL('./'+f,import.meta.url),'utf8');
@@ -139,88 +138,53 @@ test('Q33 campaign save: only wins, draws and losses, once per match',()=>{
  assert.equal(sanitizeFootballSave({won:1,ids:Array.from({length:40},(_,i)=>'id'+i)}).ids.length,20,'a short list of ids is enough');
 });
 
-// a tiny DOM for the full-screen scene
-function fakeDoc(){
- const byId=new Map(),listeners=new Map();
- const ctx=new Proxy({},{get:(t,k)=>k in t?t[k]:()=>{},set:(t,k,v)=>{t[k]=v;return true;}});
- const el=(tag,id='')=>{const e={tag,id,hidden:false,textContent:'',style:{},className:'',width:0,height:0,clientWidth:0,clientHeight:0,
-  classList:{toggle(){},add(){},remove(){}},setAttribute(){},getContext:()=>ctx,appendChild(){},focus(){},setPointerCapture(){},
-  getBoundingClientRect:()=>({left:0,top:0,width:120,height:120})};
-  Object.defineProperty(e,'innerHTML',{set(html){for(const m of html.matchAll(/id="([^"]+)"/g))byId.set(m[1],el('x',m[1]));}});
-  return e;};
- const body=el('body');body.appendChild=c=>{if(c.id)byId.set(c.id,c);};
- return {body,getElementById:id=>byId.get(id)||null,createElement:tag=>el(tag),
-  addEventListener:(t,f)=>{(listeners.get(t)||listeners.set(t,new Set()).get(t)).add(f);},removeEventListener:(t,f)=>{listeners.get(t)?.delete(f);},
-  key:(type,key,code=key)=>{const e={key,code,repeat:false,stopped:false,preventDefault(){},stopImmediatePropagation(){this.stopped=true;}};for(const f of [...(listeners.get(type)||[])])f(e);return e;},
-  listeners};
-}
 
-test('Q33 back to the gate you came from, in the same pose; ESC abandons without saving',()=>{
- const pitch={id:'prova',nome:'Campetto di prova',kind:'calcetto',cx:30,cy:30,w:30,h:17,gate:{x:30,y:19}};
- assert.deepEqual(footballReturnPoint(pitch,{x:30.4,y:17.2,a:1.1}),{x:30.4,y:17.2,a:1.1},'pressed E at the gate: exactly there');
- const fromInside=footballReturnPoint(pitch,{x:36,y:33,a:0});
- assert.deepEqual([fromInside.x,fromInside.y],[30,19],'pressed E inside the lines: back at the gate');
- assert.ok(Math.abs(fromInside.a+Math.PI/2)<1e-9,'facing out of the pitch');
- // the scene: ESC = abandon, nothing recorded
- const doc=fakeDoc(),frames=[];let exit=null,results=0;
- const raf=f=>{frames.push(f);return frames.length;};
- assert.equal(openFootballGame({pitch,doc,raf,caf:()=>{},seed:9,onResult:()=>results++,onExit:e=>{exit=e;}}),true);
- assert.equal(isFootballOpen(),true);assert.equal(doc.getElementById('football-panel').hidden,false);
- assert.equal(openFootballGame({pitch,doc,raf}),false,'one match at a time');
- const k=doc.key('keydown','e');assert.equal(k.stopped,true,'keys do not reach the city underneath');
- doc.key('keydown','Escape');
- assert.equal(isFootballOpen(),false);assert.equal(doc.getElementById('football-panel').hidden,true);
- assert.deepEqual([exit.abandoned,exit.result,results],[true,null,0]);
- assert.equal(doc.listeners.get('keydown').size,0,'keyboard given back to the city');
- // a whole match, then the final whistle saves once and SPAZIO goes back
- const progress=freshProgress();exit=null;let frames2=[];
- openFootballGame({pitch,doc,raf:f=>{frames2.push(f);return 1;},caf:()=>{},seed:4,
-  onResult:r=>{recordFootballResult(progress,r);recordFootballResult(progress,r);results++;},onExit:e=>{exit=e;}});
- doc.key('keydown',' ','Space');                                 // CALCIO D'INIZIO
- let t=0;const ended=()=>/FISCHIO FINALE/.test(doc.getElementById('fb-title').textContent);
- for(let i=0;i<4000&&!ended();i++){const f=frames2.shift();if(!f)break;t+=100;f(t);}
- assert.ok(ended(),'final whistle and result card');
- for(let i=0;i<50;i++){const f=frames2.shift();if(!f)break;t+=100;f(t);}
- assert.equal(exit,null,'the result card waits for the player');
- assert.equal(results,1,'onResult once, at the final whistle');
- assert.equal(progress.football.won+progress.football.drawn+progress.football.lost,1,'one match in the record');
- assert.match(doc.getElementById('fb-text').textContent,/ROSSI \d+ – \d+ BLU/);
- doc.key('keydown',' ','Space');
- assert.ok(exit&&exit.result&&!exit.abandoned,'TORNA AL CAMPETTO');assert.equal(isFootballOpen(),false);
-});
+import {createWorldFootball,stepWorldFootball,fieldToWorld,worldToField,footballWorldPlayer,footballHud,drawWorldFootball,FOOTBALL_SPRITE_PATH} from './football-overworld.mjs';
+import {PITCHES} from './football-pitches.mjs';
 
-test('Q33 drawing and screen fit: whole pitch visible on PC and phone, pixel art without errors',()=>{
- for(const [w,h] of [[1280,720],[844,390]]){
-  const v=footballView(w,h),fieldW=R.length*v.ppm*v.P,fieldH=R.width*v.ppm*v.P;
-  assert.ok(Number.isInteger(v.P)&&v.P>=1,'whole CSS pixels per art pixel');
-  assert.ok(fieldW<w-40&&fieldH<h-40,'the whole pitch fits '+w+'×'+h);
-  assert.ok(v.ppm>=6,'players stay readable: '+v.ppm.toFixed(1)+' px/m');
-  assert.ok(v.oy*v.P-fieldH/2>=40,'the score bar does not cover the pitch');
+test('Q33 real pitches project the local match into their marked lines',()=>{
+ for(const pitch of PITCHES.filter(p=>p.kind==='calcetto')){
+  const world=createWorldFootball(pitch,{seed:19});assert.ok(world);assert.equal(world.match.players.length,10);
+  assert.equal(world.match.active,4);assert.equal(world.match.fixedPlayer,true);
+  for(const point of [[-20,-10],[0,0],[18,7]]){
+   const at=fieldToWorld(pitch,...point),back=worldToField(pitch,at.x,at.y);
+   assert.ok(Math.abs(back.x-point[0])<1e-8&&Math.abs(back.y-point[1])<1e-8);
+  }
+  for(const p of world.match.players){const at=fieldToWorld(pitch,p.x,p.y);assert.ok(Math.abs(at.x-pitch.cx)<pitch.w/2+2);assert.ok(Math.abs(at.y-pitch.cy)<pitch.h/2+2);}
+  const user=footballWorldPlayer(world);assert.ok(Number.isFinite(user.x)&&Number.isFinite(user.y));
+  assert.equal(footballHud(world).score,'0 – 0');
  }
- const calls={};const ctx=new Proxy({},{get:(t,k)=>k in t?t[k]:(...a)=>{calls[k]=(calls[k]||0)+1;},set:(t,k,v)=>{t[k]=v;return true;}});
- const m=inPlay();drawFootballScene(ctx,m,footballView(1280,720));
- assert.ok(calls.fillRect>400,'field, ten players and the ball');
- assert.equal(FOOTBALL_TEAMS.length,2);assert.notEqual(FOOTBALL_TEAMS[0].shirt,FOOTBALL_TEAMS[1].shirt,'two shirt colours');
- assert.ok(FOOTBALL_TEAMS.every(t=>t.trim&&t.keeper),'two-colour shirts and a different keeper shirt');
 });
 
-test('Q33 game wiring: the Q32 gate opens the match, the city pauses, the player returns to the gate',async()=>{
- const [game,html,mod,campaign]=await Promise.all([read('game.mjs'),read('index.html'),read('minigame-football.mjs'),read('campaign.mjs')]);
- assert.match(game,/import \{openFootballGame,isFootballOpen,recordFootballResult,footballReturnPoint,footballRecordText\} from '\.\/minigame-football\.mjs\?v=\d+'/);
- assert.match(game,/const pitch=pitchHotspot\(state\.pitches,p\.x,p\.y\);\n  if\(pitch\)\{openFootballMatch\(pitch\);return;\}/,'E at the gate (Q32)');
- assert.match(game,/function openFootballMatch\(pitch\)\{[\s\S]*?const opened=openFootballGame\(\{pitch,/,'no more notice: the match opens');
- assert.doesNotMatch(game,/LA PARTITA ARRIVA CON LA Q33/);
- assert.match(game,/const back=footballReturnPoint\(pitch,entry,PITCH_RULES\.hotspot\);\n   p\.x=back\.x;p\.y=back\.y;p\.a=back\.a;p\.car=-1;/,'return to the gate');
- assert.match(game,/recordFootballResult\(state\.progress,result\)\)\{saveProgress\(localStorage,state\.progress\)/,'result saved at once');
- assert.match(game,/hidden\|\|isFootballOpen\(\)\|\|state\.shopOpen(?:\|\|[\w.()]+)*\)\{/,'tick paused under the match');
- assert.match(game,/if\(isFootballOpen\(\)\)\{updateCityAudio\(\);requestAnimationFrame\(frame\);return;\}/,'no city drawing under the match');
- assert.match(game,/const paused=[^\n]*\|\|isFootballOpen\(\);/,'city sound paused');
- assert.match(game,/from '\.\/campaign\.mjs\?v=003'/);
- assert.match(campaign,/football:sanitizeFootballSave\(p\.football\)/);
- assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=186);
- assert.match(html,/\.football\{position:fixed;inset:0;z-index:15/,'full screen over the city');
- for(const id of ['fb-stick','fb-shoot','fb-pass','fb-switch','fb-exit','fb-score','fb-clock'])assert.ok(mod.includes('id="'+id+'"'),id);
- for(const [id,size] of [['fb-shoot',76],['fb-pass',62],['fb-switch',52]])assert.match(html,new RegExp('#'+id+'\\{width:'+size+'px;height:'+size+'px'),id+' at least 44 px');
- assert.match(html,/#fb-exit\{[^}]*min-height:44px/);
- assert.match(mod,/SPAZIO tiro · X o SHIFT passaggio · Q cambio giocatore · ESC esci/);
+test('Q33 protagonist stays the same red player; goal and final whistle occur in the overworld',()=>{
+ const pitch=PITCHES.find(p=>p.id==='europa-campetto'),world=createWorldFootball(pitch,{seed:41});
+ let events=[];for(let i=0;i<100;i++)events.push(...stepWorldFootball(world,1/60,{}));
+ assert.equal(world.match.phase,'play');assert.equal(world.match.active,4);
+ const me=world.match.players[4];world.match.ball.owner=4;me.fx=1;me.fy=0;
+ events=stepWorldFootball(world,1/60,{x:1,pass:true});
+ assert.ok(events.some(e=>e.type==='pass'));assert.equal(world.match.active,4,'pass never switches protagonist');
+ for(let i=0;i<120;i++)stepWorldFootball(world,1/60,{});
+ assert.equal(world.match.active,4);assert.equal(switchPlayer(world.match),4);
+ // Put all players away from the shot path and test a real goal event.
+ clearField(world.match);looseBall(world.match,18,0,12,0);
+ let scored=[];for(let i=0;i<30;i++)scored.push(...stepWorldFootball(world,1/60,{}));
+ assert.ok(scored.some(e=>e.type==='goal'));assert.equal(world.match.score[0],1);
+ world.match.time=R.realSeconds-.05;world.match.phase='play';
+ let final=[];for(let i=0;i<10;i++)final.push(...stepWorldFootball(world,1/60,{}));
+ assert.ok(final.some(e=>e.type==='end'));assert.equal(world.match.phase,'end');
+ assert.equal(matchResult(world.match).outcome,'vittoria');
+});
+
+test('Q33 24×40 pixel art, city wiring and no fullscreen scene',async()=>{
+ const [game,html,mod,novita]=await Promise.all([read('game.mjs'),read('index.html'),read('minigame-football.mjs'),read('novita.mjs')]);
+ assert.match(game,/createWorldFootball\(pitch/);assert.match(game,/stepWorldFootball\(state\.football/);
+ assert.match(game,/drawWorldFootball\(c,state\.football/);assert.match(game,/recordFootballResult\(state\.progress,result\)/);
+ assert.doesNotMatch(game,/openFootballGame/);assert.doesNotMatch(html,/football-panel|fb-canvas/);
+ assert.match(html,/id="football-hud"/);assert.match(html,/id="football-shoot"/);assert.match(html,/id="football-pass"/);
+ assert.match(novita,/partita sul campetto, nella città/i);assert.doesNotMatch(mod,/document|requestAnimationFrame|openFootballGame/);
+ const bytes=await readFile(new URL(FOOTBALL_SPRITE_PATH,import.meta.url));
+ assert.equal(bytes.readUInt32BE(16),384);assert.equal(bytes.readUInt32BE(20),160);
+ const calls={};const ctx=new Proxy({},{get:(t,k)=>k in t?t[k]:(...a)=>{calls[k]=(calls[k]||0)+1;},set:(t,k,v)=>{t[k]=v;return true;}});
+ drawWorldFootball(ctx,createWorldFootball(PITCHES.find(p=>p.id==='europa-campetto')));
+ assert.ok(calls.fillRect>10,'ten fallback players and the ball are drawn without an image in Node');
 });

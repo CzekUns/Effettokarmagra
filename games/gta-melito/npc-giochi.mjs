@@ -79,10 +79,10 @@ export function createStreetGames({map,enclosures,pitches,graph,doors=[],canStan
  return {ballGroups,cardTables,activeKids:[],activeCards:[],seconds:0};
 }
 
-export function stepStreetGames(games,dt,{minutes,player,canStand=()=>true,onRoad=()=>false,matchOpen=false}={}){
+export function stepStreetGames(games,dt,{minutes,player,canStand=()=>true,onRoad=()=>false,matchOpen=false,matchPitchId=null}={}){
  if(!games)return;
  const hours=streetGamesOpen(minutes);games.seconds+=Math.max(0,dt);
- games.activeKids=hours.kids&&!matchOpen?games.ballGroups:[];
+ games.activeKids=hours.kids?games.ballGroups.filter(g=>!matchOpen&&g.id!=='campo-'+matchPitchId):[];
  games.activeCards=hours.cards?games.cardTables:[];
  for(const g of games.activeKids){
   g.seconds+=Math.max(0,dt);
