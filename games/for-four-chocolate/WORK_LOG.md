@@ -72,3 +72,10 @@
 - **Verifiche:** asset WebP recuperabile con SHA `cd77033fc00aeb9e38e870224871fb607dda8ddf`. Nessuna modifica a renderer/motore e nessun test in browser del nuovo aspetto; asset **solo reference**.
 - **Da fare:** collaboratore realizza *una sola scena 3D in game* dei frigoriferi con Ipno, agente e CCTV e meccanica di prelievo; screenshot desktop+mobile landscape per approvazione prima del merge grafico.
 - **Riferimenti:** `REFERENCE_GAMEPLAY.md`, issue #96.
+
+## 2026-10-22 — ChatGPT / vincolo grafico definitivo unico
+- **Decisione esplicita utente:** usare **solo** `references/gameplay-mgs-vr-artboard.webp` come riferimento **artistico ufficiale e obbligatorio**; nessun altro artwork/stile può guidare il collaboratore. Le foto di Ipno/Totore rimangono reference d'identità e non di stile.
+- **Fatto:** creato `games/for-four-chocolate/AGENTS.md` (istruzioni vincolanti a ogni collaboratore per la sottocartella) e aggiunto richiamo nel `AGENTS.md` root; aggiornati `REFERENCE_GAMEPLAY.md`, `DIREZIONE_ARTISTICA_PS1.md`, `OBIETTIVO-FOR-FOUR-CHOCOLATE.md`, `STILE_PERSONAGGI.md` per eliminare interpretazioni estetiche alternative.
+- **Passaggio al collaboratore:** aggiornata [issue #96](https://github.com/CzekUns/Effettokarmagra/issues/96), assegnata a `ilconsulentelogistico-hue`; direttiva con image preview, checklist di screenshot browser, regole prelievo e criterio di non-merge senza approvazione visiva.
+- **Stato/verifiche:** file reference preesistente verificato sul ramo `main` con SHA blob `cd77033fc00aeb9e38e870224871fb607dda8ddf`. Non sono stati creati asset alternativi o modificato il gioco; nessuna validazione artistica di un nuovo build eseguita in questa sessione.
+- **Da fare:** collaboratore sviluppa scena reale 3D, confronta screenshot con **sola** tavola approvata, presenta PR per giudizio dell'utente; registrare eventuali scostamenti e correzioni.
