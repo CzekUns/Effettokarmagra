@@ -4,8 +4,9 @@
  * proprietario può rifarla nello stile originale. Ogni voce sa dove trovare un esempio vero nella
  * mappa (VAI A VEDERE: posto, ora, meteo); i giudizi MI PIACE / DA RIFARE restano solo in questo
  * browser e si copiano come testo. Tenere allineato con NOVITA_DA_APPROVARE.md. */
-import {LOTTO2_PEDESTRIAN_NPC_START_KIND,pedestrianSheet} from './extra-pedestrian-sprites.mjs?v=004';
+import {LOTTO2_PEDESTRIAN_NPC_START_KIND,pedestrianSheet} from './extra-pedestrian-sprites.mjs?v=005';
 const LOTTO10_12_FIRST_KIND=pedestrianSheet('lotto10').startKind;// lotti 10–12: kind 11–22
+const LOTTO13_14_FIRST_KIND=pedestrianSheet('lotto13').startKind;// lotti 13–14: kind 23–30
 export const NOVITA_AUTORE='Claude · ilconsulentelogistico-hue';
 export const NOVITA_STATO='PROVVISORIO · da approvare';
 export const NOVITA_STORAGE_KEY='gta-melito-novita-giudizi-v1';
@@ -147,7 +148,10 @@ export const NOVITA=Object.freeze([
   trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO9.test(v?.model||'')),s)},
  {id:'lotto10-12-pedoni',nome:'Lotti 10–12: 12 pedoni nuovi (anziani, giovani, adulti con borse, zaini, telefono, bastone)',lavoro:'Lotti 10–12 · CODEX-GH',pr:'in revisione',
   cosa:'Tre fogli di CODEX-GH, frame adattati a zone dalla tavola madre (stesse pose, piedi e scala), vestiti e colori nuovi. Lotto 10: signora anziana col cappotto e la borsa della spesa, ragazzo con felpa e zaino, donna con giacca chiara e borsa a tracolla, uomo in giacca con cravatta e valigetta. Lotto 11: ragazza col telefono, uomo robusto con maglietta a righe, donna col vestito corallo, sportivo in tuta. Lotto 12: nonno con coppola e bastone, nonna col vestito a fiori, ragazzo con le cuffie, ragazza con la giacca di jeans. Si mescolano alla gente in strada (residenti, passanti, clienti): guardali camminare su Via Roma nelle quattro direzioni. Grafica PROVVISORIA.',
-  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO10_12_FIRST_KIND),s)||roadMiddle(s,'Via Roma')}
+  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO10_12_FIRST_KIND),s)||roadMiddle(s,'Via Roma')},
+ {id:'lotto13-14-pedoni',nome:'Lotti 13–14: 8 pedoni nuovi (operaio, signora col carrello, ragazzino, barista, uomo estivo, signora elegante, studente, donna con velo)',lavoro:'Lotti 13–14 · CODEX-GH',pr:'in revisione',
+  cosa:'Due fogli di CODEX-GH, frame adattati a zone dalla tavola madre (stesse pose, piedi e scala), vestiti e colori nuovi. Lotto 13: operaio con gilet arancione, signora col carrello della spesa a quadri (davanti o di lato secondo la direzione), ragazzino con felpa verde e pallone sotto il braccio (più basso degli altri, di proposito), barista con camicia bianca e grembiule nero. Lotto 14: uomo estivo in canottiera e bermuda, signora elegante con cappello a falda e vestito blu, studente con giacca salvia, occhiali e cartellina, donna con velo corallo e abito lungo petrolio. Si mescolano alla gente in strada (residenti, passanti, clienti): guardali camminare su Via Roma nelle quattro direzioni. Grafica PROVVISORIA.',
+  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO13_14_FIRST_KIND),s)||roadMiddle(s,'Via Roma')}
 ].map(Object.freeze));
 
 /* Una voce è attiva se esiste davvero nel gioco (le voci «in arrivo» solo quando il modulo c'è). */

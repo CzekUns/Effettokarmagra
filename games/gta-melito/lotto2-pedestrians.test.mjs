@@ -126,7 +126,7 @@ test('lotto 2: il foglio si carica a parte e disegna la cella giusta; senza fogl
 test('lotto 2: i quattro nuovi pedoni entrano nella rotazione (kind 7–10) senza togliere gli altri né aggiungere NPC',async()=>{
  assert.equal(EXTRA_PEDESTRIAN_NPC_START_KIND,4);
  assert.equal(LOTTO2_PEDESTRIAN_NPC_START_KIND,7,'dopo i 4 originali e i 3 del secondo lotto');
- assert.ok(PEDESTRIAN_KIND_COUNT>=11,'almeno i kind fino al lotto 2 (dai lotti 10–12 sono 23)');
+ assert.ok(PEDESTRIAN_KIND_COUNT>=11,'almeno i kind fino al lotto 2 (dai lotti 10–12 sono 23, dai lotti 13–14 sono 31)');
  const [art,game,road,resident,market,page,novita]=await Promise.all(['city-art.mjs','game.mjs','roads.mjs','resident-routines.mjs','market.mjs','index.html','novita.mjs']
   .map(f=>readFile(new URL('./'+f,import.meta.url),'utf8')));
  // Dai lotti 10–12 il lotto 2 passa dalla tabella generale dei fogli extra (kind 7 in su).

@@ -43,7 +43,7 @@ import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v
 import {loadCarSprites,drawCarSprite,carDrawSize,CAR_TRAFFIC_SPRITE_IDS,CAR_TRAFFIC_STRIDE,CAR_PARKED_SPRITE_IDS,APE_CAR_IDS,COURIER_IDS,REFUSE_TRUCK_IDS,TOW_TRUCK_IDS,BUS_IDS} from './car-sprites.mjs?v=118';
 import {DAMAGE_RULES,DAMAGE_LABEL,addDamage,damagePoints,damageLevel,damagedProfile,repairCost,payRepair,repairMessage,healOutOfView,drawVehicleDamage,placeWorkshop,nearWorkshop,drawWorkshop} from './vehicle-damage.mjs?v=001';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=002';
-import {loadExtraPedestrianSprites,loadPedestrianSheets} from './extra-pedestrian-sprites.mjs?v=004';
+import {loadExtraPedestrianSprites,loadPedestrianSheets} from './extra-pedestrian-sprites.mjs?v=005';
 import {loadFryerSprite} from './friggitore-sprites.mjs?v=002';
 import {loadProfessionSprites} from './profession-sprites.mjs?v=003';
 import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=007';
@@ -77,7 +77,7 @@ import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
 import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=009';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=010';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
 import {PASSENGER_RULES,seatCapacity,ensureSeats,occupantsOf,freeSeat,boardPassenger,alightPassenger,hitchhikersNear,liftCandidate,liftDestination,alightSpot,doorSpots,trafficOccupants,lookOf,drawCabinOccupants} from './passengers.mjs?v=001';
 import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';

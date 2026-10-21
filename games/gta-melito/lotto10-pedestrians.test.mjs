@@ -55,14 +55,14 @@ const cell=(img,column,row)=>{
 };
 const differ=(a,b)=>a.some((v,i)=>v!==b[i]);
 
-test('lotti 10–12: tabella dei fogli extra con 4 fogli (lotto 2 compreso), 12 identità nuove, kind 11–22, totale 23',()=>{
- assert.deepEqual(PEDESTRIAN_SHEETS.map(s=>s.id),['lotto2','lotto10','lotto11','lotto12']);
+test('lotti 10–12: tabella dei fogli extra con i 4 fogli fino al lotto 12 (lotto 2 compreso), 12 identità nuove, kind 11–22 (totale 31 dai lotti 13–14)',()=>{
+ assert.deepEqual(PEDESTRIAN_SHEETS.slice(0,4).map(s=>s.id),['lotto2','lotto10','lotto11','lotto12']);
  assert.equal(PEDESTRIAN_SHEET_START_KIND,7);assert.equal(LOTTO2_PEDESTRIAN_NPC_START_KIND,7);assert.equal(EXTRA_PEDESTRIAN_NPC_START_KIND,4);
  const fresh=PEDESTRIAN_SHEETS.filter(s=>NEW_SHEETS.includes(s.id));
  assert.equal(fresh.length,3);
  assert.equal(fresh.reduce((n,s)=>n+s.identities.length,0),12,'12 identità nuove');
  assert.deepEqual(fresh.map(s=>s.startKind),[11,15,19]);
- assert.equal(PEDESTRIAN_KIND_COUNT,23);
+ assert.ok(PEDESTRIAN_KIND_COUNT>=23,'almeno i kind fino al lotto 12 (dai lotti 13–14 sono 31)');
  for(const s of PEDESTRIAN_SHEETS){
   assert.equal(s.identities.length,4);
   assert.ok(Object.isFrozen(s)&&Object.isFrozen(s.identities));
@@ -74,7 +74,7 @@ test('lotti 10–12: tabella dei fogli extra con 4 fogli (lotto 2 compreso), 12 
  assert.deepEqual([...pedestrianSheet('lotto10').identities],['signora-anziana-cappotto-borsa','ragazzo-felpa-zaino','donna-giacca-tracolla','uomo-giacca-cravatta-valigetta']);
  assert.deepEqual([...pedestrianSheet('lotto11').identities],['ragazza-telefono','uomo-robusto-righe','donna-vestito-corallo','sportivo-tuta']);
  assert.deepEqual([...pedestrianSheet('lotto12').identities],['nonno-coppola-bastone','nonna-vestito-fiori','ragazzo-cuffie','ragazza-giacca-jeans']);
- for(const k of [0,3,4,6,23,-1,1.5,'7'])assert.equal(pedestrianSheetForKind(k),null,'kind fuori dai fogli extra: '+k);
+ for(const k of [0,3,4,6,PEDESTRIAN_KIND_COUNT,-1,1.5,'7'])assert.equal(pedestrianSheetForKind(k),null,'kind fuori dai fogli extra: '+k);
  assert.equal(pedestrianSheet('lotto99'),null);
 });
 
@@ -147,8 +147,8 @@ test('lotti 10–12: ogni foglio si carica a parte e disegna la cella giusta; ki
   assert.equal(frames.size,4,'4 frame distinti per il nonno con il bastone (kind 19)');
   // ogni sheet usa la propria immagine
   const images=new Set(PEDESTRIAN_SHEETS.map(s=>{drawSheetPedestrianSprite(ctx,0,0,0,s.startKind,0,false);return ctx.last[0];}));
-  assert.equal(images.size,4,'quattro cache separate');
-  for(const k of [0,4,6,23,-1])assert.equal(drawSheetPedestrianSprite(ctx,0,0,0,k),false,'kind '+k+' non è dei fogli extra');
+  assert.equal(images.size,PEDESTRIAN_SHEETS.length,'una cache per foglio');
+  for(const k of [0,4,6,PEDESTRIAN_KIND_COUNT,-1])assert.equal(drawSheetPedestrianSprite(ctx,0,0,0,k),false,'kind '+k+' non è dei fogli extra');
   assert.equal(drawLotto2PedestrianSprite(ctx,22,33,0,2,0,false),true);assert.equal(ctx.last[1],8*24,'lotto 2 identità 2 come prima');
  }finally{
   if(original===undefined)delete globalThis.Image;else globalThis.Image=original;
@@ -198,7 +198,7 @@ test('lotti 10–12: collegamento nel gioco, voce NOVITÀ, registri e versioni u
   for(const src of sources)for(const m of src.matchAll(new RegExp('\\./'+mod+'\\.mjs\\?v=(\\d+)','g')))found.add(m[1]);
   assert.equal(found.size,1,mod+'.mjs importato con una sola versione: '+[...found].join(','));
  }
- assert.match(game,/extra-pedestrian-sprites\.mjs\?v=004/);
+ assert.ok(Number((game.match(/extra-pedestrian-sprites\.mjs\?v=(\d+)/)||[])[1])>=4,'extra-pedestrian-sprites.mjs?v= aggiornato');
  assert.ok(Number((page.match(/game\.mjs\?v=(\d+)/)||[])[1])>=207,'game.mjs?v= aggiornato');
  assert.ok(Number((game.match(/city-art\.mjs\?v=(\d+)/)||[])[1])>=136);
  assert.ok(Number((game.match(/roads\.mjs\?v=(\d+)/)||[])[1])>=163);
