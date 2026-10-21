@@ -141,3 +141,11 @@ I file sono in `assets/ui/loading-art-*`; la scena del Municipio è esclusa perc
 | `varianti-pedoni` | Due varianti di abiti e capelli per 11 fogli di pedoni già presenti; 88 kind nuovi, 47–134 | Varianti pedoni · CODEX-GH / ramo `varianti`, PR a cura di Claude | PAUSA › NOVITÀ › `varianti-pedoni` › VAI A VEDERE cerca il nuovo pedone più vicino su Via Roma | giorno, scala normale e screenshot 3× | Colori distinguibili, coerenza con la pixel art, leggibilità in camminata e carnagioni lasciate come nell'originale. **PROVVISORIO, da approvare da Simone**. |
 
 I 22 PNG stanno in `assets/people/`; il generatore unico è `assets/people/sources/varianti-genera.py`. Peso dei nuovi PNG: 765.427 byte, sotto 1 MB. I kind precedenti 0–46 restano invariati; il gioco legge già `PEDESTRIAN_KIND_COUNT` per passanti, residenti e clienti.
+
+### Vita di quartiere — persone ferme (21 ottobre 2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+
+| id | Elemento | Lavoro / PR | Dove guardare | Ora / parametri | Cosa giudicare |
+|---|---|---|---|---|---|
+| `vita-di-quartiere` | Gruppi di 2–3 davanti ai locali, alle chiese e al mercato; panchine occupate; due anziani al Municipio | Vita di quartiere · CODEX-GH / ramo `quartiere`, PR a cura di Claude | PAUSA › NOVITÀ › `vita-di-quartiere` › VAI A VEDERE, gruppetto più vicino | 11:00, più presenze 10–13 e 17–21 | Densità, naturalezza delle pose e dei cambi di sguardo, assenza di ostacoli su strada e ingressi. **PROVVISORIO, da approvare da Simone**. |
+
+`npc-idle.mjs` prende gli ancoraggi dai dati OSM caricati e dalle panchine/banchi già costruiti dal gioco. Non sono stati trovati un circolo localizzabile o tavolini all'aperto; non sono stati inventati. Le figure non entrano nelle collisioni e usano gli sprite già approvati o provvisori.
