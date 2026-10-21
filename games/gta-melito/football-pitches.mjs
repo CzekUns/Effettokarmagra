@@ -1,10 +1,14 @@
-/* GTA Melito — Q32: campetti da calcetto (e il campo a 11 di Via delle Palme), accesso e mappa.
+/* GTA Melito — Q32: campetti da calcetto e il campo grande di Via delle Palme, accesso e mappa.
+ * Q33 (21/10/2026, richiesta del committente): la partita si gioca DENTRO il campo, nell'overworld
+ * (football-match.mjs). Il campo da gioco è quello grande di Via delle Palme (`partita:true`), nello
+ * spazio del campo a 11 visto sulla foto aerea; i due campetti piccoli restano scenografia.
  * Position and size of every pitch are traced by eye on the Esri World Imagery aerial photo
  * (consulted 20/10/2026, coordinates only, no image in the repo) and checked against the game map:
  * no OSM building, no street (visual width + 1,2 m) inside the fenced area. OSM has no leisure=pitch
  * in the game extract, so they are `verificato:false` as map data but `foto:true` (seen on the photo).
  * Only the INVENTED infill placeholders (urban-infill) standing on a pitch are removed; OSM polygons
- * are never touched. The playable match (calcio a 5) arrives with Q33: here only the gate hotspot. */
+ * are never touched. `partita:true` marks the pitch where the Q33 match is played: inside its lines
+ * the prompt «E · GIOCA» appears (football-match.mjs). */
 
 export const PITCH_RULES=Object.freeze({
  runoff:1.5,        // synthetic grass between the lines and the fence
@@ -12,7 +16,7 @@ export const PITCH_RULES=Object.freeze({
  walkerRadius:.45,
  sample:.5,         // fence collision points
  gateWidth:3,       // pedestrian gate: too narrow for a car
- hotspot:3,         // E · GIOCA A CALCETTO within this distance of the gate (or inside the lines)
+ hotspot:3,         // (Q32) distance from the gate used by the old gate prompt; the Q33 prompt is inside the lines
  lightEvery:1       // floodlight poles at the four corners
 });
 const R=PITCH_RULES;
@@ -23,8 +27,12 @@ export const PITCH_SOURCE='Posizione e misure ricalcate a vista sulla foto aerea
 export const PITCHES=Object.freeze([
  Object.freeze({id:'palme-campetto',nome:'Campetto di Via delle Palme',kind:'calcetto',cx:550,cy:1198,w:52,h:32,a:0,
   foto:true,verificato:false,note:'campetto in erba sintetica con fari, a nord del campo a 11 (audit BF13 A01)'}),
- Object.freeze({id:'palme-campo-a-11',nome:'Campo di calcio di Via delle Palme',kind:'calcio11',cx:528.5,cy:1276,w:61,h:108,a:0,
-  foto:true,verificato:false,note:'campo a 11 in erba sintetica con tribuna a ovest; prima coperto da 9 segnaposto dell\'infill (audit BF13 A01)'}),
+ /* Q33: the big field. On the photo it is the full-size pitch (61×108); in the game it is the
+  * playable «campo grande»: lines 58×102, goals 8 wide, fence on the photo footprint. People are drawn
+  * about twice their real size here (24×40 px), so the pitch is about twice a calcio a 5 pitch too. */
+ Object.freeze({id:'palme-campo',nome:'Campo di Via delle Palme',kind:'calcetto',partita:true,cx:528.5,cy:1276,w:58,h:102,a:0,
+  porta:8,profondita:2.6,area:14,centro:7,
+  foto:true,verificato:false,note:'campo grande in erba sintetica con tribuna a ovest (sulla foto un campo a 11); prima coperto da 9 segnaposto dell\'infill (audit BF13 A01). Qui si gioca la partita Q33.'}),
  Object.freeze({id:'europa-campetto',nome:'Campetto di Corso Europa',kind:'calcetto',cx:1026,cy:1882,w:30,h:17,a:0,
   foto:true,verificato:false,note:'campetto con fari accanto al fabbricato degli spogliatoi (audit BF13 M12); il secondo campetto a sud è sotto la carreggiata disegnata di Corso Europa e resta fuori'})
 ]);
@@ -34,6 +42,8 @@ export function pitchFence(p){
  const hw=p.w/2+R.runoff,hh=p.h/2+R.runoff,c=Math.cos(p.a||0),s=Math.sin(p.a||0);
  return [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([u,v])=>[p.cx+u*c-v*s,p.cy+u*s+v*c]);
 }
+// Goal frame of a pitch: explicit (porta/profondita) or the typical calcetto / calcio a 11 sizes.
+export function goalSize(p){return {width:p.porta||(p.kind==='calcio11'?7.3:3),depth:p.profondita||(p.kind==='calcio11'?2:1.2)};}
 function toLocal(p,x,y){const dx=x-p.cx,dy=y-p.cy,c=Math.cos(p.a||0),s=Math.sin(p.a||0);return [dx*c+dy*s,-dx*s+dy*c];}
 export function insidePitch(p,x,y,pad=0){const [u,v]=toLocal(p,x,y);return Math.abs(u)<=p.w/2+R.runoff+pad&&Math.abs(v)<=p.h/2+R.runoff+pad;}
 function insidePoly(x,y,poly){
@@ -60,7 +70,7 @@ export function infillOnPitch(building,pitches=PITCHES){
  * On the two goal ends it sits beside the goal, never behind it. */
 function gateCandidates(p){
  const hw=p.w/2+R.runoff,hh=p.h/2+R.runoff,c=Math.cos(p.a||0),s=Math.sin(p.a||0),long=p.w>=p.h;
- const goalHalf=(p.kind==='calcio11'?7.3:3)/2+1.2+R.gateWidth/2;
+ const goalHalf=goalSize(p).width/2+1.2+R.gateWidth/2;
  const at=(u,v)=>({x:p.cx+u*c-v*s,y:p.cy+u*s+v*c});
  const out=[];
  for(const [side,ends,half,fixed,nx,ny] of [['nord',!long,hw,-hh,0,-1],['sud',!long,hw,hh,0,1],['ovest',long,hh,-hw,-1,0],['est',long,hh,hw,1,0]]){
@@ -107,7 +117,7 @@ export function preparePitches(list=PITCHES,{walkable=()=>true,nearStreet=()=>fa
    }
   }
   // goals: the frame (posts and back bar) is solid; calcetto 3 m wide, calcio a 11 7,3 m
-  const gw=p.kind==='calcio11'?7.3:3,depth=p.kind==='calcio11'?2:1.2,long=p.w>=p.h;
+  const {width:gw,depth}=goalSize(p),long=p.w>=p.h;
   for(const end of [-1,1]){
    for(let t=-gw/2;t<=gw/2;t+=R.sample){
     const u=long?end*(p.w/2+depth):t,v=long?t:end*(p.h/2+depth);
@@ -137,13 +147,20 @@ export function pitchVehicleContacts(P,pose,shape){
  for(const q of nearPoints(P,pose.x,pose.y,hl+1)){const dx=q.x-pose.x,dy=q.y-pose.y,u=hl-Math.abs(dx*c+dy*s),v=hw-Math.abs(-dx*s+dy*c);if(u>0&&v>0)n+=Math.min(u,v);}
  return n;
 }
-/* The calcetto hotspot: on foot inside the lines, or at the gate (inside or outside). */
+/* Q33: «E · GIOCA» on foot inside the lines of the playable pitch (partita:true). The small pitches
+ * are scenery: no prompt. */
 export function pitchHotspot(P,x,y){
  if(!P)return null;
  for(const p of P.list){
-  if(p.kind!=='calcetto')continue;
-  if(Math.hypot(x-p.gate.x,y-p.gate.y)<=R.hotspot||insidePitch(p,x,y,-R.runoff))return p;
+  if(!p.partita)continue;
+  if(insidePitch(p,x,y,-R.runoff))return p;
  }
+ return null;
+}
+// Inside the fence of a pitch (run-off included): used by the match to see who is on the field.
+export function pitchContaining(P,x,y,pad=0){
+ if(!P)return null;
+ for(const p of P.list)if(insidePitch(p,x,y,pad))return p;
  return null;
 }
 
@@ -158,17 +175,17 @@ export function drawPitches(c,P,bounds,zoom){
   c.save();c.translate(p.cx,p.cy);c.rotate(p.a||0);
   // run-off and mown stripes across the long axis
   c.fillStyle=RUNOFF;c.fillRect(-hw-R.runoff,-hh-R.runoff,p.w+2*R.runoff,p.h+2*R.runoff);
-  const bands=p.kind==='calcio11'?12:8;
+  const bands=p.kind==='calcio11'||p.partita?12:8,area=p.area||6,centre=p.centro||3,big=p.kind==='calcio11'||p.partita;
   for(let k=0;k<bands;k++){
    c.fillStyle=GREEN[k%2];
    if(long)c.fillRect(-hw+k*p.w/bands,-hh,p.w/bands+.05,p.h);else c.fillRect(-hw,-hh+k*p.h/bands,p.w,p.h/bands+.05);
   }
   // lines
-  c.strokeStyle=LINE;c.lineWidth=p.kind==='calcio11'?.24:.18;
+  c.strokeStyle=LINE;c.lineWidth=big?.3:.18;
   c.strokeRect(-hw,-hh,p.w,p.h);
   c.beginPath();if(long){c.moveTo(0,-hh);c.lineTo(0,hh);}else{c.moveTo(-hw,0);c.lineTo(hw,0);}c.stroke();
-  c.beginPath();c.arc(0,0,p.kind==='calcio11'?9.15:3,0,Math.PI*2);c.stroke();
-  c.fillStyle=LINE;c.beginPath();c.arc(0,0,.3,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(0,0,p.kind==='calcio11'?9.15:centre,0,Math.PI*2);c.stroke();
+  c.fillStyle=LINE;c.beginPath();c.arc(0,0,big?.45:.3,0,Math.PI*2);c.fill();
   for(const end of [-1,1]){
    c.save();if(long)c.scale(end,1);else c.scale(1,end);
    if(p.kind==='calcio11'){
@@ -177,16 +194,17 @@ export function drawPitches(c,P,bounds,zoom){
     box(16.5,40.3);box(5.5,18.3);
     c.beginPath();if(long)c.arc(hw-11,0,.3,0,Math.PI*2);else c.arc(0,hh-11,.3,0,Math.PI*2);c.fill();
    }else{
-    // calcio a 5: the area is a quarter-circle pair joined by a short line (radius 6 m)
+    // calcio a 5: the area is a quarter-circle pair centred on the posts, joined by a straight line
+    const gh=p.goal.width/2;
     c.beginPath();
-    if(long){c.arc(hw,-.8,6,Math.PI/2,Math.PI,false);c.lineTo(hw-6,.8);c.arc(hw,.8,6,Math.PI,Math.PI*1.5,false);}
-    else{c.arc(-.8,hh,6,-Math.PI,-Math.PI/2,false);c.lineTo(.8,hh-6);c.arc(.8,hh,6,-Math.PI/2,0,false);}
+    if(long){c.arc(hw,-gh,area,Math.PI/2,Math.PI,false);c.lineTo(hw-area,gh);c.arc(hw,gh,area,Math.PI,Math.PI*1.5,false);}
+    else{c.arc(-gh,hh,area,-Math.PI,-Math.PI/2,false);c.lineTo(gh,hh-area);c.arc(gh,hh,area,-Math.PI/2,0,false);}
     c.stroke();
-    c.beginPath();if(long)c.arc(hw-6,0,.25,0,Math.PI*2);else c.arc(0,hh-6,.25,0,Math.PI*2);c.fill();
+    c.beginPath();if(long)c.arc(hw-area,0,big?.4:.25,0,Math.PI*2);else c.arc(0,hh-area,big?.4:.25,0,Math.PI*2);c.fill();
    }
    // goal: white frame with a hatched net behind the line
    const gw=p.goal.width,gd=p.goal.depth;
-   c.fillStyle='#d9dfd6';c.strokeStyle='#ffffff';c.lineWidth=.22;
+   c.fillStyle='#d9dfd6';c.strokeStyle='#ffffff';c.lineWidth=big?.32:.22;
    if(long){c.strokeRect(hw,-gw/2,gd,gw);c.strokeStyle='#ffffff66';c.lineWidth=.06;for(let t=-gw/2;t<=gw/2;t+=.45){c.beginPath();c.moveTo(hw,t);c.lineTo(hw+gd,t);c.stroke();}}
    else{c.strokeRect(-gw/2,hh,gw,gd);c.strokeStyle='#ffffff66';c.lineWidth=.06;for(let t=-gw/2;t<=gw/2;t+=.45){c.beginPath();c.moveTo(t,hh);c.lineTo(t,hh+gd);c.stroke();}}
    c.restore();

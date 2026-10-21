@@ -36,7 +36,7 @@ button{cursor:pointer}a{color:#eec97d}button:focus-visible,a:focus-visible{outli
 .buttons button.pressed{background:#f5cc74;color:#1a2922}
 #brake{background:#5c3f38;color:#fff4d4;border:2px solid #bd8c79;font-weight:900}
 #sprint{background:#345452;color:#fff4d4;border:2px solid #67908d;font-weight:900}
-#brake,#sprint{padding:10px 11px;min-width:67px}
+#brake,#sprint,#pass{padding:10px 11px;min-width:67px}
 .mini{padding:11px 12px;background:#263b35;border:1px solid #81937b;color:#f2e0b9;font-weight:bold}
 .instructions{color:#adbbaa;font-size:11px;line-height:1.6;margin:12px 0 0}
 .credits{display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:space-between;color:#a4b5a6;font-size:10px;margin-top:12px;border-top:1px solid #526353;padding-top:10px}
@@ -120,7 +120,7 @@ button, button *, #mission-panel-toggle, .waypoint, .loading {
  user-select:none;-webkit-user-select:none;-ms-user-select:none;
  -webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
 }
-.dpad button, #accelerator, #brake, #reverse, #sprint, #steering-wheel, #mission-panel-toggle {touch-action:none}
+.dpad button, #accelerator, #brake, #reverse, #sprint, #pass, #steering-wheel, #mission-panel-toggle {touch-action:none}
 button {cursor:pointer;appearance:none;-webkit-appearance:none}
 button:focus-visible{outline:3px solid #f5d78a;outline-offset:2px}
 #mission-panel-toggle{position:absolute;bottom:12px;right:12px;z-index:3;
@@ -385,40 +385,10 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
 @media (max-height:500px){.pool-title,.pool-score{display:none}.pool-side .slot-rules,.pool-side .slot-note,.pool-record{font-size:9.5px;line-height:1.25}}
 @media (max-width:640px){.slot-card.pool-card{flex-direction:column;align-items:center}#pool-canvas{width:min(94vw,560px);height:auto}.pool-side{width:auto;max-height:none}}
 
-/* Q33: partita di calcetto 5 contro 5, scena a schermo intero sopra la città (in pausa sotto). */
-.football{position:fixed;inset:0;z-index:15;overflow:hidden;background:#1d2b24;color:#f6ebce;touch-action:none;user-select:none;-webkit-user-select:none;font-family:inherit}
-.football[hidden]{display:none}
-.football canvas{position:absolute;left:0;top:0;image-rendering:pixelated;image-rendering:crisp-edges}
-.fb-top{position:absolute;z-index:2;top:max(6px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));display:flex;align-items:center;justify-content:center;pointer-events:none}
-.fb-top #fb-exit{position:absolute;left:0;top:0;pointer-events:auto;min-width:64px;min-height:44px;padding:6px 12px;border:2px solid #d8c48c;background:#17261eeb;color:#ffdf99;font-weight:900;font-size:12px;letter-spacing:.06em;box-shadow:0 3px 8px #0009}
-.fb-score{display:flex;align-items:center;gap:8px;padding:5px 12px;background:#0f1a15e6;border:2px solid #c2ab72;box-shadow:3px 3px #09140fa6;font-size:14px;font-weight:900;letter-spacing:.06em;white-space:nowrap}
-.fb-score b{font-size:17px;color:#ffe6a7;min-width:52px;text-align:center}
-.fb-chip{padding:2px 6px;border:1px solid #0006;color:#fff}.fb-home{background:#d33b33}.fb-away{background:#2d5fc4}
-.fb-clock{margin-left:4px;color:#bfe3c2;min-width:30px;text-align:right}
-.fb-banner{position:absolute;z-index:3;left:50%;top:22%;transform:translateX(-50%);padding:8px 18px;background:#0f1a15e0;border:2px solid #ffe14a;color:#ffe14a;font-size:22px;font-weight:1000;letter-spacing:.1em;white-space:nowrap;pointer-events:none;text-shadow:2px 2px #000}
-.fb-banner[hidden]{display:none}
-.fb-card{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);width:min(460px,calc(100% - 32px));max-height:calc(100% - 70px);overflow:auto;padding:14px 16px;background:linear-gradient(150deg,#25372c,#121e18);border:2px solid #d0b772;box-shadow:5px 6px #050b08;text-align:center}
-.fb-card[hidden]{display:none}
-.fb-card h2{margin:0 0 8px;color:#f2d18a;font-size:18px;letter-spacing:.06em}
-.fb-card p{margin:0 0 12px;font-size:12px;line-height:1.55;color:#e4e8da}
-.fb-card button{min-height:44px;min-width:160px;padding:9px 18px;background:#f2d28a;color:#152a21;border:2px solid #ffe7b2;font-weight:900;font-size:13px}
-.fb-keys{position:absolute;z-index:2;left:50%;bottom:max(6px,env(safe-area-inset-bottom));transform:translateX(-50%);margin:0;padding:4px 10px;background:#0f1a15cc;border:1px solid #536951;font-size:11px;color:#d6dccd;white-space:nowrap;pointer-events:none}
-.fb-stick,.fb-buttons{display:none}
-@media(max-width:760px),(pointer:coarse){
- .fb-keys{display:none}
- .fb-stick{display:flex;position:absolute;z-index:3;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));width:clamp(104px,15vw,136px);height:clamp(104px,15vw,136px);border:2px solid #e5d19b8c;border-radius:50%;background:#15241c80;align-items:center;justify-content:center;box-shadow:0 4px 14px #0008;touch-action:none}
- .fb-knob{width:42%;height:42%;border:2px solid #ffe9ae;background:linear-gradient(145deg,#829273,#34483b);border-radius:50%;box-shadow:0 4px 0 #101913b8;pointer-events:none;transform:translate(0,0)}
- .fb-buttons{display:flex;position:absolute;z-index:3;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));align-items:flex-end;gap:10px;touch-action:none}
- .fb-buttons button{border-radius:50%;font-weight:1000;font-size:10px;letter-spacing:.04em;color:#f6ebce;border:2px solid #fff0b4;box-shadow:0 4px 0 #101d17,0 7px 12px #0009;touch-action:none;padding:2px}
- .fb-buttons #fb-shoot{width:76px;height:76px;background:linear-gradient(160deg,#c94a3d,#7a2b25)}
- .fb-buttons #fb-pass{width:62px;height:62px;margin-bottom:34px;background:linear-gradient(160deg,#3c7fc9,#1f4a7c)}
- .fb-buttons #fb-switch{width:52px;height:52px;margin-bottom:8px;background:linear-gradient(160deg,#6f7f5f,#3a4a35);font-size:9px}
- .fb-buttons button.pressed{transform:translateY(3px);box-shadow:0 1px 0 #101d17}
- .fb-score{font-size:11px;padding:4px 9px;gap:6px}.fb-score b{font-size:14px;min-width:44px}
- .fb-banner{font-size:17px;top:20%}
- .fb-card{padding:10px 12px}.fb-card h2{font-size:15px}.fb-card p{font-size:11px;margin-bottom:8px}
-}
-.football.fb-playing .fb-card{display:none}
+/* Q33 (21/10/2026): la partita si gioca nel campo, nell'overworld: niente scena a parte. Sul telefono,
+ * durante la partita, accanto all'azione (TIRO, tenuto = più forte) compare PASSA. */
+#pass{display:none;background:linear-gradient(180deg,#3c7fc9,#1f4a7c);color:#fff4d4;border:2px solid #8fc0ee;font-weight:900}
+.controls.football #pass{display:inline-block}
 </style>
 </head><body><main class="app">
 <div class="stage" id="stage">
@@ -537,5 +507,5 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  </div></div>
  <div class="rotate-screen" id="rotate-screen" hidden><div class="rotate-card"><span class="rotate-icon" aria-hidden="true">▰</span><h2>RUOTA LO SCHERMO</h2><p>GTA Melito si gioca in orizzontale. Ruota il telefono per continuare.</p></div></div>
 </div>
-<div class="controls" aria-label="Comandi"><div class="touch-actions" aria-label="Azioni"><button class="control-action" id="action">ENTRA IN VEICOLO</button><button id="sprint" aria-label="Corri a piedi">CORRI</button><div class="pedals" aria-label="Pedali di guida"><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="accelerator" aria-label="Tieni premuto per accelerare">ACCELERA</button><button id="reverse" aria-label="Tieni premuto per andare in retromarcia">RETRO</button></div></div><div class="dpad" aria-hidden="true"></div><div class="buttons"><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-auto" aria-label="Ripristina zoom automatico">AUTO</button><button class="mini" id="zoom-in" aria-label="Regola zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div></div>
-</main><script type="module" src="./game.mjs?v=196"></script></body></html>
+<div class="controls" aria-label="Comandi"><div class="touch-actions" aria-label="Azioni"><button class="control-action" id="action">ENTRA IN VEICOLO</button><button id="pass" aria-label="Passaggio al compagno più vicino">PASSA</button><button id="sprint" aria-label="Corri a piedi">CORRI</button><div class="pedals" aria-label="Pedali di guida"><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="accelerator" aria-label="Tieni premuto per accelerare">ACCELERA</button><button id="reverse" aria-label="Tieni premuto per andare in retromarcia">RETRO</button></div></div><div class="dpad" aria-hidden="true"></div><div class="buttons"><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-auto" aria-label="Ripristina zoom automatico">AUTO</button><button class="mini" id="zoom-in" aria-label="Regola zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div></div>
+</main><script type="module" src="./game.mjs?v=197"></script></body></html>

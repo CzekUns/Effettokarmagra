@@ -734,3 +734,10 @@ Schermata della slot in pixel art disegnata via codice. Griglia logica 192×128,
 - Scena a schermo intero vista dall'alto, come nei primi giochi di calcio. Campo a strisce con gli stessi verdi del campetto Q32, linee del calcio a 5, porte con rete a quadretti, recinzione con pali e fari.
 - Calciatori 7×9 pixel con maglia a due colori: ROSSI rosso e bianco, BLU blu e azzurro; portieri giallo e verde. Freccia gialla sul giocatore comandato; palla 3×3 pixel con ombra.
 - Sul telefono: levetta, TIRO, PASSA e CAMBIO; sul PC la riga dei tasti. Dove vederla: «E · GIOCA A CALCETTO» al cancello di un campetto (Via delle Palme (535, 1181) o Corso Europa (1010, 1878)), oppure PAUSA › NOVITÀ › `calcetto`.
+
+## 2026-10-21 — Q33 partita di calcetto NEL CAMPO (grafica PROVVISORIA, da approvare)
+- Niente più scena a parte: si gioca nel campo grande di Via delle Palme (58×102, ex campo a 11), con la pixel art e la telecamera della città (zoom-out ×0,8 in campo).
+- Calciatori = sprite dei pedoni con la maglia ricolorata a zone (ROSSI rosso, BLU blu, portieri giallo e verde), stessi passi e direzioni; arrivano e se ne vanno a piedi dal cancello.
+- Palla bianca con tre macchie scure che girano e ombra; anello giallo sotto l'avversario/compagno che ha la palla; barra gialla/rossa sopra il protagonista mentre carica il tiro; riga in alto «CALCETTO · ROSSI 0 – 0 BLU · 12'»; sul telefono il pulsante PASSA accanto all'azione.
+- Dove vederla: PAUSA › NOVITÀ › `calcetto`, oppure a piedi dentro le linee del campo di Via delle Palme (circa (528, 1276)). Foto della prova in `sim-q33b/pc-arrivo.png` e `pc-partita.png` (fuori dal repository).
+
