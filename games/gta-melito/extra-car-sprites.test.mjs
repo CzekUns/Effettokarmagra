@@ -43,21 +43,22 @@ function decodePNGAlpha(bytes){
  return {w,h,type,alpha:(x,y)=>type===3?(alphas[pixels[y*stride+x]]??255):pixels[y*stride+x*4+3]};
 }
 
-test('fourteen extra car families have eight distinct color variants each',()=>{
- const models=['seicento-1998','fiat-500-2007','fiat-uno-1983','smart-fortwo-2007','grande-punto-2005','ypsilon-2011','tipo-hatchback-2016','fiat-500l-2012','clio-iv-2012','golf-vii-2012','corsa-e-2014','peugeot-208-2012','qashqai-j11-2013','duster-2010'];
+test('sixteen extra car families have eight distinct color variants each',()=>{
+ const models=['seicento-1998','fiat-500-2007','fiat-uno-1983','smart-fortwo-2007','grande-punto-2005','ypsilon-2011','tipo-hatchback-2016','fiat-500l-2012','clio-iv-2012','golf-vii-2012','corsa-e-2014','peugeot-208-2012','qashqai-j11-2013','duster-2010','doblo-2010','fiorino-2008'];
  assert.equal(CAR_ATLAS_VARIANT_IDS.length,16);
  // Lotto 1 (CODEX-GH): Grande Punto and Ypsilon III add 16 variants to the original 32; lotto 5 (Tipo, 500L) 16 more,
- // lotto 6 (Clio IV, Golf VII) 16 more, lotto 7 (Corsa E, 208) and lotto 8 (Qashqai J11, Duster) 32 more.
- assert.equal(Object.keys(EXTRA_CAR_VARIANTS).length,112);
- // 128 palette variants; two standalone shop/work vehicles
+ // lotto 6 (Clio IV, Golf VII) 16 more, lotto 7 (Corsa E, 208) and lotto 8 (Qashqai J11, Duster) 32 more,
+ // lotto 9 (Doblò II, Fiorino III work vans on 52x92 cells) 16 more.
+ assert.equal(Object.keys(EXTRA_CAR_VARIANTS).length,128);
+ // 144 palette variants; two standalone shop/work vehicles
  // can join the traffic without pretending to be factory color variants.
- assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,130);
- assert.equal(CAR_PARKED_SPRITE_IDS.length,146);
- assert.deepEqual(CAR_PARKED_SPRITE_IDS.slice(130),MARKET_VARIANT_IDS);
- assert.equal(new Set(CAR_TRAFFIC_SPRITE_IDS).size,130);
- assert.deepEqual(CAR_TRAFFIC_SPRITE_IDS.slice(0,128),
+ assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,146);
+ assert.equal(CAR_PARKED_SPRITE_IDS.length,162);
+ assert.deepEqual(CAR_PARKED_SPRITE_IDS.slice(146),MARKET_VARIANT_IDS);
+ assert.equal(new Set(CAR_TRAFFIC_SPRITE_IDS).size,146);
+ assert.deepEqual(CAR_TRAFFIC_SPRITE_IDS.slice(0,144),
   [...CAR_ATLAS_VARIANT_IDS,...Object.keys(EXTRA_CAR_VARIANTS)]);
- assert.deepEqual(CAR_TRAFFIC_SPRITE_IDS.slice(128),['ape-car-azzurra','furgone-fritti']);
+ assert.deepEqual(CAR_TRAFFIC_SPRITE_IDS.slice(144),['ape-car-azzurra','furgone-fritti']);
  for(const model of models)assert.equal(Object.keys(EXTRA_CAR_VARIANTS).filter(x=>x.startsWith(model+'-')).length,8);
  assert.equal(EXTRA_CAR_VARIANTS['smart-fortwo-2007-green'].index,15);
  assert.equal(EXTRA_CAR_VARIANTS['fiat-uno-1983-white'].index,0);
@@ -65,16 +66,19 @@ test('fourteen extra car families have eight distinct color variants each',()=>{
 });
 
 test('all extra PNG atlases have transparent corners and opaque car bodies',async()=>{
- assert.equal(Object.keys(EXTRA_CAR_ATLASES).length,7);
- for(const path of Object.values(EXTRA_CAR_ATLASES)){
+ assert.equal(Object.keys(EXTRA_CAR_ATLASES).length,8);
+ for(const [atlas,path] of Object.entries(EXTRA_CAR_ATLASES)){
+  // Lotto 9: the first extra atlas with its own cell (52x92 like the Q18 service atlas); the others stay 40x60.
+  const cell=Object.values(EXTRA_CAR_VARIANTS).find(v=>v.atlas===atlas)?.cell||{width:40,height:60,columns:4,rows:4};
+  const {width:cw,height:ch}=cell;
   const bin=await readFile(new URL(path,import.meta.url));const a=decodePNGAlpha(bin);
-  assert.equal(a.w,160);assert.equal(a.h,240);
+  assert.equal(a.w,cw*4);assert.equal(a.h,ch*4);
   assert.ok(bin.length<18000,'each atlas is compact for mobile');
   for(let index=0;index<16;index++){
-   const ox=index%4*40,oy=Math.floor(index/4)*60;
-   for(const [x,y] of [[0,0],[39,0],[0,59],[39,59]])
+   const ox=index%4*cw,oy=Math.floor(index/4)*ch;
+   for(const [x,y] of [[0,0],[cw-1,0],[0,ch-1],[cw-1,ch-1]])
     assert.equal(a.alpha(ox+x,oy+y),0,path+' sprite '+index+' corner');
-   assert.ok(a.alpha(ox+20,oy+30)>200,path+' sprite '+index+' body');
+   assert.ok(a.alpha(ox+cw/2,oy+ch/2)>200,path+' sprite '+index+' body');
   }
  }
 });
@@ -94,6 +98,7 @@ test('new atlases draw right cells with model-specific dimensions',()=>{
   };
   const dimensions={};
   for(const [model,meta] of Object.entries(EXTRA_CAR_VARIANTS)){
+   if(meta.cell)continue; // lotto 9: 208x368 atlas, covered by lotto9-sprites.test.mjs with its own mock image
    assert.equal(carSpriteReady(model),true,model);
    calls.length=0;assert.equal(drawCarSprite(ctx,12,15,Math.PI/4,model),true);
    const draw=calls.find(x=>x[0]==='draw');assert.equal(draw.length,10);

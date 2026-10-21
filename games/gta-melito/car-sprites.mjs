@@ -4,6 +4,8 @@
  * Lotto 5: Tipo hatchback 2016 and 500L 2012, same grid (atlas by CODEX-GH).
  * Lotto 6: Renault Clio IV 2012 and Volkswagen Golf VII 2012, same grid (atlas by CODEX-GH).
  * Lotto 7: Opel Corsa E 2014 and Peugeot 208 2012; lotto 8: Nissan Qashqai J11 2013 and Dacia Duster 2010 (CODEX-GH).
+ * Lotto 9: Fiat Doblò II 2010 and Fiat Fiorino III 2008, work vans on a 4x4 grid with the 52x92 cells of the Q18
+ * service atlas (CODEX-GH); the first extra atlas with its own cell size (EXTRA_MODELS «cell» + «body»).
  * Body colors are illustrative, not all factory paint codes verified.
  */
 export const CAR_SPRITES=Object.freeze({
@@ -41,7 +43,16 @@ export const EXTRA_CAR_ATLASES=Object.freeze({
  // Lotto 8 (CODEX-GH, 2026-10-21): Nissan Qashqai J11 2013 and Dacia Duster 2010, RGBA atlas drawn by code
  // (sources/qashqai-duster-16-genera.py, notes in qashqai-duster-16-NOTE.md). PROVISIONAL art, to be approved by Simone.
  '@qashqai-duster-atlas':'./assets/vehicles/qashqai-duster-16-rgba.png',
+ // Lotto 9 (CODEX-GH, 2026-10-21): Fiat Doblò II 2010 and Fiat Fiorino III 2008, work vans with generic liveries, RGBA
+ // atlas 208x368 drawn by code (sources/doblo-fiorino-16-genera.py, notes in doblo-fiorino-16-NOTE.md): 4x4 cells of
+ // 52x92 like the Q18 service atlas, not 40x60. PROVISIONAL art, to be approved by Simone.
+ '@doblo-fiorino-atlas':'./assets/vehicles/doblo-fiorino-16-rgba.png',
 });
+/* Lotto 9: an extra atlas may declare its own cell (default CAR_ATLAS_CELL, 40x60) and the opaque «body» rectangle
+ * [x,y,width,height] inside the cell, the same for all the colours of the model (checked by sources/verifica.py). When
+ * «body» is set, only that rectangle is drawn at MODEL_DRAW_SIZE, so the size is the visible body and the damage marks
+ * and focus frame hug the van instead of the wide transparent margins of the 52x92 cell. */
+const WORK_VAN_CELL=Object.freeze({width:52,height:92,columns:4,rows:4});
 const EXTRA_MODELS=Object.freeze([
  {model:'seicento-1998',atlas:'@seicento-500-atlas',offset:0,colors:['white','red','blue','silver','black','yellow','green','champagne']},
  {model:'fiat-500-2007',atlas:'@seicento-500-atlas',offset:8,colors:['white','black','red','lightblue','blue','silver','cream','graphite']},
@@ -57,10 +68,15 @@ const EXTRA_MODELS=Object.freeze([
  {model:'peugeot-208-2012',atlas:'@corsa-e-208-atlas',offset:8,colors:['white','red','silver','sharkgrey','black','virtualblue','darkblue','orangepower']},
  {model:'qashqai-j11-2013',atlas:'@qashqai-duster-atlas',offset:0,colors:['white','red','silver','graphite','black','blue','bronze','burgundy']},
  {model:'duster-2010',atlas:'@qashqai-duster-atlas',offset:8,colors:['white','beige','darkgreen','silver','graphite','black','blue','brown']},
+ // Lotto 9: work vans; «white-edilizia» / «white-frutta» carry a generic readable lettering (no real firms).
+ {model:'doblo-2010',atlas:'@doblo-fiorino-atlas',offset:0,cell:WORK_VAN_CELL,body:Object.freeze([1,7,50,79]),
+  colors:['white','white-stripe','grey','blue','red','yellow','darkgreen','white-edilizia']},
+ {model:'fiorino-2008',atlas:'@doblo-fiorino-atlas',offset:8,cell:WORK_VAN_CELL,body:Object.freeze([5,17,42,62]),
+  colors:['white','white-stripe','grey','blue','red','yellow','darkgreen','white-frutta']},
 ]);
 export const EXTRA_CAR_VARIANTS=Object.freeze(Object.fromEntries(
- EXTRA_MODELS.flatMap(({model,atlas,offset,colors})=>
-  colors.map((color,i)=>[model+'-'+color,{index:offset+i,model,color,atlas}]))
+ EXTRA_MODELS.flatMap(({model,atlas,offset,colors,cell,body})=>
+  colors.map((color,i)=>[model+'-'+color,{index:offset+i,model,color,atlas,...(cell?{cell,body}:{})}]))
 ));
 /* 4x4 atlas: 8 Ape market bodies + 8 food vendor stalls.
  * Open awnings belong to stationary vehicles, not AI traffic.
@@ -120,7 +136,7 @@ export const CAR_TRAFFIC_SPRITE_IDS=Object.freeze([...CAR_ATLAS_VARIANT_IDS,...O
 export const CAR_PARKED_SPRITE_IDS=Object.freeze([...CAR_TRAFFIC_SPRITE_IDS,...MARKET_VARIANT_IDS]);
 // Lotto 6: the traffic walks the id list with a fixed stride (game.mjs trafficModel). With 98 ids a stride of 7 would
 // spawn only 14 models, so the stride is the first odd number from 7 that is coprime with the list length
-// (9 with 98 ids; 7 again since lotti 7-8 brought the list to 130 ids).
+// (9 with 98 ids; 7 again since lotti 7-8 brought the list to 130 ids and lotto 9 to 146 = 2·73).
 const gcd=(a,b)=>b?gcd(b,a%b):a;
 export const CAR_TRAFFIC_STRIDE=[7,9,11,13,17,19,23].find(s=>gcd(s,CAR_TRAFFIC_SPRITE_IDS.length)===1);
 const MODEL_DRAW_SIZE=Object.freeze({
@@ -140,6 +156,10 @@ const MODEL_DRAW_SIZE=Object.freeze({
  // Lotto 8: Qashqai J11 and Duster are crossovers, a bit wider and longer than every hatchback but still narrower
  // than the furgone-ambulante (7.9), so they stay inside their lane (CODEX-GH's proposals).
  'qashqai-j11-2013':[5.8,9.4],'duster-2010':[5.7,9.2],
+ // Lotto 9: size of the VISIBLE body (the «body» rectangle of the cell is drawn, not the whole 52x92 cell): the Doblò
+ // between the Punto 188 (body ~4,4 x 8,5) and the Q18 courier van (body ~6,3 x 10), the Fiorino a Punto-length van;
+ // both narrower than the courier, so they stay in the lane (CODEX-GH's proposals, kept as they are).
+ 'doblo-2010':[5.9,9.6],'fiorino-2008':[5.5,8.9],
  'ape-car-azzurra':[4.1,6.25],'furgone-fritti':[5.65,8.65],
  'ape-mercato':[5.7,6.9],'furgone-ambulante':[7.9,9.3],'ape-classica':[5.7,6.9],
  // Q18: whole 52x92 cell; the van body is then ~5,7 x 9,4 and the refuse truck ~6,3 x 12,4.
@@ -170,6 +190,7 @@ export function carSpriteReady(model){
  if(MARKET_VARIANTS[model]||APE_CAR_VARIANTS[model])return !!(img?.complete&&img.naturalWidth===224&&img.naturalHeight===256);
  if(SERVICE_VARIANTS[model])return !!(img?.complete&&img.naturalWidth===208&&img.naturalHeight===368);
  if(SERVICE2_VARIANTS[model])return !!(img?.complete&&img.naturalWidth===208&&img.naturalHeight===496);
+ if(EXTRA_CAR_VARIANTS[model]?.cell){const c=EXTRA_CAR_VARIANTS[model].cell;return !!(img?.complete&&img.naturalWidth===c.width*c.columns&&img.naturalHeight===c.height*c.rows);}
  if(CAR_ATLAS_VARIANTS[model]||EXTRA_CAR_VARIANTS[model])return !!(img?.complete&&img.naturalWidth===160&&img.naturalHeight===240);
  return !!(img?.complete&&img.naturalWidth>0&&img.naturalHeight>0);
 }
@@ -187,9 +208,11 @@ export function drawCarSprite(ctx,x,y,angle,model,focused=false){
  const [width,length]=carDrawSize(model);
  ctx.save();ctx.translate(x,y);ctx.rotate(angle+Math.PI/2);ctx.imageSmoothingEnabled=false;
  if(variant){
-  const {width:sw,height:sh,columns}=SERVICE2_VARIANTS[model]?SERVICE2_ATLAS_CELL:SERVICE_VARIANTS[model]?SERVICE_ATLAS_CELL:MARKET_VARIANTS[model]||APE_CAR_VARIANTS[model]?MARKET_ATLAS_CELL:CAR_ATLAS_CELL;
+  const {width:sw,height:sh,columns}=SERVICE2_VARIANTS[model]?SERVICE2_ATLAS_CELL:SERVICE_VARIANTS[model]?SERVICE_ATLAS_CELL:MARKET_VARIANTS[model]||APE_CAR_VARIANTS[model]?MARKET_ATLAS_CELL:variant.cell||CAR_ATLAS_CELL;
   const sx=(variant.index%columns)*sw,sy=Math.floor(variant.index/columns)*sh;
-  ctx.drawImage(img,sx,sy,sw,sh,-width/2,-length/2,width,length);
+  // Lotto 9: an extra atlas with a «body» rectangle draws only the opaque part of the cell at [width,length].
+  const [bx,by,bw,bh]=variant.body||[0,0,sw,sh];
+  ctx.drawImage(img,sx+bx,sy+by,bw,bh,-width/2,-length/2,width,length);
  }else ctx.drawImage(img,-width/2,-length/2,width,length);
  if(focused){
   ctx.strokeStyle='#f5d887';ctx.lineWidth=.18;

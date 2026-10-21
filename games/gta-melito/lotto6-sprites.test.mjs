@@ -85,8 +85,8 @@ test('lotto 6: both models are in the AI traffic and in the parked cars, with th
  }
  // The traffic picks ids with stride CAR_TRAFFIC_STRIDE (game.mjs): over a full cycle EVERY car id is spawned.
  // With 98 ids a fixed 7 would reach only 14 of them (7 divides 98): the stride must be coprime with the length
- // (it was 9 with 98 ids; lotti 7-8 brought the list to 130 ids, coprime with 7 again).
- assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,130);assert.equal(CAR_TRAFFIC_STRIDE,7);
+ // (it was 9 with 98 ids; lotti 7-8 brought the list to 130 ids, coprime with 7 again, lotto 9 to 146 = 2·73).
+ assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,146);assert.equal(CAR_TRAFFIC_STRIDE,7);
  const seen=new Set();for(let i=0;i<CAR_TRAFFIC_SPRITE_IDS.length;i++)seen.add(CAR_TRAFFIC_SPRITE_IDS[(i*CAR_TRAFFIC_STRIDE)%CAR_TRAFFIC_SPRITE_IDS.length]);
  for(const id of IDS)assert.ok(seen.has(id),'spawned '+id);
  assert.equal(seen.size,CAR_TRAFFIC_SPRITE_IDS.length,'every traffic car id is reachable');

@@ -52,7 +52,9 @@ Riferimenti visivi iniziali già approvati: **Panda moderna bianca** e **Panda F
 - **Nissan Qashqai J11** (2013–2021) — **FATTO, lotto 8 del 21/10/2026** (CODEX-GH + Claude): `assets/vehicles/qashqai-duster-16-rgba.png` celle 0–7, modello `qashqai-j11-2013`; PROVVISORIO, da approvare da Simone.
 - **Dacia Duster** prima serie (2010–2017) — **FATTO, lotto 8 del 21/10/2026**: stesso atlante, celle 8–15, modello `duster-2010`; PROVVISORIO, da approvare da Simone.
 - **Jeep Renegade** per crossover/SUV.
-- **Fiat Doblò**, **Fiat Fiorino/Qubo**, **Fiat Ducato** per consegne e lavoro.
+- **Fiat Doblò II** (2010–2022) — **FATTO, lotto 9 del 21/10/2026** (CODEX-GH + Claude): `assets/vehicles/doblo-fiorino-16-rgba.png` (208×368, celle **52×92** come l'atlante di servizio Q18; in `EXTRA_MODELS` con `cell` e `body`) celle 0–7, modello `doblo-2010`, livree generiche (l'ultima con scritta `EDILIZIA`); PROVVISORIO, da approvare da Simone.
+- **Fiat Fiorino III** (2008–2021) — **FATTO, lotto 9 del 21/10/2026**: stesso atlante, celle 8–15, modello `fiorino-2008` (l'ultima livrea con scritta `FRUTTA`); PROVVISORIO, da approvare da Simone.
+- **Fiat Qubo**, **Fiat Ducato** per consegne e lavoro.
 - Eventuali scooter/moto in seguito (asset e collisioni dedicate).
 
 Le liste rappresentano **ipotesi di varietà stradale plausibile**, non statistiche sulla reale diffusione a Melito. I colori e l'anno vanno verificati modello per modello.

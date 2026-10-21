@@ -99,11 +99,12 @@ test('lotti 7-8: all four models are in the AI traffic and in the parked cars, w
   assert.ok(CAR_PARKED_SPRITE_IDS.includes(id),'parked '+id);
  }
  // The traffic picks ids with stride CAR_TRAFFIC_STRIDE (game.mjs): over a full cycle EVERY car id is spawned.
- // With 130 ids the stride is 7 again (130 = 2·5·13, coprime with 7); the parked step (k*7)%146 is coprime too.
+ // With 130 ids the stride was 7 again (130 = 2·5·13); lotto 9 brought the list to 146 = 2·73, still coprime with 7,
+ // and the parked step (k*7)%162 is coprime too.
  const gcd=(a,b)=>b?gcd(b,a%b):a;
- assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,130);assert.equal(CAR_TRAFFIC_STRIDE,7);
+ assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,146);assert.equal(CAR_TRAFFIC_STRIDE,7);
  assert.equal(gcd(CAR_TRAFFIC_STRIDE,CAR_TRAFFIC_SPRITE_IDS.length),1);
- assert.equal(CAR_PARKED_SPRITE_IDS.length,146);assert.equal(gcd(7,CAR_PARKED_SPRITE_IDS.length),1);
+ assert.equal(CAR_PARKED_SPRITE_IDS.length,162);assert.equal(gcd(7,CAR_PARKED_SPRITE_IDS.length),1);
  const seen=new Set();for(let i=0;i<CAR_TRAFFIC_SPRITE_IDS.length;i++)seen.add(CAR_TRAFFIC_SPRITE_IDS[(i*CAR_TRAFFIC_STRIDE)%CAR_TRAFFIC_SPRITE_IDS.length]);
  for(const id of IDS)assert.ok(seen.has(id),'spawned '+id);
  assert.equal(seen.size,CAR_TRAFFIC_SPRITE_IDS.length,'every traffic car id is reachable');

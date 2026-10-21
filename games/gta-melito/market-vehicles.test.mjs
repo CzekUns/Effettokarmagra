@@ -48,9 +48,9 @@ test('vehicle sheet has 16 variants, eight Ape and eight food trucks',()=>{
  assert.deepEqual(MARKET_VARIANT_IDS.slice(0,4),['ape-azzurra-vuota','ape-azzurra-ferro','ape-azzurra-ortofrutta','ape-azzurra-pesce']);
  assert.equal(MARKET_VARIANT_IDS[9],'food-pere-e-musso');
  assert.equal(MARKET_VARIANT_IDS[15],'food-misto');
- assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,130,'vehicles with extended awnings are parked only');
- assert.deepEqual(CAR_PARKED_SPRITE_IDS.slice(130),MARKET_VARIANT_IDS);
- assert.equal(new Set(CAR_PARKED_SPRITE_IDS).size,146);
+ assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,146,'vehicles with extended awnings are parked only');
+ assert.deepEqual(CAR_PARKED_SPRITE_IDS.slice(146),MARKET_VARIANT_IDS);
+ assert.equal(new Set(CAR_PARKED_SPRITE_IDS).size,162);
 });
 test('all 16 PNG cells: no opaque rectangular background, actual visible vehicle',async()=>{
  const file=await readFile(new URL(MARKET_ATLAS_PATH,import.meta.url));
