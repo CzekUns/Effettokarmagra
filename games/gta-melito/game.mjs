@@ -77,7 +77,9 @@ import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
 import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=010';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=011';
+// Lotto 15: dialoghi con volto (prototipo per la storyline, PROVVISORIO): barra in basso + riquadro del personaggio.
+import {openDialogue,isDialogueOpen,DEMO_DIALOGUE} from './dialogue.mjs?v=001';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
 import {PASSENGER_RULES,seatCapacity,ensureSeats,occupantsOf,freeSeat,boardPassenger,alightPassenger,hitchhikersNear,liftCandidate,liftDestination,alightSpot,doorSpots,trafficOccupants,lookOf,drawCabinOccupants} from './passengers.mjs?v=001';
 import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
@@ -1582,6 +1584,8 @@ function tick(dt){
   stick.x=0;stick.y=0;
   return;
  }
+ // Lotto 15: con la barra del dialogo aperta i comandi di movimento restano azzerati, ma il mondo e l'orologio NPC vanno avanti.
+ if(isDialogueOpen()){for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;}
  // Q02: in banca gli NPC non vengono simulati, quindi anche il loro orologio resta fermo.
  state.npcClockMinutes=advanceNpcClock(state.npcClockMinutes,dt,{interior:!!state.bankInterior||!!state.shopInterior});
  state.weather=weatherAt(state.npcClockMinutes,{forced:state.preview?.weather||FORCED_WEATHER});
@@ -2501,6 +2505,8 @@ function bind(){
  window.addEventListener('keydown',e=>{
   // Q37: con il telefono aperto frecce, INVIO, ESC e la scrittura nella ricerca restano al telefono.
   if(!$('pause-menu').hidden&&phoneUi?.key(e))return;
+  // Lotto 15: con la barra del dialogo aperta INVIO/SPAZIO/ESC li gestisce dialogue.mjs; gli altri tasti di gioco restano fermi.
+  if(isDialogueOpen()&&$('pause-menu').hidden)return;
   const dir={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];
   if(dir){e.preventDefault();pressed[dir]=true;}
   if(e.key==='Shift')pressed.run=true;
@@ -2590,6 +2596,8 @@ function bind(){
  function refreshNovita(){
   renderNovita($('novita-list'),{state,judgements:novitaJudgements,
    onGo:entry=>{if(goToNovita(entry))closePause();},
+   // Lotto 15: PROVA apre il dialogo di esempio con i sei volti (nessun aggancio alle missioni).
+   onProva:entry=>{if(entry.prova==='dialogo'){closePause();openDialogue(DEMO_DIALOGUE);}},
    onJudge:(id,value)=>{novitaJudgements=toggleJudgement(novitaJudgements,id,value);saveJudgements(globalThis.localStorage,novitaJudgements);refreshNovita();}});
   const done=Object.keys(novitaJudgements).length,total=NOVITA.filter(e=>!e.futura).length;
   $('novita-count').textContent=done+' giudicate su '+total;

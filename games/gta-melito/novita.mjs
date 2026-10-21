@@ -151,7 +151,10 @@ export const NOVITA=Object.freeze([
   trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO10_12_FIRST_KIND),s)||roadMiddle(s,'Via Roma')},
  {id:'lotto13-14-pedoni',nome:'Lotti 13–14: 8 pedoni nuovi (operaio, signora col carrello, ragazzino, barista, uomo estivo, signora elegante, studente, donna con velo)',lavoro:'Lotti 13–14 · CODEX-GH',pr:'in revisione',
   cosa:'Due fogli di CODEX-GH, frame adattati a zone dalla tavola madre (stesse pose, piedi e scala), vestiti e colori nuovi. Lotto 13: operaio con gilet arancione, signora col carrello della spesa a quadri (davanti o di lato secondo la direzione), ragazzino con felpa verde e pallone sotto il braccio (più basso degli altri, di proposito), barista con camicia bianca e grembiule nero. Lotto 14: uomo estivo in canottiera e bermuda, signora elegante con cappello a falda e vestito blu, studente con giacca salvia, occhiali e cartellina, donna con velo corallo e abito lungo petrolio. Si mescolano alla gente in strada (residenti, passanti, clienti): guardali camminare su Via Roma nelle quattro direzioni. Grafica PROVVISORIA.',
-  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO13_14_FIRST_KIND),s)||roadMiddle(s,'Via Roma')}
+  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO13_14_FIRST_KIND),s)||roadMiddle(s,'Via Roma')},
+ {id:'dialogo-volti',nome:'Lotto 15: dialoghi con volto — barra di testo in basso e riquadro del personaggio (6 volti artwork)',lavoro:'Lotto 15 · CODEX-GH',pr:'in revisione',
+  cosa:'Prototipo per i dialoghi delle missioni (decisione di Simone del 21/10): una barra scura nella parte bassa dello schermo con il nome in maiuscolo e il testo che scorre a macchina da scrivere, e accanto il riquadro con il volto di chi parla (illustrazioni cel-shaded di CODEX-GH: nonna severa, meccanico, ragazza con le cuffie, vigile urbano, barista anziano, ragazzo quindicenne; personaggi inventati). PROVA apre un dialogo di esempio di 6 battute: un tocco sulla barra, INVIO/SPAZIO o AVANTI completano la riga o passano alla battuta dopo; mentre è aperto i comandi di movimento sono fermi ma il paese va avanti. Non ancora agganciato alle missioni. Grafica PROVVISORIA.',
+  prova:'dialogo',trova:null}
 ].map(Object.freeze));
 
 /* Una voce è attiva se esiste davvero nel gioco (le voci «in arrivo» solo quando il modulo c'è). */
@@ -203,8 +206,9 @@ export function judgementSummary(judgements,{date=new Date()}={}){
   'DA RIFARE ('+pick('rifare').length+'):',...pick('rifare').map(line),'',
   'NON ANCORA GIUDICATE ('+open.length+'):',...open.map(line)].join('\n');
 }
-/* Lista del menu PAUSA. onGo(entry) porta all'esempio, onJudge(id,value) registra il giudizio. */
-export function renderNovita(container,{state,judgements={},onGo=()=>{},onJudge=()=>{}}={}){
+/* Lista del menu PAUSA. onGo(entry) porta all'esempio, onJudge(id,value) registra il giudizio,
+ * onProva(entry) apre la prova per le voci con `prova` (es. il dialogo con volto): al posto di VAI A VEDERE c'è PROVA. */
+export function renderNovita(container,{state,judgements={},onGo=()=>{},onJudge=()=>{},onProva=()=>{}}={}){
  if(!container)return;
  const doc=container.ownerDocument;container.textContent='';
  for(const entry of NOVITA){
@@ -215,8 +219,10 @@ export function renderNovita(container,{state,judgements={},onGo=()=>{},onJudge=
   meta.textContent=entry.lavoro+' · PR '+entry.pr+' · '+(entry.futura&&!on?'IN ARRIVO':NOVITA_STATO)+(judgements[entry.id]?' · '+GIUDIZI[judgements[entry.id]]:'');
   const what=doc.createElement('div');what.className='novita-what';what.textContent=entry.cosa;
   const bar=doc.createElement('div');bar.className='novita-actions';
-  const go=doc.createElement('button');go.type='button';go.textContent='VAI A VEDERE';
-  go.disabled=!on||typeof entry.trova!=='function';go.addEventListener('click',()=>onGo(entry));bar.append(go);
+  const go=doc.createElement('button');go.type='button';
+  if(entry.prova){go.textContent='PROVA';go.disabled=!on;go.addEventListener('click',()=>onProva(entry));}
+  else{go.textContent='VAI A VEDERE';go.disabled=!on||typeof entry.trova!=='function';go.addEventListener('click',()=>onGo(entry));}
+  bar.append(go);
   for(const [value,label] of Object.entries(GIUDIZI)){
    const b=doc.createElement('button');b.type='button';b.textContent=label;b.disabled=!on;
    b.setAttribute('aria-pressed',String(judgements[entry.id]===value));b.className='novita-'+value;
