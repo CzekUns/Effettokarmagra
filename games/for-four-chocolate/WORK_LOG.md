@@ -36,3 +36,10 @@
 - **Verifiche e stato:** GitHub segnala entrambe le PR chiuse e merged, zero PR aperte dopo i merge. Ispezionate nel connettore immagine `assets/sheet.png` e screenshot `assets/style-in-game.png`: sprite essenziali con grafica ancora provvisoria. Il collaborator segnala test Node e prova Chromium superati; **non rieseguiti in questa sessione**. Al controllo post-merge i due workflow di deploy del secondo merge erano `in_progress`.
 - **Da fare:** verificare il deploy completato e il gameplay dal browser. Migliorare la grafica delle corsie, decorazioni e sprite a partire dalle reference originali; ottenere approvazione del design definitivo. Aggiungere punteggi/WhatsApp e scene narrative nei lotti successivi.
 - **Riferimenti:** https://github.com/CzekUns/Effettokarmagra/pull/94 · https://github.com/CzekUns/Effettokarmagra/pull/95
+
+## 2026-10-21 — ChatGPT / correzione direzione grafica su feedback utente
+- **Feedback:** l'utente voleva una resa come **Metal Gear Solid PlayStation 1**; l'attuale scena a quadrettoni e figure 24×40 appare invece come un gioco Commodore 64. Il bersaglio estetico precedente è esplicitamente respinto.
+- **Fatto:** creata la direzione artistica vincolante `DIREZIONE_ARTISTICA_PS1.md`, corretta la priorità nel documento obiettivo e dichiarata storica/superata la bibbia sprite `STILE_PERSONAGGI.md`.
+- **Come e dove:** in futuro mantenere `logic.mjs` e la logica stealth ma sostituire il renderer 2D a tile con una scena a profondità reale, camera elevata e obliqua, modelli low-poly/materiali/luci, campo visivo e ambientazione ceca credibile.
+- **Verifiche:** aggiornamenti documentali; **nessuna modifica al renderer**, nessuno screenshot grafico PS1, nessun test browser/deploy grafico svolto in questa sessione.
+- **Da fare:** prima una singola scena campione in gioco per approvazione visiva, poi resto del livello. Vietato continuare a produrre altri sprite retro 24×40 come base finale.
