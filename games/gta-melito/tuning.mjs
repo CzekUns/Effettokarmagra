@@ -5,7 +5,7 @@
  * del modello (vehicle-handling BF05): mai moltiplicazioni cumulative, tetto al 15%.
  * Neon: bagliore colorato sotto la scocca, tenue di giorno e ben visibile di notte.
  * Si paga in euro di gioco del salvataggio (economia Q06); tutto resta nel posto del garage. */
-import {CAR_ATLAS_VARIANTS,EXTRA_CAR_VARIANTS,APE_CAR_VARIANTS} from './car-sprites.mjs?v=116';
+import {CAR_ATLAS_VARIANTS,EXTRA_CAR_VARIANTS,APE_CAR_VARIANTS} from './car-sprites.mjs?v=117';
 
 export const PERF_LEVELS=Object.freeze([0,5,10,15]);
 export const PERF_CAP=15;

@@ -29,6 +29,8 @@ const SERVICE_VAN=/corriere|courier/i, REFUSE_TRUCK=/nettezza|rifiut|compatt|ref
 const LOTTO1=/^(grande-punto-2005|ypsilon-2011)-/;
 const LOTTO5=/^(tipo-hatchback-2016|fiat-500l-2012)-/;
 const LOTTO6=/^(clio-iv-2012|golf-vii-2012)-/;
+const LOTTO7=/^(corsa-e-2014|peugeot-208-2012)-/;
+const LOTTO8=/^(qashqai-j11-2013|duster-2010)-/;
 const hasPassengers=v=>(Array.isArray(v?.passengers)&&v.passengers.length>0)||(Array.isArray(v?.occupants)&&v.occupants.length>0);
 
 /* Le voci: chi l'ha fatta, in quale PR, cosa guardare e dove (trova → punto da inquadrare).
@@ -128,7 +130,15 @@ export const NOVITA=Object.freeze([
  {id:'lotto6-auto',nome:'Lotto 6: Renault Clio IV 2012 e Volkswagen Golf VII 2012 nel traffico',lavoro:'Lotto 6 · CODEX-GH',pr:'in revisione',
   cosa:'Due modelli nuovi tra le auto del traffico e dei parcheggi, 8 tinte ciascuno (atlante pixel art disegnato da codice da CODEX-GH; tinte interpretate, non codici vernice). Guarda la fila di auto in Via Roma: la Clio è corta e arrotondata, con muso curvo e fari a goccia; la Golf è più lunga, larga e squadrata, con tetto piatto e fari stretti. Grafica PROVVISORIA.',
   disponibile:s=>vehicles(s).some(v=>LOTTO6.test(v?.model||''))||!s?.traffic,
-  trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO6.test(v?.model||'')),s)}
+  trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO6.test(v?.model||'')),s)},
+ {id:'lotto7-auto',nome:'Lotto 7: Opel Corsa E 2014 e Peugeot 208 2012 nel traffico',lavoro:'Lotto 7 · CODEX-GH',pr:'in revisione',
+  cosa:'Due modelli nuovi tra le auto del traffico e dei parcheggi, 8 tinte ciascuno (atlante pixel art disegnato da codice da CODEX-GH; tinte interpretate, non codici vernice). Guarda la fila di auto in Via Roma: la Corsa ha la coda alta, il tetto lungo e i fari anteriori a freccia; la 208 ha fari allungati e il tetto che si restringe e scende verso la coda. Grafica PROVVISORIA.',
+  disponibile:s=>vehicles(s).some(v=>LOTTO7.test(v?.model||''))||!s?.traffic,
+  trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO7.test(v?.model||'')),s)},
+ {id:'lotto8-auto',nome:'Lotto 8: Nissan Qashqai J11 2013 e Dacia Duster 2010 nel traffico',lavoro:'Lotto 8 · CODEX-GH',pr:'in revisione',
+  cosa:'Due crossover nuovi tra le auto del traffico e dei parcheggi, 8 tinte ciascuno (atlante pixel art disegnato da codice da CODEX-GH; tinte interpretate, non codici vernice; il verde scuro della Duster è una scelta artistica). Guarda la fila di auto in Via Roma: il Qashqai ha muso a V, spalle e lunotto rastremati; la Duster è più squadrata, con coda verticale, paraurti scuri e passaruota marcati; entrambi con barre sul tetto, un po\' più grandi delle utilitarie. Grafica PROVVISORIA.',
+  disponibile:s=>vehicles(s).some(v=>LOTTO8.test(v?.model||''))||!s?.traffic,
+  trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO8.test(v?.model||'')),s)}
 ].map(Object.freeze));
 
 /* Una voce è attiva se esiste davvero nel gioco (le voci «in arrivo» solo quando il modulo c'è). */

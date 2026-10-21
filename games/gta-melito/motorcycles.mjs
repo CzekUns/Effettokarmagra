@@ -7,7 +7,7 @@ export const MOTORCYCLE_MODELS=Object.freeze(['scooter-sh','scooter-retro','moto
 export const MOTORCYCLE_COLORS=Object.freeze(['white','red','black','blue']);
 export const MOTORCYCLE_IDS=Object.freeze(MOTORCYCLE_MODELS.flatMap(m=>MOTORCYCLE_COLORS.map(c=>`moto-${m}-${c}`)));
 export const MOTORCYCLE_CELL=Object.freeze({width:40,height:68,columns:4,rows:4});
-import {stepVehicle,MOTORCYCLE_HANDLING} from './vehicle-handling.mjs?v=008';
+import {stepVehicle,MOTORCYCLE_HANDLING} from './vehicle-handling.mjs?v=009';
 import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
 export const isMotorcycle=v=>v?.vehicleType==='motorcycle';
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
