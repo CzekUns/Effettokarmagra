@@ -7,7 +7,7 @@
  * the same door. Doors of named OSM shops are marked 'osm-poi', the others 'inventata'. */
 import {makeCollisionIndex,addToCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked} from './traffic-collision.mjs?v=131';
 import {makeResidentAgenda,residentDepartureWindow} from './npc-agenda.mjs?v=002';
-import {PEDESTRIAN_KIND_COUNT} from './extra-pedestrian-sprites.mjs?v=003';
+import {PEDESTRIAN_KIND_COUNT} from './extra-pedestrian-sprites.mjs?v=004';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const hash=n=>{let x=(Number(n)||1)|0;x=Math.imul(x^x>>>16,2246822519);x=Math.imul(x^x>>>13,3266489917);return (x^x>>>16)>>>0;};
 const rand=n=>hash(n)/4294967295;

@@ -12,7 +12,7 @@ import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
 import {easeRoofReveal} from './roof-reveal.mjs?v=121';
 import {NPC_DAY_MINUTES,npcDay,npcWeekday} from './npc-agenda.mjs?v=002';
 import {addToCollisionIndex,moveInCollisionIndex} from './traffic-collision.mjs?v=131';
-import {PEDESTRIAN_KIND_COUNT} from './extra-pedestrian-sprites.mjs?v=003';
+import {PEDESTRIAN_KIND_COUNT} from './extra-pedestrian-sprites.mjs?v=004';
 
 // Stessi dati di data/market-area.json (il test lo verifica): il gioco non legge quel file a runtime.
 export const MARKET_AREA=Object.freeze({
