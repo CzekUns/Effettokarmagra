@@ -1,5 +1,14 @@
 # FOR FOUR CHOCOLATE — Reference di gameplay e art direction (22 ottobre 2026)
 
+## TAVOLA GRAFICA — REFERENCE CARICATA NELLA REPOSITORY
+
+![Artboard di riferimento: scena di gameplay, personaggi alla stessa scala, condizioni di prelievo e zone sorvegliate](./references/gameplay-mgs-vr-artboard.webp)
+
+**File effettivo:** [references/gameplay-mgs-vr-artboard.webp](./references/gameplay-mgs-vr-artboard.webp) (anteprima WebP 720 px, compressa per la repository). L'illustrazione originale ad alta risoluzione è stata generata nella conversazione del 22 ottobre 2026.
+
+**Attenzione:** usare questa tavola per camera/proporzioni, materiali, densità dei prodotti, palette, variazioni di sorveglianza e leggibilità dei personaggi. Le scritte italiane della tavola sono *etichette esplicative*: nel gioco il supermercato deve avere insegne in **ceco**. È una reference artistica, **non** uno screenshot del gioco né texture/fondale da incollare.
+
+
 ## 0. Stato e priorità
 **Nuovo brief vincolante per il collaboratore.** L'attuale campione `sample-ps1.html` ha il giusto inizio tecnologico (Three.js, volumetria, camera obliqua), ma è ancora un *blockout* a parallelepipedi. L'utente ha bocciato esplicitamente i personaggi a «Pinocchio» e la resa C64. **Non basta arrotondare o aggiungere dettagli agli stessi manichini:** serve un nuovo linguaggio di modelli, proporzioni, texture e illuminazione.
 
