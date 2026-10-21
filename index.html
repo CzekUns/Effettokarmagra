@@ -175,7 +175,7 @@ a{color:inherit;text-decoration:none}
  </main>
  <footer class="foot"><b>ARCADE CLUB · DAL PRIMO LIVELLO AL PROSSIMO</b><span>Una sala giochi, tanti mondi da aggiungere.</span></footer>
 </div>
-<script src="./arcade/catalog.js?v=12"></script>
+<script src="./arcade/catalog.js?v=13"></script>
 <script>
 (function(){
 "use strict";
@@ -196,8 +196,10 @@ function tag(name,cls,text){
 }
 function card(game){
  var playable=game.status==="live";
- var outer=tag(playable?"a":"article","game-card");
- if(playable)outer.href=game.href;
+ var preview=game.status==="preview";
+ var navigable=playable||preview;
+ var outer=tag(navigable?"a":"article","game-card");
+ if(navigable)outer.href=game.href;
  else outer.setAttribute("aria-label",game.title+" – in arrivo");
  var art=tag("div","card-art");
  art.appendChild(tag("div","art-wall"));
@@ -212,7 +214,7 @@ function card(game){
   pill.src=game.decoration;pill.alt="";pill.loading="lazy";
   art.appendChild(pill);
  }
- art.appendChild(tag("span","card-status",playable?"● GIOCABILE":"PROSSIMAMENTE"));
+ art.appendChild(tag("span","card-status",playable?"● GIOCABILE":preview?"◆ ANTEPRIMA":"PROSSIMAMENTE"));
  outer.appendChild(art);
  var body=tag("div","card-body");
  body.appendChild(tag("div","card-category",(game.genre||"ARCADE").toUpperCase()));
@@ -225,7 +227,7 @@ function card(game){
   try{var score=Number(localStorage.getItem(game.recordKey)||0);if(score>0)support="Tuo record: "+score;}catch(e){}
  }
  bottom.appendChild(tag("span",null,support));
- bottom.appendChild(tag("span","card-play",playable?"GIOCA ORA ↗":"IN ARRIVO"));
+ bottom.appendChild(tag("span","card-play",playable?"GIOCA ORA ↗":preview?"VEDI ANTEPRIMA ↗":"IN ARRIVO"));
  body.appendChild(bottom);
  outer.appendChild(body);
  return outer;
