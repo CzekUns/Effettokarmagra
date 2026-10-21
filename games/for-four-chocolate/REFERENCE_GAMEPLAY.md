@@ -1,8 +1,10 @@
 # FOR FOUR CHOCOLATE — Reference di gameplay e art direction (22 ottobre 2026)
 
-## TAVOLA GRAFICA — REFERENCE CARICATA NELLA REPOSITORY
+## UNICA REFERENCE GRAFICA AUTORIZZATA — VINCOLANTE
 
 ![Artboard di riferimento: scena di gameplay, personaggi alla stessa scala, condizioni di prelievo e zone sorvegliate](./references/gameplay-mgs-vr-artboard.webp)
+
+**È vietato usare un’altra immagine come riferimento di stile.** I precedenti render e screenshot sono documentazione tecnica o storica. Leggere [`AGENTS.md`](./AGENTS.md) prima di lavorare.
 
 **File effettivo:** [references/gameplay-mgs-vr-artboard.webp](./references/gameplay-mgs-vr-artboard.webp) (anteprima WebP 720 px, compressa per la repository). L'illustrazione originale ad alta risoluzione è stata generata nella conversazione del 22 ottobre 2026.
 
@@ -12,8 +14,7 @@
 ## 0. Stato e priorità
 **Nuovo brief vincolante per il collaboratore.** L'attuale campione `sample-ps1.html` ha il giusto inizio tecnologico (Three.js, volumetria, camera obliqua), ma è ancora un *blockout* a parallelepipedi. L'utente ha bocciato esplicitamente i personaggi a «Pinocchio» e la resa C64. **Non basta arrotondare o aggiungere dettagli agli stessi manichini:** serve un nuovo linguaggio di modelli, proporzioni, texture e illuminazione.
 
-**MGS VR Missions / Metal Gear Solid PS1 = reference per gameplay, telecamera e proporzioni.**
-**Artwork coloratissimo di supermercato concordato in chat = reference per palette, texture, ricchezza di prodotti e luci.**
+**L'unica immagine da applicare stilisticamente è [questa artboard](./references/gameplay-mgs-vr-artboard.webp).** La struttura/camera e le proporzioni si richiamano a MGS VR Missions, ma la palette, la definizione di modelli e texture, la luminosità e i materiali devono seguire **questa artboard**, non fotografie di altri giochi. Non generare nuove art direction.
 L'obiettivo è una scena videoludica *realmente giocabile* che combini i due, senza copiare la composizione pubblicitaria delle vecchie immagini.
 
 ## 1. Il fotogramma target
@@ -57,6 +58,6 @@ Una **schermata di gameplay 16:9 landscape**, ripresa alta inclinata alla Metal 
 3. Validare l'assenza di errori di console e la leggibilità in landscape Android, includendo screenshot desktop/mobile nella PR, senza merge automatico.
 4. Mantenere il vecchio sample/prototipo accessibile per confronto e aggiornare `WORK_LOG.md`.
 
-La futura immagine ImageGen generata in conversazione è una **reference di art direction**, non un asset direttamente integrabile: **non** tentare di applicarla come unico sfondo statico se servono interazioni e visibilità reali.
+L'immagine artboard già presente in repository è la **unica reference di art direction**, non un asset direttamente integrabile: **non** tentare di applicarla come unico sfondo statico se servono interazioni e visibilità reali.
 
 **Precedenza:** questo file prevale su ogni antica istruzione sulla pixel art 24×40 e integra `DIREZIONE_ARTISTICA_PS1.md` con le regole più recenti sul prelievo.
