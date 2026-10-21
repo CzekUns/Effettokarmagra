@@ -1,0 +1,1 @@
+Three.js r186 (npm package three@0.186.1), MIT license. Local ES modules are kept here so the static GitHub Pages game has no network dependency. Original project: https://threejs.org/ ; license in LICENSE.
