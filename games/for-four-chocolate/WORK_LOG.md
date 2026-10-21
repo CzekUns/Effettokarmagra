@@ -57,3 +57,10 @@
 - **Verifiche:** GitHub conferma PR #97 merged e nessuna PR aperta; screenshot desktop e mobile della PR esaminati. Test automatici e gameplay Android **non rieseguiti qui**. Al controllo subito dopo il merge, i workflow di deploy erano `in_progress`.
 - **Da fare:** valutazione grafica dell'utente e test Android del campione, prima di estendere il rendering 3D al gioco intero. Non presentare questo esempio come grafica definitiva né sostituire automaticamente la pagina principale.
 - **Riferimenti:** https://github.com/CzekUns/Effettokarmagra/pull/97 · https://czekuns.github.io/Effettokarmagra/games/for-four-chocolate/sample-ps1.html
+
+## 2026-10-22 — ChatGPT / nuove reference gameplay e correzione logica
+- **Fatto:** creato `REFERENCE_GAMEPLAY.md` come guida vincolante per MGS VR Missions (camera/proporzioni), art direction vividissima illustrata (colori/texture), inquadratura gameplay dei frigoriferi, movimento landscape e controlli touch.
+- **Nuove meccaniche:** furto da scaffali con tasto PRENDI, movimento visibile consentito, riconoscimento del **prelievo visto** come evento incriminante, sicurezza variabile e incremento locale dopo il prelievo.
+- **Come:** aggiornato anche `OBIETTIVO-FOR-FOUR-CHOCOLATE.md`; direttiva per il collaboratore attraverso issue #96. Non confondere l'immagine ImageGen con asset pronti da integrare.
+- **Verifiche:** documentazione soltanto; non sono state prodotte modifiche funzionali al gioco in questa sessione, né test/deploy di gameplay.
+- **Da fare:** ottenere ed allegare la nuova reference visiva di gameplay; costruire un unico campione di reparto frigoriferi con un agente, CCTV, un prodotto su scaffale, screenshot reali desktop/mobile e verifica Android landscape.
