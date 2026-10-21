@@ -41,6 +41,9 @@ const CAR_MODELS={
  // 500L, tall and heavy mini-MPV, slower and softer in the corners.
  'tipo-hatchback-2016':{accel:14.4,top:43,brake:52,grip:7.6},
  'fiat-500l-2012':{accel:12,top:38,brake:46,steer:2.25,grip:6.8},
+ // Lotto 6: Clio IV drives like the Grande Punto (same class, a hair lighter); Golf VII a bit faster and steadier.
+ 'clio-iv-2012':{accel:14.2,top:41,brake:50},
+ 'golf-vii-2012':{accel:14.8,top:44,brake:53,grip:7.8},
  'seicento-1998':{accel:10.4,top:35,steer:2.6,brake:44},
  'fiat-500-2007':{accel:11.5,top:37,steer:2.55},
  'fiat-uno-1983':{accel:9.6,top:36,brake:40,grip:6.2,launch:.38},

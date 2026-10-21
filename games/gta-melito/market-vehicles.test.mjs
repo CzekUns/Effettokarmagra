@@ -48,9 +48,9 @@ test('vehicle sheet has 16 variants, eight Ape and eight food trucks',()=>{
  assert.deepEqual(MARKET_VARIANT_IDS.slice(0,4),['ape-azzurra-vuota','ape-azzurra-ferro','ape-azzurra-ortofrutta','ape-azzurra-pesce']);
  assert.equal(MARKET_VARIANT_IDS[9],'food-pere-e-musso');
  assert.equal(MARKET_VARIANT_IDS[15],'food-misto');
- assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,82,'vehicles with extended awnings are parked only');
- assert.deepEqual(CAR_PARKED_SPRITE_IDS.slice(82),MARKET_VARIANT_IDS);
- assert.equal(new Set(CAR_PARKED_SPRITE_IDS).size,98);
+ assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,98,'vehicles with extended awnings are parked only');
+ assert.deepEqual(CAR_PARKED_SPRITE_IDS.slice(98),MARKET_VARIANT_IDS);
+ assert.equal(new Set(CAR_PARKED_SPRITE_IDS).size,114);
 });
 test('all 16 PNG cells: no opaque rectangular background, actual visible vehicle',async()=>{
  const file=await readFile(new URL(MARKET_ATLAS_PATH,import.meta.url));
@@ -91,7 +91,7 @@ test('food truck awnings stay parked while compact Ape models join moving traffi
   readFile(new URL('./game.mjs',import.meta.url),'utf8'),
   readFile(new URL('./index.html',import.meta.url),'utf8')]);
  assert.ok(game.includes('CAR_PARKED_SPRITE_IDS[(k*7)%CAR_PARKED_SPRITE_IDS.length]'));
- assert.ok(game.includes('CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length]'));
+ assert.ok(game.includes('CAR_TRAFFIC_SPRITE_IDS[(i*CAR_TRAFFIC_STRIDE)%CAR_TRAFFIC_SPRITE_IDS.length]'));
  assert.ok(Number((game.match(/car\-sprites\.mjs\?v=(\d+)/)||[])[1])>=108,'car-sprites.mjs almeno v=108');
  assert.ok(game.includes('trafficApeModel(i)'));
  assert.ok(!game.includes("v.model='food-zeppole-panzerotti'"));

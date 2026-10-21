@@ -44,7 +44,9 @@ Riferimenti visivi iniziali già approvati: **Panda moderna bianca** e **Panda F
 - **Fiat 500L** (2012–2022) — **FATTO, lotto 5 del 21/10/2026**: stesso atlante, celle 8–15, modello `fiat-500l-2012`; PROVVISORIO, da approvare da Simone.
 
 ### Lotto 3 — varietà internazionale plausibile
-- **Renault Clio**, **Opel Corsa**, **Ford Fiesta**, **Volkswagen Golf**, **Peugeot 208**; scegli la generazione specifica prima di disegnare.
+- **Renault Clio IV** (2012–2019) — **FATTO, lotto 6 del 21/10/2026** (CODEX-GH + Claude): `assets/vehicles/clio4-golf7-16-rgba.png` celle 0–7, modello `clio-iv-2012`; PROVVISORIO, da approvare da Simone.
+- **Volkswagen Golf VII** (2012–2019) — **FATTO, lotto 6 del 21/10/2026**: stesso atlante, celle 8–15, modello `golf-vii-2012`; PROVVISORIO, da approvare da Simone.
+- **Opel Corsa**, **Ford Fiesta**, **Peugeot 208**; scegli la generazione specifica prima di disegnare.
 - **Nissan Qashqai**, **Jeep Renegade**, **Dacia Duster** per crossover/SUV.
 - **Fiat Doblò**, **Fiat Fiorino/Qubo**, **Fiat Ducato** per consegne e lavoro.
 - Eventuali scooter/moto in seguito (asset e collisioni dedicate).

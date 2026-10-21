@@ -40,7 +40,7 @@ import {openPoolMachine,isPoolOpen} from './minigame-pool.mjs?v=001';
 import {drawWorldLandmarks,drawMinimapLandmarks,drawBigMap} from './landmark-art.mjs?v=089';
 import {prepareCityStyles,applyApprovedArcadeRoofStyle,applyPiazzaRoofStudies,prepareUrbanGround,drawTerrain,drawCityParcels,drawCityStreets,drawCityBuildings,drawCityPeople,drawCityCar,drawCityPlayer,loadChurchWebp,facadeWindowPanes,SANTA_MARIA_OSM_ID} from './city-art.mjs?v=135';
 import {createSatelliteOverlay,satelliteFromUrl} from './satellite-overlay.mjs?v=001';
-import {loadCarSprites,drawCarSprite,carDrawSize,CAR_TRAFFIC_SPRITE_IDS,CAR_PARKED_SPRITE_IDS,APE_CAR_IDS,COURIER_IDS,REFUSE_TRUCK_IDS,TOW_TRUCK_IDS,BUS_IDS} from './car-sprites.mjs?v=115';
+import {loadCarSprites,drawCarSprite,carDrawSize,CAR_TRAFFIC_SPRITE_IDS,CAR_TRAFFIC_STRIDE,CAR_PARKED_SPRITE_IDS,APE_CAR_IDS,COURIER_IDS,REFUSE_TRUCK_IDS,TOW_TRUCK_IDS,BUS_IDS} from './car-sprites.mjs?v=116';
 import {DAMAGE_RULES,DAMAGE_LABEL,addDamage,damagePoints,damageLevel,damagedProfile,repairCost,payRepair,repairMessage,healOutOfView,drawVehicleDamage,placeWorkshop,nearWorkshop,drawWorkshop} from './vehicle-damage.mjs?v=001';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=002';
 import {loadExtraPedestrianSprites,loadLotto2PedestrianSprites} from './extra-pedestrian-sprites.mjs?v=003';
@@ -52,7 +52,7 @@ import {applySurveyDrafts} from './survey/visual-profiles.mjs?v=045';
 import {generateUrbanInfill,INFILL_VERSION,mapFingerprint} from './urban-infill.mjs?v=116';
 import {CAMERA_ZOOM_MAX,targetCameraZoom,advanceCameraZoom,describeCameraZoom,vehicleCameraTarget} from './camera-zoom.mjs?v=102';
 import {WALK_SPEED,RUN_SPEED,stepDriving} from './driving-controls.mjs?v=100';
-import {handlingProfile,applyGrip} from './vehicle-handling.mjs?v=007';
+import {handlingProfile,applyGrip} from './vehicle-handling.mjs?v=008';
 import {MOTORCYCLE_IDS,isMotorcycle,loadMotorcycleSprites,drawMotorcycle,stepMotorcycle,chooseMotorcycleDismount} from './motorcycles.mjs?v=008';
 import {nearestEnterableVehicle} from './vehicle-entry.mjs?v=004';
 import {PARKED_BIKE_TARGET,PARKED_VEHICLE_CAP,PARKED_CAR_PHASE_CAP,motorcycleParkingRoadOrder,parkedBikeLabel} from './motorcycle-parking.mjs?v=001';
@@ -77,7 +77,7 @@ import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
 import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=005';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=006';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
 import {PASSENGER_RULES,seatCapacity,ensureSeats,occupantsOf,freeSeat,boardPassenger,alightPassenger,hitchhikersNear,liftCandidate,liftDestination,alightSpot,doorSpots,trafficOccupants,lookOf,drawCabinOccupants} from './passengers.mjs?v=001';
 import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
@@ -1046,7 +1046,8 @@ function trafficModel(i,type){
   (i%13===5?COURIER_IDS[Math.floor(i/13)%COURIER_IDS.length]:null)||(i%31===20?REFUSE_TRUCK_IDS[Math.floor(i/31)%REFUSE_TRUCK_IDS.length]:null)||
   // Q19: a few tow trucks and buses (roads.mjs keeps the buses on the main roads).
   (i%29===12?TOW_TRUCK_IDS[Math.floor(i/29)%TOW_TRUCK_IDS.length]:null)||(i%23===3?BUS_IDS[Math.floor(i/23)%BUS_IDS.length]:null)||
-  CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];
+  // Lotto 6: stride coprime with the list length (car-sprites.mjs), so every car model really spawns.
+  CAR_TRAFFIC_SPRITE_IDS[(i*CAR_TRAFFIC_STRIDE)%CAR_TRAFFIC_SPRITE_IDS.length];
 }
 const TRAFFIC_COUNT=140;
 // Q20: the work of the four service vehicles, all simulated. ?servizio=1 shortens the waits (tests).
