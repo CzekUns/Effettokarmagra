@@ -1,33 +1,53 @@
 <!doctype html>
-<html lang="it"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#140d1d"><meta name="description" content="For Four Chocolate, il prossimo stealth arcade di Domenico Ipno ambientato in un supermercato ceco. Anteprima ufficiale su Arcade Club.">
-<title>For Four Chocolate · Anteprima · Arcade Club</title>
-<style>
-:root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#100d1a;color:#f9f0da}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 65% 0%,#512a43,#100d1a 62%)}
-a{color:inherit;text-decoration:none}main{width:min(1080px,calc(100% - 32px));margin:auto;padding:26px 0 65px}
-.nav{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:25px;font-size:12px;font-weight:850;letter-spacing:.1em;color:#ffc778}
-.back{border:1px solid #a66759;border-radius:9px;padding:10px 15px}.back:hover,.back:focus-visible{background:#503044}
-.status{background:#40241d;border:1px solid #aa684f;padding:10px 15px;border-radius:30px;color:#ffc67e}
-.poster{border-radius:17px;overflow:hidden;border:2px solid #8c4e48;box-shadow:0 22px 70px #0008;background:#241727}
-.poster img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
-.intro{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:30px;margin-top:30px;align-items:start}
-h1{font:900 clamp(38px,6vw,72px)/1.05 Georgia,serif;letter-spacing:-.04em;margin:5px 0 16px;color:#ffcc77}
-.kicker{color:#f49e83;letter-spacing:.2em;font-size:12px;font-weight:900}p{color:#d4bfb8;line-height:1.68;font-size:16px;max-width:650px}
-aside{border:1px solid #654253;background:#251727;border-radius:14px;padding:20px}
-aside b{display:block;font-size:13px;letter-spacing:.1em;color:#ffd08d;margin-bottom:15px}
-aside p{font-size:13px;margin:0 0 12px}
-@media(max-width:720px){.intro{grid-template-columns:1fr}.nav{font-size:10px}.poster{border-radius:10px}.status{padding:9px}}
-</style></head>
-<body><main>
-<nav class="nav"><a class="back" href="../../">← TORNA AD ARCADE CLUB</a><span class="status">ANTEPRIMA · IN SVILUPPO</span></nav>
-<section class="poster" aria-label="Illustrazione concept di For Four Chocolate"><img src="./cover.svg" alt="For Four Chocolate: corridoi di un supermercato ceco, quattro cioccolate e coni di sorveglianza"></section>
-<div class="intro"><div>
-<div class="kicker">IL PROSSIMO GIOCO · STEALTH ARCADE</div>
-<h1>For Four Chocolate</h1>
-<p>Domenico «Ipno» entra in un supermercato della Repubblica Ceca con una missione: raccogliere cioccolato e uscire senza farsi scoprire.</p>
-<p>Poliziotti in pattuglia, telecamere e corsie che diventano un labirinto. Una commedia stealth dall'alto, con record da battere e un finale da ricordare.</p>
-<p><strong>Il gioco è in preparazione.</strong> Questa pagina è soltanto la sua presentazione: non ci sono ancora livelli o controlli giocabili.</p>
-</div><aside><b>MISSIONE RISERVATA</b><p>🎩 Protagonista: Domenico Ipno</p><p>🍫 Obiettivo: il cioccolato</p><p>👁️ Rischio: telecamere e POLICIE</p><p>🛒 Scenario: supermercato ceco</p><p>🏆 In futuro: record e condivisione su WhatsApp</p></aside></div>
-</main></body></html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#151b2e">
+  <meta name="description" content="For Four Chocolate: gioca il primo prototipo stealth nel supermercato ceco.">
+  <title>For Four Chocolate · Vertical slice</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="back" href="../../">← ARCADE CLUB</a>
+      <span class="build">PROTOTIPO · LOTTO 1</span>
+    </header>
+    <div class="title">
+      <div><p class="eyebrow">CZECH STEALTH ARCADE</p><h1>FOR FOUR <em>CHOCOLATE</em></h1></div>
+      <p>Raccogli le quattro tavolette. Gli scaffali fermano gli sguardi. Raggiungi <b>VÝCHOD</b>.</p>
+    </div>
+    <section class="gamepanel" aria-label="Gioco For Four Chocolate">
+      <div class="hud">
+        <div class="huditem"><small>BOTTINO</small><strong id="loot">0 / 4</strong></div>
+        <div class="huditem"><small>SORVEGLIANZA</small><strong id="alert" class="calmo">CALMO</strong></div>
+        <div class="huditem meter"><small>SOSPETTO <span id="risk-number">0%</span></small><div class="track"><div id="risk"></div></div></div>
+        <div class="huditem"><small>TEMPO</small><strong id="time">0:00</strong></div>
+      </div>
+      <div class="stage">
+        <canvas id="world" width="640" height="448" aria-label="Supermercato visto dall'alto: usa frecce o WASD per muoverti"></canvas>
+        <div class="overlay" id="overlay">
+          <div class="card">
+            <span class="tag" id="overlay-tag">MISSIONE 01</span>
+            <h2 id="overlay-title">Quattro cioccolate. Una via d’uscita.</h2>
+            <p id="overlay-text">Muovi Ipno con frecce o WASD. Su telefono usa i pulsanti. Evita i coni rossi di POLICIE e telecamera: dietro gli scaffali sei nascosto.</p>
+            <button id="action" type="button">ENTRA NEL SUPERMERCATO →</button>
+          </div>
+        </div>
+      </div>
+      <div class="underbar">
+        <span id="hint">Raccogli 🍫 e raggiungi l'uscita verde.</span>
+        <span class="legend"><i class="guard"></i> POLICIE <i class="cam"></i> TELECAMERA</span>
+      </div>
+    </section>
+    <div class="controls" aria-label="Comandi touch">
+      <button data-dir="left" aria-label="Vai a sinistra">◀</button>
+      <div class="vertical"><button data-dir="up" aria-label="Vai su">▲</button><button data-dir="down" aria-label="Vai giù">▼</button></div>
+      <button data-dir="right" aria-label="Vai a destra">▶</button>
+    </div>
+    <footer>GRAFICA PROVVISORIA · DA APPROVARE DA SIMONE · il punteggio e la storia arriveranno nei prossimi lotti</footer>
+  </main>
+  <script type="module" src="./game.mjs"></script>
+</body>
+</html>

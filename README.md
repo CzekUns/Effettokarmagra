@@ -175,8 +175,8 @@ Guida completa e licenze: [games/gta-melito/README.md](games/gta-melito/README.m
 
 Un registro OSM di 2.056 edifici divisi in 34 settori, con mappa consultabile in `games/gta-melito/survey/` e 47 prime schede individuali di stile, ancora da validare su foto. I link Google Maps e Street View aprono il provider senza incorporarne immagini. Il prossimo settore è S003.
 
-## For Four Chocolate — anteprima (21 ottobre 2026)
+## For Four Chocolate — vertical slice in revisione (21 ottobre 2026)
 
-**In preparazione, non ancora giocabile.** [Pagina di anteprima](./games/for-four-chocolate/) · [Obiettivo e specifiche](./games/for-four-chocolate/OBIETTIVO-FOR-FOUR-CHOCOLATE.md) · [Registro di sviluppo](./games/for-four-chocolate/WORK_LOG.md).
+**Primo prototipo giocabile, ancora in revisione.** [Gioco](./games/for-four-chocolate/) · [Obiettivo e specifiche](./games/for-four-chocolate/OBIETTIVO-FOR-FOUR-CHOCOLATE.md) · [Registro di sviluppo](./games/for-four-chocolate/WORK_LOG.md). La scheda nella home resta «anteprima» finché Simone non approva la beta.
 
-Stealth arcade con Domenico Ipno in un supermercato ceco: guardie POLICIE, telecamere, cioccolato, fuga, record e futuro epilogo comico. Le [reference fotografiche ottimizzate](./games/for-four-chocolate/references/) contengono due immagini di Ipno con cappello di paglia e una di Totore Capellone. Sono **reference**, non sprite finali. La home usa `status: "preview"`, cliccabile ma esclusa dal conteggio dei giochi giocabili.
+Stealth arcade con Domenico Ipno in un supermercato ceco: scaffali opachi, due guardie POLICIE, telecamera, quattro cioccolate e fuga. Muovi Ipno con frecce/WASD o pulsanti touch; resta fuori dai coni visivi per far scendere il sospetto. Record, condivisione e scene comiche arriveranno nei prossimi lotti. Le [reference fotografiche ottimizzate](./games/for-four-chocolate/references/) contengono due immagini di Ipno con cappello di paglia e una di Totore Capellone. Sono **reference**, non sprite finali. La home usa `status: "preview"`, cliccabile ma esclusa dal conteggio dei giochi giocabili.
