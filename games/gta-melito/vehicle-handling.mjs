@@ -51,6 +51,10 @@ const CAR_MODELS={
  // slower steering and the standard grip 7.0 (they lean a bit in the corners).
  'qashqai-j11-2013':{accel:12.6,top:40,brake:48,steer:2.3,grip:7},
  'duster-2010':{accel:12.2,top:40,brake:47,steer:2.3,grip:7},
+ // Lotto 9: Doblò II and Fiorino III, light work vans: slower than the hatchbacks, top 38, softer steering and grip
+ // (loaded cargo bay), but still «auto» for the traffic and the parking strips, not VAN_HANDLING of the market vans.
+ 'doblo-2010':{accel:11.5,top:38,brake:46,steer:2.3,grip:6.6},
+ 'fiorino-2008':{accel:11.5,top:38,brake:46,steer:2.3,grip:6.6},
  'seicento-1998':{accel:10.4,top:35,steer:2.6,brake:44},
  'fiat-500-2007':{accel:11.5,top:37,steer:2.55},
  'fiat-uno-1983':{accel:9.6,top:36,brake:40,grip:6.2,launch:.38},

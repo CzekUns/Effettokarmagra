@@ -6,7 +6,7 @@
  * L'archivio vive nel salvataggio della campagna (progress.garage) e ha al massimo 6 posti.
  * Un veicolo è sempre in UN solo posto: in garage (stored) oppure in strada (ownedId sull'auto).
  * Al ricaricamento un'auto registrata rimasta in strada torna nel suo garage: mai persa né doppia. */
-import {CAR_ATLAS_VARIANTS,EXTRA_CAR_VARIANTS,APE_CAR_VARIANTS} from './car-sprites.mjs?v=117';
+import {CAR_ATLAS_VARIANTS,EXTRA_CAR_VARIANTS,APE_CAR_VARIANTS} from './car-sprites.mjs?v=118';
 
 export const GARAGE_SLOTS=6;
 export const GARAGE_RADIUS={car:9,foot:6};

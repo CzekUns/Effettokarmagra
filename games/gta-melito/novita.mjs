@@ -31,6 +31,7 @@ const LOTTO5=/^(tipo-hatchback-2016|fiat-500l-2012)-/;
 const LOTTO6=/^(clio-iv-2012|golf-vii-2012)-/;
 const LOTTO7=/^(corsa-e-2014|peugeot-208-2012)-/;
 const LOTTO8=/^(qashqai-j11-2013|duster-2010)-/;
+const LOTTO9=/^(doblo-2010|fiorino-2008)-/;
 const hasPassengers=v=>(Array.isArray(v?.passengers)&&v.passengers.length>0)||(Array.isArray(v?.occupants)&&v.occupants.length>0);
 
 /* Le voci: chi l'ha fatta, in quale PR, cosa guardare e dove (trova → punto da inquadrare).
@@ -138,7 +139,11 @@ export const NOVITA=Object.freeze([
  {id:'lotto8-auto',nome:'Lotto 8: Nissan Qashqai J11 2013 e Dacia Duster 2010 nel traffico',lavoro:'Lotto 8 · CODEX-GH',pr:'in revisione',
   cosa:'Due crossover nuovi tra le auto del traffico e dei parcheggi, 8 tinte ciascuno (atlante pixel art disegnato da codice da CODEX-GH; tinte interpretate, non codici vernice; il verde scuro della Duster è una scelta artistica). Guarda la fila di auto in Via Roma: il Qashqai ha muso a V, spalle e lunotto rastremati; la Duster è più squadrata, con coda verticale, paraurti scuri e passaruota marcati; entrambi con barre sul tetto, un po\' più grandi delle utilitarie. Grafica PROVVISORIA.',
   disponibile:s=>vehicles(s).some(v=>LOTTO8.test(v?.model||''))||!s?.traffic,
-  trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO8.test(v?.model||'')),s)}
+  trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO8.test(v?.model||'')),s)},
+ {id:'lotto9-furgoncini',nome:'Lotto 9: Fiat Doblò II 2010 e Fiat Fiorino III 2008, furgoncini da lavoro nel traffico',lavoro:'Lotto 9 · CODEX-GH',pr:'in revisione',
+  cosa:'Due furgoncini da lavoro tra le auto del traffico e dei parcheggi, 8 livree ciascuno: bianco, bianco con fascia, grigio, blu, rosso, giallo, verde scuro e bianco con scritta generica (EDILIZIA sul Doblò, FRUTTA sul Fiorino; nessuna ditta vera). Atlante pixel art disegnato da codice da CODEX-GH con le celle grandi del furgone corriere. Guarda la fila in Via Roma: il Doblò è lungo, con tetto piatto nervato, parabrezza ampio e porte scorrevoli; il Fiorino è più corto e stretto, cabina arrotondata e vano squadrato; entrambi più grandi delle utilitarie ma più stretti del corriere. Grafica PROVVISORIA.',
+  disponibile:s=>vehicles(s).some(v=>LOTTO9.test(v?.model||''))||!s?.traffic,
+  trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO9.test(v?.model||'')),s)}
 ].map(Object.freeze));
 
 /* Una voce è attiva se esiste davvero nel gioco (le voci «in arrivo» solo quando il modulo c'è). */
