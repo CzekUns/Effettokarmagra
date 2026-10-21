@@ -203,3 +203,7 @@ La [pixel art rossa/crema](./assets/buildings/serbatoio-melito-scacchi-rossi.png
 ### Giochi di strada (21/10/2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
 - Il pallone è un piccolo disegno a rettangoli netti 4×4 circa, senza texture esterne. Tavolini 2.5D con bordo scuro, piano legno a due toni, carte chiare. Bambini dai fogli esistenti, anziani dalle pose sedute; il gesto della carta sovrappone un frammento del frame rilassato.
 - Le scene non generano collisioni e sono nascoste fuori orario. **PROVVISORIO, da approvare da Simone**.
+
+### Animali di strada (21/10/2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+- `assets/animals/sources/animali-genera.py`: `piccioni-8x8.png` 32×16 (2 mantelli × 4 frame), `gatti-12x8.png` 36×24 (3 mantelli × 3 frame), RGBA. Contorni scuri, ombre a due toni, pixel netti. Il disegno usa nearest neighbor nel canvas del gioco.
+- Animali decorativi, niente collisioni o danni; i piccioni possono volare sopra la strada ma si posano solo in area calpestabile fuori carreggiata. **PROVVISORIO, da approvare da Simone**.

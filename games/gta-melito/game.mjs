@@ -21,6 +21,7 @@ import {createCityAudio} from './city-audio.mjs?v=006';
 import {createSocial,stepSocial} from './npc-social.mjs?v=004';
 import {createIdlePeople,stepIdlePeople,drawIdlePeople,loadIdlePoseSheets} from './npc-idle.mjs?v=003';
 import {createStreetGames,stepStreetGames,drawStreetGames} from './npc-giochi.mjs?v=001';
+import {createAnimals,stepAnimals,drawAnimals,loadAnimalSprites} from './animali.mjs?v=001';
 import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=007';
 import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=007';
 import {trafficTargetAt} from './traffic-rush.mjs?v=001';
@@ -80,7 +81,7 @@ import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
 import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=017';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=018';
 // Lotto 15: dialoghi con volto (prototipo per la storyline, PROVVISORIO): barra in basso + riquadro del personaggio.
 import {openDialogue,isDialogueOpen,DEMO_DIALOGUE} from './dialogue.mjs?v=001';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
@@ -191,7 +192,7 @@ function openPoolGame(){
  return openPoolMachine({storage:globalThis.localStorage,onExit:()=>{carRadio.duck(false);canvas.focus?.({preventScroll:true});updateHud();}});
 }
 const FORCED_WEATHER=(()=>{const w=new URLSearchParams(globalThis.location?.search||'').get('meteo');return ['pioggia','nuvoloso','sereno'].includes(w)?w:null;})();
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],idle:null,streetGames:null,dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],idle:null,streetGames:null,animals:null,dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 // BF14: the world scale in use (read by the PAUSE › NOVITÀ entry and by the tests).
 state.worldScale=Object.freeze({vehicle:VEHICLE_SCALE,person:PERSON_SCALE});
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
@@ -516,6 +517,11 @@ function createNeighbourhoodGames(){
   graph:state.graph,doors:state.doors||[],canStand:safe,onRoad:onCarriageway});
  stepStreetGames(state.streetGames,0,{minutes:state.npcClockMinutes,player:state.player,
   canStand:safe,onRoad:onCarriageway,matchOpen:isFootballOpen()});
+}
+function createNeighbourhoodAnimals(){
+ const safe=(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y);
+ state.animals=createAnimals({map:state.map,roads:state.roads,enclosures:state.enclosures,
+  market:state.market,parked:state.cars,doors:state.doors||[],canStand:safe,onRoad:onCarriageway});
 }
 function stepMelitoMarket(dt){
  if(!state.market)return;
@@ -859,7 +865,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  }
  state.traffic=createTraffic(START_MINUTE);prepareSignals();
  createShopEntrances();
- state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();state.service=createServices();createNeighbourhoodIdle();createNeighbourhoodGames();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();state.service=createServices();createNeighbourhoodIdle();createNeighbourhoodGames();createNeighbourhoodAnimals();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
@@ -1160,6 +1166,8 @@ function updateTraffic(dt){
   canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,doors:state.doors||[]});
  stepStreetGames(state.streetGames,elapsed,{minutes:state.npcClockMinutes,player:state.player,
   canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,matchOpen:isFootballOpen()});
+ stepAnimals(state.animals,elapsed,{player:state.player,vehicles:[...state.traffic,...state.cars],
+  canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,doors:state.doors||[]});
  // Q13: rush hours. The hour curve sets how many vehicles drive; BF09 balanceTraffic is the one place
  // that adds and removes them, through the border gates.
  state.trafficTarget=trafficTargetAt(state.npcClockMinutes,TRAFFIC_COUNT);
@@ -1796,7 +1804,7 @@ function compareRoadWidths(){
  state.propsGrid=makeIndex(state.props);
  state.shops=prepareStorefronts(state.map.pois||[],state.roads);
  state.shopGrid=makeIndex(state.shops);
- createNeighbourhoodIdle();createNeighbourhoodGames();
+ createNeighbourhoodIdle();createNeighbourhoodGames();createNeighbourhoodAnimals();
  updateRoadWidthLabel();
  roofReveal.clear();
 }
@@ -2222,6 +2230,7 @@ function draw(dt=0){
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  if(state.idle)drawIdlePeople(c,state.idle,state.clock,[x0,y0,x1,y1],alpha);
  if(state.streetGames)drawStreetGames(c,state.streetGames,state.clock,[x0,y0,x1,y1]);
+ if(state.animals)drawAnimals(c,state.animals,[x0,y0,x1,y1]);
  if(state.market)drawCityPeople(c,state.market.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  // Q20: autista del corriere e operatore della nettezza urbana (figure di servizio, non NPC della città).
  if(state.service?.figures.length)drawCityPeople(c,state.service.figures,state.graph,state.clock,[x0,y0,x1,y1],1);
@@ -2749,4 +2758,4 @@ function bind(){
  },{passive:false});
 }
 loadChurchWebp(()=>{staticTiles.clear();pendingTile=null;});
-applyLoadingScreen();loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSheets();loadIdlePoseSheets();loadMarketArt();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();
+applyLoadingScreen();loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSheets();loadIdlePoseSheets();loadAnimalSprites();loadMarketArt();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();

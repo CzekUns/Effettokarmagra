@@ -228,6 +228,6 @@ test('lotti 13–14: collegamento nel gioco, voce NOVITÀ, registri e versioni u
   assert.equal(found.size,1,mod+'.mjs importato con una sola versione: '+[...found].join(','));
  }
  assert.match(game,/extra-pedestrian-sprites\.mjs\?v=007/);
- assert.match(game,/novita\.mjs\?v=017/);
+ assert.match(game,/novita\.mjs\?v=018/);
  assert.ok(Number((page.match(/game\.mjs\?v=(\d+)/)||[])[1])>=208,'game.mjs?v= aggiornato');
 });

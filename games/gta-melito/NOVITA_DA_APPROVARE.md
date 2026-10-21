@@ -161,3 +161,9 @@ I 22 PNG stanno in `assets/people/`; il generatore unico è `assets/people/sourc
 | Voce | Cosa guardare | Lavoro | Dove | Quando | Stato |
 |---|---|---|---|---|---|
 | `giochi-di-strada` | Bambini che si passano il pallone e anziani seduti a carte | Giochi di strada · CODEX-GH / ramo `giochi-strada`, PR a cura di Claude | PAUSA › NOVITÀ › `giochi-di-strada` › VAI A VEDERE | 17:30; bambini 16–20 scuola / 10–20 weekend, carte 9–12 e 16–19 | Posizioni e leggibilità da giudicare; **PROVVISORIO, da approvare da Simone**. |
+
+### Animali di strada (21 ottobre 2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+
+| Voce | Cosa guardare | Lavoro | Dove | Quando | Stato |
+|---|---|---|---|---|---|
+| `animali-di-strada` | Piccioni nelle piazze che si alzano in volo; gatti presso muretti e auto in sosta | Animali di strada · CODEX-GH / ramo `animali`, PR a cura di Claude | PAUSA › NOVITÀ › `animali-di-strada` › VAI A VEDERE | Sempre | Sprite e densità da giudicare; **PROVVISORIO, da approvare da Simone**. |

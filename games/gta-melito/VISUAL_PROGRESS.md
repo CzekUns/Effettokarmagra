@@ -836,3 +836,7 @@ Secondo screenshot e correzione dell'utente, **mantenere la torre molto grande e
 ### 2026-10-21 — Giochi di strada (CODEX-GH) — PROVVISORIO, da approvare da Simone
 - Ragazzini con pallone pixel art 4×4, corse brevi e passaggi nella villa, sui campetti e in slarghi pedonali; anziani seduti con carte a due tavolini semplici in villa e al Municipio.
 - PAUSA › NOVITÀ › `giochi-di-strada` › VAI A VEDERE porta alle 17:30; screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-giochi/`. **PROVVISORIO, da approvare da Simone**.
+
+### 2026-10-21 — Animali di strada (CODEX-GH) — PROVVISORIO, da approvare da Simone
+- Piccioni grigi e bianchi in gruppi piccoli, con due frame a terra e due in volo; gatti di tre mantelli, seduti o in passo. Le posizioni seguono piazze, chiese, mercato, villa e parcheggi già presenti nella mappa.
+- PAUSA › NOVITÀ › `animali-di-strada` › VAI A VEDERE; screenshot 3× di stormo e gatto in `/home/ubuntu/codex-gh-lavoro/sim-animali/`. **PROVVISORIO, da approvare da Simone**.

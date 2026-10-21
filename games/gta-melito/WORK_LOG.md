@@ -1287,3 +1287,8 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 - Bambini a pallone nella villa, nei campetti liberi e in 2–3 slarghi pedonali; kind 25 e 44 più varianti. Passaggi ogni 1–3 s, corse brevi fra punti verificati fuori strada, pausa se il giocatore è vicino. Durante il minigioco calcetto, le scene di pallone si fermano.
 - Due tavolini a carte con anziani seduti nella villa e davanti al Municipio. Luoghi da recinti/POI OSM, campetti e grafo pedonale; nessuna coordinata cittadina scritta a mano. Orari da `npc-agenda.mjs`: bambini 16–20 nei giorni di scuola, 10–20 nel weekend; anziani 9–12 e 16–19.
 - Modulo `npc-giochi.mjs`, test, voce NOVITÀ `giochi-di-strada`, screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-giochi/`. Figure solo decorative, fuori dall'indice collisioni. **PROVVISORIO, da approvare da Simone**.
+
+### 2026-10-21 — CODEX-GH — animali di strada; PROVVISORIO, da approvare da Simone
+- Generati due piccoli fogli pixel art con `assets/animals/sources/animali-genera.py`: piccioni 8×8 grigi/bianchi (beccano e volano), gatti 12×8 tigrati/neri/bianchi-rossi (camminano e siedono). Entrambi RGBA con sfondo trasparente.
+- `animali.mjs` deriva stormi da piazze OSM, chiese, mercato e villa; gatti da auto parcheggiate e muretti. Punti filtrati fuori carreggiata e ingressi. Fino a 60 piccioni e 20 gatti; fuga dei piccioni a circa 2 m con volo e atterraggio 10–15 m più in là, fuga calma dei gatti a 1,5 m. Animali solo grafici, senza collisioni né danni.
+- Voce NOVITÀ `animali-di-strada`, test `animali.test.mjs`, screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-animali/`. **PROVVISORIO, da approvare da Simone**.

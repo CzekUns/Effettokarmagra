@@ -172,6 +172,9 @@ export const NOVITA=Object.freeze([
   cosa:'Nella villa comunale, nei campetti e negli slarghi pedonali alcuni ragazzini si passano un pallone; nella villa e davanti al Municipio due tavolini ospitano anziani che giocano a carte. Si fermano un attimo se il giocatore passa in mezzo, senza collisioni. Bambini 16–20 nei giorni di scuola e 10–20 nel weekend; carte 9–12 e 16–19. Grafica PROVVISORIA, da approvare da Simone.',
   ora:17*60+30,trova:s=>near((s?.streetGames?.ballGroups||[]).map(g=>g.center),s)||
    near((s?.streetGames?.cardTables||[]).map(t=>t.center),s)||roadMiddle(s,'Via Roma')},
+ {id:'animali-di-strada',nome:'Animali di strada: piccioni e gatti',lavoro:'Animali di strada · CODEX-GH',pr:'in revisione',
+  cosa:'Piccoli stormi di piccioni grigi e bianchi nelle piazze, presso le chiese, il mercato e la villa; se il giocatore o un’auto arriva vicino, volano via e poi si posano. Gatti tigrati, neri e bianchi/rossi vicino ai muretti e alle auto parcheggiate; si allontanano con calma. Non bloccano e non feriscono nessuno. Grafica PROVVISORIA, da approvare da Simone.',
+  ora:11*60,trova:s=>near((s?.animals?.flocks||[]).map(f=>f.center),s)||near(s?.animals?.cats,s)||roadMiddle(s,'Via Roma')},
  {id:'caricamento-artwork',nome:'Schermate di caricamento: sei artwork di Melito e il render del gioco',lavoro:'Caricamento · CODEX-GH',pr:'in revisione',
   cosa:'Sette sfondi a rotazione: Via Roma nel gioco, mercato, campetto, villa comunale, pizzeria di Via Roma, mercato all’alba e festa patronale. L’ultima schermata vista non ricompare subito. PROVA mostra l’anteprima successiva senza lasciare il gioco; la fascia scura mantiene leggibili titolo, testo e barra. Artwork PROVVISORIE, da approvare da Simone.',
   prova:'caricamento',trova:null},
