@@ -79,6 +79,9 @@ a{color:inherit;text-decoration:none}
 .game-card:hover,.game-card:focus-visible{transform:translateY(-5px);border-color:#d9cb93}
 .card-art{position:relative;height:195px;overflow:hidden;background:radial-gradient(ellipse at 70% 55%,#213d75,#0c1835 65%);border-bottom:1px solid #627db04d}
 .card-art::before{content:"";position:absolute;inset:0;background-image:radial-gradient(#fff1cf 2px,transparent 2.7px);background-size:27px 27px;background-position:12px 9px;opacity:.5}
+.card-art-preview::before{display:none}
+.card-art-preview .art-wall{display:none}
+.card-art-preview .art-sprite{left:0;top:0;width:100%;max-width:none;height:100%;object-fit:cover;transform:none;filter:none}
 .art-wall{position:absolute;width:50%;height:115px;left:-4%;top:35%;border:9px solid #2460c2;border-radius:17px;transform:rotate(16deg);box-shadow:inset 0 0 0 3px #85a7ee}
 .art-wall.two{left:auto;right:-16%;top:-17%;width:65%;height:155px;transform:rotate(-19deg)}
 .art-sprite{position:absolute;width:125px;max-width:62%;height:145px;object-fit:contain;left:50%;top:18%;transform:translateX(-50%);filter:drop-shadow(0 8px 7px #0009)}
@@ -201,7 +204,7 @@ function card(game){
  var outer=tag(navigable?"a":"article","game-card");
  if(navigable)outer.href=game.href;
  else outer.setAttribute("aria-label",game.title+" – in arrivo");
- var art=tag("div","card-art");
+ var art=tag("div",preview?"card-art card-art-preview":"card-art");
  art.appendChild(tag("div","art-wall"));
  art.appendChild(tag("div","art-wall two"));
  var img=tag("img","art-sprite");
