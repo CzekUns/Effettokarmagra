@@ -1,4 +1,7 @@
-# AVVISO — DOCUMENTO SUPERATO DAL FEEDBACK UTENTE (21 OTTOBRE 2026)
+# AVVISO — DOCUMENTO GRAFICO SUPERATO (22 OTTOBRE 2026)
+
+**UNICA REFERENCE ARTISTICA APPROVATA:** [gameplay-mgs-vr-artboard.webp](./references/gameplay-mgs-vr-artboard.webp). Vietato trattare gli sprite di questo documento come uno stile alternativo. Attenersi a [AGENTS.md](./AGENTS.md).
+
 
 **Questa tavola pixel art 24×40 / 20 colori NON è più la specifica artistica attiva.** L'utente ha esplicitamente richiesto una resa **Metal Gear Solid PS1**, non Commodore 64. La fonte normativa aggiornata è **[DIREZIONE_ARTISTICA_PS1.md](./DIREZIONE_ARTISTICA_PS1.md)**. Conserviamo la documentazione qui sotto per la tracciabilità del prototipo e i test, ma nessun nuovo collaboratore deve riproporne la scala, i vincoli cromatici o il renderer come versione finale.
 
