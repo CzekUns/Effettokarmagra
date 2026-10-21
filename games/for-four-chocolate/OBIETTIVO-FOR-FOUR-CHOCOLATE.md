@@ -1,8 +1,10 @@
 # OBIETTIVO — FOR FOUR CHOCOLATE
-**Progetto:** Uns Arcade / Arcade Club · **Stato:** concept approvato, solo anteprima pubblicata · **Data:** 21 ottobre 2026
+**Progetto:** Uns Arcade / Arcade Club · **Stato:** vertical slice tecnico giocabile; resa visiva non approvata · **Data:** 21 ottobre 2026
+
+> **DIREZIONE ARTISTICA AGGIORNATA (vincolante):** [DIREZIONE_ARTISTICA_PS1.md](./DIREZIONE_ARTISTICA_PS1.md). L'utente chiede uno stile **Metal Gear Solid PlayStation 1**, con scena tridimensionale e camera dall'alto obliqua. Il prototipo C64-like attuale è **respinto sul piano grafico**. Ogni indicazione di «pixel art» qui sotto è storica e non più valida come obiettivo estetico.
 
 ## 1. Visione
-Arcade stealth umoristico **For Four Chocolate**, con protagonista **Domenico “Ipno”**. Ambientazione: **supermercato della Repubblica Ceca**, organizzato come un labirinto di corsie, scaffali, casse, varchi, scale mobili e stanza di sicurezza. Visuale **dall'alto o tre-quarti elevato**, leggibile come le sezioni stealth del classico Metal Gear: movimento furtivo, pattuglie, angoli ciechi, ripari e campi visivi espliciti. Stile grafico curato, coerente, art direction pixel art ad alta leggibilità; niente placeholder procedurali grossolani quando ci sono asset dedicati.
+Arcade stealth umoristico **For Four Chocolate**, con protagonista **Domenico “Ipno”**. Ambientazione: **supermercato della Repubblica Ceca**, organizzato come un labirinto di corsie, scaffali, casse, varchi, scale mobili e stanza di sicurezza. Visuale **dall'alto o tre-quarti elevato**, leggibile come le sezioni stealth del classico Metal Gear: movimento furtivo, pattuglie, angoli ciechi, ripari e campi visivi espliciti. Stile grafico da **Metal Gear Solid PS1**, con prospettiva alta obliqua e ambiente 3D/2.5D di qualità, profondità reale degli scaffali, materiali, illuminazione e personaggi volumetrici; niente resa Commodore 64 né placeholder primitivi.
 
 ## 2. Personaggi e reference visive
 - **Domenico Ipno**, personaggio giocabile. Due fotografie fornite dall'utente: una foto di gruppo con **cappello di paglia** e posa accucciata, e una seconda all'aperto con **cappello di paglia, occhiali, camicia fantasia, accovacciato sulla sfera**. Preservare aspetto e riconoscibilità nel ritratto/sprite, adattandolo alla prospettiva del gioco.
@@ -20,19 +22,19 @@ Arcade stealth umoristico **For Four Chocolate**, con protagonista **Domenico �
 6. Epilogo comico del fallimento: Ipno **sale la scala mobile ammanettato**, esce e riceve **la multa**; in contemporanea compare il cameo di **Totore Capellone** che esce dal supermercato con un salame usato da cintura.
 
 ## 4. Specifiche future (non ancora implementate)
-- **Visuale e collisioni:** top-down tattico / 3/4; navigazione continua o tile-based da decidere in prototipo, niente prospettiva laterale.
+- **Visuale e collisioni:** telecamera obliqua **3D in stile MGS PS1**; la logica tile-based del prototipo può essere riutilizzata, ma non impone resa a quadrettoni né sprite 24×40 in output. Il movimento finale dovrà risultare fluido.
 - **Stealth:** NPC con direzione di sguardo, ostacoli opachi, triangoli/coni di visione per agenti e telecamere, stati calmo/sospetto/allarme/inseguimento.
 - **Bilanciamento:** variabilità di round, difficoltà progressiva, scelta tra rischio e bottino, punteggio di uscita; il titolo allude alle **quattro cioccolate**.
 - **Interfaccia:** responsive desktop + mobile, controlli touch e tastiera, leggibilità dei coni visivi, pause e riavvio.
-- **Grafica:** usare `cover.svg` solo come **illustrazione provvisoria di anteprima**. Prima di creare spritesheet definitivi, rielaborare le foto di Ipno e Totore nel medesimo stile, con rotazioni/movimenti coerenti e sfondi trasparenti.
+- **Grafica:** [direzione PS1 vincolante](./DIREZIONE_ARTISTICA_PS1.md). `cover.svg` è un'immagine provvisoria; i PNG 24×40 e il generatore originario sono solo riferimenti tecnici storici. Personaggi e scaffali devono avere volume e prospettiva. Usare le foto originali per modellare/renderizzare Ipno e Totore nei rispettivi momenti.
 - **Tecnologia:** statico HTML/CSS/JS su GitHub Pages, salvataggio punteggi in `localStorage`, nessun backend obbligatorio.
 - **Privacy/uso delle reference:** fotografie fornite dall'utente da utilizzare come guida grafica, senza riprodurre volti reali di terzi non necessari.
 
 ## 5. Limite dell'intervento richiesto ora
-**SOLO predisposizione iniziale:** scheda nella home Arcade Club **cliccabile come ANTEPRIMA**, pagina introduttiva chiaramente **non giocabile**, illustrazione provvisoria, file obiettivo e reference fotografiche. **NON** creare ancora mappa giocabile, poliziotti, IA, scena dell'arresto, punteggi o pulsanti WhatsApp non funzionanti.
+**Nota storica:** questa sezione descriveva il primo incarico, ormai superato. Le PR #94 e #95 hanno pubblicato un **vertical slice tecnico giocabile**, ma la resa a quadrettoni/sprite miniaturizzati è stata criticata. Ora il prossimo traguardo non è aggiungere funzionalità: è sostituire la grafica con il **campione PS1**, da validare prima del resto.
 
 ## 6. Accettazione
 - La home espone **For Four Chocolate** con link corretto verso `games/for-four-chocolate/`; non lo conta tra i giochi giocabili.
-- La pagina mostra il concept e torna alla home senza errori o finte funzionalità.
+- La pagina mostra oggi un prototipo giocabile; la prossima revisione deve soddisfare i criteri grafici della direzione PS1 prima di essere considerata esteticamente approvata.
 - La documentazione e le reference guidano le prossime sessioni senza confondere i personaggi.
 - Ogni passaggio va registrato in `WORK_LOG.md` secondo `AGENTS.md`.
