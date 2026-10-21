@@ -1,8 +1,9 @@
 /* GTA Melito — Q42: mercato settimanale del rione 219.
  * Il LUOGO è reale (data/market-area.json, fonti in MERCATO_MELITO.md); il giorno (venerdì) e gli
  * orari NON sono verificati; banchi, merci, prezzi, venditori e clienti sono di fantasia.
- * I banchi sono PLACEHOLDER disegnati qui in pixel art semplice: ogni tipo si sostituisce con uno
- * sprite futuro registrandolo in MARKET_ART (un solo punto di aggancio). Gli ombrelloni sono pixel
+ * I banchi hanno un segnaposto disegnato qui in pixel art semplice; dal lotto 3 (CODEX-GH, 21/10/2026)
+ * i 14 tipi usano le celle dell'atlante assets/market/ registrate in MARKET_ART (un solo punto di
+ * aggancio): senza PNG restano i segnaposto. Gli ombrelloni sono pixel
  * art procedurale (cache per variante) e, come i tetti, sfumano quando il giocatore ci passa sotto.
  * Venditori e clienti usano gli sprite esistenti dei pedoni e vivono in market.people, fuori da
  * state.people: li muove solo questo modulo (griglia di 1 m dentro l'area, percorsi lungo i
@@ -59,6 +60,47 @@ export const MARKET_TYPES=Object.freeze([
 /* Punto di aggancio per l'arte definitiva: MARKET_ART[id] = {draw(c,stall,build,clock)} sostituisce il
  * banco segnaposto di quel tipo (per esempio disegnando uno sprite). Vuota = tutti PLACEHOLDER. */
 export const MARKET_ART={};
+/* Lotto 3 (CODEX-GH, 2026-10-21): atlante dei 14 banchi visti dall'alto + 4 teli, RGBA 384×144,
+ * griglia 6×3 di celle 64×48 a 8 pixel sorgente per unità di gioco (2× rispetto a PX=4 dei
+ * segnaposto): ogni cella copre 8×6 unità e il piano colorato (48/36/24 px) coincide quasi con stall.w.
+ * Cella di B01…B14 = Number(id.slice(1))-1; i teli T1–T4 stanno nelle celle 14–17 e oggi il gioco
+ * NON li disegna (le «tende» del mercato sono coperture appese di B06, non piani di banco).
+ * L'immagine si carica una volta sola e registra MARKET_ART[B01…B14] solo quando è pronta: senza PNG
+ * (o in Node) restano i segnaposto. Grafica PROVVISORIA da approvare da Simone. */
+export const MARKET_ATLAS_PATH='./assets/market/mercato-banchi-14-teli-4-rgba.png';
+export const MARKET_ATLAS_CELL=Object.freeze({width:64,height:48,columns:6,rows:3});
+export const MARKET_ATLAS_PX=8; // pixel dell'atlante per unità di gioco
+export const MARKET_CLOTH_IDS=Object.freeze(['T1','T2','T3','T4']);
+export const MARKET_ART_FADE=Object.freeze({from:.75,to:.95}); // montaggio: sprite in dissolvenza sopra il bancone del segnaposto
+export function marketArtCell(id){
+ const m=/^([BT])(\d{1,2})$/.exec(String(id||''));if(!m)return null;
+ const n=Number(m[2]),{width,height,columns}=MARKET_ATLAS_CELL;
+ const index=m[1]==='B'?(n>=1&&n<=MARKET_TYPES.length?n-1:-1):(n>=1&&n<=MARKET_CLOTH_IDS.length?MARKET_TYPES.length+n-1:-1);
+ if(index<0)return null;
+ return {index,sx:(index%columns)*width,sy:Math.floor(index/columns)*height,sw:width,sh:height};
+}
+let marketAtlas=null,marketAtlasRequested=false;
+const atlasSized=img=>!!img&&(img.complete??true)&&(img.naturalWidth||img.width)===MARKET_ATLAS_CELL.width*MARKET_ATLAS_CELL.columns&&(img.naturalHeight||img.height)===MARKET_ATLAS_CELL.height*MARKET_ATLAS_CELL.rows;
+/* Registra l'arte dei 14 tipi (image = atlante già caricato o un oggetto con le stesse misure). */
+export function registerMarketArt(image){
+ if(!atlasSized(image))return false;
+ marketAtlas=image;
+ for(const type of MARKET_TYPES){
+  const cell=marketArtCell(type.id);
+  if(cell)MARKET_ART[type.id]={cell,source:'lotto3',draw:(c,stall,build,clock)=>drawStallSprite(c,stall,type,cell,build,clock)};
+ }
+ return true;
+}
+export function clearMarketArt(){marketAtlas=null;marketAtlasRequested=false;for(const k of Object.keys(MARKET_ART))delete MARKET_ART[k];}
+export function marketArtReady(){return !!marketAtlas;}
+export function loadMarketArt(){
+ if(marketAtlasRequested||typeof Image==='undefined')return;
+ marketAtlasRequested=true;
+ const img=new Image();
+ img.onload=()=>{if(!registerMarketArt(img))console.warn('GTA Melito: atlante del mercato con misure inattese; restano i banchi segnaposto');};
+ img.onerror=()=>console.warn('GTA Melito: atlante del mercato non disponibile; restano i banchi segnaposto');
+ img.src=new URL(MARKET_ATLAS_PATH,import.meta.url).href;
+}
 /* File di banchi (coordinate di gioco). face = direzione verso i clienti. Le file attorno alla
  * pensilina OSM (x 1162,6–1172,5, y 934–961) hanno la schiena verso di essa. */
 const ROWS=[
@@ -609,6 +651,23 @@ function drawStallPlaceholder(c,s,type,build,clock){
  drawStallLocal(c,s,type,build,clock,true);
  c.restore();
 }
+/* Banco con lo sprite del lotto 3: stesse coordinate locali del segnaposto (x lungo il banco, +y
+ * verso i clienti), così l'orlo di legno e l'ombra della cella guardano il corridoio dei clienti.
+ * Fino a .75 resta il montaggio del segnaposto (casse per terra, poi bancone nudo); fra .75 e .95 lo
+ * sprite completo sfuma sopra il bancone; da .95 solo lo sprite. Ombrelloni e venditori sono altrove. */
+function drawStallSprite(c,s,type,cell,build,clock){
+ const F=MARKET_ART_FADE,a=clamp((build-F.from)/(F.to-F.from),0,1);
+ if(a<1)drawStallPlaceholder(c,s,type,Math.min(build,F.from-.001),clock);
+ if(a<=0||!marketAtlas)return;
+ const U=cell.sw/MARKET_ATLAS_PX,V=cell.sh/MARKET_ATLAS_PX; // 8×6 unità di gioco
+ c.save();c.translate(s.x,s.y);c.rotate(s.face-Math.PI/2);
+ const was=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
+ if(a<1)c.globalAlpha=a;
+ c.drawImage(marketAtlas,cell.sx,cell.sy,cell.sw,cell.sh,-U/2,-V/2,U,V);
+ c.imageSmoothingEnabled=was;c.globalAlpha=1;
+ if(type.goods==='porchetta')drawSmoke(c,s,clock);
+ c.restore();
+}
 function drawSmoke(c,s,clock){
  c.fillStyle='#ffffff26';const t=clock*.6+s.seed;c.fillRect(-s.w/2+1+Math.sin(t)*.3,-s.d/2-.6-((t*.4)%1),.5,.5);
 }
@@ -699,7 +758,7 @@ export function drawMarketGround(c,m,bounds,zoom=1){
  }
  c.restore();
 }
-/* Banchi (segnaposto o arte da MARKET_ART) e ombre degli ombrelloni: sotto le persone. */
+/* Banchi (sprite del lotto 3 da MARKET_ART, altrimenti segnaposto) e ombre degli ombrelloni: sotto le persone. */
 export function drawMarketStalls(c,m,bounds,clock=0){
  if(!m)return;
  const [x0,y0,x1,y1]=bounds;

@@ -43,7 +43,7 @@ test('Q42 sheet and area data: types, sizes and polygon are the ones of the CSV 
  const area=JSON.parse(json);
  assert.deepEqual(MARKET_AREA.polygon.map(p=>[...p]),area.polygon_game);assert.deepEqual([...MARKET_AREA.centre],area.centre_game);
  assert.deepEqual([...MARKET_AREA.streets],area.streets);
- assert.deepEqual(MARKET_ART,{},'no final art yet: every stall is a placeholder');
+ assert.deepEqual(MARKET_ART,{},'in Node (no Image) the lotto 3 atlas is not registered: every stall falls back to the placeholder');
 });
 
 test('Q42 layout: 15–23 stalls in rows, never on roads, buildings, trees, benches or each other, room in front of each',()=>{
@@ -173,7 +173,7 @@ test('Q42 setup in view is gradual: vendors walk in, stalls grow in stages; tear
 
 test('Q42 game wiring: created with the map, stepped after street physics, solid in car and on foot, drawn in layers, weekday in the HUD',async()=>{
  const [game,html]=await Promise.all(['game.mjs','index.html'].map(f=>readFile(new URL('./'+f,import.meta.url),'utf8')));
- assert.match(game,/import \{createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols\} from '\.\/market\.mjs\?v=\d+'/);
+ assert.match(game,/import \{createMarket,stepMarket,marketBlocksWalker,marketBlocksVehicle,stepParasolReveal,drawMarketGround,drawMarketStalls,drawMarketParasols(?:,loadMarketArt)?\} from '\.\/market\.mjs\?v=\d+'/);
  assert.equal((game.match(/state\.streetObjects=createStreetObjects\(\);(?:createCityLife\(\);)?state\.market=createMelitoMarket\(\);/g)||[]).length,2,'on load and on the width switch');
  const tick=game.indexOf('function tick(dt)'),phys=game.indexOf('stepStreetPhysics(dt);',tick),mk=game.indexOf('stepMelitoMarket(dt);',tick);
  assert.ok(phys>0&&mk>phys&&mk-phys<40);

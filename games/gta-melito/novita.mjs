@@ -64,8 +64,8 @@ export const NOVITA=Object.freeze([
  {id:'piscina',nome:'Piscina comunale interrata in rovina',lavoro:'BF12',pr:'#50',
   cosa:'Vasca vuota e crepata con piastrelle sbiadite, erbacce e scaletta, muri bassi spezzati; con la pioggia (?meteo=pioggia) compaiono pozzanghere.',
   trova:s=>boundsCentre((s?.buildings||[]).find(b=>b.art?.ruinPool))},
- {id:'mercato',nome:'Mercato: banchi placeholder, ombrelloni e venditori',lavoro:'Q42',pr:'#52',
-  cosa:'Banchi provvisori dei 14 tipi del foglio, ombrelloni a spicchi, a strisce e tondi, venditori che chiamano e clienti che comprano. Il mercato viene montato per la prova anche se non è venerdì.',
+ {id:'mercato',nome:'Mercato: banchi dei 14 tipi (sprite del lotto 3), ombrelloni e venditori',lavoro:'Q42',pr:'#52',
+  cosa:'Banchi dei 14 tipi del foglio (dal lotto 3 con gli sprite visti dall\'alto; segnaposto solo se il PNG manca), ombrelloni a spicchi, a strisce e tondi, venditori che chiamano e clienti che comprano. Il mercato viene montato per la prova anche se non è venerdì.',
   ora:10*60+30,mercato:true,trova:()=>({x:1168,y:948})},
  {id:'ombrelloni',nome:'Ombrelloni che diventano trasparenti',lavoro:'Q42',pr:'#52',
   cosa:'Passa sotto un ombrellone, a piedi o in auto: sfuma come i tetti e vedi la bancarella sotto.',
@@ -115,7 +115,10 @@ export const NOVITA=Object.freeze([
   disponibile:s=>!!s?.races?.routes?.length,trova:s=>near((s?.races?.routes||[]).map(r=>r.start),s)},
  {id:'lotto2-pedoni',nome:'Lotto 2: quattro nuovi pedoni (signora con la borsa, ragazzo con lo zaino, uomo in giacca, ragazza col cappotto rosso)',lavoro:'Lotto 2 grafica',pr:'in revisione',
   cosa:'Foglio di CODEX-GH: frame adattati a zone dalla tavola madre dei pedoni (stesse pose, piedi e scala), vestiti e colori nuovi. Si mescolano alla gente in strada (residenti, passanti, clienti): guardali camminare su Via Roma nelle quattro direzioni. Grafica PROVVISORIA.',
-  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO2_PEDESTRIAN_NPC_START_KIND),s)||roadMiddle(s,'Via Roma')}
+  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO2_PEDESTRIAN_NPC_START_KIND),s)||roadMiddle(s,'Via Roma')},
+ {id:'lotto3-banchi',nome:'Lotto 3: banchi del mercato visti dall\'alto (14 tipi) al posto dei segnaposto',lavoro:'Lotto 3 grafica',pr:'in revisione',
+  cosa:'Foglio di CODEX-GH: piano di ogni banco visto dall\'alto con la merce del suo tipo (cassette di frutta, vasche del pesce, vetrina dei salumi, pile di vestiti, scarpe, pentole, flaconi, giocattoli, vasi, borse, intimo, bigiotteria, porchetta, olive), orlo di legno e ombra verso il corridoio dei clienti. Ombrelloni, venditori e clienti come prima; durante il montaggio lo sprite appare in dissolvenza. Grafica PROVVISORIA.',
+  ora:10*60+30,mercato:true,distanza:[2,8],trova:s=>near((s?.market?.stalls||[]).map(q=>({x:q.x,y:q.y})),{spawn:[1168,948]})||{x:1168,y:948}}
 ].map(Object.freeze));
 
 /* Una voce è attiva se esiste davvero nel gioco (le voci «in arrivo» solo quando il modulo c'è). */
