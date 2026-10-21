@@ -747,3 +747,8 @@ Nuova torre a scacchi rossi/crema, PNG RGBA `assets/buildings/serbatoio-melito-s
 
 ### 2026-10-20 — Serbatoio: deformazione del PNG rimossa
 Secondo screenshot e correzione dell'utente, **mantenere la torre molto grande e dettagliata**: è un'eccezione monumentale intenzionale. La versione precedente piegava visibilmente il fusto verso sinistra a causa di `c.transform(... shear ...)` e lo schiacciava verticalmente per via della diversa scala X/Y. Renderer aggiornato con PNG diritto e **fattore uniforme isotropo**, stessa massa/area visiva precedente; testa allineata a base, dissolvenza e luci riallineate. L'immagine originale non è stata rigenerata. Resta il collaudo sul telefono.
+
+### 2026-10-21 — Lotto 1: Fiat Grande Punto e Lancia Ypsilon III nel traffico (grafica PROVVISORIA, da approvare)
+- Atlante di CODEX-GH `assets/vehicles/grande-punto-ypsilon3-16-rgba.png`: 16 auto viste dall'alto, muso in su, contorno scuro, due toni di carrozzeria, vetri, fari, specchi, ruote; stesso reticolo 4×4 da 40×60 degli atlanti Punto/Ypsilon, Seicento/500, Uno/Smart. Righe 1–2 Grande Punto (white, red, blue, silver, graphite, black, lightblue, beige), righe 3–4 Ypsilon III (white, red, silver, graphite, black, blue, beige, purple). Tinte interpretate, non codici vernice di fabbrica.
+- Nel gioco: ~16 auto su 66 id del traffico, anche nei parcheggi e in garage/officina. Misure disegnate come Punto 188 e Ypsilon 2003. Dove vederle: Via Roma (PAUSA › NOVITÀ › `lotto1-auto`).
+- Verificato con una prova Chrome headless di 20 s (screenshot in PR); **non provato su Android vero**. Giudizio di Simone da raccogliere.

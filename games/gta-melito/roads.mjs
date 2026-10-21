@@ -1,7 +1,7 @@
 import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=044';
 import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=008';
 import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=131';
-import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=005';
+import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=006';
 import {vs,ps} from './world-scale.mjs?v=001';
 // BF14: following distance between two cars on the same edge (centre to centre).
 const QUEUE=Object.freeze({stop:vs(6.3)+1,window:vs(7)});

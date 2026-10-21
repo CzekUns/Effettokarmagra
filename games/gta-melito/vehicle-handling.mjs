@@ -34,6 +34,9 @@ export const BUS_HANDLING=freeze({...CAR_HANDLING,kind:'autobus',launch:.32,laun
 const CAR_MODELS={
  'punto-188':{accel:14,top:41,brake:50},
  'ypsilon-2003':{accel:13.2,top:40,grip:7.4},
+ // Lotto 1: Grande Punto drives like the Punto 188, Ypsilon III like the Ypsilon 2003.
+ 'grande-punto-2005':{accel:14,top:41,brake:50},
+ 'ypsilon-2011':{accel:13.2,top:40,grip:7.4},
  'seicento-1998':{accel:10.4,top:35,steer:2.6,brake:44},
  'fiat-500-2007':{accel:11.5,top:37,steer:2.55},
  'fiat-uno-1983':{accel:9.6,top:36,brake:40,grip:6.2,launch:.38},
