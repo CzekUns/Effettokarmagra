@@ -80,8 +80,8 @@ window.ARCADE_CATALOG = [
     support: "Telefono e PC · Beta, da collaudare",
     status: "live",
     accent: "orange"
-  }
-,  {
+  },
+  {
     id: "for-four-chocolate",
     title: "For Four Chocolate",
     subtitle: "Domenico Ipno · Missione cioccolato",
