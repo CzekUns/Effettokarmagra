@@ -168,6 +168,10 @@ export const NOVITA=Object.freeze([
  {id:'pose-fermi',nome:'Pose ferme: seduti, in chiacchiera e appoggiati',lavoro:'Pose ferme · CODEX-GH',pr:'in revisione',
   cosa:'Le persone della vita di quartiere ora hanno pose dedicate: gambe piegate sulle panchine, un piccolo gesto che alterna due frame nei gruppetti, postura laterale appoggiata presso alcuni bar. Fogli derivati da tutti i pedoni esistenti, comprese le varianti; nessun nuovo kind. Grafica PROVVISORIA, da approvare da Simone.',
   ora:11*60,trova:s=>near((s?.idle?.spots||[]).filter(q=>q.activity==='bench'||q.pose==='leaning'),s)||near(s?.idle?.spots,s)||roadMiddle(s,'Via Roma')},
+ {id:'giochi-di-strada',nome:'Giochi di strada: bambini a pallone e anziani a carte',lavoro:'Giochi di strada · CODEX-GH',pr:'in revisione',
+  cosa:'Nella villa comunale, nei campetti e negli slarghi pedonali alcuni ragazzini si passano un pallone; nella villa e davanti al Municipio due tavolini ospitano anziani che giocano a carte. Si fermano un attimo se il giocatore passa in mezzo, senza collisioni. Bambini 16–20 nei giorni di scuola e 10–20 nel weekend; carte 9–12 e 16–19. Grafica PROVVISORIA, da approvare da Simone.',
+  ora:17*60+30,trova:s=>near((s?.streetGames?.ballGroups||[]).map(g=>g.center),s)||
+   near((s?.streetGames?.cardTables||[]).map(t=>t.center),s)||roadMiddle(s,'Via Roma')},
  {id:'caricamento-artwork',nome:'Schermate di caricamento: sei artwork di Melito e il render del gioco',lavoro:'Caricamento · CODEX-GH',pr:'in revisione',
   cosa:'Sette sfondi a rotazione: Via Roma nel gioco, mercato, campetto, villa comunale, pizzeria di Via Roma, mercato all’alba e festa patronale. L’ultima schermata vista non ricompare subito. PROVA mostra l’anteprima successiva senza lasciare il gioco; la fascia scura mantiene leggibili titolo, testo e barra. Artwork PROVVISORIE, da approvare da Simone.',
   prova:'caricamento',trova:null},

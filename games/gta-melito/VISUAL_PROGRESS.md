@@ -832,3 +832,7 @@ Secondo screenshot e correzione dell'utente, **mantenere la torre molto grande e
 ### 2026-10-21 — Pose ferme per vita di quartiere (CODEX-GH) — PROVVISORIO, da approvare da Simone
 - 34 fogli 96×160: seduto, in piedi rilassato in due frame, appoggiato lateralmente. I fogli derivano dai personaggi esistenti; colori e identità restano coerenti. Peso complessivo 227 KB.
 - Da vedere in PAUSA › NOVITÀ › `pose-fermi` › VAI A VEDERE alle 11:00 e negli screenshot 3× di panchina e gruppetto in `/home/ubuntu/codex-gh-lavoro/sim-pose/`. **PROVVISORIO, da approvare da Simone**.
+
+### 2026-10-21 — Giochi di strada (CODEX-GH) — PROVVISORIO, da approvare da Simone
+- Ragazzini con pallone pixel art 4×4, corse brevi e passaggi nella villa, sui campetti e in slarghi pedonali; anziani seduti con carte a due tavolini semplici in villa e al Municipio.
+- PAUSA › NOVITÀ › `giochi-di-strada` › VAI A VEDERE porta alle 17:30; screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-giochi/`. **PROVVISORIO, da approvare da Simone**.

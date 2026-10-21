@@ -199,3 +199,7 @@ La [pixel art rossa/crema](./assets/buildings/serbatoio-melito-scacchi-rossi.png
 ### Pose ferme dei pedoni (21/10/2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
 - `assets/people/sources/pose-genera.py` ricava da ogni foglio di camminata 4 pose statiche per personaggio, celle 24×40: seduto, rilassato A, rilassato B, appoggiato. Output `assets/people/pose-<foglio>.png` 96×160 RGBA. Usare pixel netti, margini trasparenti e colori dei fogli originali; nessun ritocco runtime.
 - Le pose sono adattamenti procedurali del frame fermo, quindi accessori voluminosi (carrello, cane, sedia a rotelle) potrebbero richiedere rifinitura manuale dopo il giudizio di Simone. **PROVVISORIO, da approvare da Simone**.
+
+### Giochi di strada (21/10/2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+- Il pallone è un piccolo disegno a rettangoli netti 4×4 circa, senza texture esterne. Tavolini 2.5D con bordo scuro, piano legno a due toni, carte chiare. Bambini dai fogli esistenti, anziani dalle pose sedute; il gesto della carta sovrappone un frammento del frame rilassato.
+- Le scene non generano collisioni e sono nascoste fuori orario. **PROVVISORIO, da approvare da Simone**.

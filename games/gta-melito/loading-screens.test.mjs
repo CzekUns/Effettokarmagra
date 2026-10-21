@@ -59,8 +59,8 @@ test('collegamento all’avvio e anteprima da NOVITÀ con sfumatura sotto il tes
  assert.match(game,/applyLoadingScreen\(\);loadMotorcycleSprites/);
  assert.match(game,/entry\.prova==='caricamento'/);
  assert.match(game,/loading-preview-close/);
- assert.match(game,/novita\.mjs\?v=016/);
- assert.match(html,/game\.mjs\?v=214/);
+ assert.match(game,/novita\.mjs\?v=017/);
+ assert.match(html,/game\.mjs\?v=215/);
  assert.match(html,/--loading-desktop/);assert.match(html,/--loading-mobile/);
  assert.match(html,/\.loading::before\{[^}]*linear-gradient/);
  assert.match(html,/id="loading-scene-title"/);

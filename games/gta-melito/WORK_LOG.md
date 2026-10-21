@@ -1282,3 +1282,8 @@ laude (account `ilconsulentelogistico-hue`) — Q02 collaudata e chiusa
 ### 2026-10-21 — CODEX-GH — pose ferme della vita di quartiere; PROVVISORIO, da approvare da Simone
 - Generati 34 fogli `pose-*.png` dai frame dei pedoni già presenti (4 personaggi × 4 pose, 24×40). Peso complessivo 227 KB. Seduti sulle panchine; rilassati con due frame lenti nei gruppetti; alcuni appoggiati davanti ai locali. Nessun nuovo kind, nessuna collisione.
 - Generatore riutilizzabile `assets/people/sources/pose-genera.py`; test `pose-pedoni.test.mjs`; voce NOVITÀ `pose-fermi`. Screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-pose/`. **PROVVISORIO, da approvare da Simone**.
+
+### 2026-10-21 — CODEX-GH — giochi di strada; PROVVISORIO, da approvare da Simone
+- Bambini a pallone nella villa, nei campetti liberi e in 2–3 slarghi pedonali; kind 25 e 44 più varianti. Passaggi ogni 1–3 s, corse brevi fra punti verificati fuori strada, pausa se il giocatore è vicino. Durante il minigioco calcetto, le scene di pallone si fermano.
+- Due tavolini a carte con anziani seduti nella villa e davanti al Municipio. Luoghi da recinti/POI OSM, campetti e grafo pedonale; nessuna coordinata cittadina scritta a mano. Orari da `npc-agenda.mjs`: bambini 16–20 nei giorni di scuola, 10–20 nel weekend; anziani 9–12 e 16–19.
+- Modulo `npc-giochi.mjs`, test, voce NOVITÀ `giochi-di-strada`, screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-giochi/`. Figure solo decorative, fuori dall'indice collisioni. **PROVVISORIO, da approvare da Simone**.

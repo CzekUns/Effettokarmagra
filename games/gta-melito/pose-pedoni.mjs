@@ -43,3 +43,13 @@ export function drawIdlePose(ctx,x,y,person,clock){
  ctx.restore();
  return true;
 }
+
+/* Solo durante la giocata a carte: sovrappone la manica del frame del gesto
+ * al busto già seduto, senza far alzare il personaggio. */
+export function drawIdleCardGesture(ctx,x,y,person){
+ const source=idlePoseSourceForKind(person.kind);if(!source||!idlePoseReady(source.id))return false;
+ const width=ps(3.25),height=ps(4.7),dx=x-width/2,dy=y-height+ps(.8);
+ ctx.drawImage(images.get(source.id),source.identity*24+14,80+16,9,16,
+  dx+14/24*width,dy+21/40*height,9/24*width,16/40*height);
+ return true;
+}

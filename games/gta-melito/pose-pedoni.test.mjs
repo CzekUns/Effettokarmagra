@@ -91,7 +91,7 @@ test('generator, renderer, NOVITÀ e registri collegati',async()=>{
  assert.match(generator,/def seated/);assert.match(generator,/def relaxed/);assert.match(generator,/def leaning/);
  assert.match(idle,/drawIdlePose/);assert.match(idle,/pose:activity==='bench'\?'seated'/);
  assert.match(game,/drawIdlePeople\(c,state\.idle/);assert.match(game,/loadIdlePoseSheets\(\)/);
- assert.match(game,/npc-idle\.mjs\?v=002/);assert.match(game,/novita\.mjs\?v=016/);
- assert.match(html,/game\.mjs\?v=214/);assert.match(novita,/id:'pose-fermi'/);
+ assert.match(game,/npc-idle\.mjs\?v=003/);assert.match(game,/novita\.mjs\?v=017/);
+ assert.match(html,/game\.mjs\?v=215/);assert.match(novita,/id:'pose-fermi'/);
  for(const doc of docs)assert.match(doc,/pose ferme/i);
 });

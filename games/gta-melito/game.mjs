@@ -19,7 +19,8 @@ import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPudd
 import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=006';
 import {createSocial,stepSocial} from './npc-social.mjs?v=004';
-import {createIdlePeople,stepIdlePeople,drawIdlePeople,loadIdlePoseSheets} from './npc-idle.mjs?v=002';
+import {createIdlePeople,stepIdlePeople,drawIdlePeople,loadIdlePoseSheets} from './npc-idle.mjs?v=003';
+import {createStreetGames,stepStreetGames,drawStreetGames} from './npc-giochi.mjs?v=001';
 import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=007';
 import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=007';
 import {trafficTargetAt} from './traffic-rush.mjs?v=001';
@@ -79,7 +80,7 @@ import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
 import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=016';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=017';
 // Lotto 15: dialoghi con volto (prototipo per la storyline, PROVVISORIO): barra in basso + riquadro del personaggio.
 import {openDialogue,isDialogueOpen,DEMO_DIALOGUE} from './dialogue.mjs?v=001';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
@@ -190,7 +191,7 @@ function openPoolGame(){
  return openPoolMachine({storage:globalThis.localStorage,onExit:()=>{carRadio.duck(false);canvas.focus?.({preventScroll:true});updateHud();}});
 }
 const FORCED_WEATHER=(()=>{const w=new URLSearchParams(globalThis.location?.search||'').get('meteo');return ['pioggia','nuvoloso','sereno'].includes(w)?w:null;})();
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],idle:null,dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],idle:null,streetGames:null,dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 // BF14: the world scale in use (read by the PAUSE › NOVITÀ entry and by the tests).
 state.worldScale=Object.freeze({vehicle:VEHICLE_SCALE,person:PERSON_SCALE});
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
@@ -508,6 +509,13 @@ function createNeighbourhoodIdle(){
   doors:state.doors||[],canStand:idleStand,onRoad:onCarriageway,kindCount:PEDESTRIAN_KIND_COUNT});
  stepIdlePeople(state.idle,0,{minutes:state.npcClockMinutes,player:state.player,
   canStand:idleStand,onRoad:onCarriageway,doors:state.doors||[]});
+}
+function createNeighbourhoodGames(){
+ const safe=(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y);
+ state.streetGames=createStreetGames({map:state.map,enclosures:state.enclosures,pitches:state.pitches,
+  graph:state.graph,doors:state.doors||[],canStand:safe,onRoad:onCarriageway});
+ stepStreetGames(state.streetGames,0,{minutes:state.npcClockMinutes,player:state.player,
+  canStand:safe,onRoad:onCarriageway,matchOpen:isFootballOpen()});
 }
 function stepMelitoMarket(dt){
  if(!state.market)return;
@@ -851,7 +859,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  }
  state.traffic=createTraffic(START_MINUTE);prepareSignals();
  createShopEntrances();
- state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();state.service=createServices();createNeighbourhoodIdle();
+ state.people=createCityPedestrians();state.streetObjects=createStreetObjects();createCityLife();state.market=createMelitoMarket();state.service=createServices();createNeighbourhoodIdle();createNeighbourhoodGames();
  state.dynamicCollision=makeCollisionIndex([...state.cars,...state.traffic,...state.people]);state.trafficClock=0;state.npcClockMinutes=START_MINUTE;
  $('road-count').textContent=String(state.roads.length);
  $('building-count').textContent=String(state.buildings.length);
@@ -1150,6 +1158,8 @@ function updateTraffic(dt){
   kerbWait:agent=>kerbWait(state.reactions,agent,state.graph,life)});
  stepIdlePeople(state.idle,elapsed,{minutes:state.npcClockMinutes,player:state.player,
   canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,doors:state.doors||[]});
+ stepStreetGames(state.streetGames,elapsed,{minutes:state.npcClockMinutes,player:state.player,
+  canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,matchOpen:isFootballOpen()});
  // Q13: rush hours. The hour curve sets how many vehicles drive; BF09 balanceTraffic is the one place
  // that adds and removes them, through the border gates.
  state.trafficTarget=trafficTargetAt(state.npcClockMinutes,TRAFFIC_COUNT);
@@ -1786,7 +1796,7 @@ function compareRoadWidths(){
  state.propsGrid=makeIndex(state.props);
  state.shops=prepareStorefronts(state.map.pois||[],state.roads);
  state.shopGrid=makeIndex(state.shops);
- createNeighbourhoodIdle();
+ createNeighbourhoodIdle();createNeighbourhoodGames();
  updateRoadWidthLabel();
  roofReveal.clear();
 }
@@ -2211,6 +2221,7 @@ function draw(dt=0){
  for(const q of inFront)q.indoors=true;
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  if(state.idle)drawIdlePeople(c,state.idle,state.clock,[x0,y0,x1,y1],alpha);
+ if(state.streetGames)drawStreetGames(c,state.streetGames,state.clock,[x0,y0,x1,y1]);
  if(state.market)drawCityPeople(c,state.market.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  // Q20: autista del corriere e operatore della nettezza urbana (figure di servizio, non NPC della città).
  if(state.service?.figures.length)drawCityPeople(c,state.service.figures,state.graph,state.clock,[x0,y0,x1,y1],1);
