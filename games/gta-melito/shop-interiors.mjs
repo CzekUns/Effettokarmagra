@@ -5,7 +5,7 @@
  * OSM, l'arredo no (nessuna pretesa sulla pianta reale del locale). Superficie fra 1/4 e 1/6
  * della banca 160×120: bar e minimarket 80×60, panificio o pasticceria 64×50.
  * I locali di tipo non previsto o senza un portone raggiungibile restano chiusi. */
-import {drawCityPlayer} from './city-art.mjs?v=136';
+import {drawCityPlayer} from './city-art.mjs?v=137';
 import {drawPedestrianSprite} from './pedestrian-sprites.mjs?v=002';
 import {WALK_SPEED,RUN_SPEED} from './driving-controls.mjs?v=100';
 

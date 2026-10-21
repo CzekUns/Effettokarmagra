@@ -29,12 +29,13 @@ export function drawExtraPedestrianSprite(ctx,x,y,angle,identity=0,clock=0,movin
  return true;
 }
 
-/* Fogli extra dei pedoni (CODEX-GH, 2026-10-21): lotto 2, 10, 11, 12, 13 e 14. Ogni foglio è un atlante
+/* Fogli extra dei pedoni (CODEX-GH, 2026-10-21): lotto 2, 10–14 e 17–20. Ogni foglio è un atlante
  * 384×160 (4 identità × 4 frame nelle colonne, 4 direzioni nelle righe, celle 24×40) con i frame
  * adattati a zone dalla tavola madre (stesse pose, pivot e scala). I kind degli NPC proseguono in
  * sequenza dopo i 4 originali e i 3 del secondo lotto: lotto 2 = 7–10, lotto 10 = 11–14,
- * lotto 11 = 15–18, lotto 12 = 19–22, lotto 13 = 23–26, lotto 14 = 27–30 (il ragazzino del lotto 13
- * è più basso dentro la cella, di proposito). Una cache per immagine: se un PNG manca, i suoi kind
+ * lotto 11 = 15–18, lotto 12 = 19–22, lotto 13 = 23–26, lotto 14 = 27–30,
+ * lotti 17–20 = 31–46. I ragazzini dei lotti 13 e 20 sono più bassi nella cella.
+ * Una cache per immagine: se un PNG manca, i suoi kind
  * ricadono sui fogli precedenti (city-art.mjs). Grafica PROVVISORIA, da approvare da Simone. */
 export const PEDESTRIAN_SHEET_CELL=Object.freeze({width:24,height:40,columns:16,rows:4});
 export const PEDESTRIAN_SHEET_SIZE=Object.freeze({width:384,height:160});
@@ -46,7 +47,11 @@ const SHEET_LIST=[
  ['lotto11',['ragazza-telefono','uomo-robusto-righe','donna-vestito-corallo','sportivo-tuta']],
  ['lotto12',['nonno-coppola-bastone','nonna-vestito-fiori','ragazzo-cuffie','ragazza-giacca-jeans']],
  ['lotto13',['operaio-gilet','signora-carrello','ragazzino-pallone','barista-grembiule']],
- ['lotto14',['uomo-canottiera','signora-elegante-cappello','studente-occhiali','donna-velo']]
+ ['lotto14',['uomo-canottiera','signora-elegante-cappello','studente-occhiali','donna-velo']],
+ ['lotto17',['postino-borsa','pizzaiolo-cartoni','netturbino-scopa','prete-talare']],
+ ['lotto18',['turista-fotocamera','ragazzo-skateboard','donna-tailleur-cartella','anziano-giornale']],
+ ['lotto19',['mamma-bambino','ragazza-cane','uomo-sedia-rotelle','ragazzo-delivery']],
+ ['lotto20',['nonna-grembiule-scopa','ragazzino-scuola','uomo-tuta-telefono','donna-carrello-mercato']]
 ];
 export const PEDESTRIAN_SHEETS=Object.freeze(SHEET_LIST.reduce((out,[id,identities])=>{
  const previous=out[out.length-1];
