@@ -64,7 +64,7 @@ test('codice collegato, nessun blocco del giocatore, NOVITÀ e registri',async()
  assert.match(game,/npc-giochi\.mjs\?v=002/);assert.match(game,/createNeighbourhoodGames\(\)/);
  assert.match(game,/stepStreetGames\(state\.streetGames,elapsed/);assert.match(game,/drawStreetGames\(c,state\.streetGames/);
  assert.doesNotMatch(game,/makeCollisionIndex\([^\n]*streetGames/);
- assert.match(game,/novita\.mjs\?v=019/);assert.match(html,/game\.mjs\?v=219/);
+ assert.match(game,/novita\.mjs\?v=020/);assert.match(html,/game\.mjs\?v=220/);
  assert.match(novita,/id:'giochi-di-strada'/);
  const e=NOVITA.find(x=>x.id==='giochi-di-strada');assert.equal(e.ora,1050);
  assert.deepEqual(novitaTarget(e,{spawn:[0,0],streetGames:{ballGroups:[{center:{x:5,y:7}}]}}),{x:5,y:7});

@@ -62,8 +62,8 @@ test('collegamento nel gioco: nessuna collisione, disegno con lo stesso renderer
  assert.match(game,/stepIdlePeople\(state\.idle,elapsed/);
  assert.match(game,/drawIdlePeople\(c,state\.idle/);
  assert.doesNotMatch(game,/makeCollisionIndex\([^\n]*state\.idle/);
- assert.match(game,/novita\.mjs\?v=019/);
- assert.match(html,/game\.mjs\?v=219/);
+ assert.match(game,/novita\.mjs\?v=020/);
+ assert.match(html,/game\.mjs\?v=220/);
  assert.match(novita,/id:'vita-di-quartiere'/);
  const entry=NOVITA.find(e=>e.id==='vita-di-quartiere');assert.equal(entry.ora,660);
  assert.deepEqual(novitaTarget(entry,{spawn:[0,0],idle:{spots:[{x:18,y:7}]}}),{x:18,y:7});

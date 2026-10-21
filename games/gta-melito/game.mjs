@@ -34,7 +34,7 @@ import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=003';
 import {prepareSignalPosts,drawStopLines,drawSignals,signalGlows} from './traffic-light-art.mjs?v=004';
 import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=004';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=091';
-import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=004';
+import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=005';
 import {openSlotMachine,isSlotOpen} from './minigame-slot.mjs?v=001';
 import {openPokerMachine,isPokerOpen} from './minigame-poker.mjs?v=001';
 import {riderPickups,riderDestinations,riderOffers,riderVehicleCheck,acceptOffer,cancelJob,stepJob,completeDelivery,riderStats,riderRoute,routeLookahead,PICKUP_RADIUS,DELIVERY_RADIUS} from './rider.mjs?v=001';
@@ -72,17 +72,17 @@ import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,return
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=003';
-import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches,PITCH_RULES} from './football-pitches.mjs?v=001';
+import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches,PITCH_RULES} from './football-pitches.mjs?v=002';
 import {GARAGES,nearestGarage,canStoreVehicle,depositVehicle,takeVehicle,vehicleFromEntry,chooseExitSpot,garageMessage,vehicleLabel,ownedEntry,ownedCount,garageById,GARAGE_SLOTS,drawGarage} from './garages.mjs?v=001';
 import {paintOptions,paintName,PERF_LEVELS,perfPrice,PAINT_PRICE,NEON_PRICE,NEON_COLORS,tunedProfile,buyTuning,tuningMessage,drawNeonUnderglow,neonNightGlows} from './tuning.mjs?v=001';
-import {recordFootballResult,footballRecordText} from './minigame-football.mjs?v=002';
-import {createWorldFootball,stepWorldFootball,footballWorldPlayer,footballHud,drawWorldFootball,loadFootballSprites} from './football-overworld.mjs?v=001';
+import {recordFootballResult,footballRecordText} from './minigame-football.mjs?v=003';
+import {createFieldMatch} from './football-match.mjs?v=002';
 import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,loadWaterTowerSprite,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=003';
 import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
 import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=019';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=020';
 // Lotto 15: dialoghi con volto (prototipo per la storyline, PROVVISORIO): barra in basso + riquadro del personaggio.
 import {openDialogue,isDialogueOpen,DEMO_DIALOGUE} from './dialogue.mjs?v=001';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
@@ -113,8 +113,6 @@ let tileRoadMode=null,pendingTile=null;
 const radar=$('radar'),r=radar.getContext('2d');
 const pressed={up:false,down:false,left:false,right:false,run:false,handbrake:false,accelerate:false,brake:false,reverse:false};
 const stick={x:0,y:0};
-const footballInput={shoot:false,pass:false};
-const isFootballOpen=()=>!!state.football;
 function moveAxes(){return {x:Math.abs(stick.x)>.08?stick.x:Number(pressed.right)-Number(pressed.left),y:Math.abs(stick.y)>.08?stick.y:Number(pressed.down)-Number(pressed.up)};}
 const wheel={angle:0,held:false,pointerId:null,pointerAngle:0};
 function driveAxes(){
@@ -289,50 +287,50 @@ function createPitches(){
   nearStreet:(x,y)=>{const r=nearest(x,y,24,state.roads);return !!r&&r.distance<=visualRoadWidth(r.road)/2+2;}});
  if(state.pitches.failed.length)console.warn('Campetti non collocati: '+state.pitches.failed.map(f=>f.id+' ('+f.reason+')').join(', '));
 }
-// Q33: the match uses the Q32 field already painted in the city. The player is always red #4.
-function showFootballBanner(text,seconds=1.5){
- const el=$('football-banner');el.textContent=text;el.hidden=false;state.footballBannerUntil=state.clock+seconds;
+// Q33 (21/10/2026, richiesta del committente): la partita si gioca NEL campo, nell'overworld, senza
+// scene a parte (football-match.mjs). E dentro le linee del campo grande: nove calciatori arrivano a
+// piedi da fuori vista, si dispongono, fischio e si gioca con la telecamera di sempre; la città continua.
+// Solo il risultato finale (V/P/S) va nel salvataggio della campagna, una volta per partita (id).
+function openFootballMatch(pitch){
+ if(state.football||!state.ready||!pitch)return false;
+ const p=state.player;
+ state.football=createFieldMatch({pitch,walkable:canStand,view:visibleBounds(),player:{x:p.x,y:p.y,a:p.a},
+  sound:{get muted(){return cityAudio.muted;},get volume(){return cityAudio.effectsVolume;}},
+  onResult:result=>{
+   if(state.progress&&recordFootballResult(state.progress,result)){saveProgress(localStorage,state.progress);refreshCampaign();}
+  }});
+ if(!state.football)return false;
+ pressed.handbrake=false;
+ state.notice={text:state.football.hudText(),until:state.clock+1};
+ cityEventBubble(state.events,p,'Chiamo gli altri!');
+ updateHud();return true;
 }
 function updateFootballHud(){
- const el=$('football-hud'),world=state.football;
- if(!world){el.hidden=!(state.footballFinalUntil>state.clock);$('football-touch').hidden=true;return;}
- const h=footballHud(world);el.hidden=false;$('football-score').textContent=h.score;$('football-clock').textContent=h.clock;
- $('football-touch').hidden=false;
- if(h.phase==='kickoff')showFootballBanner('CALCIO D’INIZIO · '+Math.max(1,Math.ceil(world.match.timer)),.3);
+ const f=state.football,active=!!f?.playing(),hud=$('football-hud'),touch=$('football-touch');
+ hud.hidden=!active;touch.hidden=!active;
+ if(!active)return;
+ $('football-score').textContent=f.match.score.join(' – ');
+ $('football-clock').textContent=f.match.phase==='intro'?'ARRIVANO':`${Math.floor(f.match.time/3)}′`;
+ const banner=$('football-banner'),message=f.banner;
+ banner.hidden=!message;if(message)banner.textContent=message;
 }
-function closeFootballMatch(abandoned=false){
- if(!state.football)return false;
- if(abandoned&&!globalThis.confirm('Abbandonare la partita di calcetto? Il risultato non sarà salvato.'))return false;
- state.football=null;footballInput.shoot=false;footballInput.pass=false;
- $('football-touch').hidden=true;$('football-hud').hidden=true;$('football-banner').hidden=true;
- for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
- if(abandoned){state.notice={text:'CALCETTO · PARTITA ABBANDONATA',until:state.clock+4};}
- canvas.focus?.({preventScroll:true});updateHud();return true;
+function abandonFootball(){
+ const f=state.football;if(!f?.playing())return false;
+ if(!globalThis.confirm('Abbandonare la partita di calcetto? Il risultato non sarà salvato.'))return false;
+ f.abandon();updateFootballHud();return true;
 }
-function footballEvents(events){
- for(const e of events){
-  if(e.type==='goal')showFootballBanner('GOL! '+(e.team===0?'ROSSI':'BLU'),2.2);
-  if(e.type==='restart')showFootballBanner('RIMESSA '+(e.kind==='laterale'?'LATERALE':e.kind==='angolo'?"D’ANGOLO":'DAL FONDO'));
-  if(e.type==='end'){
-   const result=e.result;
-   if(state.progress&&recordFootballResult(state.progress,result)){saveProgress(localStorage,state.progress);refreshCampaign();}
-   const word={vittoria:'VITTORIA',pareggio:'PAREGGIO',sconfitta:'SCONFITTA'}[result.outcome];
-   showFootballBanner('FISCHIO FINALE · '+word,5);
-   state.notice={text:'CALCETTO · '+word+' '+result.home+'–'+result.away+' · BILANCIO '+footballRecordText(state.progress?.football),until:state.clock+5};
-   state.footballFinalUntil=state.clock+5;state.football=null;$('football-touch').hidden=true;
-   for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
-   canvas.focus?.({preventScroll:true});updateHud();
-  }
+// Un passo della partita in campo: posa del protagonista, calciatori, palla, riga dell'HUD, fine.
+function stepFootball(dt){
+ const f=state.football;if(!f)return;
+ const p=state.player;
+ f.step(dt,{player:{x:p.x,y:p.y,a:p.a,car:p.car},view:visibleBounds()});
+ if(f.done()){
+  state.football=null;
+  const r=f.result,word=r?{vittoria:'VITTORIA',pareggio:'PAREGGIO',sconfitta:'SCONFITTA'}[r.outcome]+' '+r.home+'–'+r.away:'PARTITA ABBANDONATA';
+  state.notice={text:'CALCETTO · '+word+' · BILANCIO '+footballRecordText(state.progress?.football),until:state.clock+6};
+  updateHud();return;
  }
-}
-function openFootballMatch(pitch){
- if(isFootballOpen()||!state.ready||state.player.car>=0)return false;
- const seed=(Date.now()>>>0),world=createWorldFootball(pitch,{seed});if(!world)return false;
- for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;resetDrivingControls();
- $('stick-knob').style.transform='translate(0,0)';state.football=world;state.footballFinalUntil=0;
- const at=footballWorldPlayer(world);Object.assign(state.player,{...at,car:-1,vehicleType:null,impactTime:0});
- state.camera.x=at.x;state.camera.y=at.y;
- showFootballBanner('CALCIO D’INIZIO',1.3);updateFootballHud();updateHud();return true;
+ state.notice={text:f.banner||f.hudText(),until:state.clock+.6};
 }
 // Q36: the driven profile is always the model's BASE profile (BF05) plus the owned car's tuning.
 function vehicleProfile(car){
@@ -1440,7 +1438,7 @@ function dropPassengers(vehicle){
 }
 function toggleVehicle(){
  if(!state.ready)return;
- if(isFootballOpen()){footballInput.shoot=true;return;}
+ if(state.football?.playing())return;   // Q33: in campo E = calcio (press/release nei gestori)
  if(state.shopOpen){closeShop();return;}
  if(state.garageOpen){closeGarage();return;}
  const p=state.player;
@@ -1660,11 +1658,7 @@ function tick(dt){
   return;
  }
  const p=state.player;
- if(state.football){
-  const axes=moveAxes(),events=stepWorldFootball(state.football,dt,{...axes,...footballInput});
-  footballInput.shoot=false;footballInput.pass=false;
-  Object.assign(p,footballWorldPlayer(state.football));footballEvents(events);updateFootballHud();
- }else if(p.car>=0){
+ if(p.car>=0){
   const car=state.cars[p.car];
   const axes=driveAxes();
   car.prevX=car.x;car.prevY=car.y;car.prevA=car.a;
@@ -1766,6 +1760,7 @@ function tick(dt){
  // Parked vehicles can be shoved by faster vehicles but cannot disappear.
  for(const car of state.cars)if(car!==state.cars[p.car])
   advanceNonlethalImpact(car,dt,canKnockbackMove);
+ stepFootball(dt);
  updateTraffic(dt);
  stepStreetRace(dt);
  stepCommuters(dt);
@@ -1794,7 +1789,9 @@ function tick(dt){
  const movement={inVehicle:p.car>=0,
   speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?RUN_SPEED:WALK_SPEED):0,
   running:pressed.run,moving:!!moving};
+ // Q33: leggero zoom-out automatico mentre si è in campo durante la partita.
  state.zoomTarget=targetCameraZoom(movement,state.zoomBias);
+ if(state.football)state.zoomTarget=targetCameraZoom(movement,state.zoomBias*state.football.cameraBias(p.x,p.y));
  state.zoom=advanceCameraZoom(state.zoom,state.zoomTarget,dt);
  const target=p.car>=0
   ?vehicleCameraTarget(state.cars[p.car],$('world').clientWidth,$('world').clientHeight,state.zoom)
@@ -1857,7 +1854,6 @@ function updateHud(){
   boardPrompt('ESCI DALLA BANCA');
   $('camera-mode').textContent='INTERNO · '+interiorZoom().toFixed(1)+'×';return;
  }
- if(state.football){$('vehicle').textContent='CALCETTO · ROSSI';$('street').textContent=state.football.pitch.nome.toUpperCase();$('action').textContent='TIRO';$('action').classList.remove('idle');$('action').setAttribute('aria-disabled','false');$('sprint').textContent='PASSA';boardPrompt('TIRO');return;}
  const boostLeft=boostSecondsLeft(state.boost,state.clock);
  const myCar=p.car>=0?state.cars[p.car]:null,dmg=myCar?DAMAGE_LABEL[damageLevel(myCar)]:'';
  const ride=myCar,aboard=ride?occupantsOf(ride).length:0;
@@ -1875,17 +1871,25 @@ function updateHud(){
  const enterable=p.car<0?nearestEnterableVehicle(state.cars,p):null;
  // Q23: fermo davanti all'officina di gioco con il mezzo danneggiato, E ripara (a pagamento).
  const repair=myCar&&nearWorkshop(state.workshop,myCar)&&Math.abs(myCar.speed||0)<1.5?repairCost(myCar):0;
- const pitchNear=p.car<0&&!eventAction&&!shopNear?pitchHotspot(state.pitches,p.x,p.y):null;
+ // Q33: «GIOCA» dentro le linee del campo grande; durante la partita il pulsante è il calcio.
+ const football=state.football?.playing()?state.football:null;
+ const pitchNear=p.car<0&&!eventAction&&!shopNear&&!football?pitchHotspot(state.pitches,p.x,p.y):null;
+ const smallPitch=(state.pitches?.list||[]).find(q=>!q.partita&&q.kind==='calcetto'&&q.gate&&Math.hypot(p.x-q.gate.x,p.y-q.gate.y)<PITCH_RULES.hotspot);
+ if(smallPitch&&!football&&(!state.notice||state.notice.until<=state.clock))state.notice={text:'PARTITA NEL CAMPO GRANDE DI VIA DELLE PALME',until:state.clock+1};
+ const kickLabel=football?(football.hasBall()?'TIRO':'CONTRASTO'):null;
  // Q34: la partenza vicina è calcolata nel tick (stepStreetRace).
  const raceNear=p.car>=0?state.raceNear:null;
  const garageNear=garagePrompt(p,eventAction||shopNear||pitchNear);
- $('action').textContent=eventAction||(shopDoor?'ENTRA':shopNear?'COMPRA':pitchNear?'GIOCA A CALCETTO':garageNear?garageNear:bank?'ENTRA IN BANCA':raceNear?'GARA':repair?'RIPARA · '+repair+' €':p.car>=0?liftAction||'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ $('action').textContent=eventAction||(shopDoor?'ENTRA':shopNear?'COMPRA':pitchNear?'GIOCA':garageNear?garageNear:bank?'ENTRA IN BANCA':raceNear?'GARA':repair?'RIPARA · '+repair+' €':p.car>=0?liftAction||'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ if(kickLabel)$('action').textContent=kickLabel;
+ document.querySelector?.('.controls')?.classList.toggle('football',!!football);
  // Q15: on foot with nothing in reach the touch button is shown dimmed (it used to invite to get into a
  // car that was not there; the tap then only said to get closer to a vehicle).
  const idle=p.car<0&&!eventAction&&!shopNear&&!pitchNear&&!garageNear&&!shopDoor&&!bank&&!enterable;
- $('action').classList.toggle('idle',idle);$('action').setAttribute('aria-disabled',idle?'true':'false');
- boardPrompt(p.car>=0?garageNear||(repair?'RIPARA · '+repair+' € · OFFICINA DI GIOCO':liftAction||''):eventAction||(shopDoor?'ENTRA · '+shopDoor.shop.name.toUpperCase():shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):pitchNear?'GIOCA A CALCETTO':garageNear?garageNear:bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
+ $('action').classList.toggle('idle',idle&&!football);$('action').setAttribute('aria-disabled',idle&&!football?'true':'false');
+ boardPrompt(p.car>=0?garageNear||(repair?'RIPARA · '+repair+' € · OFFICINA DI GIOCO':liftAction||''):eventAction||(shopDoor?'ENTRA · '+shopDoor.shop.name.toUpperCase():shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):pitchNear?'GIOCA':garageNear?garageNear:bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
  if(raceNear)boardPrompt('GARA');
+ if(football)boardPrompt(football.prompt());
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
@@ -1977,7 +1981,6 @@ function drawLiftHints(){
  c.restore();
 }
 function drawPlayer(){
- if(state.football){drawWorldFootball(c,state.football,state.clock);return;}
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
  drawCityPlayer(c,state.player,state.clock,moving||state.player.impactTime>0);
 }
@@ -2285,7 +2288,10 @@ function draw(dt=0){
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1){if(v.tuning?.neon)drawNeonUnderglow(c,v,(state.light?.darkness||0)/NIGHT_DARKNESS,state.clock);{drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);if(v.turnSignal)drawBlinker(v.x,v.y,v.a,v);
   // Q20: auto in panne in attesa del carro attrezzi: quattro frecce e triangolo.
   if(v.broken&&i!==p.car){drawBlinker(v.x,v.y,v.a,v);drawWarningTriangle(c,v,vehicleShape(v));}}}});
+ // Q33: i calciatori NPC (sprite dei pedoni con la maglia) sotto il protagonista, la palla sopra.
+ if(state.football)state.football.drawPeople(c,state.clock,[x0,y0,x1,y1]);
  drawPlayer();
+ if(state.football)state.football.drawBall(c,state.clock,p.car<0?p:null);
  // Q42: ombrelloni del mercato sopra persone e veicoli; sfumano col giocatore sotto (R01, come i tetti).
  if(state.market){
   const pc=p.car>=0?state.cars[p.car]:null;
@@ -2499,7 +2505,7 @@ function soundLabel(){
 function frame(now){
  const dt=state.last?Math.min(.05,(now-state.last)/1000):0;state.last=now;
  tick(dt);draw(dt);drawMini();updateCityAudio();updateDrive(dt);
- if(state.footballBannerUntil<=state.clock)$('football-banner').hidden=true;updateFootballHud();requestAnimationFrame(frame);
+ updateFootballHud();requestAnimationFrame(frame);
 }
 async function load(){
  if(state.loading)return;
@@ -2567,14 +2573,14 @@ function bind(){
   if(isDialogueOpen()&&$('pause-menu').hidden)return;
   const dir={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right',W:'up',A:'left',S:'down',D:'right'}[e.key];
   if(dir){e.preventDefault();pressed[dir]=true;}
-  if(isFootballOpen()){
-   if(e.code==='Space'||e.key.toLowerCase()==='e'){e.preventDefault();if(!e.repeat)footballInput.shoot=true;}
-   if(e.key.toLowerCase()==='x'||e.key==='Shift'){e.preventDefault();if(!e.repeat)footballInput.pass=true;}
-   if(e.key==='Escape'&&!e.repeat){e.preventDefault();closeFootballMatch(true);}
-   return;
-  }
   if(e.key==='Shift')pressed.run=true;
   if(e.code==='Space'){e.preventDefault();pressed.handbrake=true;}
+  // Q33: in campo E/SPAZIO = calcio (tenuto = più forte), X o SHIFT con la palla = passaggio.
+  if(state.football?.playing()&&pause.hidden&&!state.shopOpen&&!state.garageOpen&&!state.riderOpen){
+   if(e.key==='Escape'&&!e.repeat){e.preventDefault();abandonFootball();return;}
+   if((e.key.toLowerCase()==='e'||e.code==='Space')&&!e.repeat){e.preventDefault();state.football.press('kick');return;}
+   if((e.key.toLowerCase()==='x'||e.key==='Shift')&&!e.repeat){e.preventDefault();state.football.press('pass');return;}
+  }
   if(state.riderOpen){
    const offer=Number(e.key)-1;
    if(offer>=0&&offer<9&&!e.repeat&&!state.rider?.job){e.preventDefault();acceptRider(offer);return;}
@@ -2612,6 +2618,7 @@ function bind(){
   if(dir){e.preventDefault();pressed[dir]=false;}
   if(e.key==='Shift')pressed.run=false;
   if(e.code==='Space')pressed.handbrake=false;
+  if((e.key.toLowerCase()==='e'||e.code==='Space')&&state.football)state.football.release('kick');
  });
  const steeringPad=$('steering-wheel');
  const wheelPointer=e=>{
@@ -2719,10 +2726,13 @@ function bind(){
   for(const name of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(name,()=>{pressed[key]=false;btn.classList.remove('pressed');});
  });
  $('action').addEventListener('click',toggleVehicle);
- $('football-shoot').addEventListener('pointerdown',e=>{e.preventDefault();footballInput.shoot=true;});
- $('football-pass').addEventListener('pointerdown',e=>{e.preventDefault();footballInput.pass=true;});
- $('football-exit').addEventListener('click',()=>closeFootballMatch(true));
- $('sprint').addEventListener('pointerdown',()=>{if(isFootballOpen())footballInput.pass=true;});
+ // Q33: durante la partita il pulsante azione è il calcio (tenuto = più forte) e PASSA il passaggio.
+ $('action').addEventListener('pointerdown',e=>{if(state.football?.playing()){e.preventDefault();state.football.press('kick');}});
+ for(const name of ['pointerup','pointercancel','pointerleave'])$('action').addEventListener(name,()=>{state.football?.release('kick');});
+ $('football-shoot').addEventListener('pointerdown',e=>{e.preventDefault();state.football?.press('kick');});
+ for(const name of ['pointerup','pointercancel','pointerleave'])$('football-shoot').addEventListener(name,()=>state.football?.release('kick'));
+ $('football-pass').addEventListener('pointerdown',e=>{e.preventDefault();state.football?.press('pass');});
+ $('football-exit').addEventListener('click',abandonFootball);
  $('radio-prev').addEventListener('click',()=>carRadio.previous());
  $('radio-next').addEventListener('click',()=>carRadio.next());
  $('radio-toggle').addEventListener('click',()=>carRadio.toggle());
@@ -2793,4 +2803,4 @@ function bind(){
  },{passive:false});
 }
 loadChurchWebp(()=>{staticTiles.clear();pendingTile=null;});
-applyLoadingScreen();loadMotorcycleSprites();loadFootballSprites();loadExtraPedestrianSprites();loadPedestrianSheets();loadIdlePoseSheets();loadAnimalSprites();loadMarketArt();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();
+applyLoadingScreen();loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSheets();loadIdlePoseSheets();loadAnimalSprites();loadMarketArt();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();

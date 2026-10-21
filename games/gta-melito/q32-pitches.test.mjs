@@ -12,7 +12,9 @@ const near=(p,b)=>{for(let i=0;i<b.p.length;i+=2)if(Math.hypot(b.p[i]-p.cx,b.p[i
 
 test('Q32 the three pitches (traced on the aerial photo) stand clear of OSM buildings and streets',()=>{
  assert.equal(PITCHES.length,3);
- assert.equal(PITCHES.filter(p=>p.kind==='calcetto').length,2,'two calcetto pitches, one full field');
+ assert.equal(PITCHES.filter(p=>p.kind==='calcetto').length,3,'three pitches drawn as calcetto');
+ assert.deepEqual(PITCHES.filter(p=>p.partita).map(p=>p.id),['palme-campo'],'Q33: one playable pitch, the big field of Via delle Palme');
+ const big=PITCHES.find(p=>p.partita);assert.ok(Math.max(big.w,big.h)>=80&&Math.min(big.w,big.h)>=45,'much bigger than a calcio a 5 pitch: '+big.w+'×'+big.h);
  for(const p of PITCHES){
   assert.equal(p.foto,true);assert.equal(p.verificato,false,'traced, not surveyed: declared');
   const buildings=map.buildings.filter(b=>near(p,b)),roads=map.roads.filter(r=>near(p,r));
@@ -33,7 +35,7 @@ test('Q32 only the invented infill placeholders on a pitch are left out',()=>{
 });
 
 // a small test world: a street along y=0, a wall of houses west of the pitch
-const pitch={id:'prova',nome:'Campetto di prova',kind:'calcetto',cx:30,cy:30,w:30,h:17,a:0};
+const pitch={id:'prova',nome:'Campetto di prova',kind:'calcetto',partita:true,cx:30,cy:30,w:30,h:17,a:0};
 const walkable=(x,y)=>!(x<12&&y>5)&&y>-12;            // houses west of x=12, open towards the street
 const nearStreet=(x,y)=>Math.abs(y)<4;
 const P=preparePitches([pitch],{walkable,nearStreet});
@@ -53,13 +55,15 @@ test('Q32 the gate opens on the side reachable on foot from the street, the fenc
  assert.equal(pitchWalkBlocked(P,goalX,pitch.cy),true,'the goal frame is solid');
 });
 
-test('Q32 E · GIOCA A CALCETTO at the gate or inside the lines of a calcetto pitch only',()=>{
+test('Q32/Q33 E · GIOCA inside the lines of the playable pitch only (the gate and the small pitches: nothing)',()=>{
  const p=P.list[0];
- assert.equal(pitchHotspot(P,p.gate.x,p.gate.y-2)?.id,'prova','at the gate, from outside');
+ assert.equal(pitchHotspot(P,p.gate.x,p.gate.y-2),null,'Q33: at the gate, from outside, no prompt: you walk in');
  assert.equal(pitchHotspot(P,pitch.cx,pitch.cy)?.id,'prova','in the middle of the pitch');
  assert.equal(pitchHotspot(P,pitch.cx+40,pitch.cy),null);
- const big=preparePitches([{...pitch,id:'grande',kind:'calcio11',w:61,h:108}],{walkable:()=>true,nearStreet:(x,y)=>y<0});
- assert.equal(pitchHotspot(big,30,30),null,'the full field is scenery for now');
+ const scenery=preparePitches([{...pitch,id:'piccolo',partita:false}],{walkable:()=>true,nearStreet:(x,y)=>y<0});
+ assert.equal(pitchHotspot(scenery,30,30),null,'a pitch without partita is scenery');
+ const big=preparePitches([{...pitch,id:'grande',kind:'calcio11',partita:false,w:61,h:108}],{walkable:()=>true,nearStreet:(x,y)=>y<0});
+ assert.equal(pitchHotspot(big,30,30),null,'the full field is scenery');
  assert.ok(insidePitch(pitch,pitch.cx,pitch.cy)&&!insidePitch(pitch,0,0));
  assert.equal(pitchFence(pitch).length,4);
 });
@@ -82,7 +86,7 @@ test('Q32 game wiring: placeholders filtered, pitches on load and width switch, 
  assert.match(game,/createPitches\(\);createEnclosures\(\);(?:createWorkshop\(\);)?createParkingBays\(\);/,'on the road-width switch');
  assert.match(game,/const hit=pitchVehicleContacts\(state\.pitches,\{x,y,a\},bodyShape\(vehicle\)\);/,'carBlocked');
  assert.match(game,/const pitch=pitchHotspot\(state\.pitches,p\.x,p\.y\);\n  if\(pitch\)\{openFootballMatch\(pitch\);return;\}/,'E at the gate');
- assert.match(game,/pitchNear\?'GIOCA A CALCETTO'/);
+ assert.match(game,/pitchNear\?'GIOCA'/,'Q33: «E · GIOCA» inside the lines');
  assert.match(game,/function openFootballMatch\(pitch\)\{/,'hook for the Q33 match');
  assert.equal((game.match(/drawPitches\(ctx,state\.pitches/g)||[]).length,2,'ground and roof reveal');
  assert.ok(Number((html.match(/game\.mjs\?v=(\d+)/)||[])[1])>=185);

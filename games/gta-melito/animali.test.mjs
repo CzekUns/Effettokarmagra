@@ -85,7 +85,7 @@ test('integrazione, NOVITÀ, versioni e registri',async()=>{
  assert.match(game,/animali\.mjs\?v=001/);assert.match(game,/createNeighbourhoodAnimals\(\)/);
  assert.match(game,/stepAnimals\(state\.animals/);assert.match(game,/drawAnimals\(c,state\.animals/);
  assert.doesNotMatch(game,/makeCollisionIndex\([^\n]*state\.animals/);
- assert.match(game,/novita\.mjs\?v=019/);assert.match(html,/game\.mjs\?v=219/);
+ assert.match(game,/novita\.mjs\?v=020/);assert.match(html,/game\.mjs\?v=220/);
  assert.match(novita,/id:'animali-di-strada'/);
  const entry=NOVITA.find(e=>e.id==='animali-di-strada');
  assert.deepEqual(novitaTarget(entry,{spawn:[0,0],animals:{flocks:[{center:{x:5,y:6}}]}}),{x:5,y:6});
