@@ -56,3 +56,11 @@ Al Municipio in Via Madrid (circa x=1314, y=825), PAUSA › NOVITÀ › TORRE: i
 | `lotto1-auto` | Fiat Grande Punto (2005) e Lancia Ypsilon III (2011): 8 tinte ciascuna nel traffico e nei parcheggi | Lotto 1 · CODEX-GH / ramo `lotto1` | Via Roma, in mezzo alla strada (VAI A VEDERE porta lì, le auto passano davanti) | giorno | sagome dall'alto (musetto arrotondato e fari a goccia della Grande Punto; fianchi stretti e lunotto piccolo della Ypsilon), tinte e somiglianza con lo stile degli altri atlanti; tinte interpretate, non codici vernice |
 
 Atlante `assets/vehicles/grande-punto-ypsilon3-16-rgba.png` (160×240, 16 celle 40×60) disegnato da codice da CODEX-GH (`assets/vehicles/sources/grande-punto-ypsilon3-16-genera.py`, anteprima `grande-punto-ypsilon3-16-sheet.png`). Collegato nel gioco da Claude; se Simone boccia le sagome, il generatore si corregge e si rigenera l'atlante.
+
+### Lotto 4 grafica — sfondo della schermata di caricamento (2026-10-21, Claude + CODEX-GH) — grafica PROVVISORIA, da approvare da Simone — non in `novita.mjs` (si vede ricaricando la pagina, non serve VAI A VEDERE)
+| id | Elemento | Lavoro / PR | Dove guardare (esempio) | Ora / parametri | Cosa giudicare |
+|---|---|---|---|---|---|
+| `lotto4-caricamento` | Schermata di caricamento «CARICO MELITO…» con lo sfondo di un render del gioco (Via Roma alle 19:10, post-prodotto: vignetta e fascia scura in basso) al posto del fondo verde uniforme | Lotto 4 grafica / ramo `lotto4` (render e post-produzione di CODEX-GH, collegato da Claude) | si vede ricaricando la pagina, sia su PC sia sul telefono (orizzontale usa l'immagine 844×390) | — | leggibilità di titolo, testo e barra sulla fascia scura; scena riconoscibile e pixel netti; sul telefono il taglio dell'immagine; se bocciato basta ripristinare il fondo uniforme nel CSS di `.loading` |
+
+Immagini `assets/ui/loading-1280x720.png` e `assets/ui/loading-844x390.png` (PNG RGB, sotto 400 KB), NOTE di CODEX-GH in `assets/ui/sources/loading-NOTE.md`. La barra di caricamento è decorativa (solo CSS), non misura un avanzamento vero.
+

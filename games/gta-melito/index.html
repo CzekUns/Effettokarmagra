@@ -19,9 +19,20 @@ button{cursor:pointer}a{color:#eec97d}button:focus-visible,a:focus-visible{outli
 #radar{position:absolute;top:12px;right:12px;width:168px;height:142px;background:#0d1e1ad9;border:2px solid #b6b18a;image-rendering:auto;pointer-events:none}
 .coins{position:absolute;top:12px;left:12px;background:#14221fbd;padding:9px 11px;border:1px solid #8b9470;color:#f5cc83;font-size:11px;pointer-events:none;max-width:calc(100% - 200px)}
 #street{display:block;color:#f6efce;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#0e1a17eb;padding:24px;gap:14px;z-index:4}
+.loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;
+ /* Lotto 4 grafica (PROVVISORIO): sfondo = render del gioco post-prodotto da CODEX-GH, con fascia scura e vignetta già nel PNG. */
+ background:#111419 url('./assets/ui/loading-1280x720.png') center/cover no-repeat;image-rendering:pixelated;padding:24px 24px 5vh;gap:12px;z-index:4}
 .loading[hidden]{display:none}
-.loading h2{font-size:clamp(20px,4vw,38px);color:#f5ce6f;margin:0}.loading p{max-width:550px;line-height:1.7;color:#d6dccd;font-size:13px;margin:0}
+.loading h2{font-size:clamp(20px,4vw,38px);color:#f5ce6f;margin:0;text-shadow:0 2px 0 #000,0 0 14px #000,0 0 4px #000c}
+.loading p{max-width:550px;line-height:1.7;color:#e4e8dc;font-size:13px;margin:0;text-shadow:0 1px 0 #000,0 0 8px #000,0 0 3px #000c}
+.loading-bar{width:min(420px,72%);height:10px;border:2px solid #fff0b4;background:#1a1d22e6;box-shadow:2px 3px #000c;overflow:hidden;flex:none}
+.loading-bar::before{content:"";display:block;width:40%;height:100%;background:#ecd081;animation:loading-sweep 1.4s linear infinite}
+.loading[hidden] .loading-bar::before{animation:none}
+@keyframes loading-sweep{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+@media(max-width:680px),(max-height:480px){
+ .loading{background-image:url('./assets/ui/loading-844x390.png');gap:4px;padding:8px 10px 3vh}
+ .loading h2{font-size:18px}.loading p{font-size:11px;line-height:1.2;max-width:min(550px,86vw)}
+ .loading-bar{height:8px;width:min(320px,60%)}}
 .loading button,.control-action{background:#ecd081;color:#25332b;font-weight:1000;border:2px solid #fff0b4;padding:12px 20px;box-shadow:2px 3px #6e613c}
 .controls{display:flex;align-items:center;justify-content:space-between;gap:15px;padding-top:12px;flex-wrap:wrap}
 .dpad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(2,52px);gap:5px}
@@ -495,7 +506,7 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
   <canvas id="bigmap" width="640" height="580" aria-label="Mappa completa della città con obiettivi"></canvas>
   <button id="map-close">CHIUDI MAPPA · M</button>
  </section>
- <section class="loading" id="loading"><h2 id="loading-title">CARICO MELITO…</h2><p id="loading-text">Preparo strade ed edifici reali da OpenStreetMap.</p><button id="retry" hidden>RIPROVA ↻</button></section>
+ <section class="loading" id="loading"><h2 id="loading-title">CARICO MELITO…</h2><p id="loading-text">Preparo strade ed edifici reali da OpenStreetMap.</p><div class="loading-bar" aria-hidden="true"></div><button id="retry" hidden>RIPROVA ↻</button></section>
  <div class="pause-menu" id="pause-menu" hidden><div class="pause-card"><div class="pause-head"><h2>PAUSA · MELITO</h2><button id="pause-close" class="pause-close">RIPRENDI</button></div>
  <p class="pause-info">Stato · zoom · mappa · missioni · controlli secondari</p>
  <!-- BF11: on PC the page shows only the game board; everything that used to sit around it lives here, in sections. -->
