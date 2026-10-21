@@ -1,3 +1,9 @@
+# AVVISO — DOCUMENTO SUPERATO DAL FEEDBACK UTENTE (21 OTTOBRE 2026)
+
+**Questa tavola pixel art 24×40 / 20 colori NON è più la specifica artistica attiva.** L'utente ha esplicitamente richiesto una resa **Metal Gear Solid PS1**, non Commodore 64. La fonte normativa aggiornata è **[DIREZIONE_ARTISTICA_PS1.md](./DIREZIONE_ARTISTICA_PS1.md)**. Conserviamo la documentazione qui sotto per la tracciabilità del prototipo e i test, ma nessun nuovo collaboratore deve riproporne la scala, i vincoli cromatici o il renderer come versione finale.
+
+---
+
 # Stile dei personaggi — tavola iniziale
 
 **Stato: PROVVISORIO, da approvare da Simone.** Questa bibbia fissa le regole per Ipno, POLICIE, clienti, cassieri e Totore. Gli sprite non riproducono i volti delle fotografie.
