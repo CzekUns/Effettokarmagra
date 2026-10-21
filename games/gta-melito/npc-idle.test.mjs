@@ -57,13 +57,13 @@ test('si guardano e cambiano direzione; si scostano dal giocatore senza entrare 
 
 test('collegamento nel gioco: nessuna collisione, disegno con lo stesso renderer, NOVITÀ e versioni',async()=>{
  const [game,html,novita,work,visual,approve]=await Promise.all(['game.mjs','index.html','novita.mjs','WORK_LOG.md','VISUAL_PROGRESS.md','NOVITA_DA_APPROVARE.md'].map(f=>readFile(new URL(f,import.meta.url),'utf8')));
- assert.match(game,/npc-idle\.mjs\?v=001/);
+ assert.match(game,/npc-idle\.mjs\?v=002/);
  assert.match(game,/createNeighbourhoodIdle\(\)/);
  assert.match(game,/stepIdlePeople\(state\.idle,elapsed/);
- assert.match(game,/drawCityPeople\(c,state\.idle\.active/);
+ assert.match(game,/drawIdlePeople\(c,state\.idle/);
  assert.doesNotMatch(game,/makeCollisionIndex\([^\n]*state\.idle/);
- assert.match(game,/novita\.mjs\?v=015/);
- assert.match(html,/game\.mjs\?v=213/);
+ assert.match(game,/novita\.mjs\?v=016/);
+ assert.match(html,/game\.mjs\?v=214/);
  assert.match(novita,/id:'vita-di-quartiere'/);
  const entry=NOVITA.find(e=>e.id==='vita-di-quartiere');assert.equal(entry.ora,660);
  assert.deepEqual(novitaTarget(entry,{spawn:[0,0],idle:{spots:[{x:18,y:7}]}}),{x:18,y:7});

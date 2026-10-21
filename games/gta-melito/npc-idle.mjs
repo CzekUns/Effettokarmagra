@@ -1,6 +1,10 @@
 /* Vita di quartiere: figure ferme, derivate da POI/edifici OSM, banchi e panchine già collocate.
  * Sono solo grafica: non entrano nell'indice collisioni, nelle routine o nel traffico. */
 import {PEDESTRIAN_KIND_COUNT} from './extra-pedestrian-sprites.mjs?v=007';
+import {drawIdlePose,loadIdlePoseSheets} from './pose-pedoni.mjs?v=001';
+import {drawPedestrianSprite} from './pedestrian-sprites.mjs?v=002';
+import {drawExtraPedestrianSprite,drawSheetPedestrianSprite} from './extra-pedestrian-sprites.mjs?v=007';
+export {loadIdlePoseSheets};
 
 const CAFE_KINDS=new Set(['bar','cafe','fast_food','restaurant']);
 const FOOT_ROADS=new Set(['pedestrian','footway','path','steps']);
@@ -63,7 +67,7 @@ export function createIdlePeople({map,graph,props=[],market=null,doors=[],canSta
    const toward=points[(i+1)%points.length]||anchor;
    const a=activity==='bench'?Math.PI/2:Math.atan2(toward.y-p.y,toward.x-p.x);
    spots.push({id:`${activity}-${group}-${i}`,activity,source,group,x:p.x,y:p.y,homeX:p.x,homeY:p.y,
-    a,prevX:p.x,prevY:p.y,prevA:a,kind,body:'walk',braking:true,speed:0,seed:hash(group*37+i),
+    a,prevX:p.x,prevY:p.y,prevA:a,kind,pose:activity==='bench'?'seated':activity==='chat'&&i===0?'leaning':'relaxed',body:'walk',braking:true,speed:0,seed:hash(group*37+i),
     lookSeconds:3+hash(group*91+i)%300/100,anchor});
    taken.push(p);
   }
@@ -118,4 +122,20 @@ export function stepIdlePeople(idle,dt,{minutes,player,canStand=()=>true,onRoad=
   p.braking=travel<.03;
  }
  return idle.active;
+}
+
+/* Disegna le persone ferme con le pose dedicate; un foglio mancante usa il frame
+ * fermo esistente, così il gioco resta leggibile anche durante il caricamento. */
+export function drawIdlePeople(ctx,idle,clock,bounds,alpha=1){
+ if(!idle)return;
+ const [x0,y0,x1,y1]=bounds;
+ for(const p of idle.active){
+  const x=p.prevX===undefined?p.x:p.prevX+(p.x-p.prevX)*alpha;
+  const y=p.prevY===undefined?p.y:p.prevY+(p.y-p.prevY)*alpha;
+  if(x<x0||x>x1||y<y0||y>y1)continue;
+  if(drawIdlePose(ctx,x,y,p,clock))continue;
+  if(drawSheetPedestrianSprite(ctx,x,y,p.a,p.kind,clock,false,0,p.seed))continue;
+  if(p.kind>=4&&p.kind<=6&&drawExtraPedestrianSprite(ctx,x,y,p.a,p.kind-3,clock,false,0,p.seed))continue;
+  drawPedestrianSprite(ctx,x,y,p.a,p.kind,clock,false,0,p.seed);
+ }
 }

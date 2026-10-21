@@ -149,3 +149,9 @@ I 22 PNG stanno in `assets/people/`; il generatore unico è `assets/people/sourc
 | `vita-di-quartiere` | Gruppi di 2–3 davanti ai locali, alle chiese e al mercato; panchine occupate; due anziani al Municipio | Vita di quartiere · CODEX-GH / ramo `quartiere`, PR a cura di Claude | PAUSA › NOVITÀ › `vita-di-quartiere` › VAI A VEDERE, gruppetto più vicino | 11:00, più presenze 10–13 e 17–21 | Densità, naturalezza delle pose e dei cambi di sguardo, assenza di ostacoli su strada e ingressi. **PROVVISORIO, da approvare da Simone**. |
 
 `npc-idle.mjs` prende gli ancoraggi dai dati OSM caricati e dalle panchine/banchi già costruiti dal gioco. Non sono stati trovati un circolo localizzabile o tavolini all'aperto; non sono stati inventati. Le figure non entrano nelle collisioni e usano gli sprite già approvati o provvisori.
+
+### Pose ferme per vita di quartiere (21 ottobre 2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+
+| Voce | Cosa guardare | Lavoro | Dove | Quando | Stato |
+|---|---|---|---|---|---|
+| `pose-fermi` | Seduti sulle panchine, gesto alternato nei gruppetti, alcuni appoggiati ai bar | Pose ferme · CODEX-GH / ramo `pose`, PR a cura di Claude | PAUSA › NOVITÀ › `pose-fermi` › VAI A VEDERE | 11:00 | 34 fogli derivati, 227 KB totali; **PROVVISORIO, da approvare da Simone**. |

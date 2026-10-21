@@ -828,3 +828,7 @@ Secondo screenshot e correzione dell'utente, **mantenere la torre molto grande e
 - Sprite pedoni già presenti per coppie e piccoli gruppi davanti ai locali OSM, alle due chiese e al mercato; due anziani al Municipio; posa frontale ferma sulle panchine del gioco. Nessun asset nuovo. `npc-idle.mjs` usa solo coordinate ricavate dai dati già caricati, valida su marciapiede e lascia liberi gli ingressi.
 - Fino a 40 figure nell'intero comune, più visibili alle 10–13 e 17–21, quasi assenti di notte; non entrano nella collisione e si spostano brevemente quando il giocatore è vicino. Sguardi dei gruppi aggiornati ogni 3–6 secondi.
 - Da giudicare in PAUSA › NOVITÀ › `vita-di-quartiere` › VAI A VEDERE (porta alle 11:00) e nello screenshot 3× in `/home/ubuntu/codex-gh-lavoro/sim-quartiere/`. Nessun circolo localizzabile né tavolino esterno nei dati caricati: non rappresentati. **PROVVISORIO, da approvare da Simone**.
+
+### 2026-10-21 — Pose ferme per vita di quartiere (CODEX-GH) — PROVVISORIO, da approvare da Simone
+- 34 fogli 96×160: seduto, in piedi rilassato in due frame, appoggiato lateralmente. I fogli derivano dai personaggi esistenti; colori e identità restano coerenti. Peso complessivo 227 KB.
+- Da vedere in PAUSA › NOVITÀ › `pose-fermi` › VAI A VEDERE alle 11:00 e negli screenshot 3× di panchina e gruppetto in `/home/ubuntu/codex-gh-lavoro/sim-pose/`. **PROVVISORIO, da approvare da Simone**.

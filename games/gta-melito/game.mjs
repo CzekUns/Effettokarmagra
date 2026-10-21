@@ -19,7 +19,7 @@ import {weatherAt,combineWeather,drawRain,drawCloudShadows,placePuddles,drawPudd
 import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=006';
 import {createSocial,stepSocial} from './npc-social.mjs?v=004';
-import {createIdlePeople,stepIdlePeople} from './npc-idle.mjs?v=001';
+import {createIdlePeople,stepIdlePeople,drawIdlePeople,loadIdlePoseSheets} from './npc-idle.mjs?v=002';
 import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=007';
 import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=007';
 import {trafficTargetAt} from './traffic-rush.mjs?v=001';
@@ -79,7 +79,7 @@ import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
 import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=015';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=016';
 // Lotto 15: dialoghi con volto (prototipo per la storyline, PROVVISORIO): barra in basso + riquadro del personaggio.
 import {openDialogue,isDialogueOpen,DEMO_DIALOGUE} from './dialogue.mjs?v=001';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
@@ -2210,7 +2210,7 @@ function draw(dt=0){
  const inFront=state.people.filter(q=>q.scripted&&q.washer?.car&&!q.indoors&&q.y>q.washer.car.y);
  for(const q of inFront)q.indoors=true;
  drawCityPeople(c,state.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
- if(state.idle)drawCityPeople(c,state.idle.active,state.graph,state.clock,[x0,y0,x1,y1],alpha);
+ if(state.idle)drawIdlePeople(c,state.idle,state.clock,[x0,y0,x1,y1],alpha);
  if(state.market)drawCityPeople(c,state.market.people,state.graph,state.clock,[x0,y0,x1,y1],alpha);
  // Q20: autista del corriere e operatore della nettezza urbana (figure di servizio, non NPC della città).
  if(state.service?.figures.length)drawCityPeople(c,state.service.figures,state.graph,state.clock,[x0,y0,x1,y1],1);
@@ -2738,4 +2738,4 @@ function bind(){
  },{passive:false});
 }
 loadChurchWebp(()=>{staticTiles.clear();pendingTile=null;});
-applyLoadingScreen();loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSheets();loadMarketArt();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();
+applyLoadingScreen();loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSheets();loadIdlePoseSheets();loadMarketArt();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();

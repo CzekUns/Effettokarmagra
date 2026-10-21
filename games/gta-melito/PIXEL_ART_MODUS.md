@@ -195,3 +195,7 @@ La [pixel art rossa/crema](./assets/buildings/serbatoio-melito-scacchi-rossi.png
 
 ### Varianti cromatiche pedoni, 21 ottobre 2026 (CODEX-GH)
 `assets/people/sources/varianti-genera.py` legge gli 11 fogli madre indicati nel codice e crea due PNG per foglio (`pedoni-<id>-var1/var2-4x4frames-24x40-rgba.png`). Preserva alpha, contorno, pose, piedi e carnagioni; ricolora per zone capelli, parte alta degli abiti e pantaloni modulando i toni chiari e scuri. Formato 384×160 RGBA, celle 24×40; 22 nuovi file per 765.427 byte. `PEDESTRIAN_SHEETS` assegna kind 47–134 ai fogli pronti; nessuna ricolorazione a runtime. Grafica PROVVISORIA, da approvare da Simone.
+
+### Pose ferme dei pedoni (21/10/2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+- `assets/people/sources/pose-genera.py` ricava da ogni foglio di camminata 4 pose statiche per personaggio, celle 24×40: seduto, rilassato A, rilassato B, appoggiato. Output `assets/people/pose-<foglio>.png` 96×160 RGBA. Usare pixel netti, margini trasparenti e colori dei fogli originali; nessun ritocco runtime.
+- Le pose sono adattamenti procedurali del frame fermo, quindi accessori voluminosi (carrello, cane, sedia a rotelle) potrebbero richiedere rifinitura manuale dopo il giudizio di Simone. **PROVVISORIO, da approvare da Simone**.
