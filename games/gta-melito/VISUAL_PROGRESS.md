@@ -769,3 +769,8 @@ Secondo screenshot e correzione dell'utente, **mantenere la torre molto grande e
 - Titolo, testo e una barra di caricamento decorativa (solo CSS, scorrimento continuo) stanno in basso sulla fascia scura, con ombra al testo per la leggibilità; nessun testo è dentro le immagini.
 - Dove guardarla: basta ricaricare la pagina (PC e telefono); `NOVITA_DA_APPROVARE.md` › `lotto4-caricamento`. Screenshot della prova in Chrome headless (PC 1280×720 e telefono 844×390) nella PR; **non verificato su Android**; da approvare da Simone.
 
+
+### 2026-10-21 — Lotto 5 grafica: Fiat Tipo 2016 e Fiat 500L 2012 nel traffico (CODEX-GH + Claude) — grafica PROVVISORIA, da approvare
+- Atlante di CODEX-GH `assets/vehicles/tipo-500l-16-rgba.png`: 16 auto viste dall'alto, muso in su, contorno scuro, due toni di carrozzeria, vetri, fari, specchi, ruote; stesso reticolo 4×4 da 40×60 degli altri atlanti auto. Righe 1–2 Tipo hatchback (white, silver, graphite, sand, bronze, red, blue, black: Bianco Gelato, Grigio Maestro, Grigio Colosseo, Perla Sabbia, Bronzo Magnetico, Rosso Amore, Blu Mediterraneo, Nero Cinema per approssimazione), righe 3–4 500L (white, red, silver, graphite, black, blue, yellow, green). Tinte interpretate, non codici vernice.
+- Nel gioco: 16 auto su 82 id del traffico, anche nei parcheggi e in garage/officina. La Tipo è disegnata un po' più lunga della Punto 188 (`[5.5,9.2]`), la 500L un po' più larga e corta (`[5.55,9]`): misure prudenti, meno delle proposte di CODEX-GH, per restare nella corsia. Dove vederle: Via Roma (PAUSA › NOVITÀ › `lotto5-auto`).
+- Verificato con una prova Chrome headless di ~20 s (screenshot in PR, le due auto accanto a una Punto); **non provato su Android vero**. Giudizio di Simone da raccogliere.

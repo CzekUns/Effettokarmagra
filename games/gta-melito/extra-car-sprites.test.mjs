@@ -43,20 +43,20 @@ function decodePNGAlpha(bytes){
  return {w,h,type,alpha:(x,y)=>type===3?(alphas[pixels[y*stride+x]]??255):pixels[y*stride+x*4+3]};
 }
 
-test('six extra car families have eight distinct color variants each',()=>{
- const models=['seicento-1998','fiat-500-2007','fiat-uno-1983','smart-fortwo-2007','grande-punto-2005','ypsilon-2011'];
+test('eight extra car families have eight distinct color variants each',()=>{
+ const models=['seicento-1998','fiat-500-2007','fiat-uno-1983','smart-fortwo-2007','grande-punto-2005','ypsilon-2011','tipo-hatchback-2016','fiat-500l-2012'];
  assert.equal(CAR_ATLAS_VARIANT_IDS.length,16);
- // Lotto 1 (CODEX-GH): Grande Punto and Ypsilon III add 16 variants to the original 32.
- assert.equal(Object.keys(EXTRA_CAR_VARIANTS).length,48);
- // 64 palette variants; two standalone shop/work vehicles
+ // Lotto 1 (CODEX-GH): Grande Punto and Ypsilon III add 16 variants to the original 32; lotto 5 (Tipo, 500L) 16 more.
+ assert.equal(Object.keys(EXTRA_CAR_VARIANTS).length,64);
+ // 80 palette variants; two standalone shop/work vehicles
  // can join the traffic without pretending to be factory color variants.
- assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,66);
- assert.equal(CAR_PARKED_SPRITE_IDS.length,82);
- assert.deepEqual(CAR_PARKED_SPRITE_IDS.slice(66),MARKET_VARIANT_IDS);
- assert.equal(new Set(CAR_TRAFFIC_SPRITE_IDS).size,66);
- assert.deepEqual(CAR_TRAFFIC_SPRITE_IDS.slice(0,64),
+ assert.equal(CAR_TRAFFIC_SPRITE_IDS.length,82);
+ assert.equal(CAR_PARKED_SPRITE_IDS.length,98);
+ assert.deepEqual(CAR_PARKED_SPRITE_IDS.slice(82),MARKET_VARIANT_IDS);
+ assert.equal(new Set(CAR_TRAFFIC_SPRITE_IDS).size,82);
+ assert.deepEqual(CAR_TRAFFIC_SPRITE_IDS.slice(0,80),
   [...CAR_ATLAS_VARIANT_IDS,...Object.keys(EXTRA_CAR_VARIANTS)]);
- assert.deepEqual(CAR_TRAFFIC_SPRITE_IDS.slice(64),['ape-car-azzurra','furgone-fritti']);
+ assert.deepEqual(CAR_TRAFFIC_SPRITE_IDS.slice(80),['ape-car-azzurra','furgone-fritti']);
  for(const model of models)assert.equal(Object.keys(EXTRA_CAR_VARIANTS).filter(x=>x.startsWith(model+'-')).length,8);
  assert.equal(EXTRA_CAR_VARIANTS['smart-fortwo-2007-green'].index,15);
  assert.equal(EXTRA_CAR_VARIANTS['fiat-uno-1983-white'].index,0);
@@ -64,7 +64,7 @@ test('six extra car families have eight distinct color variants each',()=>{
 });
 
 test('all extra PNG atlases have transparent corners and opaque car bodies',async()=>{
- assert.equal(Object.keys(EXTRA_CAR_ATLASES).length,3);
+ assert.equal(Object.keys(EXTRA_CAR_ATLASES).length,4);
  for(const path of Object.values(EXTRA_CAR_ATLASES)){
   const bin=await readFile(new URL(path,import.meta.url));const a=decodePNGAlpha(bin);
   assert.equal(a.w,160);assert.equal(a.h,240);
@@ -104,6 +104,7 @@ test('new atlases draw right cells with model-specific dimensions',()=>{
   assert.ok(dimensions['smart-fortwo-2007'][1]<dimensions['fiat-uno-1983'][1]);
   assert.ok(dimensions['seicento-1998'][1]<dimensions['fiat-500-2007'][1]);
   assert.ok(dimensions['ypsilon-2011'][1]<dimensions['grande-punto-2005'][1]);
+  assert.ok(dimensions['fiat-500l-2012'][1]<dimensions['tipo-hatchback-2016'][1]);
   assert.equal(carSpriteReady('panda-modern-white'),true);
  }finally{
   if(oldImage===undefined)delete globalThis.Image;else globalThis.Image=oldImage;

@@ -40,8 +40,8 @@ Riferimenti visivi iniziali già approvati: **Panda moderna bianca** e **Panda F
 ### Lotto 2 — auto italiane cittadine e contemporanee
 - **Fiat 500** (2007–2024, distinguere dalla 500e se serve).
 - **Lancia Ypsilon terza serie** (2011–2024).
-- **Fiat Tipo hatchback** (2016–2025; verifica l'anno di riferimento).
-- **Fiat 500L** (2012–2022).
+- **Fiat Tipo hatchback** (2016–2025) — **FATTO, lotto 5 del 21/10/2026** (CODEX-GH + Claude): `assets/vehicles/tipo-500l-16-rgba.png` celle 0–7, modello `tipo-hatchback-2016`; PROVVISORIO, da approvare da Simone.
+- **Fiat 500L** (2012–2022) — **FATTO, lotto 5 del 21/10/2026**: stesso atlante, celle 8–15, modello `fiat-500l-2012`; PROVVISORIO, da approvare da Simone.
 
 ### Lotto 3 — varietà internazionale plausibile
 - **Renault Clio**, **Opel Corsa**, **Ford Fiesta**, **Volkswagen Golf**, **Peugeot 208**; scegli la generazione specifica prima di disegnare.
