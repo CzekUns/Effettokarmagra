@@ -1,6 +1,6 @@
 /* Catalogo unico della sala giochi.
  * Aggiungi qui un oggetto quando pubblichi un nuovo gioco in games/<slug>/.
- * status: "live" per giocabile, "soon" per in preparazione.
+ * status: "live" per giocabile, "preview" per anteprima cliccabile, "soon" senza link.
  * Gli URL sono relativi alla root di GitHub Pages.
  */
 window.ARCADE_CATALOG = [
@@ -79,6 +79,18 @@ window.ARCADE_CATALOG = [
     artwork: "./games/gta-melito/cover.svg",
     support: "Telefono e PC · Beta, da collaudare",
     status: "live",
+    accent: "orange"
+  }
+,  {
+    id: "for-four-chocolate",
+    title: "For Four Chocolate",
+    subtitle: "Domenico Ipno · Missione cioccolato",
+    genre: "Stealth / Commedia",
+    description: "Un supermercato ceco, quattro cioccolate e un labirinto sorvegliato da telecamere e POLICIE. L'anteprima del prossimo arcade è pronta.",
+    href: "./games/for-four-chocolate/",
+    artwork: "./games/for-four-chocolate/cover.svg",
+    support: "Concept · non giocabile",
+    status: "preview",
     accent: "orange"
   }
 ];
