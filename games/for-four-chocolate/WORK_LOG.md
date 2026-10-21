@@ -64,3 +64,11 @@
 - **Come:** aggiornato anche `OBIETTIVO-FOR-FOUR-CHOCOLATE.md`; direttiva per il collaboratore attraverso issue #96. Non confondere l'immagine ImageGen con asset pronti da integrare.
 - **Verifiche:** documentazione soltanto; non sono state prodotte modifiche funzionali al gioco in questa sessione, né test/deploy di gameplay.
 - **Da fare:** ottenere ed allegare la nuova reference visiva di gameplay; costruire un unico campione di reparto frigoriferi con un agente, CCTV, un prodotto su scaffale, screenshot reali desktop/mobile e verifica Android landscape.
+
+## 2026-10-22 — ChatGPT / tavola visiva consegnata al collaboratore
+- **Fatto:** generata una tavola illustrata di gameplay ispirata a MGS VR Missions, salvata la sua **anteprima WebP** nella repository e incorporata in `REFERENCE_GAMEPLAY.md`.
+- **Dove:** `games/for-four-chocolate/references/gameplay-mgs-vr-artboard.webp` (720 px, file verificato in GitHub); versione maggiore in conversazione del 22 ottobre 2026.
+- **Brief al collaboratore:** commento aggiornato su issue #96, con reference incorporata e indicazioni su proporzioni, personaggi, texture e gameplay. I cartelli italiani sono didascalie della tavola, in gioco serve segnaletica ceca.
+- **Verifiche:** asset WebP recuperabile con SHA `cd77033fc00aeb9e38e870224871fb607dda8ddf`. Nessuna modifica a renderer/motore e nessun test in browser del nuovo aspetto; asset **solo reference**.
+- **Da fare:** collaboratore realizza *una sola scena 3D in game* dei frigoriferi con Ipno, agente e CCTV e meccanica di prelievo; screenshot desktop+mobile landscape per approvazione prima del merge grafico.
+- **Riferimenti:** `REFERENCE_GAMEPLAY.md`, issue #96.
