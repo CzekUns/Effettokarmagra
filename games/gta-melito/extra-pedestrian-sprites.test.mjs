@@ -52,7 +52,7 @@ test('hero gets the new red hoodie; NPCs include three more identities without a
  assert.match(art,/drawExtraPedestrianSprite\(c,player\.x,player\.y,player\.a,0,clock,moving,1\.2,0\)/);
  assert.match(art,/p\.kind-EXTRA_PEDESTRIAN_NPC_START_KIND\+1/);
  assert.match(art,/drawPedestrianSprite\(c,x,y,angle,p\.kind,clock,moving,p\.speed,p\.seed\)/,'previous four NPCs retained');
- assert.match(road,/kind:i%7/,'seven NPC identities without changing car kinds');
+ assert.match(road,/kind:kind==='walk'\?i%PEDESTRIAN_KIND_COUNT:i%7/,'walkers rotate over all sheets (lotto 2 included), car kinds unchanged');
  assert.ok(game.includes('loadExtraPedestrianSprites()'));
  assert.ok(Number((game.match(/roads\.mjs\?v=(\d+)/)||[])[1])>=127,'roads.mjs deve essere almeno alla v=127');
  assert.ok(Number((game.match(/city\-art\.mjs\?v=(\d+)/)||[])[1])>=125,'city-art.mjs deve essere almeno alla v=125');

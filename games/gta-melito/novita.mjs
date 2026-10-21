@@ -4,6 +4,7 @@
  * proprietario può rifarla nello stile originale. Ogni voce sa dove trovare un esempio vero nella
  * mappa (VAI A VEDERE: posto, ora, meteo); i giudizi MI PIACE / DA RIFARE restano solo in questo
  * browser e si copiano come testo. Tenere allineato con NOVITA_DA_APPROVARE.md. */
+import {LOTTO2_PEDESTRIAN_NPC_START_KIND} from './extra-pedestrian-sprites.mjs?v=003';
 export const NOVITA_AUTORE='Claude · ilconsulentelogistico-hue';
 export const NOVITA_STATO='PROVVISORIO · da approvare';
 export const NOVITA_STORAGE_KEY='gta-melito-novita-giudizi-v1';
@@ -111,7 +112,10 @@ export const NOVITA=Object.freeze([
   trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO1.test(v?.model||'')),s)},
  {id:'gare',nome:'Gare clandestine arcade: partenza, anelli, frecce e avversari',lavoro:'Q34',pr:'in revisione',
   cosa:'Bandiera a scacchi e cerchio alla partenza in periferia, 3 avversari fermi in griglia; in auto «E · GARA»: anelli gialli, frecce sull’asfalto, percorso in minimappa, cronometro e posizione. Evento di finzione, solo nel gioco.',
-  disponibile:s=>!!s?.races?.routes?.length,trova:s=>near((s?.races?.routes||[]).map(r=>r.start),s)}
+  disponibile:s=>!!s?.races?.routes?.length,trova:s=>near((s?.races?.routes||[]).map(r=>r.start),s)},
+ {id:'lotto2-pedoni',nome:'Lotto 2: quattro nuovi pedoni (signora con la borsa, ragazzo con lo zaino, uomo in giacca, ragazza col cappotto rosso)',lavoro:'Lotto 2 grafica',pr:'in revisione',
+  cosa:'Foglio di CODEX-GH: frame adattati a zone dalla tavola madre dei pedoni (stesse pose, piedi e scala), vestiti e colori nuovi. Si mescolano alla gente in strada (residenti, passanti, clienti): guardali camminare su Via Roma nelle quattro direzioni. Grafica PROVVISORIA.',
+  trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO2_PEDESTRIAN_NPC_START_KIND),s)||roadMiddle(s,'Via Roma')}
 ].map(Object.freeze));
 
 /* Una voce è attiva se esiste davvero nel gioco (le voci «in arrivo» solo quando il modulo c'è). */

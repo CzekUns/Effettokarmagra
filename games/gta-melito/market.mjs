@@ -11,6 +11,7 @@ import {VEHICLE_SCALE,PERSON_SCALE,vs,ps} from './world-scale.mjs?v=001';
 import {easeRoofReveal} from './roof-reveal.mjs?v=121';
 import {NPC_DAY_MINUTES,npcDay,npcWeekday} from './npc-agenda.mjs?v=002';
 import {addToCollisionIndex,moveInCollisionIndex} from './traffic-collision.mjs?v=131';
+import {PEDESTRIAN_KIND_COUNT} from './extra-pedestrian-sprites.mjs?v=003';
 
 // Stessi dati di data/market-area.json (il test lo verifica): il gioco non legge quel file a runtime.
 export const MARKET_AREA=Object.freeze({
@@ -276,7 +277,7 @@ const visible=(view,x,y,pad=MARKET_RULES.viewPad)=>!!view&&x>=view[0]-pad&&x<=vi
 const areaVisible=(view)=>{const b=MARKET_AREA.gridBox;return !!view&&b[2]>=view[0]-MARKET_RULES.viewPad&&b[0]<=view[2]+MARKET_RULES.viewPad&&b[3]>=view[1]-MARKET_RULES.viewPad&&b[1]<=view[3]+MARKET_RULES.viewPad;};
 function newPerson(m,x,y,role,extra={}){
  const id=m.nextId++,seed=m.seed*7+id*131;
- const person={x,y,a:0,prevX:x,prevY:y,prevA:0,body:'walk',market:true,role,seed,kind:hash(seed)%7,
+ const person={x,y,a:0,prevX:x,prevY:y,prevA:0,body:'walk',market:true,role,seed,kind:hash(seed)%PEDESTRIAN_KIND_COUNT,
   speed:role==='vendor'?MARKET_RULES.vendorSpeed:between(MARKET_RULES.customerSpeed,seed),braking:true,
   route:[],state:'idle',wait:0,id,...extra};
  m.people.push(person);

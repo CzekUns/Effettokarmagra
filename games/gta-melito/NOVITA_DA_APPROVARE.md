@@ -43,6 +43,7 @@
 | id | Elemento | Lavoro / PR | Dove guardare (esempio) | Ora / parametri | Cosa giudicare |
 |---|---|---|---|---|---|
 | `rider` | App RIDER: pannello, riga HUD gialla, frecce gialle sull'asfalto, linea sulla minimappa, cubo giallo sul mezzo | Q39–Q41 / ramo `q39` | sali sullo scooter vicino alla partenza, premi `J` (o PAUSA › 🛵 RIDER) e accetta un'offerta | — | leggibilità di cubo, frecce e freccia attorno al giocatore a zoom scooter; pannello su telefono |
+| `lotto2-pedoni` | Lotto 2: quattro nuovi pedoni (signora anziana con la borsa, ragazzo con lo zaino, uomo in giacca da lavoro, ragazza col cappotto rosso) | Lotto 2 grafica / in revisione (foglio di CODEX-GH, integrato da Claude) | Via Roma, vicino alla partenza, circa (1179, 1303): VAI A VEDERE porta dal nuovo pedone più vicino | — | frame adattati a zone dalla tavola madre (`assets/people/pedoni-lotto2-4x4frames-24x40-rgba.png`, anteprima 3× in `assets/people/sources/`): vestiti, colori, capelli e accessori; stesse pose e scala degli altri pedoni; giudicare in tutte e quattro le direzioni |
 | `gare` | Gare clandestine arcade (finzione): partenza, anelli, frecce, avversari | Q34 / in revisione | partenza GARA 1 su Via Colonne di Giugliano, circa (345, 445); GARA 2 su Via Signorelli, circa (8, 927) | in auto, «E · GARA» | bandiera e cerchio, anelli gialli, frecce, sprite avversari, cronometro in alto |
 
 ### Torre del serbatoio a scacchi rossi (20 ottobre 2026)

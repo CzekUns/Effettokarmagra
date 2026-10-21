@@ -1,5 +1,6 @@
 import {visualRoadWidth,roadTrafficLaneOffset} from './road-widths.mjs?v=044';
-import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=008';
+import {stepResidentRoutine,restoreResidentRoutine} from './resident-routines.mjs?v=009';
+import {PEDESTRIAN_KIND_COUNT} from './extra-pedestrian-sprites.mjs?v=003';
 import {makeCollisionIndex,addToCollisionIndex,moveInCollisionIndex,nearbyColliders,collidesWithTraffic,trafficMoveBlocked,trafficMoveBlocker,vehicleSeparation,vehiclesOverlap,vehicleHitsPedestrian,vehicleShape} from './traffic-collision.mjs?v=131';
 import {handlingProfile,npcCruise,npcSpeedStep} from './vehicle-handling.mjs?v=006';
 import {vs,ps} from './world-scale.mjs?v=001';
@@ -162,7 +163,7 @@ export function createAgents(graph,count,seed=10,kind='car',avoid=[],settings={}
     ['through','local','courier'][hash(seed+i*31)%3];
    const agent={...at,edge:edgeIndex,t,speed:kind==='car'?(vehicleType==='motorcycle'?9:7)+rand(i*13+seed)*7:
     (role==='stroller'?.68:role==='commuter'?1.08:.85)+rand(i*11+seed)*.35,
-    kind:i%7,seed:seed+i*17,wait:0,body:kind,side,routine:role,segments:0,
+    kind:kind==='walk'?i%PEDESTRIAN_KIND_COUNT:i%7,seed:seed+i*17,wait:0,body:kind,side,routine:role,segments:0,
     home:{x:at.x,y:at.y,edge:edgeIndex,side,radius:kind==='walk'?
      (role==='stroller'?58:role==='errand'?85:125):
      (role==='local'?185:role==='courier'?250:360)}};
