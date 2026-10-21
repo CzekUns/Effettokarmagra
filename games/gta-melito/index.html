@@ -430,6 +430,32 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  .fb-card{padding:10px 12px}.fb-card h2{font-size:15px}.fb-card p{font-size:11px;margin-bottom:8px}
 }
 .football.fb-playing .fb-card{display:none}
+/* Lotto 15: dialoghi con volto — barra di testo in basso + riquadro del personaggio (PROVVISORIO, da approvare da Simone).
+ * Su PC larga quanto la plancia (meno il bottone MISSIONI); sul telefono in orizzontale sta al centro in basso,
+ * fra la levetta/volante a sinistra e i pulsanti touch a destra, senza coprirli. Il volto è un'illustrazione: image-rendering:auto. */
+.dialogue{position:absolute;z-index:6;left:50%;bottom:18px;transform:translateX(-50%);width:min(960px,calc(100% - 32px));
+ display:flex;align-items:stretch;gap:12px;padding:10px 12px;background:linear-gradient(160deg,#101d19ee,#0b1512f2);
+ border:2px solid #e2c98a;box-shadow:0 0 0 1px #f0dda233,5px 6px #09140fb8,0 8px 30px #000a;color:#f6ebce;cursor:pointer;
+ user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.dialogue[hidden]{display:none}
+.dialogue-portrait{flex:none;width:96px;height:96px;border:2px solid #f0d79a;background:#1b2a25;box-shadow:2px 3px #09140fb8;overflow:hidden}
+.dialogue-portrait img{width:100%;height:100%;object-fit:cover;display:block;image-rendering:auto}
+.dialogue-portrait img[hidden]{display:none}
+.dialogue-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.dialogue-name{font-size:11px;font-weight:1000;letter-spacing:.14em;color:#f4a972;text-transform:uppercase}
+.dialogue-text{flex:1;margin:0;font-size:14px;line-height:1.5;color:#f8f2e2;min-height:3em;white-space:pre-line;text-shadow:1px 1px #000}
+.dialogue-side{flex:none;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:6px}
+.dialogue-counter{font-size:9px;letter-spacing:.12em;color:#aebaaa}
+.dialogue-next{background:linear-gradient(180deg,#e9d18d,#d8b967);color:#263329;border:1px solid #fff0ba;box-shadow:0 2px #8b7143;font-weight:900;font-size:11px;padding:9px 14px;min-height:40px;min-width:92px;letter-spacing:.06em}
+.dialogue-next:active{transform:translateY(1px);box-shadow:0 1px #8b7143}
+.stage.dialogue-open .pc-prompt{display:none!important}
+@media(min-width:761px) and (pointer:fine),(min-width:761px) and (pointer:none){.dialogue{width:min(960px,calc(100% - 290px));bottom:22px}}
+@media(max-width:760px),(pointer:coarse) and (orientation:landscape){
+ .dialogue{left:max(184px,calc(env(safe-area-inset-left) + 184px));right:max(192px,calc(env(safe-area-inset-right) + 192px));width:auto;transform:none;bottom:max(14px,env(safe-area-inset-bottom));gap:8px;padding:7px 8px}
+ .dialogue-portrait{width:72px;height:72px}
+ .dialogue-name{font-size:9px}.dialogue-text{font-size:11px;line-height:1.35;min-height:2.7em}
+ .dialogue-next{min-height:34px;min-width:72px;font-size:9px;padding:6px 8px}.dialogue-counter{font-size:8px}
+}
 </style>
 </head><body><main class="app">
 <div class="stage" id="stage">
@@ -501,6 +527,12 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
   <div class="name" id="dialog-speaker">NICO</div><h2 id="dialog-head">NUOVO MESSAGGIO</h2><p id="dialog-text"></p>
   <button id="dialog-close" aria-label="Chiudi messaggio">CONTINUA →</button>
  </section>
+ <!-- Lotto 15: dialoghi con volto (PROVVISORIO, da approvare): barra in basso + riquadro del personaggio, gestita da dialogue.mjs. -->
+ <section class="dialogue" id="dialogue" hidden role="dialog" aria-labelledby="dialogue-name" aria-live="polite">
+  <div class="dialogue-portrait"><img id="dialogue-portrait" alt="" hidden decoding="async"></div>
+  <div class="dialogue-body"><div class="dialogue-name" id="dialogue-name"></div><p class="dialogue-text" id="dialogue-text"></p></div>
+  <div class="dialogue-side"><span class="dialogue-counter" id="dialogue-counter"></span><button class="dialogue-next" id="dialogue-next" type="button" aria-label="Battuta successiva">AVANTI ›</button></div>
+ </section>
  <section class="fullmap" id="fullmap" hidden role="dialog" aria-label="Mappa di Melito">
   <h2>MAPPA REALE · MELITO</h2><p>Strade: OpenStreetMap · ◉ obiettivo · ● posizione attuale</p>
   <canvas id="bigmap" width="640" height="580" aria-label="Mappa completa della città con obiettivi"></canvas>
@@ -549,4 +581,4 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  <div class="rotate-screen" id="rotate-screen" hidden><div class="rotate-card"><span class="rotate-icon" aria-hidden="true">▰</span><h2>RUOTA LO SCHERMO</h2><p>GTA Melito si gioca in orizzontale. Ruota il telefono per continuare.</p></div></div>
 </div>
 <div class="controls" aria-label="Comandi"><div class="touch-actions" aria-label="Azioni"><button class="control-action" id="action">ENTRA IN VEICOLO</button><button id="sprint" aria-label="Corri a piedi">CORRI</button><div class="pedals" aria-label="Pedali di guida"><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="accelerator" aria-label="Tieni premuto per accelerare">ACCELERA</button><button id="reverse" aria-label="Tieni premuto per andare in retromarcia">RETRO</button></div></div><div class="dpad" aria-hidden="true"></div><div class="buttons"><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-auto" aria-label="Ripristina zoom automatico">AUTO</button><button class="mini" id="zoom-in" aria-label="Regola zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div></div>
-</main><script type="module" src="./game.mjs?v=208"></script></body></html>
+</main><script type="module" src="./game.mjs?v=209"></script></body></html>
