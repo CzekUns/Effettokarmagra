@@ -19,3 +19,7 @@ Questo file si applica all'intera repository, a persone, agenti AI e sessioni Ch
 6. Non sostituire il log con un semplice messaggio in chat, una descrizione di commit o una lista di intenzioni. Il repository è la fonte condivisa per gli handoff.
 
 Per GTA Melito valgono anche [le istruzioni locali](./games/gta-melito/AGENTS.md); i lavori grafici devono continuare ad aggiornare anche `VISUAL_PROGRESS.md`. Il `WORK_LOG.md` resta il riepilogo operativo generale per **qualsiasi** tipo di intervento, inclusi gameplay, asset, bug, mappa, performance e documentazione.
+
+## For Four Chocolate — unica reference grafica obbligatoria
+
+Ogni collaboratore deve prima leggere [`games/for-four-chocolate/AGENTS.md`](./games/for-four-chocolate/AGENTS.md). Per il gioco esiste **una sola reference grafica approvata**: [`references/gameplay-mgs-vr-artboard.webp`](./games/for-four-chocolate/references/gameplay-mgs-vr-artboard.webp); vecchi asset, screenshot e bozzetti non possono fungere da alternativa estetica. Prima di sostituire la grafica occorre una PR con screenshot autentici di gioco per verifica visiva.
