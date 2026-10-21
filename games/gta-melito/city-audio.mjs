@@ -10,7 +10,7 @@
  * a variatore sale continuo. Uno strato di rumore (rombo, aria, rotolamento) cresce con marcia e
  * velocità. Due volumi separati e salvati: EFFETTI/AMBIENTE (tutto questo modulo) e RADIO/MUSICA
  * (applicato da game.mjs allo stream di car-radio.mjs); SUONI OFF zittisce entrambi. */
-import {handlingProfile,gearAt} from './vehicle-handling.mjs?v=007';
+import {handlingProfile,gearAt} from './vehicle-handling.mjs?v=008';
 export const AUDIO_STORAGE_KEY='gta-melito-audio-v1';
 export const RADIO_DEFAULT_VOLUME=.52;
 export const TRAFFIC_VOICES=4;

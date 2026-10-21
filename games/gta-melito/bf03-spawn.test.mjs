@@ -4,14 +4,14 @@ import {readFile} from 'node:fs/promises';
 import {buildRoadGraph,createAgents,stepAgents,chooseTurn,yieldsInGridlock} from './roads.mjs';
 import {vehiclesOverlap,vehicleShape} from './traffic-collision.mjs';
 import {MOTORCYCLE_IDS} from './motorcycles.mjs';
-import {CAR_TRAFFIC_SPRITE_IDS} from './car-sprites.mjs';
+import {CAR_TRAFFIC_SPRITE_IDS,CAR_TRAFFIC_STRIDE} from './car-sprites.mjs';
 import {TRAFFIC_APES,FOOD_STALLS,trafficApeModel} from './street-professions.mjs';
 
 const map=JSON.parse(await readFile(new URL('./data/melito-map.json',import.meta.url),'utf8'));
 const city=buildRoadGraph(map.roads);
 // Same model choice as game.mjs (trafficModel).
 const model=(i,type)=>type==='motorcycle'?MOTORCYCLE_IDS[(i+Math.floor(i/4)*5)%MOTORCYCLE_IDS.length]:
- trafficApeModel(i)||CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length];
+ trafficApeModel(i)||CAR_TRAFFIC_SPRITE_IDS[(i*CAR_TRAFFIC_STRIDE)%CAR_TRAFFIC_SPRITE_IDS.length];
 const spawn=(avoid=[],extra={})=>createAgents(city,140,189,'car',avoid,{motorcycleEvery:4,model,...extra});
 const junctionGap=graph=>{
  const near=graph.nodes.map(()=>new Set()),width=graph.nodes.map(()=>0);

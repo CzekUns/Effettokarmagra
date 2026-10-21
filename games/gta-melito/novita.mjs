@@ -28,6 +28,7 @@ const vehicles=state=>[...(state?.cars||[]),...(state?.traffic||[])];
 const SERVICE_VAN=/corriere|courier/i, REFUSE_TRUCK=/nettezza|rifiut|compatt|refuse|garbage/i;
 const LOTTO1=/^(grande-punto-2005|ypsilon-2011)-/;
 const LOTTO5=/^(tipo-hatchback-2016|fiat-500l-2012)-/;
+const LOTTO6=/^(clio-iv-2012|golf-vii-2012)-/;
 const hasPassengers=v=>(Array.isArray(v?.passengers)&&v.passengers.length>0)||(Array.isArray(v?.occupants)&&v.occupants.length>0);
 
 /* Le voci: chi l'ha fatta, in quale PR, cosa guardare e dove (trova → punto da inquadrare).
@@ -123,7 +124,11 @@ export const NOVITA=Object.freeze([
  {id:'lotto5-auto',nome:'Lotto 5: Fiat Tipo 2016 e Fiat 500L 2012 nel traffico',lavoro:'Lotto 5 · CODEX-GH',pr:'in revisione',
   cosa:'Due modelli nuovi tra le auto del traffico e dei parcheggi, 8 tinte ciascuno (atlante pixel art disegnato da codice da CODEX-GH; tinte interpretate, non codici vernice). Guarda la fila di auto in Via Roma: la Tipo è più lunga e bassa, con cofano esteso e fanali posteriori orizzontali; la 500L è corta e tozza, con tetto lungo, vetri grandi e fari tondi. Grafica PROVVISORIA.',
   disponibile:s=>vehicles(s).some(v=>LOTTO5.test(v?.model||''))||!s?.traffic,
-  trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO5.test(v?.model||'')),s)}
+  trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO5.test(v?.model||'')),s)},
+ {id:'lotto6-auto',nome:'Lotto 6: Renault Clio IV 2012 e Volkswagen Golf VII 2012 nel traffico',lavoro:'Lotto 6 · CODEX-GH',pr:'in revisione',
+  cosa:'Due modelli nuovi tra le auto del traffico e dei parcheggi, 8 tinte ciascuno (atlante pixel art disegnato da codice da CODEX-GH; tinte interpretate, non codici vernice). Guarda la fila di auto in Via Roma: la Clio è corta e arrotondata, con muso curvo e fari a goccia; la Golf è più lunga, larga e squadrata, con tetto piatto e fari stretti. Grafica PROVVISORIA.',
+  disponibile:s=>vehicles(s).some(v=>LOTTO6.test(v?.model||''))||!s?.traffic,
+  trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO6.test(v?.model||'')),s)}
 ].map(Object.freeze));
 
 /* Una voce è attiva se esiste davvero nel gioco (le voci «in arrivo» solo quando il modulo c'è). */

@@ -4,7 +4,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {inflateSync} from 'node:zlib';
-import {EXTRA_CAR_ATLASES,EXTRA_CAR_VARIANTS,CAR_TRAFFIC_SPRITE_IDS,CAR_PARKED_SPRITE_IDS,CAR_ATLAS_CELL,carDrawSize} from './car-sprites.mjs';
+import {EXTRA_CAR_ATLASES,EXTRA_CAR_VARIANTS,CAR_TRAFFIC_SPRITE_IDS,CAR_TRAFFIC_STRIDE,CAR_PARKED_SPRITE_IDS,CAR_ATLAS_CELL,carDrawSize} from './car-sprites.mjs';
 import {handlingProfile} from './vehicle-handling.mjs';
 import {vehicleShape} from './traffic-collision.mjs';
 import {NOVITA,novitaAvailable} from './novita.mjs';
@@ -78,8 +78,8 @@ test('lotto 1: both models are in the AI traffic and in the parked cars, with th
   assert.ok(CAR_TRAFFIC_SPRITE_IDS.includes(id),'traffic '+id);
   assert.ok(CAR_PARKED_SPRITE_IDS.includes(id),'parked '+id);
  }
- // The traffic picks ids with step 7 (game.mjs): over a full cycle every new variant is spawned.
- const seen=new Set();for(let i=0;i<CAR_TRAFFIC_SPRITE_IDS.length;i++)seen.add(CAR_TRAFFIC_SPRITE_IDS[(i*7)%CAR_TRAFFIC_SPRITE_IDS.length]);
+ // The traffic picks ids with stride CAR_TRAFFIC_STRIDE (game.mjs): over a full cycle every new variant is spawned.
+ const seen=new Set();for(let i=0;i<CAR_TRAFFIC_SPRITE_IDS.length;i++)seen.add(CAR_TRAFFIC_SPRITE_IDS[(i*CAR_TRAFFIC_STRIDE)%CAR_TRAFFIC_SPRITE_IDS.length]);
  for(const id of IDS)assert.ok(seen.has(id),'spawned '+id);
  const punto=handlingProfile({model:'grande-punto-2005-blue'}),ypsilon=handlingProfile({model:'ypsilon-2011-beige'});
  assert.equal(punto.model,'grande-punto-2005');assert.equal(ypsilon.model,'ypsilon-2011');
