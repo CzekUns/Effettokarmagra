@@ -53,17 +53,18 @@ test('passaggi ogni 1–3 s, pausa vicino al giocatore, partita aperta sospende 
  assert.deepEqual(g.ball,stopped);assert.ok(g.pause>0);
  stepStreetGames(games,2,{minutes:17*60+30,canStand,onRoad});
  assert.equal(g.pause,0);
- stepStreetGames(games,.1,{minutes:17*60+30,canStand,onRoad,matchOpen:true});
- assert.equal(games.activeKids.length,0);
+ stepStreetGames(games,.1,{minutes:17*60+30,canStand,onRoad,matchPitchId:'campo'});
+ assert.ok(games.activeKids.every(g=>g.id!=='campo-campo'),'only children on the active pitch disappear');
+ assert.ok(games.activeKids.length>0,'villa and pedestrian squares remain alive');
  for(const p of g.kids)assert.ok(canStand(p.x,p.y)&&!onRoad(p.x,p.y));
 });
 
 test('codice collegato, nessun blocco del giocatore, NOVITÀ e registri',async()=>{
  const [game,html,novita,work,visual,approve]=await Promise.all(['game.mjs','index.html','novita.mjs','WORK_LOG.md','VISUAL_PROGRESS.md','NOVITA_DA_APPROVARE.md'].map(f=>readFile(new URL(f,import.meta.url),'utf8')));
- assert.match(game,/npc-giochi\.mjs\?v=001/);assert.match(game,/createNeighbourhoodGames\(\)/);
+ assert.match(game,/npc-giochi\.mjs\?v=002/);assert.match(game,/createNeighbourhoodGames\(\)/);
  assert.match(game,/stepStreetGames\(state\.streetGames,elapsed/);assert.match(game,/drawStreetGames\(c,state\.streetGames/);
  assert.doesNotMatch(game,/makeCollisionIndex\([^\n]*streetGames/);
- assert.match(game,/novita\.mjs\?v=018/);assert.match(html,/game\.mjs\?v=217/);
+ assert.match(game,/novita\.mjs\?v=020/);assert.match(html,/game\.mjs\?v=220/);
  assert.match(novita,/id:'giochi-di-strada'/);
  const e=NOVITA.find(x=>x.id==='giochi-di-strada');assert.equal(e.ora,1050);
  assert.deepEqual(novitaTarget(e,{spawn:[0,0],streetGames:{ballGroups:[{center:{x:5,y:7}}]}}),{x:5,y:7});

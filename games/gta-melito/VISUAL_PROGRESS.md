@@ -840,3 +840,15 @@ Secondo screenshot e correzione dell'utente, **mantenere la torre molto grande e
 ### 2026-10-21 — Animali di strada (CODEX-GH) — PROVVISORIO, da approvare da Simone
 - Piccioni grigi e bianchi in gruppi piccoli, con due frame a terra e due in volo; gatti di tre mantelli, seduti o in passo. Le posizioni seguono piazze, chiese, mercato, villa e parcheggi già presenti nella mappa.
 - PAUSA › NOVITÀ › `animali-di-strada` › VAI A VEDERE; screenshot 3× di stormo e gatto in `/home/ubuntu/codex-gh-lavoro/sim-animali/`. **PROVVISORIO, da approvare da Simone**.
+
+## 2026-10-21 — Q33 calcetto nell’overworld (CODEX-GH, PROVVISORIO)
+
+- La partita usa il campetto Q32 realmente disegnato sulla mappa, con la telecamera e lo zoom a piedi della città. Rimosso il pannello a schermo intero. Coordinate 40×20 del motore adattate alle linee 52×32 di Via delle Palme e 30×17 di Corso Europa.
+- Quattro kit (rossi, blu, portiere giallo, portiere verde) nel foglio `assets/people/calcetto-4squadre-4dir-4frames-24x40.png`, derivati e ricolorati dalla prima tavola dei pedoni, con identico pivot 24×40 e contorni. Sorgente `assets/people/sources/calcetto-genera.py`. La palla ha ombra e pixel netti. Grafica **PROVVISORIA, da approvare da Simone**.
+- HUD leggero con punteggio e cronometro in alto; TIRO/PASSA sul telefono. A Corso Europa dieci figure alla scala del protagonista sono fitte sul campo piccolo: non sono state ridotte artificialmente. Screenshot PC e telefono in `/home/ubuntu/codex-gh-lavoro/sim-calcetto/`; nessuna foto esterna incorporata.
+
+### 2026-10-21 — CODEX-GH — Q33: integrazione del commit Claude 98aa684 (PROVVISORIO)
+- Campo grande di Via delle Palme 58×102, nove calciatori che arrivano a piedi e partita nella città. Il motore parametrico e `football-match.mjs` derivano dal commit `98aa684` del ramo `q33b` di Claude.
+- Divise ROSSI/BLU/portieri dal foglio pixel art 24×40 generato da CODEX-GH; HUD e pulsanti touch TIRO/PASSA, conferma ESC/ESCI, bambini nascosti sul campo attivo. I campetti piccoli, incluso Corso Europa, mostrano solo l’avviso per il campo grande perché troppo stretti per dieci giocatori alla scala cittadina.
+- Grafica **PROVVISORIA, da approvare da Simone**. Le note precedenti sul calcetto nei due campetti descrivono la bozza superata da questa integrazione.
+- **Verifica finale:** suite 680/680; audit 199 moduli MJS, zero import discordanti, file mancanti, ID HTML doppi o JSON invalidi. Browser PC 1280×720 e telefono 844×390: 55,0 e 59,7 FPS, rispettivamente; gol, fischio finale, salvataggio unico e camminata dopo il gioco; zero errori console/404. Screenshot 3× in `sim-calcetto/`. Nessun push.

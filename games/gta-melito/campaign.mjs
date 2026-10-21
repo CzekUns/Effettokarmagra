@@ -5,7 +5,7 @@ import {freshShopSave,sanitizeShopSave} from './local-shops.mjs?v=003';
 import {freshGarageSave,sanitizeGarageSave} from './garages.mjs?v=001';
 import {freshRiderSave,sanitizeRiderSave} from './rider.mjs?v=001';
 // Q33: the calcetto record (wins / draws / losses only) lives in the same save, reset with it.
-import {freshFootballSave,sanitizeFootballSave} from './minigame-football.mjs?v=001';
+import {freshFootballSave,sanitizeFootballSave} from './minigame-football.mjs?v=003';
 export const SAVE_KEY='gta-melito-campaign-v3';
 export const STORY=[
  {id:'primo-contatto',title:'01 · Il primo contatto',reward:75,time:0,

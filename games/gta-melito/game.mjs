@@ -20,7 +20,7 @@ import {buildingVolume} from './building-volume.mjs?v=088';
 import {createCityAudio} from './city-audio.mjs?v=006';
 import {createSocial,stepSocial} from './npc-social.mjs?v=004';
 import {createIdlePeople,stepIdlePeople,drawIdlePeople,loadIdlePoseSheets} from './npc-idle.mjs?v=003';
-import {createStreetGames,stepStreetGames,drawStreetGames} from './npc-giochi.mjs?v=001';
+import {createStreetGames,stepStreetGames,drawStreetGames} from './npc-giochi.mjs?v=002';
 import {createAnimals,stepAnimals,drawAnimals,loadAnimalSprites} from './animali.mjs?v=001';
 import {createReactions,stepReactions,kerbWait,pickBlockedHorn} from './npc-reactions.mjs?v=007';
 import {createDensity,stepDensity,prepareWalkWeights} from './npc-density.mjs?v=007';
@@ -34,7 +34,7 @@ import {SIGNALS_SIMULATED,clockSecondsFromMinutes} from './junctions.mjs?v=003';
 import {prepareSignalPosts,drawStopLines,drawSignals,signalGlows} from './traffic-light-art.mjs?v=004';
 import {stepWasher,drawWasherEffects} from './window-washers.mjs?v=004';
 import {buildStreetProps,drawArchitecture,drawStreets,drawCrosswalks,drawStreetProps,drawPoiSigns} from './visuals.mjs?v=091';
-import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=003';
+import {STORY,readProgress,saveProgress,freshProgress,resolveLandmarks,currentStep,activeTarget,isNear,doInteraction,updateTimer,resetCurrentMission} from './campaign.mjs?v=005';
 import {openSlotMachine,isSlotOpen} from './minigame-slot.mjs?v=001';
 import {openPokerMachine,isPokerOpen} from './minigame-poker.mjs?v=001';
 import {riderPickups,riderDestinations,riderOffers,riderVehicleCheck,acceptOffer,cancelJob,stepJob,completeDelivery,riderStats,riderRoute,routeLookahead,PICKUP_RADIUS,DELIVERY_RADIUS} from './rider.mjs?v=001';
@@ -72,16 +72,17 @@ import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,return
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
 import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=003';
-import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches,PITCH_RULES} from './football-pitches.mjs?v=001';
+import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches,PITCH_RULES} from './football-pitches.mjs?v=002';
 import {GARAGES,nearestGarage,canStoreVehicle,depositVehicle,takeVehicle,vehicleFromEntry,chooseExitSpot,garageMessage,vehicleLabel,ownedEntry,ownedCount,garageById,GARAGE_SLOTS,drawGarage} from './garages.mjs?v=001';
 import {paintOptions,paintName,PERF_LEVELS,perfPrice,PAINT_PRICE,NEON_PRICE,NEON_COLORS,tunedProfile,buyTuning,tuningMessage,drawNeonUnderglow,neonNightGlows} from './tuning.mjs?v=001';
-import {openFootballGame,isFootballOpen,recordFootballResult,footballReturnPoint,footballRecordText} from './minigame-football.mjs?v=001';
+import {recordFootballResult,footballRecordText} from './minigame-football.mjs?v=003';
+import {createFieldMatch} from './football-match.mjs?v=002';
 import {prepareWaterTowers,towerRevealTarget,drawWaterTower,drawWaterTowerLight,loadWaterTowerSprite,markRuinPool,drawRuinPoolPuddles} from './municipio-landmarks.mjs?v=003';
 import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
 import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=018';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=020';
 // Lotto 15: dialoghi con volto (prototipo per la storyline, PROVVISORIO): barra in basso + riquadro del personaggio.
 import {openDialogue,isDialogueOpen,DEMO_DIALOGUE} from './dialogue.mjs?v=001';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
@@ -192,7 +193,7 @@ function openPoolGame(){
  return openPoolMachine({storage:globalThis.localStorage,onExit:()=>{carRadio.duck(false);canvas.focus?.({preventScroll:true});updateHud();}});
 }
 const FORCED_WEATHER=(()=>{const w=new URLSearchParams(globalThis.location?.search||'').get('meteo');return ['pioggia','nuvoloso','sereno'].includes(w)?w:null;})();
-const state={map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],idle:null,streetGames:null,animals:null,dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
+const state={football:null,map:null,roads:null,buildings:null,roadGrid:null,buildingGrid:null,cars:[],traffic:[],people:[],idle:null,streetGames:null,animals:null,dynamicCollision:null,trafficClock:0,npcClockMinutes:START_MINUTE,player:{x:0,y:0,a:0,car:-1},spawn:[0,0],zoom:CAMERA_ZOOM_MAX,zoomBias:1,zoomTarget:CAMERA_ZOOM_MAX,clock:0,last:0,hud:0,ready:false,loading:false,mapCanvas:null,graph:null,turnGuides:[],props:[],propsGrid:null,camera:{x:0,y:0},distance:0,shops:[],shopGrid:null,bankEntrances:[],bankInterior:null,ground:null,inferredBuildings:[],inferredGrid:null,infillStats:null,landmarks:new Map(),progress:null,lastSave:0,bannerTimeout:0,mapOpen:false};
 // BF14: the world scale in use (read by the PAUSE › NOVITÀ entry and by the tests).
 state.worldScale=Object.freeze({vehicle:VEHICLE_SCALE,person:PERSON_SCALE});
 const CELL=140,DRIVE=new Set(['motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service','track']);
@@ -286,34 +287,50 @@ function createPitches(){
   nearStreet:(x,y)=>{const r=nearest(x,y,24,state.roads);return !!r&&r.distance<=visualRoadWidth(r.road)/2+2;}});
  if(state.pitches.failed.length)console.warn('Campetti non collocati: '+state.pitches.failed.map(f=>f.id+' ('+f.reason+')').join(', '));
 }
-// Q33: the calcetto match opens over the city, which stays paused underneath (tick/draw skip it);
-// after the final whistle or ESC the player is back at the gate of the pitch, in the same pose.
-// Only the finished result (win/draw/loss) goes into the campaign save, once per match id.
+// Q33 (21/10/2026, richiesta del committente): la partita si gioca NEL campo, nell'overworld, senza
+// scene a parte (football-match.mjs). E dentro le linee del campo grande: nove calciatori arrivano a
+// piedi da fuori vista, si dispongono, fischio e si gioca con la telecamera di sempre; la città continua.
+// Solo il risultato finale (V/P/S) va nel salvataggio della campagna, una volta per partita (id).
 function openFootballMatch(pitch){
- if(isFootballOpen()||!state.ready)return false;
- const p=state.player,entry={x:p.x,y:p.y,a:p.a};
- for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;resetDrivingControls();
- $('stick-knob').style.transform='translate(0,0)';
- carRadio.duck(true);
- const opened=openFootballGame({pitch,record:()=>state.progress?.football,
+ if(state.football||!state.ready||!pitch)return false;
+ const p=state.player;
+ state.football=createFieldMatch({pitch,walkable:canStand,view:visibleBounds(),player:{x:p.x,y:p.y,a:p.a},
   sound:{get muted(){return cityAudio.muted;},get volume(){return cityAudio.effectsVolume;}},
   onResult:result=>{
    if(state.progress&&recordFootballResult(state.progress,result)){saveProgress(localStorage,state.progress);refreshCampaign();}
-  },
-  onExit:({result})=>{
-   const back=footballReturnPoint(pitch,entry,PITCH_RULES.hotspot);
-   p.x=back.x;p.y=back.y;p.a=back.a;p.car=-1;p.vehicleType=null;
-   p.impactTime=0;p.impactVX=0;p.impactVY=0;p.impactLock=0;
-   state.camera.x=p.x;state.camera.y=p.y;state.last=0;
-   for(const key of Object.keys(pressed))pressed[key]=false;stick.x=0;stick.y=0;
-   carRadio.duck(false);
-   const word=result?{vittoria:'VITTORIA',pareggio:'PAREGGIO',sconfitta:'SCONFITTA'}[result.outcome]+' '+result.home+'–'+result.away:'PARTITA ABBANDONATA';
-   state.notice={text:'CALCETTO · '+word+' · BILANCIO '+footballRecordText(state.progress?.football),until:state.clock+5};
-   cityEventBubble(state.events,p,result?word:'Partita abbandonata');
-   canvas.focus?.({preventScroll:true});updateHud();
   }});
- if(!opened)carRadio.duck(false);
- return opened;
+ if(!state.football)return false;
+ pressed.handbrake=false;
+ state.notice={text:state.football.hudText(),until:state.clock+1};
+ cityEventBubble(state.events,p,'Chiamo gli altri!');
+ updateHud();return true;
+}
+function updateFootballHud(){
+ const f=state.football,active=!!f?.playing(),hud=$('football-hud'),touch=$('football-touch');
+ hud.hidden=!active;touch.hidden=!active;
+ if(!active)return;
+ $('football-score').textContent=f.match.score.join(' – ');
+ $('football-clock').textContent=f.match.phase==='intro'?'ARRIVANO':`${Math.floor(f.match.time/3)}′`;
+ const banner=$('football-banner'),message=f.banner;
+ banner.hidden=!message;if(message)banner.textContent=message;
+}
+function abandonFootball(){
+ const f=state.football;if(!f?.playing())return false;
+ if(!globalThis.confirm('Abbandonare la partita di calcetto? Il risultato non sarà salvato.'))return false;
+ f.abandon();updateFootballHud();return true;
+}
+// Un passo della partita in campo: posa del protagonista, calciatori, palla, riga dell'HUD, fine.
+function stepFootball(dt){
+ const f=state.football;if(!f)return;
+ const p=state.player;
+ f.step(dt,{player:{x:p.x,y:p.y,a:p.a,car:p.car},view:visibleBounds()});
+ if(f.done()){
+  state.football=null;
+  const r=f.result,word=r?{vittoria:'VITTORIA',pareggio:'PAREGGIO',sconfitta:'SCONFITTA'}[r.outcome]+' '+r.home+'–'+r.away:'PARTITA ABBANDONATA';
+  state.notice={text:'CALCETTO · '+word+' · BILANCIO '+footballRecordText(state.progress?.football),until:state.clock+6};
+  updateHud();return;
+ }
+ state.notice={text:f.banner||f.hudText(),until:state.clock+.6};
 }
 // Q36: the driven profile is always the model's BASE profile (BF05) plus the owned car's tuning.
 function vehicleProfile(car){
@@ -516,7 +533,7 @@ function createNeighbourhoodGames(){
  state.streetGames=createStreetGames({map:state.map,enclosures:state.enclosures,pitches:state.pitches,
   graph:state.graph,doors:state.doors||[],canStand:safe,onRoad:onCarriageway});
  stepStreetGames(state.streetGames,0,{minutes:state.npcClockMinutes,player:state.player,
-  canStand:safe,onRoad:onCarriageway,matchOpen:isFootballOpen()});
+  canStand:safe,onRoad:onCarriageway,matchPitchId:state.football?.pitch.id});
 }
 function createNeighbourhoodAnimals(){
  const safe=(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y);
@@ -1165,7 +1182,7 @@ function updateTraffic(dt){
  stepIdlePeople(state.idle,elapsed,{minutes:state.npcClockMinutes,player:state.player,
   canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,doors:state.doors||[]});
  stepStreetGames(state.streetGames,elapsed,{minutes:state.npcClockMinutes,player:state.player,
-  canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,matchOpen:isFootballOpen()});
+  canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,matchPitchId:state.football?.pitch.id});
  stepAnimals(state.animals,elapsed,{player:state.player,vehicles:[...state.traffic,...state.cars],
   canStand:(x,y)=>canStand(x,y)&&!coveredByBuilding(x,y),onRoad:onCarriageway,doors:state.doors||[]});
  // Q13: rush hours. The hour curve sets how many vehicles drive; BF09 balanceTraffic is the one place
@@ -1421,6 +1438,7 @@ function dropPassengers(vehicle){
 }
 function toggleVehicle(){
  if(!state.ready)return;
+ if(state.football?.playing())return;   // Q33: in campo E = calcio (press/release nei gestori)
  if(state.shopOpen){closeShop();return;}
  if(state.garageOpen){closeGarage();return;}
  const p=state.player;
@@ -1608,7 +1626,7 @@ function drawSkidMarks([x0,y0,x1,y1]){
 }
 function tick(dt){
  if(!state.ready)return;
- if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||isFootballOpen()||state.shopOpen||state.garageOpen||state.riderOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen()){
+ if(state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||state.shopOpen||state.garageOpen||state.riderOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen()){
   for(const key of Object.keys(pressed))pressed[key]=false;
   stick.x=0;stick.y=0;
   return;
@@ -1742,6 +1760,7 @@ function tick(dt){
  // Parked vehicles can be shoved by faster vehicles but cannot disappear.
  for(const car of state.cars)if(car!==state.cars[p.car])
   advanceNonlethalImpact(car,dt,canKnockbackMove);
+ stepFootball(dt);
  updateTraffic(dt);
  stepStreetRace(dt);
  stepCommuters(dt);
@@ -1770,7 +1789,9 @@ function tick(dt){
  const movement={inVehicle:p.car>=0,
   speed:p.car>=0?Math.abs(state.cars[p.car].speed):moving?(pressed.run?RUN_SPEED:WALK_SPEED):0,
   running:pressed.run,moving:!!moving};
+ // Q33: leggero zoom-out automatico mentre si è in campo durante la partita.
  state.zoomTarget=targetCameraZoom(movement,state.zoomBias);
+ if(state.football)state.zoomTarget=targetCameraZoom(movement,state.zoomBias*state.football.cameraBias(p.x,p.y));
  state.zoom=advanceCameraZoom(state.zoom,state.zoomTarget,dt);
  const target=p.car>=0
   ?vehicleCameraTarget(state.cars[p.car],$('world').clientWidth,$('world').clientHeight,state.zoom)
@@ -1850,17 +1871,25 @@ function updateHud(){
  const enterable=p.car<0?nearestEnterableVehicle(state.cars,p):null;
  // Q23: fermo davanti all'officina di gioco con il mezzo danneggiato, E ripara (a pagamento).
  const repair=myCar&&nearWorkshop(state.workshop,myCar)&&Math.abs(myCar.speed||0)<1.5?repairCost(myCar):0;
- const pitchNear=p.car<0&&!eventAction&&!shopNear?pitchHotspot(state.pitches,p.x,p.y):null;
+ // Q33: «GIOCA» dentro le linee del campo grande; durante la partita il pulsante è il calcio.
+ const football=state.football?.playing()?state.football:null;
+ const pitchNear=p.car<0&&!eventAction&&!shopNear&&!football?pitchHotspot(state.pitches,p.x,p.y):null;
+ const smallPitch=(state.pitches?.list||[]).find(q=>!q.partita&&q.kind==='calcetto'&&q.gate&&Math.hypot(p.x-q.gate.x,p.y-q.gate.y)<PITCH_RULES.hotspot);
+ if(smallPitch&&!football&&(!state.notice||state.notice.until<=state.clock))state.notice={text:'PARTITA NEL CAMPO GRANDE DI VIA DELLE PALME',until:state.clock+1};
+ const kickLabel=football?(football.hasBall()?'TIRO':'CONTRASTO'):null;
  // Q34: la partenza vicina è calcolata nel tick (stepStreetRace).
  const raceNear=p.car>=0?state.raceNear:null;
  const garageNear=garagePrompt(p,eventAction||shopNear||pitchNear);
- $('action').textContent=eventAction||(shopDoor?'ENTRA':shopNear?'COMPRA':pitchNear?'GIOCA A CALCETTO':garageNear?garageNear:bank?'ENTRA IN BANCA':raceNear?'GARA':repair?'RIPARA · '+repair+' €':p.car>=0?liftAction||'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ $('action').textContent=eventAction||(shopDoor?'ENTRA':shopNear?'COMPRA':pitchNear?'GIOCA':garageNear?garageNear:bank?'ENTRA IN BANCA':raceNear?'GARA':repair?'RIPARA · '+repair+' €':p.car>=0?liftAction||'SCENDI':enterable?.bike?'SALTA IN SELLA':'ENTRA IN AUTO');
+ if(kickLabel)$('action').textContent=kickLabel;
+ document.querySelector?.('.controls')?.classList.toggle('football',!!football);
  // Q15: on foot with nothing in reach the touch button is shown dimmed (it used to invite to get into a
  // car that was not there; the tap then only said to get closer to a vehicle).
  const idle=p.car<0&&!eventAction&&!shopNear&&!pitchNear&&!garageNear&&!shopDoor&&!bank&&!enterable;
- $('action').classList.toggle('idle',idle);$('action').setAttribute('aria-disabled',idle?'true':'false');
- boardPrompt(p.car>=0?garageNear||(repair?'RIPARA · '+repair+' € · OFFICINA DI GIOCO':liftAction||''):eventAction||(shopDoor?'ENTRA · '+shopDoor.shop.name.toUpperCase():shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):pitchNear?'GIOCA A CALCETTO':garageNear?garageNear:bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
+ $('action').classList.toggle('idle',idle&&!football);$('action').setAttribute('aria-disabled',idle&&!football?'true':'false');
+ boardPrompt(p.car>=0?garageNear||(repair?'RIPARA · '+repair+' € · OFFICINA DI GIOCO':liftAction||''):eventAction||(shopDoor?'ENTRA · '+shopDoor.shop.name.toUpperCase():shopNear?(shopNear.vendor?'COMPRA · '+shopNear.name.toUpperCase():'COMPRA'):pitchNear?'GIOCA':garageNear?garageNear:bank?'ENTRA IN BANCA':enterable?(enterable.bike?'SALTA IN SELLA':'ENTRA IN AUTO'):''));
  if(raceNear)boardPrompt('GARA');
+ if(football)boardPrompt(football.prompt());
  $('sprint').textContent='CORRI';
  $('sprint').setAttribute('aria-label','Corri');
  const axis=moveAxes(),moving=Math.hypot(axis.x,axis.y)>.08;
@@ -2259,7 +2288,10 @@ function draw(dt=0){
  state.cars.forEach((v,i)=>{if(v.x>=x0&&v.x<=x1&&v.y>=y0&&v.y<=y1){if(v.tuning?.neon)drawNeonUnderglow(c,v,(state.light?.darkness||0)/NIGHT_DARKNESS,state.clock);{drawCar(v.x,v.y,v.a,v.type,i===p.car,v.model,v);if(v.turnSignal)drawBlinker(v.x,v.y,v.a,v);
   // Q20: auto in panne in attesa del carro attrezzi: quattro frecce e triangolo.
   if(v.broken&&i!==p.car){drawBlinker(v.x,v.y,v.a,v);drawWarningTriangle(c,v,vehicleShape(v));}}}});
+ // Q33: i calciatori NPC (sprite dei pedoni con la maglia) sotto il protagonista, la palla sopra.
+ if(state.football)state.football.drawPeople(c,state.clock,[x0,y0,x1,y1]);
  drawPlayer();
+ if(state.football)state.football.drawBall(c,state.clock,p.car<0?p:null);
  // Q42: ombrelloni del mercato sopra persone e veicoli; sfumano col giocatore sotto (R01, come i tetti).
  if(state.market){
   const pc=p.car>=0?state.cars[p.car]:null;
@@ -2389,7 +2421,7 @@ function drawMini(){
 function updateCityAudio(){
  if(!cityAudio.started||!state.ready)return;
  const p=state.player,car=p.car>=0?state.cars[p.car]:null;
- const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen||!!state.garageOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen()||isFootballOpen();
+ const paused=state.mapOpen||!$('dialog').hidden||!$('pause-menu').hidden||!!state.shopOpen||!!state.garageOpen||isSlotOpen()||isPokerOpen()||isGorizianaOpen()||isPoolOpen();
  const traffic=[...state.traffic.filter(v=>v.body==='car'),...(state.commuters||[]).filter(c=>c.bike.rider).map(c=>c.bike)];
  cityAudio.update({paused,interior:!!state.bankInterior||!!state.shopInterior,radioLive:radioStatus==='live',
   player:{x:p.x,y:p.y,inVehicle:!!car,vehicleType:car&&isMotorcycle(car)?'motorcycle':'car',model:car?.model||'',speed:car?car.speed:0,throttle:pressed.up||pressed.accelerate?1:0},
@@ -2472,9 +2504,8 @@ function soundLabel(){
 }
 function frame(now){
  const dt=state.last?Math.min(.05,(now-state.last)/1000):0;state.last=now;
- // Q33: during a calcetto match the city is paused and hidden under the full-screen scene.
- if(isFootballOpen()){updateCityAudio();requestAnimationFrame(frame);return;}
- tick(dt);draw(dt);drawMini();updateCityAudio();updateDrive(dt);requestAnimationFrame(frame);
+ tick(dt);draw(dt);drawMini();updateCityAudio();updateDrive(dt);
+ updateFootballHud();requestAnimationFrame(frame);
 }
 async function load(){
  if(state.loading)return;
@@ -2544,6 +2575,12 @@ function bind(){
   if(dir){e.preventDefault();pressed[dir]=true;}
   if(e.key==='Shift')pressed.run=true;
   if(e.code==='Space'){e.preventDefault();pressed.handbrake=true;}
+  // Q33: in campo E/SPAZIO = calcio (tenuto = più forte), X o SHIFT con la palla = passaggio.
+  if(state.football?.playing()&&pause.hidden&&!state.shopOpen&&!state.garageOpen&&!state.riderOpen){
+   if(e.key==='Escape'&&!e.repeat){e.preventDefault();abandonFootball();return;}
+   if((e.key.toLowerCase()==='e'||e.code==='Space')&&!e.repeat){e.preventDefault();state.football.press('kick');return;}
+   if((e.key.toLowerCase()==='x'||e.key==='Shift')&&!e.repeat){e.preventDefault();state.football.press('pass');return;}
+  }
   if(state.riderOpen){
    const offer=Number(e.key)-1;
    if(offer>=0&&offer<9&&!e.repeat&&!state.rider?.job){e.preventDefault();acceptRider(offer);return;}
@@ -2581,6 +2618,7 @@ function bind(){
   if(dir){e.preventDefault();pressed[dir]=false;}
   if(e.key==='Shift')pressed.run=false;
   if(e.code==='Space')pressed.handbrake=false;
+  if((e.key.toLowerCase()==='e'||e.code==='Space')&&state.football)state.football.release('kick');
  });
  const steeringPad=$('steering-wheel');
  const wheelPointer=e=>{
@@ -2688,6 +2726,13 @@ function bind(){
   for(const name of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(name,()=>{pressed[key]=false;btn.classList.remove('pressed');});
  });
  $('action').addEventListener('click',toggleVehicle);
+ // Q33: durante la partita il pulsante azione è il calcio (tenuto = più forte) e PASSA il passaggio.
+ $('action').addEventListener('pointerdown',e=>{if(state.football?.playing()){e.preventDefault();state.football.press('kick');}});
+ for(const name of ['pointerup','pointercancel','pointerleave'])$('action').addEventListener(name,()=>{state.football?.release('kick');});
+ $('football-shoot').addEventListener('pointerdown',e=>{e.preventDefault();state.football?.press('kick');});
+ for(const name of ['pointerup','pointercancel','pointerleave'])$('football-shoot').addEventListener(name,()=>state.football?.release('kick'));
+ $('football-pass').addEventListener('pointerdown',e=>{e.preventDefault();state.football?.press('pass');});
+ $('football-exit').addEventListener('click',abandonFootball);
  $('radio-prev').addEventListener('click',()=>carRadio.previous());
  $('radio-next').addEventListener('click',()=>carRadio.next());
  $('radio-toggle').addEventListener('click',()=>carRadio.toggle());
