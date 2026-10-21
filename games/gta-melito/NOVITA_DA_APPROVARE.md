@@ -64,3 +64,10 @@ Atlante `assets/vehicles/grande-punto-ypsilon3-16-rgba.png` (160×240, 16 celle 
 
 Immagini `assets/ui/loading-1280x720.png` e `assets/ui/loading-844x390.png` (PNG RGB, sotto 400 KB), NOTE di CODEX-GH in `assets/ui/sources/loading-NOTE.md`. La barra di caricamento è decorativa (solo CSS), non misura un avanzamento vero.
 
+
+### Lotto 5 grafica — Fiat Tipo 2016 e Fiat 500L 2012 (2026-10-21, Claude + CODEX-GH) — grafica PROVVISORIA, da approvare da Simone
+| id | Elemento | Lavoro / PR | Dove guardare (esempio) | Ora / parametri | Cosa giudicare |
+|---|---|---|---|---|---|
+| `lotto5-auto` | Fiat Tipo hatchback (2016) e Fiat 500L (2012): 8 tinte ciascuna nel traffico e nei parcheggi | Lotto 5 · CODEX-GH / ramo `lotto5` | Via Roma, in mezzo alla strada (VAI A VEDERE porta lì, le auto passano davanti) | giorno | sagome dall'alto (Tipo più lunga e bassa, cofano esteso, fanali posteriori orizzontali; 500L corta e tozza, tetto lungo, vetri grandi, fari tondi), tinte, misure accanto alle altre auto (Tipo un po' più lunga, 500L un po' più larga della Punto) e somiglianza con lo stile degli altri atlanti; tinte interpretate, non codici vernice |
+
+Atlante `assets/vehicles/tipo-500l-16-rgba.png` (160×240, 16 celle 40×60) disegnato da codice da CODEX-GH (`assets/vehicles/sources/tipo-500l-16-genera.py`, note con le fonti delle tinte in `tipo-500l-16-NOTE.md`). Collegato nel gioco da Claude; se Simone boccia le sagome, il generatore si corregge e si rigenera l'atlante; se boccia le misure, si ritocca `MODEL_DRAW_SIZE` in `car-sprites.mjs`.

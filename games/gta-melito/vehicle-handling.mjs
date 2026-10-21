@@ -37,6 +37,10 @@ const CAR_MODELS={
  // Lotto 1: Grande Punto drives like the Punto 188, Ypsilon III like the Ypsilon 2003.
  'grande-punto-2005':{accel:14,top:41,brake:50},
  'ypsilon-2011':{accel:13.2,top:40,grip:7.4},
+ // Lotto 5: Tipo, a compact saloon-sized hatchback, slightly faster and steadier than the Punto 188;
+ // 500L, tall and heavy mini-MPV, slower and softer in the corners.
+ 'tipo-hatchback-2016':{accel:14.4,top:43,brake:52,grip:7.6},
+ 'fiat-500l-2012':{accel:12,top:38,brake:46,steer:2.25,grip:6.8},
  'seicento-1998':{accel:10.4,top:35,steer:2.6,brake:44},
  'fiat-500-2007':{accel:11.5,top:37,steer:2.55},
  'fiat-uno-1983':{accel:9.6,top:36,brake:40,grip:6.2,launch:.38},

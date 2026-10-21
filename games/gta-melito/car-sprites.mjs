@@ -1,6 +1,7 @@
 /* GTA Melito — compact top-down PNG vehicle skins. Panda PNGs unchanged.
  * Punto 188 and Ypsilon 2003: 16 recolored cars, clean transparent 4x4 PNG atlas, 40x60/cell.
  * Lotto 1: Grande Punto 2005 and Ypsilon III 2011, same 4x4 40x60 grid (atlas by CODEX-GH).
+ * Lotto 5: Tipo hatchback 2016 and 500L 2012, same grid (atlas by CODEX-GH).
  * Body colors are illustrative, not all factory paint codes verified.
  */
 export const CAR_SPRITES=Object.freeze({
@@ -26,6 +27,9 @@ export const EXTRA_CAR_ATLASES=Object.freeze({
  // Lotto 1 (CODEX-GH, 2026-10-21): Fiat Grande Punto 2005 and Lancia Ypsilon III 2011, RGBA atlas drawn by
  // code (sources/grande-punto-ypsilon3-16-genera.py). PROVISIONAL art, to be approved by Simone.
  '@grande-punto-ypsilon3-atlas':'./assets/vehicles/grande-punto-ypsilon3-16-rgba.png',
+ // Lotto 5 (CODEX-GH, 2026-10-21): Fiat Tipo hatchback 2016 and Fiat 500L 2012, RGBA atlas drawn by code
+ // (sources/tipo-500l-16-genera.py, notes in tipo-500l-16-NOTE.md). PROVISIONAL art, to be approved by Simone.
+ '@tipo-500l-atlas':'./assets/vehicles/tipo-500l-16-rgba.png',
 });
 const EXTRA_MODELS=Object.freeze([
  {model:'seicento-1998',atlas:'@seicento-500-atlas',offset:0,colors:['white','red','blue','silver','black','yellow','green','champagne']},
@@ -34,6 +38,8 @@ const EXTRA_MODELS=Object.freeze([
  {model:'smart-fortwo-2007',atlas:'@uno-smart-atlas',offset:8,colors:['white','black','red','lightblue','blue','silver','yellow','green']},
  {model:'grande-punto-2005',atlas:'@grande-punto-ypsilon3-atlas',offset:0,colors:['white','red','blue','silver','graphite','black','lightblue','beige']},
  {model:'ypsilon-2011',atlas:'@grande-punto-ypsilon3-atlas',offset:8,colors:['white','red','silver','graphite','black','blue','beige','purple']},
+ {model:'tipo-hatchback-2016',atlas:'@tipo-500l-atlas',offset:0,colors:['white','silver','graphite','sand','bronze','red','blue','black']},
+ {model:'fiat-500l-2012',atlas:'@tipo-500l-atlas',offset:8,colors:['white','red','silver','graphite','black','blue','yellow','green']},
 ]);
 export const EXTRA_CAR_VARIANTS=Object.freeze(Object.fromEntries(
  EXTRA_MODELS.flatMap(({model,atlas,offset,colors})=>
@@ -101,6 +107,9 @@ const MODEL_DRAW_SIZE=Object.freeze({
  'fiat-uno-1983':[5.1,8.15],'smart-fortwo-2007':[4.7,6.45],
  // Lotto 1: same footprint as the Punto 188 / Ypsilon 2003 they stand beside.
  'grande-punto-2005':[5.45,8.75],'ypsilon-2011':[5.25,8.55],
+ // Lotto 5: a little longer (Tipo) and a little wider (500L) than the Punto 188, kept prudent so they stay in the lane
+ // (CODEX-GH proposed [5.88,9.91] and [5.84,9.41], scaled from the real sizes; the atlas bodies fill the cell more than the Punto's).
+ 'tipo-hatchback-2016':[5.5,9.2],'fiat-500l-2012':[5.55,9],
  'ape-car-azzurra':[4.1,6.25],'furgone-fritti':[5.65,8.65],
  'ape-mercato':[5.7,6.9],'furgone-ambulante':[7.9,9.3],'ape-classica':[5.7,6.9],
  // Q18: whole 52x92 cell; the van body is then ~5,7 x 9,4 and the refuse truck ~6,3 x 12,4.

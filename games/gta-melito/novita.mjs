@@ -27,6 +27,7 @@ const bayPoint=s=>{const d=(s.from+s.to)/2,nx=-s.uy,ny=s.ux;
 const vehicles=state=>[...(state?.cars||[]),...(state?.traffic||[])];
 const SERVICE_VAN=/corriere|courier/i, REFUSE_TRUCK=/nettezza|rifiut|compatt|refuse|garbage/i;
 const LOTTO1=/^(grande-punto-2005|ypsilon-2011)-/;
+const LOTTO5=/^(tipo-hatchback-2016|fiat-500l-2012)-/;
 const hasPassengers=v=>(Array.isArray(v?.passengers)&&v.passengers.length>0)||(Array.isArray(v?.occupants)&&v.occupants.length>0);
 
 /* Le voci: chi l'ha fatta, in quale PR, cosa guardare e dove (trova → punto da inquadrare).
@@ -118,7 +119,11 @@ export const NOVITA=Object.freeze([
   trova:s=>near((s?.people||[]).filter(q=>!q.indoors&&!q.profession&&q.kind>=LOTTO2_PEDESTRIAN_NPC_START_KIND),s)||roadMiddle(s,'Via Roma')},
  {id:'lotto3-banchi',nome:'Lotto 3: banchi del mercato visti dall\'alto (14 tipi) al posto dei segnaposto',lavoro:'Lotto 3 grafica',pr:'in revisione',
   cosa:'Foglio di CODEX-GH: piano di ogni banco visto dall\'alto con la merce del suo tipo (cassette di frutta, vasche del pesce, vetrina dei salumi, pile di vestiti, scarpe, pentole, flaconi, giocattoli, vasi, borse, intimo, bigiotteria, porchetta, olive), orlo di legno e ombra verso il corridoio dei clienti. Ombrelloni, venditori e clienti come prima; durante il montaggio lo sprite appare in dissolvenza. Grafica PROVVISORIA.',
-  ora:10*60+30,mercato:true,distanza:[2,8],trova:s=>near((s?.market?.stalls||[]).map(q=>({x:q.x,y:q.y})),{spawn:[1168,948]})||{x:1168,y:948}}
+  ora:10*60+30,mercato:true,distanza:[2,8],trova:s=>near((s?.market?.stalls||[]).map(q=>({x:q.x,y:q.y})),{spawn:[1168,948]})||{x:1168,y:948}},
+ {id:'lotto5-auto',nome:'Lotto 5: Fiat Tipo 2016 e Fiat 500L 2012 nel traffico',lavoro:'Lotto 5 · CODEX-GH',pr:'in revisione',
+  cosa:'Due modelli nuovi tra le auto del traffico e dei parcheggi, 8 tinte ciascuno (atlante pixel art disegnato da codice da CODEX-GH; tinte interpretate, non codici vernice). Guarda la fila di auto in Via Roma: la Tipo è più lunga e bassa, con cofano esteso e fanali posteriori orizzontali; la 500L è corta e tozza, con tetto lungo, vetri grandi e fari tondi. Grafica PROVVISORIA.',
+  disponibile:s=>vehicles(s).some(v=>LOTTO5.test(v?.model||''))||!s?.traffic,
+  trova:s=>roadMiddle(s,'Via Roma')||near(vehicles(s).filter(v=>LOTTO5.test(v?.model||'')),s)}
 ].map(Object.freeze));
 
 /* Una voce è attiva se esiste davvero nel gioco (le voci «in arrivo» solo quando il modulo c'è). */
