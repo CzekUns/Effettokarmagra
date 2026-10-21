@@ -126,15 +126,16 @@ test('lotto 2: il foglio si carica a parte e disegna la cella giusta; senza fogl
 test('lotto 2: i quattro nuovi pedoni entrano nella rotazione (kind 7–10) senza togliere gli altri né aggiungere NPC',async()=>{
  assert.equal(EXTRA_PEDESTRIAN_NPC_START_KIND,4);
  assert.equal(LOTTO2_PEDESTRIAN_NPC_START_KIND,7,'dopo i 4 originali e i 3 del secondo lotto');
- assert.equal(PEDESTRIAN_KIND_COUNT,11);
+ assert.ok(PEDESTRIAN_KIND_COUNT>=11,'almeno i kind fino al lotto 2 (dai lotti 10–12 sono 23)');
  const [art,game,road,resident,market,page,novita]=await Promise.all(['city-art.mjs','game.mjs','roads.mjs','resident-routines.mjs','market.mjs','index.html','novita.mjs']
   .map(f=>readFile(new URL('./'+f,import.meta.url),'utf8')));
- const lotto2At=art.indexOf('drawLotto2PedestrianSprite(c,x,y,angle,p.kind-LOTTO2_PEDESTRIAN_NPC_START_KIND,clock,moving,p.speed,p.seed)');
+ // Dai lotti 10–12 il lotto 2 passa dalla tabella generale dei fogli extra (kind 7 in su).
+ const lotto2At=art.indexOf('drawSheetPedestrianSprite(c,x,y,angle,p.kind,clock,moving,p.speed,p.seed)');
  const extraAt=art.indexOf('drawExtraPedestrianSprite(c,x,y,angle,p.kind-EXTRA_PEDESTRIAN_NPC_START_KIND+1');
  const firstAt=art.indexOf('drawPedestrianSprite(c,x,y,angle,p.kind,clock,moving,p.speed,p.seed)');
- assert.ok(lotto2At>0&&extraAt>lotto2At&&firstAt>extraAt,'lotto 2 provato prima del secondo lotto e del primo foglio (che restano)');
- assert.match(art,/p\.kind>=LOTTO2_PEDESTRIAN_NPC_START_KIND&&/);
- assert.ok(game.includes('loadLotto2PedestrianSprites()')&&game.includes('loadExtraPedestrianSprites()')&&game.includes('loadPedestrianSprites()'));
+ assert.ok(lotto2At>0&&extraAt>lotto2At&&firstAt>extraAt,'fogli extra provati prima del secondo lotto e del primo foglio (che restano)');
+ assert.match(art,/p\.kind>=PEDESTRIAN_SHEET_START_KIND&&/);
+ assert.ok(game.includes('loadPedestrianSheets()')&&game.includes('loadExtraPedestrianSprites()')&&game.includes('loadPedestrianSprites()'));
  assert.match(road,/kind:kind==='walk'\?i%PEDESTRIAN_KIND_COUNT:i%7/,'passanti su tutti i fogli, auto invariate');
  assert.match(resident,/kind:kindIndex%PEDESTRIAN_KIND_COUNT/,'residenti');
  assert.match(market,/kind:hash\(seed\)%PEDESTRIAN_KIND_COUNT/,'clienti e venditori del mercato');

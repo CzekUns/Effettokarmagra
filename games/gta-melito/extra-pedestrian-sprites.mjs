@@ -29,33 +29,72 @@ export function drawExtraPedestrianSprite(ctx,x,y,angle,identity=0,clock=0,movin
  return true;
 }
 
-/* Lotto 2 (CODEX-GH, 2026-10-21): third sheet, four more street NPCs whose frames are
- * adapted zone by zone from the first atlas (same poses, pivot and scale). Separate cache:
- * if this PNG is missing the people fall back to the first sheet. Grafica PROVVISORIA. */
-export const LOTTO2_PEDESTRIAN_ATLAS_PATH='./assets/people/pedoni-lotto2-4x4frames-24x40-rgba.png';
-export const LOTTO2_PEDESTRIAN_IDENTITIES=Object.freeze(['signora-anziana-borsa','ragazzo-zaino','uomo-giacca-lavoro','ragazza-cappotto-rosso']);
-export const LOTTO2_PEDESTRIAN_CELL=Object.freeze({width:24,height:40,columns:16,rows:4});
-// NPC kinds 0–3: first sheet, 4–6: second sheet (identities 1–3), 7–10: lotto 2 (identities 0–3).
-export const LOTTO2_PEDESTRIAN_NPC_START_KIND=7;
-export const PEDESTRIAN_KIND_COUNT=LOTTO2_PEDESTRIAN_NPC_START_KIND+LOTTO2_PEDESTRIAN_IDENTITIES.length;
-let lotto2=null;
-export function loadLotto2PedestrianSprites(){
- if(lotto2||typeof Image==='undefined')return;
- const picture=new Image();
- lotto2=picture;
- picture.onerror=()=>console.warn('GTA Melito: lotto 2 pedestrian atlas unavailable; using the first sheets');
- picture.src=new URL(LOTTO2_PEDESTRIAN_ATLAS_PATH,import.meta.url).href;
+/* Fogli extra dei pedoni (CODEX-GH, 2026-10-21): lotto 2, 10, 11 e 12. Ogni foglio è un atlante
+ * 384×160 (4 identità × 4 frame nelle colonne, 4 direzioni nelle righe, celle 24×40) con i frame
+ * adattati a zone dalla tavola madre (stesse pose, pivot e scala). I kind degli NPC proseguono in
+ * sequenza dopo i 4 originali e i 3 del secondo lotto: lotto 2 = 7–10, lotto 10 = 11–14,
+ * lotto 11 = 15–18, lotto 12 = 19–22. Una cache per immagine: se un PNG manca, i suoi kind
+ * ricadono sui fogli precedenti (city-art.mjs). Grafica PROVVISORIA, da approvare da Simone. */
+export const PEDESTRIAN_SHEET_CELL=Object.freeze({width:24,height:40,columns:16,rows:4});
+export const PEDESTRIAN_SHEET_SIZE=Object.freeze({width:384,height:160});
+// NPC kinds 0–3: first sheet, 4–6: second sheet (identities 1–3), from 7 on: the extra sheets below.
+export const PEDESTRIAN_SHEET_START_KIND=EXTRA_PEDESTRIAN_NPC_START_KIND+EXTRA_PEDESTRIAN_IDENTITIES.length-1;
+const SHEET_LIST=[
+ ['lotto2',['signora-anziana-borsa','ragazzo-zaino','uomo-giacca-lavoro','ragazza-cappotto-rosso']],
+ ['lotto10',['signora-anziana-cappotto-borsa','ragazzo-felpa-zaino','donna-giacca-tracolla','uomo-giacca-cravatta-valigetta']],
+ ['lotto11',['ragazza-telefono','uomo-robusto-righe','donna-vestito-corallo','sportivo-tuta']],
+ ['lotto12',['nonno-coppola-bastone','nonna-vestito-fiori','ragazzo-cuffie','ragazza-giacca-jeans']]
+];
+export const PEDESTRIAN_SHEETS=Object.freeze(SHEET_LIST.reduce((out,[id,identities])=>{
+ const previous=out[out.length-1];
+ const startKind=previous?previous.startKind+previous.identities.length:PEDESTRIAN_SHEET_START_KIND;
+ out.push(Object.freeze({id,path:'./assets/people/pedoni-'+id+'-4x4frames-24x40-rgba.png',startKind,identities:Object.freeze(identities)}));
+ return out;
+},[]));
+const LAST_SHEET=PEDESTRIAN_SHEETS[PEDESTRIAN_SHEETS.length-1];
+export const PEDESTRIAN_KIND_COUNT=LAST_SHEET.startKind+LAST_SHEET.identities.length;
+export const pedestrianSheet=id=>PEDESTRIAN_SHEETS.find(s=>s.id===id)||null;
+export const pedestrianSheetForKind=kind=>Number.isInteger(kind)?
+ PEDESTRIAN_SHEETS.find(s=>kind>=s.startKind&&kind<s.startKind+s.identities.length)||null:null;
+const sheets=new Map();
+export function loadPedestrianSheets(){
+ if(typeof Image==='undefined')return;
+ for(const sheet of PEDESTRIAN_SHEETS){
+  if(sheets.has(sheet.id))continue;
+  const picture=new Image();
+  sheets.set(sheet.id,picture);
+  picture.onerror=()=>console.warn('GTA Melito: pedestrian sheet '+sheet.id+' unavailable; using the previous sheets');
+  picture.src=new URL(sheet.path,import.meta.url).href;
+ }
 }
-export function lotto2PedestrianSpriteReady(){
- return !!(lotto2?.complete&&lotto2.naturalWidth===384&&lotto2.naturalHeight===160);
+export function pedestrianSheetReady(id){
+ const picture=sheets.get(id);
+ return !!(picture?.complete&&picture.naturalWidth===PEDESTRIAN_SHEET_SIZE.width&&picture.naturalHeight===PEDESTRIAN_SHEET_SIZE.height);
 }
-export function drawLotto2PedestrianSprite(ctx,x,y,angle,identity=0,clock=0,moving=true,speed=1,seed=0){
- if(!lotto2PedestrianSpriteReady()||!Number.isInteger(identity)||identity<0||identity>=LOTTO2_PEDESTRIAN_IDENTITIES.length)return false;
- const dir=pedestrianDirection(angle);
+/* Draws the NPC of the given kind from the extra sheets; false if the kind belongs to the first
+ * two sheets or its PNG is not ready (the caller then falls back). Same walking phase, pivot and
+ * destination size as the other sheets (BF14 PERSON_SCALE). */
+export function drawSheetPedestrianSprite(ctx,x,y,angle,kind,clock=0,moving=true,speed=1,seed=0){
+ const sheet=pedestrianSheetForKind(kind);
+ if(!sheet||!pedestrianSheetReady(sheet.id))return false;
+ const identity=kind-sheet.startKind,dir=pedestrianDirection(angle);
  const phase=((Math.floor(clock*Math.max(3,Math.abs(speed||0)*3)+seed*.013)%4)+4)%4;
  const frame=moving?phase:0;
- const width=ps(3.25),height=ps(4.7);// same destination as the other sheets (BF14 PERSON_SCALE)
- ctx.drawImage(lotto2,(identity*4+frame)*LOTTO2_PEDESTRIAN_CELL.width,dir*LOTTO2_PEDESTRIAN_CELL.height,
-  LOTTO2_PEDESTRIAN_CELL.width,LOTTO2_PEDESTRIAN_CELL.height,x-width/2,y-height+ps(.8),width,height);
+ const width=ps(3.25),height=ps(4.7);
+ ctx.drawImage(sheets.get(sheet.id),(identity*4+frame)*PEDESTRIAN_SHEET_CELL.width,dir*PEDESTRIAN_SHEET_CELL.height,
+  PEDESTRIAN_SHEET_CELL.width,PEDESTRIAN_SHEET_CELL.height,x-width/2,y-height+ps(.8),width,height);
  return true;
+}
+
+/* Lotto 2 names kept for the older callers and tests: same table, same cache. */
+const LOTTO2=pedestrianSheet('lotto2');
+export const LOTTO2_PEDESTRIAN_ATLAS_PATH=LOTTO2.path;
+export const LOTTO2_PEDESTRIAN_IDENTITIES=LOTTO2.identities;
+export const LOTTO2_PEDESTRIAN_CELL=PEDESTRIAN_SHEET_CELL;
+export const LOTTO2_PEDESTRIAN_NPC_START_KIND=LOTTO2.startKind;
+export const loadLotto2PedestrianSprites=loadPedestrianSheets;
+export const lotto2PedestrianSpriteReady=()=>pedestrianSheetReady('lotto2');
+export function drawLotto2PedestrianSprite(ctx,x,y,angle,identity=0,clock=0,moving=true,speed=1,seed=0){
+ if(!Number.isInteger(identity)||identity<0||identity>=LOTTO2.identities.length)return false;
+ return drawSheetPedestrianSprite(ctx,x,y,angle,LOTTO2.startKind+identity,clock,moving,speed,seed);
 }

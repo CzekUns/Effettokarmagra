@@ -10,7 +10,7 @@ import {drawPedestrianSprite} from './pedestrian-sprites.mjs?v=002';
 import {PERSON_SCALE} from './world-scale.mjs?v=001';
 import {drawFryerSprite} from './friggitore-sprites.mjs?v=002';
 import {drawProfessionSprite} from './profession-sprites.mjs?v=003';
-import {drawExtraPedestrianSprite,EXTRA_PEDESTRIAN_NPC_START_KIND,drawLotto2PedestrianSprite,LOTTO2_PEDESTRIAN_NPC_START_KIND} from './extra-pedestrian-sprites.mjs?v=003';
+import {drawExtraPedestrianSprite,EXTRA_PEDESTRIAN_NPC_START_KIND,drawSheetPedestrianSprite,PEDESTRIAN_SHEET_START_KIND} from './extra-pedestrian-sprites.mjs?v=004';
 import {drawRuinPool} from './municipio-landmarks.mjs?v=003';
 /* GTA Melito 0.4 — top-down pixel-inspired art, © OpenStreetMap contributors
  * Layout/footprints come from OSM. Colours, rooftop details, props and human sprites
@@ -697,9 +697,10 @@ export function drawCityPeople(c,people,graph,clock,bounds,alpha=1){
   // The itinerant cook shares NPC AI, navigation and animation with locals.
   if(p.profession&&drawProfessionSprite(c,x,y,angle,p.profession,clock,moving,p.speed,p.seed))continue;
   if((p.profession==='friggitore'||p.isFryer)&&drawFryerSprite(c,x,y,angle,clock,moving,p.speed,p.seed))continue;
-  // Lotto 2 (kinds 7–10): four more residents/passers-by; falls back to the first sheets if missing.
-  if(p.kind>=LOTTO2_PEDESTRIAN_NPC_START_KIND&&
-    drawLotto2PedestrianSprite(c,x,y,angle,p.kind-LOTTO2_PEDESTRIAN_NPC_START_KIND,clock,moving,p.speed,p.seed))continue;
+  // Extra sheets (kinds 7–22: lotti 2, 10, 11, 12 of CODEX-GH): more residents/passers-by;
+  // each sheet has its own cache and falls back to the first sheets if its PNG is missing.
+  if(p.kind>=PEDESTRIAN_SHEET_START_KIND&&
+    drawSheetPedestrianSprite(c,x,y,angle,p.kind,clock,moving,p.speed,p.seed))continue;
   if(p.kind>=EXTRA_PEDESTRIAN_NPC_START_KIND&&
     drawExtraPedestrianSprite(c,x,y,angle,p.kind-EXTRA_PEDESTRIAN_NPC_START_KIND+1,clock,moving,p.speed,p.seed))continue;
   if(drawPedestrianSprite(c,x,y,angle,p.kind,clock,moving,p.speed,p.seed))continue;
