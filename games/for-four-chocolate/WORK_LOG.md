@@ -43,3 +43,10 @@
 - **Come e dove:** in futuro mantenere `logic.mjs` e la logica stealth ma sostituire il renderer 2D a tile con una scena a profondità reale, camera elevata e obliqua, modelli low-poly/materiali/luci, campo visivo e ambientazione ceca credibile.
 - **Verifiche:** aggiornamenti documentali; **nessuna modifica al renderer**, nessuno screenshot grafico PS1, nessun test browser/deploy grafico svolto in questa sessione.
 - **Da fare:** prima una singola scena campione in gioco per approvazione visiva, poi resto del livello. Vietato continuare a produrre altri sprite retro 24×40 come base finale.
+
+## 2026-10-21 — Codex CODEX-GH2 / campione 3D PS1 per revisione
+- **Fatto:** scena WebGL separata in `sample-ps1.html`, con camera alta obliqua, due corsie di scaffali pieni, casse, segnaletica ceca, luci, Ipno con cappello/occhiali, agente POLICIE e CCTV. Movimento con tastiera e touch, pattuglia, campi visivi che si fermano agli scaffali, sospetto/allarme/cattura.
+- **Come:** rendering in `ps1-sample.mjs` con Three.js r186 vendorizzato localmente (MIT); logica di collisione e visibilità isolata in `ps1-sample-logic.mjs`, ispirata al vertical slice esistente. Il prototipo su `index.html` rimane disponibile per confronto.
+- **Verifiche:** test Node della nuova logica e del vecchio prototipo; Chromium desktop 1200×930 e viewport mobile 390×844, WebGL avviato, nessun errore JavaScript, tastiera funzionante, nessun overflow mobile. Screenshot reali in `assets/ps1-sample-desktop.png` e `assets/ps1-sample-mobile.png`.
+- **Limitazioni:** **grafica provvisoria, da approvare da Simone**. Personaggi e prodotti sono modelli geometrici di esempio, senza uso di volti fotografici; su dispositivo Android reale resta da verificare il frame rate. Bottino, secondo agente, storia e punteggio seguono solo dopo il giudizio visivo. Il catalogo resta «anteprima».
+- **Riferimento:** ramo `ffc-ps1-campione`, PR separata da sottoporre a Simone senza merge autonomo.
