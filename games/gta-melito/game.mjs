@@ -44,6 +44,7 @@ import {loadCarSprites,drawCarSprite,carDrawSize,CAR_TRAFFIC_SPRITE_IDS,CAR_TRAF
 import {DAMAGE_RULES,DAMAGE_LABEL,addDamage,damagePoints,damageLevel,damagedProfile,repairCost,payRepair,repairMessage,healOutOfView,drawVehicleDamage,placeWorkshop,nearWorkshop,drawWorkshop} from './vehicle-damage.mjs?v=001';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=002';
 import {loadExtraPedestrianSprites,loadPedestrianSheets} from './extra-pedestrian-sprites.mjs?v=006';
+import {applyLoadingScreen} from './loading-screens.mjs?v=001';
 import {loadFryerSprite} from './friggitore-sprites.mjs?v=002';
 import {loadProfessionSprites} from './profession-sprites.mjs?v=003';
 import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=007';
@@ -77,7 +78,7 @@ import {createCarRadio} from './car-radio.mjs?v=003';
 import {createRaceWorld,raceHotspot,startRace,stepRace,awardPrize,parkIdleRivals,resultsText,drawRaceWorld,drawRaceMini,drawRaceHud,RACE_DISCLAIMER} from './street-race.mjs?v=001';
 import {mountPhone} from './smartphone.mjs?v=001';
 import {createDrive,stepDrive,instructionText,drawDriveRoute,mountDriveApp,cancelDrive,ARROW} from './drive-app.mjs?v=001';
-import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=012';
+import {renderNovita,novitaTarget,findStandingPoint,minutesAtHour,loadJudgements,saveJudgements,toggleJudgement,judgementSummary,NOVITA} from './novita.mjs?v=013';
 // Lotto 15: dialoghi con volto (prototipo per la storyline, PROVVISORIO): barra in basso + riquadro del personaggio.
 import {openDialogue,isDialogueOpen,DEMO_DIALOGUE} from './dialogue.mjs?v=001';
 import {placeRoadSurfaces,roadSurfaceEffect,kerbEffect,emitSurfaceHit,onSurfaceHit,drawRoadSurfaces,drawSurfacePuddles} from './road-surfaces.mjs?v=001';
@@ -2597,7 +2598,15 @@ function bind(){
   renderNovita($('novita-list'),{state,judgements:novitaJudgements,
    onGo:entry=>{if(goToNovita(entry))closePause();},
    // Lotto 15: PROVA apre il dialogo di esempio con i sei volti (nessun aggancio alle missioni).
-   onProva:entry=>{if(entry.prova==='dialogo'){closePause();openDialogue(DEMO_DIALOGUE);}},
+   onProva:entry=>{
+    if(entry.prova==='dialogo'){closePause();openDialogue(DEMO_DIALOGUE);}
+    if(entry.prova==='caricamento'){
+     closePause();applyLoadingScreen();
+     $('loading-title').textContent='MELITO IN ARTWORK';
+     $('loading-text').textContent='Una scena diversa a ogni avvio.';
+     $('retry').hidden=true;$('loading-preview-close').hidden=false;$('loading').hidden=false;
+    }
+   },
    onJudge:(id,value)=>{novitaJudgements=toggleJudgement(novitaJudgements,id,value);saveJudgements(globalThis.localStorage,novitaJudgements);refreshNovita();}});
   const done=Object.keys(novitaJudgements).length,total=NOVITA.filter(e=>!e.futura).length;
   $('novita-count').textContent=done+' giudicate su '+total;
@@ -2702,6 +2711,7 @@ function bind(){
  }
 
  $('retry').addEventListener('click',load);
+ $('loading-preview-close').addEventListener('click',()=>{$('loading-preview-close').hidden=true;$('loading').hidden=true;});
  $('zoom-in').addEventListener('click',()=>{state.zoomBias=clamp(state.zoomBias*1.17,.62,1.35);});
  $('zoom-out').addEventListener('click',()=>{state.zoomBias=clamp(state.zoomBias/1.17,.62,1.35);});
  $('zoom-auto').addEventListener('click',()=>{state.zoomBias=1;});
@@ -2716,4 +2726,4 @@ function bind(){
  },{passive:false});
 }
 loadChurchWebp(()=>{staticTiles.clear();pendingTile=null;});
-loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSheets();loadMarketArt();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();
+applyLoadingScreen();loadMotorcycleSprites();loadExtraPedestrianSprites();loadPedestrianSheets();loadMarketArt();loadPedestrianSprites();loadFryerSprite();loadProfessionSprites();loadCarSprites();bind();requestAnimationFrame(frame);load();

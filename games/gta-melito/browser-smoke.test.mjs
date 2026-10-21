@@ -12,7 +12,7 @@ const ctx=new Proxy({},{get(o,k){return k in o?o[k]:(..._)=>{}},set(o,k,v){o[k]=
 function element(id=''){
  const listeners=new Map();
  return {
-  id,hidden:id==='dialog'||id==='fullmap'||id==='waypoint'||id==='mission-panel',textContent:'',style:{},clientWidth:630,clientHeight:470,
+  id,hidden:id==='dialog'||id==='fullmap'||id==='waypoint'||id==='mission-panel',textContent:'',style:{setProperty(k,v){this[k]=v;}},clientWidth:630,clientHeight:470,
   width:168,height:142,dataset:{},classList:{add(){},remove(){},toggle(){}},
   addEventListener(type,callback){listeners.set(type,callback);},
   fire(type,args={}){listeners.get(type)?.({preventDefault(){},pointerId:1,...args});},

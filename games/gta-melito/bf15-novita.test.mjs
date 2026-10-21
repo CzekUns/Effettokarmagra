@@ -5,7 +5,7 @@ import {NOVITA,NOVITA_STORAGE_KEY,novitaAvailable,novitaTarget,findStandingPoint
  loadJudgements,saveJudgements,toggleJudgement,judgementSummary,renderNovita} from './novita.mjs';
 
 const REQUIRED=['semafori','frecce','lavavetri','varchi','baie','recinti','guardiole','atlante','torre','piscina',
- 'mercato','ombrelloni','posteggi','ape','ambulante','satellite','corsie','pulsante','scala','transenne','corriere','nettezza','passeggeri','lotto2-pedoni','lotto3-banchi','lotto10-12-pedoni','lotto13-14-pedoni','lotto17-20-pedoni','dialogo-volti'];
+ 'mercato','ombrelloni','posteggi','ape','ambulante','satellite','corsie','pulsante','scala','transenne','corriere','nettezza','passeggeri','lotto2-pedoni','lotto3-banchi','lotto10-12-pedoni','lotto13-14-pedoni','lotto17-20-pedoni','caricamento-artwork','dialogo-volti'];
 // Una mappa finta con un esempio per ogni voce, vicino alla partenza.
 const world=()=>({spawn:[100,100],
  graph:{signals:[{x:900,y:900},{x:120,y:110}]},

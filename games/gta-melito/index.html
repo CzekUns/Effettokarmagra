@@ -20,9 +20,13 @@ button{cursor:pointer}a{color:#eec97d}button:focus-visible,a:focus-visible{outli
 .coins{position:absolute;top:12px;left:12px;background:#14221fbd;padding:9px 11px;border:1px solid #8b9470;color:#f5cc83;font-size:11px;pointer-events:none;max-width:calc(100% - 200px)}
 #street{display:block;color:#f6efce;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;
- /* Lotto 4 grafica (PROVVISORIO): sfondo = render del gioco post-prodotto da CODEX-GH, con fascia scura e vignetta già nel PNG. */
- background:#111419 url('./assets/ui/loading-1280x720.png') center/cover no-repeat;image-rendering:pixelated;padding:24px 24px 5vh;gap:12px;z-index:4}
+ /* Il render del gioco è il fallback; loading-screens.mjs sceglie il file della sessione. */
+ background:#111419 url('./assets/ui/loading-1280x720.png') center/cover no-repeat;background-image:var(--loading-desktop,url('./assets/ui/loading-1280x720.png'));image-rendering:pixelated;padding:24px 24px 5vh;gap:12px;z-index:9}
 .loading[hidden]{display:none}
+.loading[data-screen]:not([data-screen="render"]){image-rendering:auto}
+.loading::before{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,transparent 48%,#0b111950 68%,#090e17e8 100%);pointer-events:none}
+.loading>*{position:relative;z-index:1}
+.loading .loading-scene-title{font-size:12px;line-height:1.2;color:#f7e6bd;text-transform:uppercase;letter-spacing:.08em;font-weight:bold}
 .loading h2{font-size:clamp(20px,4vw,38px);color:#f5ce6f;margin:0;text-shadow:0 2px 0 #000,0 0 14px #000,0 0 4px #000c}
 .loading p{max-width:550px;line-height:1.7;color:#e4e8dc;font-size:13px;margin:0;text-shadow:0 1px 0 #000,0 0 8px #000,0 0 3px #000c}
 .loading-bar{width:min(420px,72%);height:10px;border:2px solid #fff0b4;background:#1a1d22e6;box-shadow:2px 3px #000c;overflow:hidden;flex:none}
@@ -30,7 +34,8 @@ button{cursor:pointer}a{color:#eec97d}button:focus-visible,a:focus-visible{outli
 .loading[hidden] .loading-bar::before{animation:none}
 @keyframes loading-sweep{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
 @media(max-width:680px),(max-height:480px){
- .loading{background-image:url('./assets/ui/loading-844x390.png');gap:4px;padding:8px 10px 3vh}
+ .loading{background-image:url('./assets/ui/loading-844x390.png');background-image:var(--loading-mobile,url('./assets/ui/loading-844x390.png'));gap:4px;padding:8px 10px 3vh}
+ .loading .loading-scene-title{font-size:10px;letter-spacing:.03em}
  .loading h2{font-size:18px}.loading p{font-size:11px;line-height:1.2;max-width:min(550px,86vw)}
  .loading-bar{height:8px;width:min(320px,60%)}}
 .loading button,.control-action{background:#ecd081;color:#25332b;font-weight:1000;border:2px solid #fff0b4;padding:12px 20px;box-shadow:2px 3px #6e613c}
@@ -538,7 +543,7 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
   <canvas id="bigmap" width="640" height="580" aria-label="Mappa completa della città con obiettivi"></canvas>
   <button id="map-close">CHIUDI MAPPA · M</button>
  </section>
- <section class="loading" id="loading"><h2 id="loading-title">CARICO MELITO…</h2><p id="loading-text">Preparo strade ed edifici reali da OpenStreetMap.</p><div class="loading-bar" aria-hidden="true"></div><button id="retry" hidden>RIPROVA ↻</button></section>
+ <section class="loading" id="loading"><p class="loading-scene-title" id="loading-scene-title"></p><h2 id="loading-title">CARICO MELITO…</h2><p id="loading-text">Preparo strade ed edifici reali da OpenStreetMap.</p><div class="loading-bar" aria-hidden="true"></div><button id="retry" hidden>RIPROVA ↻</button><button id="loading-preview-close" hidden>TORNA AL GIOCO</button></section>
  <div class="pause-menu" id="pause-menu" hidden><div class="pause-card"><div class="pause-head"><h2>PAUSA · MELITO</h2><button id="pause-close" class="pause-close">RIPRENDI</button></div>
  <p class="pause-info">Stato · zoom · mappa · missioni · controlli secondari</p>
  <!-- BF11: on PC the page shows only the game board; everything that used to sit around it lives here, in sections. -->
@@ -581,4 +586,4 @@ body{background:radial-gradient(ellipse at 50% -18%,#304337 0,#17231e 48%,#10171
  <div class="rotate-screen" id="rotate-screen" hidden><div class="rotate-card"><span class="rotate-icon" aria-hidden="true">▰</span><h2>RUOTA LO SCHERMO</h2><p>GTA Melito si gioca in orizzontale. Ruota il telefono per continuare.</p></div></div>
 </div>
 <div class="controls" aria-label="Comandi"><div class="touch-actions" aria-label="Azioni"><button class="control-action" id="action">ENTRA IN VEICOLO</button><button id="sprint" aria-label="Corri a piedi">CORRI</button><div class="pedals" aria-label="Pedali di guida"><button id="brake" aria-label="Tieni premuto per frenare">FRENO</button><button id="accelerator" aria-label="Tieni premuto per accelerare">ACCELERA</button><button id="reverse" aria-label="Tieni premuto per andare in retromarcia">RETRO</button></div></div><div class="dpad" aria-hidden="true"></div><div class="buttons"><button id="map-toggle" class="mini" aria-label="Apri la mappa completa">MAPPA</button><button class="mini" id="zoom-auto" aria-label="Ripristina zoom automatico">AUTO</button><button class="mini" id="zoom-in" aria-label="Regola zoom avanti">＋</button><button class="mini" id="zoom-out" aria-label="Zoom indietro">－</button><button class="mini" id="reset" aria-label="Torna al punto di partenza">⌂</button></div></div>
-</main><script type="module" src="./game.mjs?v=210"></script></body></html>
+</main><script type="module" src="./game.mjs?v=211"></script></body></html>

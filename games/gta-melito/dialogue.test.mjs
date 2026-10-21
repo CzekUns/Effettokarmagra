@@ -128,8 +128,8 @@ test('lotto 15: collegamento nel gioco, HTML con gli id, registri e versioni ugu
  assert.match(game,/if\(isDialogueOpen\(\)\)\{for\(const key of Object\.keys\(pressed\)\)pressed\[key\]=false;stick\.x=0;stick\.y=0;\}/,'movimento fermo');
  assert.ok(!/isDialogueOpen\(\)\)\{[^}]*return;\s*\}\s*\n\s*\/\/ Q02/.test(game),'il dialogo non ferma il tick (l’orologio NPC va avanti)');
  assert.match(game,/if\(isDialogueOpen\(\)&&\$\('pause-menu'\)\.hidden\)return;/,'tasti di gioco fermi mentre la barra è aperta');
- assert.match(game,/onProva:entry=>\{if\(entry\.prova==='dialogo'\)\{closePause\(\);openDialogue\(DEMO_DIALOGUE\);\}\}/);
- assert.ok(!/openDialogue\(/.test(game.replace(/onProva:entry=>\{if\(entry\.prova==='dialogo'\)\{closePause\(\);openDialogue\(DEMO_DIALOGUE\);\}\}/,'')),'nessun aggancio alle missioni');
+ assert.match(game,/if\(entry\.prova==='dialogo'\)\{closePause\(\);openDialogue\(DEMO_DIALOGUE\);\}/);
+ assert.ok(!/openDialogue\(/.test(game.replace(/if\(entry\.prova==='dialogo'\)\{closePause\(\);openDialogue\(DEMO_DIALOGUE\);\}/,'')),'nessun aggancio alle missioni');
  for(const id of ['dialogue','dialogue-portrait','dialogue-name','dialogue-text','dialogue-next','dialogue-counter'])assert.match(html,new RegExp('id="'+id+'"'),'id '+id);
  assert.match(html,/<section class="dialogue" id="dialogue" hidden/,'nascosta per default');
  assert.match(html,/\.dialogue-portrait img\{[^}]*image-rendering:auto/,'il volto è un’illustrazione, non pixel art');

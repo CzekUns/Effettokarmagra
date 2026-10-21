@@ -813,3 +813,8 @@ Secondo screenshot e correzione dell'utente, **mantenere la torre molto grande e
 ### 2026-10-21 — Lotti 17–20: 16 pedoni aggiunti alla popolazione (CODEX-GH) — PROVVISORIO, da approvare da Simone
 - Quattro fogli RGBA 384×160 a celle 24×40 entrano in `PEDESTRIAN_SHEETS` con kind 31–46, insieme ai pedoni precedenti. Vestiti e accessori sono adattati ai frame della tavola madre; la sedia a rotelle sostituisce i passi con quattro posizioni dei raggi, lo scolaro è più basso nella cella. Numero totale degli NPC invariato: cambia la varietà dei kind.
 - Vedi PAUSA › NOVITÀ › `lotto17-20-pedoni` › VAI A VEDERE, vicino a Via Roma; giudicare soprattutto bambino, cane e sedia a rotelle alla scala reale. Screenshot di prova in `/home/ubuntu/codex-gh-lavoro/sim-lotto17/`. Esito dei test e della prova nel WORK_LOG. **Non verificato su Android vero; approvazione di Simone ancora necessaria.**
+
+### 2026-10-21 — Schermate di caricamento a rotazione (CODEX-GH) — PROVVISORIO, da approvare da Simone
+- Sei coppie JPEG 1280×720 e 844×390 in `assets/ui/loading-art-*`, oltre ai due PNG del render del gioco già presenti. La festa patronale grande è ricompressa sotto 400 KB; nessuna scena del Municipio.
+- `loading-screens.mjs` alterna i sette sfondi senza ripetere l’ultimo; `.loading` conserva titolo, testo e barra HTML e aggiunge credito in una fascia scura sfumata in basso. La voce NOVITÀ `caricamento-artwork` offre PROVA e TORNA AL GIOCO.
+- Da giudicare: fedeltà e atmosfera di Melito, qualità dei ritagli su PC e telefono e leggibilità dei testi. Screenshot di prova in `/home/ubuntu/codex-gh-lavoro/sim-caricamento/`. Nessuna verifica su telefono vero; approvazione di Simone necessaria.

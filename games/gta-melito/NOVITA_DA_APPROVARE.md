@@ -125,3 +125,11 @@ Volti in `assets/portraits/` (PNG 256×256 dai JPG 1024×1024 di CODEX-GH; promp
 | id | Elemento | Lavoro / PR | Dove guardare | Ora / parametri | Cosa giudicare |
 |---|---|---|---|---|---|
 | `lotto17-20-pedoni` | Sedici personaggi nei fogli 17–20: postino, pizzaiolo, netturbino, prete; turista, ragazzo con skateboard, donna in tailleur, anziano col giornale; mamma col bambino, ragazza col cane, uomo in sedia a rotelle, delivery; nonna con scopa, scolaro, uomo in tuta col telefono, donna col carrello | Lotti 17–20 · CODEX-GH / ramo `lotto17`, PR da aprire da Claude | Via Roma: PAUSA › NOVITÀ › VAI A VEDERE cerca il pedone dei kind 31–46 più vicino | giorno | Stile e leggibilità dei 16 soggetti; in particolare bambino e cane nella cella 24×40, sedia a rotelle con ruote animate, scolaro più basso; pose nelle quattro direzioni e scala accanto agli altri passanti. Grafica **PROVVISORIA, da approvare da Simone**. |
+
+### Schermate di caricamento a rotazione — artwork di Melito (21 ottobre 2026, CODEX-GH) — PROVVISORIO, da approvare da Simone
+
+| id | Elemento | Lavoro / PR | Dove guardare | Ora / parametri | Cosa giudicare |
+|---|---|---|---|---|---|
+| `caricamento-artwork` | Sei artwork (mercato, campetto, villa comunale, Via Roma con pizzeria, mercato all’alba, festa patronale) più il render del gioco, alternati all’avvio | Caricamento · CODEX-GH / ramo `caricamento`, PR a cura di Claude | PAUSA › NOVITÀ › `caricamento-artwork` › PROVA; riaprire il gioco per vedere la rotazione | PC 1280×720; telefono orizzontale 844×390 | Coerenza con Melito, varietà delle scene, leggibilità di titolo e barra in basso; le artwork sono **PROVVISORIE, da approvare da Simone**. |
+
+I file sono in `assets/ui/loading-art-*`; la scena del Municipio è esclusa perché la torre raffigurata non è corretta. `loading-screens.mjs` conserva l’ultimo id nel browser e seleziona un’altra scena all’avvio successivo. `loading` resta HTML; la fascia scura è CSS.

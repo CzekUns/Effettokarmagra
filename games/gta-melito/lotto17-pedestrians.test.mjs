@@ -106,7 +106,7 @@ test('sorgenti, registri e versioni dei moduli aggiornati',async()=>{
  for(const text of [work,visual,approvare])assert.ok(/[Ll]otti 17–20/.test(text)&&text.includes('PROVVISORIO'));
  for(const id of IDS)assert.ok(modus.includes(`pedoni-${id}-4x4frames-24x40-rgba.png`));
  assert.ok(novita.includes("id:'lotto17-20-pedoni'")&&novita.includes("roadMiddle(s,'Via Roma')"));
- assert.match(game,/extra-pedestrian-sprites\.mjs\?v=006/);assert.match(game,/novita\.mjs\?v=012/);assert.match(html,/game\.mjs\?v=210/);
+ assert.match(game,/extra-pedestrian-sprites\.mjs\?v=006/);assert.match(game,/novita\.mjs\?v=013/);assert.match(html,/game\.mjs\?v=211/);
  const names=(await readdir(new URL('./',import.meta.url))).filter(f=>(f.endsWith('.mjs')&&!f.endsWith('.test.mjs'))||f==='index.html');
  const sources=await Promise.all(names.map(read));
  for(const mod of ['extra-pedestrian-sprites','city-art','roads','resident-routines','market','novita','game']){
