@@ -95,7 +95,7 @@ test('tutti i generatori e i percorsi sono collegati a rotazione, NOVITÀ e cach
  ].map(name=>readFile(new URL(name,import.meta.url),'utf8')));
  assert.match(game,/extra-pedestrian-sprites\.mjs\?v=007/);
  assert.match(game,/novita\.mjs\?v=018/);
- assert.match(html,/game\.mjs\?v=216/);
+ assert.match(html,/game\.mjs\?v=217/);
  assert.match(roads,/kind:kind==='walk'\?i%PEDESTRIAN_KIND_COUNT:i%7/);
  assert.match(residents,/kind:kindIndex%PEDESTRIAN_KIND_COUNT/);
  assert.match(market,/kind:hash\(seed\)%PEDESTRIAN_KIND_COUNT/);

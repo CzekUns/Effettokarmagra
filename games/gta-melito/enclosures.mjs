@@ -7,7 +7,7 @@
  * Gates: pedestrians always pass. Vehicle gates of PRIVATE compounds have a barrier that is down at
  * night (22–6) for the player; it rises for NPC vehicles (residents with a remote) and stays up
  * while one is close. A guard (placeholder: vigile sprite) stands at the booth of the main gate. */
-import {drawProfessionSprite} from './profession-sprites.mjs?v=002';
+import {drawProfessionSprite} from './profession-sprites.mjs?v=003';
 
 export const ENCLOSURE_RULES=Object.freeze({
  margin:1,           // beyond the painted pavement (SIDEWALK_OUTER) before the wall starts

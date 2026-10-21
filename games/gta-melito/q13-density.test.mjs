@@ -1,8 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=161';
+import {buildRoadGraph,createAgents,stepAgents,lanePosition} from './roads.mjs?v=165';
 import {makeCollisionIndex} from './traffic-collision.mjs?v=131';
-import {createDensity,stepDensity,prepareWalkWeights,zoneCapacity,timeOfDayFactor,DENSITY_RULES} from './npc-density.mjs?v=005';
+import {createDensity,stepDensity,prepareWalkWeights,zoneCapacity,timeOfDayFactor,DENSITY_RULES} from './npc-density.mjs?v=007';
 
 // Rete di prova: un "centro" fitto (griglia 60 m) e una periferia rada (un'unica via lunga).
 const roads=[];let id=1;

@@ -71,7 +71,7 @@ import {resolveShopEntrances,nearestShopEntrance,drawShopEntrance,enterShop,step
 import {WHEEL_MAX_ANGLE,pointerWheelAngle,turnSteeringWheel,steeringInput,returnSteeringWheel} from './steering-wheel.mjs?v=001';
 import {SIDEWALK_DRIVE,SIDEWALK_OUTER} from './sidewalk.mjs?v=099';
 import {placeBuildings} from './building-placement.mjs?v=123';
-import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=002';
+import {prepareEnclosures,enclosureWalkBlocked,enclosureVehicleContacts,markGlassBuildings,drawEnclosureWalls,drawEnclosureGates} from './enclosures.mjs?v=003';
 import {preparePitches,infillOnPitch,pitchWalkBlocked,pitchVehicleContacts,pitchHotspot,drawPitches,PITCH_RULES} from './football-pitches.mjs?v=001';
 import {GARAGES,nearestGarage,canStoreVehicle,depositVehicle,takeVehicle,vehicleFromEntry,chooseExitSpot,garageMessage,vehicleLabel,ownedEntry,ownedCount,garageById,GARAGE_SLOTS,drawGarage} from './garages.mjs?v=001';
 import {paintOptions,paintName,PERF_LEVELS,perfPrice,PAINT_PRICE,NEON_PRICE,NEON_COLORS,tunedProfile,buyTuning,tuningMessage,drawNeonUnderglow,neonNightGlows} from './tuning.mjs?v=001';
