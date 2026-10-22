@@ -7,8 +7,14 @@ export const COVER = Object.freeze([
   Object.freeze({ minX: -5.6, maxX: -4.6, minZ: -4.9, maxZ: 2.6 }),
   Object.freeze({ minX: -4.7, maxX: 4.35, minZ: -5.1, maxZ: -4.45 })
 ]);
-export const PICKUP = Object.freeze({ x: -.12, z: .4, reach: .88 });
+export const PICKUPS = Object.freeze([
+  Object.freeze({ id: 'cacao', x: -.12, z: .4, reach: .88, zone: 'west', shelfX: -.49 }),
+  Object.freeze({ id: 'nocciola', x: -2.17, z: -1.05, reach: .88, zone: 'west', shelfX: -1.81 }),
+  Object.freeze({ id: 'latte', x: 2.04, z: -.75, reach: .88, zone: 'east', shelfX: 2.41 }),
+  Object.freeze({ id: 'fondente', x: 2.77, z: 3.28, reach: .88, zone: 'east', shelfX: 3.16 })
+]);
 export const EXIT = Object.freeze({ x: 5.05, z: -3.68, reach: .8 });
+export const TAKE_SECONDS = 1.15;
 const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
 const deltaAngle = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
 
@@ -39,14 +45,24 @@ export function canSee(eye, point) {
   if (Math.abs(deltaAngle(angle, eye.angle)) > eye.halfAngle) return false;
   return rayDistance(eye.x, eye.z, angle, length) >= length - .02;
 }
+export function nearestPickup(s) {
+  return PICKUPS.filter(p => !s.collected.includes(p.id))
+    .map(p => ({ ...p, distance: Math.hypot(s.player.x - p.x, s.player.z - p.z) }))
+    .filter(p => p.distance <= p.reach)
+    .sort((a, b) => a.distance - b.distance)[0] || null;
+}
 export function initialScene() {
+  const guards = [
+    { x: -3.25, z: 2.1, angle: -Math.PI / 2, halfAngle: .52, range: 4.25, dir: -1, minZ: -2.1, maxZ: 2.1, zone: 'west', baseSpeed: .88 },
+    { x: 1.23, z: -2.5, angle: Math.PI / 2, halfAngle: .48, range: 3.3, dir: 1, minZ: -2.5, maxZ: 2.1, zone: 'east', baseSpeed: .74 }
+  ];
   return {
-    phase: 'playing', time: 0, message: 'Raggiungi lo scaffale di cioccolata senza farti vedere mentre prendi.',
+    phase: 'playing', time: 0, message: 'Prendi quattro cioccolate dagli scaffali. Puoi essere visto mentre cammini, non mentre prelevi.',
     player: { x: .25, z: 3.85, facing: -Math.PI / 2, stride: 0 },
-    guard: { x: -3.25, z: 2.1, angle: -Math.PI / 2, halfAngle: .52, range: 4.25, dir: -1 },
+    guards,
     camera: { x: 4.5, z: -4.25, angle: 2.25, halfAngle: .34, range: 7 },
-    visible: false, taking: false, takeTime: 0, chocolate: 0, alert: 0, lastVisible: false,
-    increasedWatch: false, notificationTime: 0
+    visible: false, taking: false, takeTime: 0, takeId: null, collected: [], chocolate: 0, alert: 0,
+    watchZones: { west: 0, east: 0 }, notificationTime: 0
   };
 }
 export function updateScene(s, input, delta) {
@@ -54,7 +70,7 @@ export function updateScene(s, input, delta) {
   const dt = clamp(Number.isFinite(delta) ? delta : 0, 0, .05);
   s.time += dt;
   const m = Math.hypot(input.x || 0, input.z || 0);
-  if (m > .001) {
+  if (m > .001 && !s.taking) {
     const speed = input.crouch ? 1.45 : 2.7;
     const dx = (input.x / Math.max(1, m)) * speed * dt;
     const dz = (input.z / Math.max(1, m)) * speed * dt;
@@ -63,35 +79,42 @@ export function updateScene(s, input, delta) {
     s.player.facing = Math.atan2(dz, dx);
     s.player.stride += dt * (input.crouch ? 4 : 7);
   }
-  s.guard.z += s.guard.dir * (s.increasedWatch ? 1.32 : .88) * dt;
-  if (s.guard.z > 2.1) { s.guard.z = 2.1; s.guard.dir = -1; }
-  if (s.guard.z < -2.1) { s.guard.z = -2.1; s.guard.dir = 1; }
-  s.guard.angle = s.guard.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
-  s.camera.angle = 2.2 + Math.sin(s.time * (s.increasedWatch ? 1.35 : .7)) * .57;
-  s.visible = canSee(s.guard, s.player) || canSee(s.camera, s.player);
+  for (const guard of s.guards) {
+    const watch = s.watchZones[guard.zone];
+    guard.z += guard.dir * (guard.baseSpeed + watch * .28) * dt;
+    if (guard.z > guard.maxZ) { guard.z = guard.maxZ; guard.dir = -1; }
+    if (guard.z < guard.minZ) { guard.z = guard.minZ; guard.dir = 1; }
+    guard.angle = guard.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+    guard.range = (guard.zone === 'west' ? 4.25 : 3.3) + watch * .32;
+  }
+  s.camera.angle = 2.2 + Math.sin(s.time * (.7 + s.watchZones.east * .25)) * .57;
+  s.visible = s.guards.some(guard => canSee(guard, s.player)) || canSee(s.camera, s.player);
   s.alert = clamp(s.alert + (s.visible && m > .05 && !input.crouch ? 6 : -8) * dt, 0, 100);
   s.notificationTime = Math.max(0, s.notificationTime - dt);
-  const nearPickup = Math.hypot(s.player.x - PICKUP.x, s.player.z - PICKUP.z) <= PICKUP.reach;
-  if (input.take && !s.chocolate && nearPickup) {
+  if (s.taking && s.visible) {
+    s.phase = 'caught'; s.taking = false; s.message = 'Visto durante il prelievo. POLICIE!';
+    return s;
+  }
+  const pickup = nearestPickup(s);
+  if (input.take && pickup) {
     if (!s.taking && s.visible) {
       s.message = 'Troppo esposto: aspetta dietro lo scaffale.'; s.notificationTime = 2.5;
     } else if (!s.visible) {
+      if (s.takeId !== pickup.id) { s.takeTime = 0; s.takeId = pickup.id; }
       s.taking = true; s.takeTime += dt;
-      s.message = 'Prelievo in corso… resta nascosto.';
-      if (s.takeTime >= 1.15) {
-        s.chocolate = 1; s.taking = false; s.takeTime = 0;
-        s.increasedWatch = true;
-        s.guard.range = 5.1;
-        s.message = 'Cioccolata presa! La sorveglianza aumenta: raggiungi USCITA.';
+      s.message = `Prelievo ${s.chocolate + 1}/4 in corso… resta nascosto.`;
+      if (s.takeTime >= TAKE_SECONDS) {
+        s.collected.push(pickup.id); s.chocolate = s.collected.length;
+        s.taking = false; s.takeTime = 0; s.takeId = null;
+        s.watchZones[pickup.zone] = Math.min(2, s.watchZones[pickup.zone] + 1);
+        s.message = s.chocolate === PICKUPS.length ? 'Quattro cioccolate prese! Raggiungi VÝCHOD.'
+          : `Cioccolata ${s.chocolate}/4 presa. La zona ${pickup.zone === 'west' ? 'ovest' : 'est'} è più sorvegliata.`;
         s.notificationTime = 4;
       }
     }
-  } else if (!input.take || !nearPickup) { s.taking = false; s.takeTime = 0; }
-  if (s.taking && s.visible) {
-    s.phase = 'caught'; s.taking = false; s.message = 'Visto durante il prelievo. POLICIE!';
-  }
-  if (s.chocolate && Math.hypot(s.player.x - EXIT.x, s.player.z - EXIT.z) <= EXIT.reach) {
-    s.phase = 'escaped'; s.message = 'Fuori con la cioccolata!';
+  } else if (!input.take || !pickup) { s.taking = false; s.takeTime = 0; s.takeId = null; }
+  if (s.chocolate === PICKUPS.length && Math.hypot(s.player.x - EXIT.x, s.player.z - EXIT.z) <= EXIT.reach) {
+    s.phase = 'escaped'; s.message = 'Fuori con tutte e quattro le cioccolate!';
   }
   return s;
 }
