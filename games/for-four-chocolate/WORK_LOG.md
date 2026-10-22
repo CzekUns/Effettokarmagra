@@ -224,3 +224,9 @@
 - **Audio ufficiale:** `reference-play.html` usa il MP3 già caricato su `main`, un'unica istanza che parte da PRESS START, a volume basso nel gameplay e con fade in entrambi i finali. In ufficio la traccia si abbassa per la battuta e risale dopo; Rigioca la sfuma prima del nuovo START. Mute persistente, pausa su visibilità/focus e gestione del fallimento del file senza fermare il gioco.
 - **Allerta:** due segnali sintetizzati originali e distinti, legati alla transizione allarme e inseguimento con cooldown; il `!` esistente sopra l'agente resta leggibile durante risposta e caccia, compreso allarme da CCTV. Nessun allarme per il solo passaggio in vista.
 - **Verifiche:** 40 test Node e fallback MP3; browser Chromium desktop 1280×720 e mobile touch 844×390 con riproduzione del file, loop, tre impulsi sintetizzati per due segnali, controllo ON/OFF e preferenza locale, volumi in entrambi i finali, `!` e ritorno a START. Ripetuta la sequenza mobile completa di uscita/cattura, record/multa e due link WhatsApp distinti. Screenshot autentici in `assets/reference-play/audio-*.png`; nessun errore console o overflow. Android fisico e resa sullo speaker restano da verificare da Simone. PR dedicata impilata su #111, nessun merge autonomo.
+
+## 2026-10-22 — Manutenzione autorizzata / volume solo colonna sonora −50%
+- **Richiesta utente:** ridurre del 50% soltanto la musica, non gli effetti audio di allerta.
+- **Modifica:** `reference-audio.mjs` target gameplay da 0,13 a 0,065; finale da 0,55 a 0,275; dialogo da 0,17 a 0,085. Invariati envelope/frequenze e gain SFX, funzione mute e file MP3.
+- **Cache:** incrementati parametri versione import audio e script HTML della demo per ricaricare il codice sul browser mobile.
+- **Test:** aggiornate le aspettative dei test unitari sui volumi; esecuzione Node e ascolto reale su Android non disponibili da questa chat. La segnalazione precedente sulla riproduzione audio #113 resta indipendente e aperta.

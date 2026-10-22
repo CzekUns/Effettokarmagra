@@ -1,6 +1,6 @@
-const GAMEPLAY_VOLUME = .13;
-const FINALE_VOLUME = .55;
-const DIALOGUE_VOLUME = .17;
+const GAMEPLAY_VOLUME = .065; // Half the original soundtrack level (.13)
+const FINALE_VOLUME = .275; // Half the original soundtrack level (.55)
+const DIALOGUE_VOLUME = .085; // Half the original soundtrack level (.17)
 const CUE_COOLDOWN = 1.5;
 
 export function createAudioState(muted = false) {

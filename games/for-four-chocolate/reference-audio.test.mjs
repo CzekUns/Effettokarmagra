@@ -8,13 +8,13 @@ test('la canzone non parte prima di START; sale in entrambi i finali e si abbass
   assert.equal(state.volume,0);
   startAudio(state);
   for(let i=0;i<20;i++)advanceAudio(state,{},.2);
-  assert.ok(state.volume>.12&&state.volume<.14);
+  assert.ok(state.volume>.06&&state.volume<.07);
   for(let i=0;i<15;i++)advanceAudio(state,{phase:'escaped',finaleStep:'street'},.2);
-  assert.ok(state.volume>.54);
+  assert.ok(state.volume>.27);
   for(let i=0;i<20;i++)advanceAudio(state,{phase:'caught',finaleStep:'office'},.2);
-  assert.ok(state.volume<.18);
+  assert.ok(state.volume<.09);
   for(let i=0;i<20;i++)advanceAudio(state,{phase:'caught',finaleStep:'escalator'},.2);
-  assert.ok(state.volume>.54);
+  assert.ok(state.volume>.27);
   stopAudio(state);
   for(let i=0;i<15;i++)advanceAudio(state,{},.2);
   assert.ok(state.volume<.002);
