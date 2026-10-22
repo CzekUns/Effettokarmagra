@@ -5,7 +5,7 @@ import { spriteView, animationPose } from './reference-sprites.mjs';
 import { createFinale, advanceFinale, nextFinaleStep, skipFinale, finaleSubtitle } from './reference-finale-logic.mjs?v=7';
 import { createFinaleScene } from './reference-finale-scene.mjs?v=8';
 import { buildWhatsAppShareUrl } from './reference-share.mjs?v=7';
-import { createAudioController } from './reference-audio.mjs?v=1';
+import { createAudioController } from './reference-audio.mjs?v=2';
 
 const host = document.querySelector('#world');
 const game=document.querySelector('.game');
