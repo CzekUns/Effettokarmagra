@@ -3,11 +3,13 @@ import { initialScene, updateScene, rayDistance, nearestPickup, shelfBlocksCamer
 import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, centerCamera, updateCameraRig } from './reference-camera.mjs?v=6';
 import { spriteView, animationPose } from './reference-sprites.mjs';
 import { createFinale, advanceFinale, nextFinaleStep, skipFinale, finaleSubtitle } from './reference-finale-logic.mjs?v=7';
-import { createFinaleScene } from './reference-finale-scene.mjs?v=7';
+import { createFinaleScene } from './reference-finale-scene.mjs?v=8';
 import { buildWhatsAppShareUrl } from './reference-share.mjs?v=7';
 
 const host = document.querySelector('#world');
 const game=document.querySelector('.game');
+const startScreen=document.querySelector('#start-screen'),startAction=document.querySelector('#start-action');
+let started=false;
 const ui = {
   loot: document.querySelector('#loot'), score: document.querySelector('#score'), best: document.querySelector('#best'),
   mission: document.querySelector('#mission'), watch: document.querySelector('#watch'),
@@ -66,7 +68,7 @@ const animationNames = [
 const animationTextures = Object.fromEntries(await Promise.all(animationNames.map(async name =>
   [name, await load(`./assets/reference-play/${name}.webp`)])));
 const [capelloneTexture,capelloneGroupTexture,facadeTexture,cobbleTexture,...crowdTextures]=await Promise.all([
-  ...['capellone-finale','capellone-group','praha-facade','praha-cobblestone',
+  ...['capellone-finale','capellone-group','praha-day-facade','praha-day-cobblestone',
     'friend-left','friend-red','friend-tan','friend-green'].map(name=>load(`./assets/reference-play/${name}.webp`))]);
 floorTexture.wrapS = THREE.RepeatWrapping; floorTexture.wrapT = THREE.RepeatWrapping;
 floorTexture.repeat.set(4, 4);
@@ -299,7 +301,8 @@ function figure(texture, height) {
   return {group,image,shadow};
 }
 const player=figure(ipnoTexture,1.92), guards=[], customer=figure(customerTexture,1.8);
-const finaleVisual=createFinaleScene({ipnoTexture,guardTexture,capelloneTexture,capelloneGroupTexture,
+const finaleVisual=createFinaleScene({ipnoTexture,ipnoBackTexture,guardTexture,guardBackTexture,
+  capelloneTexture,capelloneGroupTexture,
   facadeTexture,cobbleTexture,crowdTextures});
 let finale=null,finalResult=null;
 function orientFigure(actor, worldX, worldZ, stride, moving = false) {
@@ -360,17 +363,17 @@ function moveJoystick(event){
   joystickAxis.z=length<radius*.12?0:dz*scale/radius;
   thumb.style.transform=`translate(calc(-50% + ${joystickAxis.x*radius}px),calc(-50% + ${joystickAxis.z*radius}px))`;
 }
-joystick.addEventListener('pointerdown',event=>{if(joystickPointer!==null)return;joystickPointer=event.pointerId;
+joystick.addEventListener('pointerdown',event=>{if(!started||joystickPointer!==null)return;joystickPointer=event.pointerId;
   joystick.setPointerCapture(event.pointerId);moveJoystick(event);event.preventDefault();});
 joystick.addEventListener('pointermove',event=>{if(event.pointerId===joystickPointer)moveJoystick(event);});
 for(const name of ['pointerup','pointercancel','lostpointercapture'])joystick.addEventListener(name,event=>{
   if(event.pointerId===joystickPointer)resetJoystick();});
-addEventListener('keydown',event=>{const key=mapping[event.code];if(key){held.add(key);event.preventDefault();}});
+addEventListener('keydown',event=>{if(!started)return;const key=mapping[event.code];if(key){held.add(key);event.preventDefault();}});
 addEventListener('keyup',event=>{const key=mapping[event.code];if(key)held.delete(key);});
 addEventListener('blur',()=>{held.clear();resetJoystick();});
 for(const button of document.querySelectorAll('[data-key]')) {
   const key=button.dataset.key;
-  button.addEventListener('pointerdown',e=>{held.add(key);button.classList.add('active');button.setPointerCapture(e.pointerId);e.preventDefault();});
+  button.addEventListener('pointerdown',e=>{if(!started)return;held.add(key);button.classList.add('active');button.setPointerCapture(e.pointerId);e.preventDefault();});
   const release=()=>{held.delete(key);button.classList.remove('active');};
   button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);
 }
@@ -390,11 +393,11 @@ for(const [id,action] of [
   ['camera-center',()=>centerCamera(cameraRig)],
   ['camera-closer',()=>zoomCamera(cameraRig,-.13)],
   ['camera-farther',()=>zoomCamera(cameraRig,.13)]
-]) document.getElementById(id).addEventListener('click', action);
+]) document.getElementById(id).addEventListener('click',()=>{if(started)action();});
 // Gesti direttamente sulla scena: trascina per ruotare, rotella per zoom.
 let pointerDrag=null;
 host.addEventListener('pointerdown',e=>{
-  if(e.button!==0 || pointerDrag!==null) return;
+  if(!started||e.button!==0 || pointerDrag!==null) return;
   pointerDrag={id:e.pointerId,x:e.clientX};
   host.setPointerCapture(e.pointerId);
 });
@@ -406,9 +409,9 @@ host.addEventListener('pointermove',e=>{
 const endDrag=e=>{if(pointerDrag&&e.pointerId===pointerDrag.id)pointerDrag=null;};
 host.addEventListener('pointerup',endDrag);
 host.addEventListener('pointercancel',endDrag);
-host.addEventListener('wheel',e=>{e.preventDefault();zoomCamera(cameraRig,e.deltaY>0?.10:-.10);},{passive:false});
+host.addEventListener('wheel',e=>{if(!started)return;e.preventDefault();zoomCamera(cameraRig,e.deltaY>0?.10:-.10);},{passive:false});
 addEventListener('keydown',e=>{
-  if(e.repeat)return;
+  if(!started||e.repeat)return;
   if(e.code==='KeyZ')orbitCamera(cameraRig,-Math.PI/4);
   else if(e.code==='KeyX')orbitCamera(cameraRig,Math.PI/4);
   else if(e.code==='KeyR')centerCamera(cameraRig);
@@ -418,7 +421,18 @@ addEventListener('keydown',e=>{
 
 function resize(){const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<1.5?48:36;camera.updateProjectionMatrix();}
 new ResizeObserver(resize).observe(host);resize();
-document.querySelector('#retry').addEventListener('click',()=>{state=initialScene();finale=null;finalResult=null;game.classList.remove('in-finale');
+function startGame(){
+  if(started||startAction.disabled)return;
+  started=true;startScreen.hidden=true;held.clear();resetJoystick();previous=performance.now();frameStart=previous;
+}
+startAction.addEventListener('click',startGame);
+addEventListener('keydown',event=>{
+  if(started||!['Enter','Space'].includes(event.code))return;
+  event.preventDefault();event.stopImmediatePropagation();startGame();
+},true);
+startAction.disabled=false;document.querySelector('#start-status').hidden=true;
+document.querySelector('#retry').addEventListener('click',()=>{state=initialScene();finale=null;finalResult=null;started=false;
+  startScreen.hidden=false;startAction.focus();game.classList.remove('in-finale');
   cameraRig.focusX=state.player.x;cameraRig.focusZ=state.player.z;centerCamera(cameraRig);held.clear();resetJoystick();
   ui.result.hidden=true;ui.finale.hidden=true;buildPickupBars();shownPickupVersion=state.pickupVersion;syncSecurityVisuals();});
 const recordKey='ffc-best-crowns-v1';
@@ -489,6 +503,7 @@ function setGuardAnimation(actor, guard) {
 }
 function loop(now) {
   const dt=Math.min((now-previous)/1000,.05);previous=now;
+  if(!started){requestAnimationFrame(loop);return;}
   const screenX=Number(held.has('right'))-Number(held.has('left'))+joystickAxis.x;
   const screenZ=Number(held.has('down'))-Number(held.has('up'))+joystickAxis.z;
   const worldMove=cameraRelativeMovement(screenX,screenZ,cameraRig.yaw);
@@ -557,6 +572,7 @@ function loop(now) {
       escalator:'SCALA MOBILE · VÝCHOD',street:'PRAHA · ESTERNO',fine:'POKUTA · MULTA'};
     const subtitle=finaleSubtitle(finale);
     ui.finale.hidden=finale.step==='result';
+    ui.finale.classList.toggle('is-escalator',finale.step==='escalator');
     ui.finaleStage.textContent=stageNames[finale.step]||'';
     ui.finaleSpoken.textContent=subtitle?.spoken||'';
     ui.finaleTranslation.textContent=subtitle?.translation||'';

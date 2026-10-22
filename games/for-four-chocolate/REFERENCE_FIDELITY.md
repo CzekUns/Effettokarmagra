@@ -49,3 +49,27 @@ Questa prova si apre in `reference-play.html`. La tavola nel repository è un'an
 Le sei immagini sopra sono **screenshot autentici di Chromium 1280×720** del gioco renderizzato, con stato di prova riproducibile (3 cioccolate all'uscita; 7 alla cattura). [Scena in viewport mobile landscape 844×390](assets/reference-play/mobile-finale-street.png) e [risultato cattura mobile](assets/reference-play/mobile-finale-caught-result.png) sono anch'essi screenshot reali; non è stata usata una foto come fondale di gioco.
 
 La tavola approvata guida sagome, costume di Ipno/POLICIE, contrasto caldo/freddo e camera obliqua. La miniatura del gruppo ha guidato solo il cast: Ipno entra da sinistra, quattro compagni lo attendono e Capellone è all'estremità destra; nella cattura Capellone ricompare **una sola volta**, in cameo con cintura di salame. Le facciate di Praga e il pavé sono texture WebP illustrate su geometrie 3D, con insegna della Città Vecchia, guglie e orologio nel set. L'ufficio e la scala mobile sono geometrie 3D animate semplici. **Scarti:** le facciate sono ripetute, gli attori rimangono sprite piani e la foto 200×128 limita i dettagli individuali dei compagni. Gli asset sono **provvisori e da approvare da Simone**. Le viewport browser non equivalgono a un test su Android fisico; le prestazioni del rendering software EC2 non rappresentano quelle del dispositivo.
+
+## Revisione START e finali (#109)
+
+| START originale nel browser desktop | START in viewport mobile landscape |
+|---|---|
+| ![START esatto 1280×720](assets/reference-play/revision-start-desktop.png) | ![START intero 844×390](assets/reference-play/revision-start-mobile.png) |
+
+La schermata usa **direttamente e senza ricompressione** `references/start-screen-approved.jpg`. Le bande laterali nella viewport 844×390 conservano proporzioni, logo, Ipno e il `PRESS START` dipinto nell'originale. Una hitbox trasparente coincide con quel pulsante: non c'è una seconda scritta.
+
+| Ufficio prima | Ufficio dopo |
+|---|---|
+| ![Ufficio #108](assets/reference-play/finale-office.png) | ![Ufficio ravvicinato #109](assets/reference-play/revision-office.png) |
+
+| Festa notturna e lontana prima | Festa di giorno davanti al supermercato dopo |
+|---|---|
+| ![Praga #108](assets/reference-play/finale-street.png) | ![Praga #109](assets/reference-play/revision-street-day.png) |
+
+| Scala mobile prima | Ingresso, metà e uscita dopo |
+|---|---|
+| ![Scala #108 con gambe coperte](assets/reference-play/finale-escalator.png) | ![Ingresso](assets/reference-play/revision-escalator-entry.png) ![Metà](assets/reference-play/revision-escalator-mid.png) ![Uscita](assets/reference-play/revision-escalator-exit.png) |
+
+[Scala mobile mobile landscape](assets/reference-play/revision-escalator-mobile.png) · [Festa mobile](assets/reference-play/revision-street-mobile.png) · [Multa e cameo di giorno](assets/reference-play/revision-fine-day.png) · [Risultato positivo con WhatsApp](assets/reference-play/revision-success-result.png) · [Risultato cattura con WhatsApp](assets/reference-play/revision-caught-result.png).
+
+Tutte le nuove immagini `revision-*.png` sono screenshot autentici del gioco in Chromium. La camera ora inquadra più da vicino personaggi e interazione; sulla scala segue l'ascesa e mostra le viste posteriori di Ipno/POLICIE con piedi sui gradini, non dentro la geometria. La città usa texture diurne derivate dalle precedenti risorse di Praga, porte e vetrine commerciali, insegne ceche e tram. Restano facciate ripetute, materiali semplificati per le vetrine e sprite piani. Il confronto mobile usa una viewport Chromium, non un Android fisico.
