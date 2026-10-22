@@ -43,3 +43,6 @@
 .finale.is-escalator{align-items:flex-start;justify-content:flex-start;padding:12px}
 .finale.is-escalator .finale-caption{min-width:0;max-width:270px;width:auto}
 @media(pointer:coarse){.finale.is-escalator{padding:5px}.finale.is-escalator .finale-caption{max-width:180px}}
+.music-toggle{position:absolute;z-index:11;left:14px;top:86px;min-width:120px;min-height:44px;padding:7px 10px;border:1px solid #b6dbd8;border-radius:8px;background:#142d3de8;color:#fff4dc;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation}
+.music-toggle[hidden]{display:none}.music-toggle:focus-visible{outline:3px solid #ffe0a0;outline-offset:2px}
+@media(pointer:coarse){.music-toggle{left:8px;top:45px;min-width:106px;min-height:42px;font-size:11px}}

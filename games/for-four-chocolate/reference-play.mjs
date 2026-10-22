@@ -5,11 +5,24 @@ import { spriteView, animationPose } from './reference-sprites.mjs';
 import { createFinale, advanceFinale, nextFinaleStep, skipFinale, finaleSubtitle } from './reference-finale-logic.mjs?v=7';
 import { createFinaleScene } from './reference-finale-scene.mjs?v=8';
 import { buildWhatsAppShareUrl } from './reference-share.mjs?v=7';
+import { createAudioController } from './reference-audio.mjs?v=1';
 
 const host = document.querySelector('#world');
 const game=document.querySelector('.game');
 const startScreen=document.querySelector('#start-screen'),startAction=document.querySelector('#start-action');
+const musicButton=document.querySelector('#music-toggle');
 let started=false;
+let audioStorage=null;
+try{audioStorage=localStorage;}catch{}
+const audio=createAudioController({music:new Audio('./assets/audio/for-four-chocolate.mp3'),
+  createContext:()=>{const Context=window.AudioContext||window.webkitAudioContext;return Context?new Context():null;},
+  storage:audioStorage});
+function syncMusicButton(){musicButton.textContent=audio.label;
+  musicButton.setAttribute('aria-label',audio.state.muted?'Attiva musica ed effetti':'Disattiva musica ed effetti');}
+syncMusicButton();
+musicButton.addEventListener('click',()=>{audio.toggleMute();syncMusicButton();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){audio.hide();syncMusicButton();}});
+addEventListener('blur',()=>{audio.hide();syncMusicButton();});
 const ui = {
   loot: document.querySelector('#loot'), score: document.querySelector('#score'), best: document.querySelector('#best'),
   mission: document.querySelector('#mission'), watch: document.querySelector('#watch'),
@@ -424,6 +437,7 @@ new ResizeObserver(resize).observe(host);resize();
 function startGame(){
   if(started||startAction.disabled)return;
   started=true;startScreen.hidden=true;held.clear();resetJoystick();previous=performance.now();frameStart=previous;
+  audio.start();musicButton.hidden=false;syncMusicButton();
 }
 startAction.addEventListener('click',startGame);
 addEventListener('keydown',event=>{
@@ -431,7 +445,8 @@ addEventListener('keydown',event=>{
   event.preventDefault();event.stopImmediatePropagation();startGame();
 },true);
 startAction.disabled=false;document.querySelector('#start-status').hidden=true;
-document.querySelector('#retry').addEventListener('click',()=>{state=initialScene();finale=null;finalResult=null;started=false;
+document.querySelector('#retry').addEventListener('click',()=>{audio.stop();musicButton.hidden=true;
+  state=initialScene();finale=null;finalResult=null;started=false;
   startScreen.hidden=false;startAction.focus();game.classList.remove('in-finale');
   cameraRig.focusX=state.player.x;cameraRig.focusZ=state.player.z;centerCamera(cameraRig);held.clear();resetJoystick();
   ui.result.hidden=true;ui.finale.hidden=true;buildPickupBars();shownPickupVersion=state.pickupVersion;syncSecurityVisuals();});
@@ -503,6 +518,7 @@ function setGuardAnimation(actor, guard) {
 }
 function loop(now) {
   const dt=Math.min((now-previous)/1000,.05);previous=now;
+  if(!started)audio.update(state,finale,dt);
   if(!started){requestAnimationFrame(loop);return;}
   const screenX=Number(held.has('right'))-Number(held.has('left'))+joystickAxis.x;
   const screenZ=Number(held.has('down'))-Number(held.has('up'))+joystickAxis.z;
@@ -510,6 +526,7 @@ function loop(now) {
   const input={...worldMove,take:held.has('take'),crouch:held.has('crouch')};
   updateScene(state,input,dt);
   beginFinale();if(finale)advanceFinale(finale,dt);
+  audio.update(state,finale,dt);
   syncSecurityVisuals();
   if(shownPickupVersion!==state.pickupVersion){buildPickupBars();shownPickupVersion=state.pickupVersion;}
   updateView(worldMove,dt);
@@ -520,7 +537,7 @@ function loop(now) {
   state.guards.forEach((guard,index)=>{
     orientFigure(guards[index],guard.x,guard.z,guard.stride,guard.moving);
     setGuardAnimation(guards[index],guard);
-    guards[index].mark.visible=guard.exclamationTime>0;
+    guards[index].mark.visible=guard.exclamationTime>0||guard.mode==='respond'||guard.mode==='chase';
     updateVision(guardVisions[index],guard);
     guardVisions[index].material.color.set(guard.chasing?'#ff4f53':'#ffb765');
     ui.radarGuards[index].classList.toggle('responding',guard.mode==='respond'||guard.mode==='chase'||guard.mode==='search');

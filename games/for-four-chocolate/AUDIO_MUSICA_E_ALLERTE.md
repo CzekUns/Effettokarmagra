@@ -34,3 +34,14 @@ L'utente chiede **due rumori distinti di allerta, evocativi di Metal Gear**, e l
 - [ ] Aprire **PR dedicata**, aggiornare `WORK_LOG.md`, e segnalare l'esito senza fare merge autonomo.
 
 **Regola grafica:** la canzone non modifica l'unico stile ufficiale del gameplay. Le icone `!` sono UI/feedback e non richiedono una nuova art direction.
+
+## Esito/Stato 22/10/2026 — CODEX-GH2, in revisione
+
+Il ramo `ffc-audio-allarmi`, impilato sulla PR #111 della schermata START, implementa la richiesta in `reference-play.html`:
+
+- Una sola istanza del file MP3 ufficiale, avviata dopo PRESS START; volume gameplay 0,13, crescita graduale fino a 0,55 in entrambi i finali, attenuazione a 0,17 nell'ufficio durante la battuta, ripresa sulla scala mobile e sul risultato. Rigioca sfuma la musica e riporta a START.
+- Due segnali originali sintetizzati con Web Audio: uno acuto per il prelievo visto e uno doppio/grave per l'inseguimento. Transizioni e pausa minima impediscono ripetizioni continue. Il `!` già esistente resta sopra gli agenti durante allarme/inseguimento, anche se la prima fonte è CCTV. Camminare in vista non suona.
+- Pulsante `MUSICA ON/OFF` accessibile anche in mobile e nei finali; preferenza in `localStorage`. Pagina nascosta o finestra senza fuoco sospende l'audio, ripreso solo dal pulsante. Il gioco continua se l'MP3 non parte.
+- 40 test Node complessivi, inclusi logica audio, cooldown, mute e errore MP3; test browser Chromium 1280×720 e touch landscape 844×390 con il file effettivo in riproduzione, due cue (tre impulsi sintetizzati), icona `!`, mute, volumi e ritorno a START. Rifatta anche la sequenza mobile completa: uscita, cattura, record/multa e due link WhatsApp distinti. Nessun errore console o scorrimento orizzontale. Screenshot reali: [allarme desktop](./assets/reference-play/audio-alert-desktop.png), [allarme mobile](./assets/reference-play/audio-alert-mobile.png), [mute desktop](./assets/reference-play/audio-muted-desktop.png), [mute mobile](./assets/reference-play/audio-muted-mobile.png).
+
+La resa sonora sullo speaker di uno smartphone e Android fisico non sono stati verificati; i livelli sono quindi tarature iniziali da ascoltare e approvare da Simone sul suo dispositivo. Le caselle sopra restano aperte fino al merge e al collaudo personale.
