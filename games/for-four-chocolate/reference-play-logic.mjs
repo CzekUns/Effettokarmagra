@@ -1,6 +1,8 @@
 // Metres on the supermarket floor; rendering and rules use the same shelf data.
 export const LIMITS = Object.freeze({ minX: -11, maxX: 11, minZ: -10, maxZ: 10 });
-export const GOAL = 4;
+export const FINE = 50;
+export const CAMERA_THRESHOLDS = Object.freeze([0,2,4,6,9,12]);
+export const GUARD_THRESHOLDS = Object.freeze([5,7,10,13,16,19,23,27]);
 export const SHELVES = Object.freeze([
   { id:'chocolate', label:'ČOKOLÁDA', x:-6.9, z:-2.9, length:5.2, kind:'chocolate', zone:'west' },
   { id:'sweets', label:'SLADKOSTI', x:-3.45, z:-2.9, length:5.2, kind:'chocolate', zone:'west' },
@@ -37,6 +39,22 @@ export const PICKUP_CANDIDATES = Object.freeze(candidateSpots);
 export const PICKUPS = PICKUP_CANDIDATES; // data for maps and older test tooling
 export const EXIT = Object.freeze({ x:9.6, z:-8.25, reach:.8 });
 export const TAKE_SECONDS = 1.15;
+export const CAMERA_POSTS = Object.freeze([
+  {x:8.9,z:-7.8,baseAngle:2.2}, {x:-8.9,z:-7.8,baseAngle:.85},
+  {x:-9.2,z:7.7,baseAngle:-.5}, {x:8.9,z:6.9,baseAngle:-2.5},
+  {x:0,z:8.7,baseAngle:-Math.PI/2}, {x:0,z:-8.4,baseAngle:Math.PI/2}
+].map(Object.freeze));
+export const GUARD_POSTS = Object.freeze([
+  {x:-8.55,z:5.8,dir:-1,minZ:-6.5,maxZ:5.8,zone:'west',baseSpeed:.88},
+  {x:-1,z:-6.3,dir:1,minZ:-6.3,maxZ:6.3,zone:'west',baseSpeed:.74},
+  {x:1,z:6.2,dir:-1,minZ:-6.2,maxZ:6.2,zone:'east',baseSpeed:.8},
+  {x:8.45,z:-6.4,dir:1,minZ:-6.4,maxZ:6,zone:'east',baseSpeed:.85},
+  {x:-9.3,z:-6.3,dir:1,minZ:-6.3,maxZ:6.3,zone:'west',baseSpeed:.83},
+  {x:-5.25,z:7.7,dir:-1,minZ:3.1,maxZ:7.7,zone:'west',baseSpeed:.9},
+  {x:5.4,z:7.7,dir:-1,minZ:3.1,maxZ:7.7,zone:'east',baseSpeed:.9},
+  {x:9.3,z:6.2,dir:-1,minZ:-6.2,maxZ:6.2,zone:'east',baseSpeed:.9}
+].map(Object.freeze));
+export function crowns(s) { return s.chocolate - (s.phase==='caught' ? FINE : 0); }
 const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
 const deltaAngle = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
 function randomGenerator(seed) {
@@ -106,10 +124,37 @@ export function shelfBlocksCamera(shelf, camera, player) {
     shelf.kind==='checkout'?1.5:2.5,camera,player);
 }
 export function nearestPickup(s) {
-  return s.pickups.filter(p => p.status !== 'collected')
+  return s.pickups.filter(p => p.status === 'available' || p.status === 'taking')
     .map(p => ({ spot:p, distance:Math.hypot(s.player.x-p.x,s.player.z-p.z) }))
     .filter(p => p.distance <= p.spot.reach)
     .sort((a,b)=>a.distance-b.distance)[0]?.spot || null;
+}
+function addCamera(s) {
+  const index=s.cameras.length,post=CAMERA_POSTS[index];
+  if(!post)return false;
+  s.cameras.push({x:post.x,z:post.z,baseAngle:post.baseAngle,angle:post.baseAngle,
+    halfAngle:.34,range:7});
+  return true;
+}
+function addGuard(s) {
+  const post=GUARD_POSTS[s.guards.length];
+  if(!post)return false;
+  s.guards.push({...post,homeX:post.x,angle:post.dir>0?Math.PI/2:-Math.PI/2,
+    halfAngle:.5,range:4,stride:0,moving:false,chasing:false,mode:'patrol',
+    path:null,repath:0,exclamationTime:0});
+  return true;
+}
+export function increaseSecurity(s) {
+  while(s.cameras.length<CAMERA_THRESHOLDS.filter(n=>s.chocolate>=n).length)addCamera(s);
+  while(s.guards.length<GUARD_THRESHOLDS.filter(n=>s.chocolate>=n).length)addGuard(s);
+}
+function refillPickup(s,used) {
+  const active=new Set(s.pickups.filter(p=>p!==used).map(p=>p.id));
+  const available=PICKUP_CANDIDATES.filter(p=>!active.has(p.id)&&p.id!==used.id);
+  const pool=available.length?available:PICKUP_CANDIDATES.filter(p=>!active.has(p.id));
+  const next=pool[(s.seed+s.chocolate*7)%pool.length];
+  s.pickups[s.pickups.indexOf(used)]={...next,status:'available'};
+  s.pickupVersion++;
 }
 const NAV_STEP=.4;
 const NAV_COLS=Math.round((LIMITS.maxX-LIMITS.minX)/NAV_STEP)+1;
@@ -181,13 +226,15 @@ function patrolGuard(guard,watch,dt) {
   if(guard.moving)guard.stride+=Math.abs(guard.z-before)*5;
 }
 function assignResponders(s,source) {
+  if(!s.guards.length)addGuard(s); // An early CCTV alarm summons the first patrol.
   const ranked=s.guards.map((guard,index)=>({index,distance:Math.hypot(guard.x-s.player.x,guard.z-s.player.z)}))
     .sort((a,b)=>a.distance-b.distance);
-  const first=source.type==='guard'?source.index:ranked[0].index;
+  const first=source.type==='guard'?source.index:ranked[0]?.index;
   const second=ranked.find(item=>item.index!==first)?.index;
   s.security.responders=[first,second].filter(index=>index!==undefined);
   for(const index of s.security.responders){
     const guard=s.guards[index];guard.mode='respond';guard.path=null;guard.repath=0;
+    guard.exclamationTime=2;
   }
 }
 function startAlarm(s,source) {
@@ -204,24 +251,18 @@ function startAlarm(s,source) {
 function visibleWitness(s) {
   const index=s.guards.findIndex(guard=>canSee(guard,s.player));
   if(index>=0)return {type:'guard',index};
-  if(canSee(s.camera,s.player))return {type:'camera'};
+  const cameraIndex=s.cameras.findIndex(camera=>canSee(camera,s.player));
+  if(cameraIndex>=0)return {type:'camera',index:cameraIndex};
   return null;
 }
 export function initialScene(seed = Math.floor(Math.random()*0xffffffff)) {
-  const guards = [
-    { x:-8.55, z:5.8, angle:-Math.PI/2, halfAngle:.52, range:4.25, dir:-1, minZ:-6.5,maxZ:5.8, zone:'west',baseSpeed:.88 },
-    { x:-1, z:-6.3, angle:Math.PI/2, halfAngle:.48, range:3.6, dir:1, minZ:-6.3,maxZ:6.3, zone:'west',baseSpeed:.74 },
-    { x:1, z:6.2, angle:-Math.PI/2, halfAngle:.5, range:3.7, dir:-1,minZ:-6.2,maxZ:6.2, zone:'east',baseSpeed:.8 },
-    { x:8.45,z:-6.4,angle:Math.PI/2,halfAngle:.48,range:4.1,dir:1,minZ:-6.4,maxZ:6.0,zone:'east',baseSpeed:.85 }
-  ].map(g=>({...g,homeX:g.x,stride:0,moving:false,chasing:false,mode:'patrol',path:null,repath:0}));
-  return {
-    phase:'playing',time:0,message:'Prendi quattro cioccolate dagli scaffali. Puoi essere visto mentre cammini, non mentre prelevi.',
-    seed,player:{x:.25,z:6.2,facing:-Math.PI/2,stride:0,moving:false},guards,
-    camera:{x:8.9,z:-7.8,angle:2.25,halfAngle:.34,range:7},
-    pickups:selectPickups(seed),visible:false,taking:false,takeTime:0,takeId:null,collected:[],chocolate:0,alert:0,
+  const s={
+    phase:'playing',time:0,message:'Prendi quante cioccolate riesci. Esci quando vuoi: ogni pezzo vale 1 Kč.',
+    seed,player:{x:.25,z:6.2,facing:-Math.PI/2,stride:0,moving:false},guards:[],cameras:[],
+    pickups:selectPickups(seed),pickupVersion:0,visible:false,taking:false,takeTime:0,takeId:null,collected:[],chocolate:0,alert:0,
     security:{mode:'routine',source:null,sourceIndex:null,timer:0,lostTime:0,lastKnown:null,responders:[]},
     watchZones:{west:0,east:0},notificationTime:0
-  };
+  };addCamera(s);return s;
 }
 export function updateScene(s, input, delta) {
   if (s.phase !== 'playing') return s;
@@ -244,6 +285,7 @@ export function updateScene(s, input, delta) {
     }
   }
   for (const guard of s.guards) {
+    guard.exclamationTime=Math.max(0,guard.exclamationTime-dt);
     const watch = s.watchZones[guard.zone];
     if(guard.mode==='patrol')patrolGuard(guard,watch,dt);
     else if(guard.mode==='inspect'){
@@ -266,7 +308,8 @@ export function updateScene(s, input, delta) {
     guard.chasing=guard.mode==='respond'||guard.mode==='chase';
     guard.range = (guard.zone === 'west' ? 4.25 : 3.7) + watch * .32;
   }
-  s.camera.angle = 2.2 + Math.sin(s.time * (.7 + s.watchZones.east * .25)) * .57;
+  s.cameras.forEach((camera,index)=>{camera.angle=camera.baseAngle+
+    Math.sin(s.time*(.7+s.watchZones[index%2?'west':'east']*.25)+index*1.7)*.57;});
   const witness=visibleWitness(s);
   s.visible=!!witness;
   s.alert = clamp(s.alert + (s.visible && m > .05 && !input.crouch ? 6 : -8) * dt, 0, 100);
@@ -289,6 +332,7 @@ export function updateScene(s, input, delta) {
     }else if(security.mode==='searching'){
       if(witness){security.mode='pursuit';security.lostTime=0;
         for(const index of security.responders){s.guards[index].mode='chase';s.guards[index].path=null;}
+        if(witness.type==='guard')s.guards[witness.index].exclamationTime=2;
         s.message='POLICIE ti ha ritrovato!';
       }else if((security.timer-=dt)<=0){
         security.mode='routine_increased';security.source=null;
@@ -320,10 +364,12 @@ export function updateScene(s, input, delta) {
         s.takeTime = 0; s.takeId = pickup.id;
       }
       pickup.status='taking';s.taking = true; s.takeTime += dt;
-      s.message = `Prelievo ${Math.min(GOAL,s.chocolate + 1)}/${GOAL} in corso… resta nascosto.`;
+      s.message = `Prelievo ${s.chocolate+1} in corso… resta nascosto.`;
       if (s.takeTime >= TAKE_SECONDS) {
-        pickup.status='collected';s.collected.push(pickup.id);s.chocolate=Math.min(GOAL,s.collected.length);
+        pickup.status='collected';s.collected.push(pickup.id);s.chocolate++;
         s.taking = false; s.takeTime = 0; s.takeId = null;
+        refillPickup(s,pickup);
+        increaseSecurity(s);
         s.watchZones[pickup.zone] = Math.min(4, s.watchZones[pickup.zone] + 1);
         if(security.mode==='routine'||security.mode==='routine_increased'){
           security.mode='routine_increased';
@@ -332,8 +378,7 @@ export function updateScene(s, input, delta) {
           if(guard){guard.mode='inspect';guard.inspectTarget={x:pickup.x,z:pickup.z};guard.inspectTimer=3;
             guard.path=null;guard.repath=0;}
         }
-        s.message = s.chocolate === GOAL ? 'Quattro cioccolate prese! Raggiungi VÝCHOD.'
-          : `Cioccolata ${s.chocolate}/${GOAL} presa. La zona ${pickup.zone === 'west' ? 'ovest' : 'est'} è più sorvegliata.`;
+        s.message = `Cioccolata ${s.chocolate} presa. Ora ${s.cameras.length} CCTV e ${s.guards.length} POLICIE: esci o rischia ancora.`;
         s.notificationTime = 4;
       }
     }
@@ -342,8 +387,8 @@ export function updateScene(s, input, delta) {
     if(previous?.status==='taking')previous.status='available';
     s.taking = false; s.takeTime = 0; s.takeId = null;
   }
-  if (s.chocolate >= GOAL && Math.hypot(s.player.x - EXIT.x, s.player.z - EXIT.z) <= EXIT.reach) {
-    s.phase = 'escaped'; s.message = 'Fuori con tutte e quattro le cioccolate!';
+  if (Math.hypot(s.player.x - EXIT.x, s.player.z - EXIT.z) <= EXIT.reach) {
+    s.phase = 'escaped'; s.message = `Fuori con ${s.chocolate} cioccolate!`;
   }
   return s;
 }

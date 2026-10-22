@@ -18,3 +18,11 @@
 @media(pointer:coarse){.camera-controls{top:50px;right:8px;gap:3px;padding:3px}.camera-controls span{font-size:8px}.camera-controls button{min-width:34px;height:34px;font-size:19px;padding:0 5px}}
 @media(pointer:coarse){.radar{width:108px;height:73px}}
 @media(max-width:700px) and (orientation:landscape){.camera-controls{top:40px;right:6px}.camera-controls span{display:none}.camera-controls button{height:32px;min-width:32px}}
+#best{white-space:nowrap;color:#ffdb8d}.radar .dot[hidden]{display:none}
+@media(pointer:coarse){#best{font-size:8px}.top-right{gap:6px}}
+@media(max-width:700px) and (orientation:landscape){#best{display:inline}.chocolate{display:none}}
+#joystick{position:relative;width:112px;height:112px;border:2px solid #b8dbe3b8;border-radius:50%;background:radial-gradient(circle,#36586aa8 0 32%,#122d3ec9 72%);box-shadow:inset 0 0 16px #03131dc9,0 0 18px #06121bb0;touch-action:none;user-select:none}
+#joystick::before,#joystick::after{content:"";position:absolute;background:#b8dbe34d;pointer-events:none}
+#joystick::before{width:1px;height:76%;left:50%;top:12%}#joystick::after{height:1px;width:76%;top:50%;left:12%}
+#joystick-thumb{position:absolute;left:50%;top:50%;width:47px;height:47px;border:2px solid #ffe0aa;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle at 35% 30%,#f5bc7c,#9c593d);box-shadow:0 3px 9px #091322b8;pointer-events:none}
+@media(max-width:700px) and (orientation:landscape){#joystick{width:94px;height:94px}#joystick-thumb{width:40px;height:40px}}
