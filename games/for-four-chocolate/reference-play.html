@@ -16,6 +16,14 @@
       <div class="loot"><span class="chocolate">▰ ▰ ▰ ▰</span><b id="loot">0/1</b><small>CAMPIONE · SCENA FRIGORIFERI</small></div>
       <div class="top-right"><span id="watch">SORVEGLIANZA NORMALE</span><b id="score">000000</b><div class="radar" aria-label="Minimappa"><i class="shelf s1"></i><i class="shelf s2"></i><i class="shelf s3"></i><i id="radar-player" class="dot player"></i><i id="radar-guard" class="dot guard"></i><i id="radar-camera" class="dot camera"></i></div></div>
     </header>
+    <div class="camera-controls" role="group" aria-label="Controlli telecamera">
+      <span>CAMERA</span>
+      <button id="camera-left" type="button" aria-label="Ruota la camera a sinistra" title="Ruota camera a sinistra (Z)">↶</button>
+      <button id="camera-right" type="button" aria-label="Ruota la camera a destra" title="Ruota camera a destra (X)">↷</button>
+      <button id="camera-closer" type="button" aria-label="Avvicina la camera" title="Avvicina (+)">＋</button>
+      <button id="camera-farther" type="button" aria-label="Allontana la camera" title="Allontana (−)">−</button>
+      <button id="camera-center" type="button" aria-label="Reimposta telecamera" title="Reimposta (R)">⦿</button>
+    </div>
     <div class="mission" id="mission">Raggiungi lo scaffale di cioccolata. Essere visto mentre cammini è normale; prendi solo quando sei coperto.</div>
     <div class="interaction" id="interaction" hidden>PRENDI <span id="progress"></span></div>
     <div class="touch left" aria-label="Movimento">
@@ -26,10 +34,10 @@
       <button id="take" data-key="take">PRENDI</button>
       <button id="crouch" data-key="crouch">ACCOVACCIATI</button>
     </div>
-    <div class="hint">WASD / FRECCE · E PRENDI · SHIFT ACCOVACCIATI <a href="./sample-ps1.html">CAMPIONE PRECEDENTE ↗</a></div>
+    <div class="hint">WASD / FRECCE · E PRENDI · SHIFT ACCOVACCIATI · Z/X CAMERA · R CENTRA · +/- ZOOM <a href="./sample-ps1.html">CAMPIONE PRECEDENTE ↗</a></div>
     <div class="rotate" id="rotate"><div>↻<strong>Ruota il telefono</strong><span>Questo gioco si usa in orizzontale.</span></div></div>
     <div class="result" id="result" hidden><div><small id="result-kicker">POLICIE</small><h1 id="result-title">Ti hanno visto.</h1><p id="result-text"></p><button id="retry">RIPROVA</button></div></div>
   </main>
-  <script type="module" src="./reference-play.mjs"></script>
+  <script type="module" src="./reference-play.mjs?v=2"></script>
 </body>
 </html>
