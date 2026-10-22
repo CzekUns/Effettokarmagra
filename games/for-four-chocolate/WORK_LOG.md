@@ -94,3 +94,11 @@
 - **Verifiche:** GitHub conferma `merged: true`; i 15 test Node e il browser sono dichiarati dal collaboratore nella PR, non rieseguiti durante questo merge. Controllo Android reale non eseguito; prestazioni da verificare.
 - **Da fare:** apertura della pagina demo pubblicata, valutazione grafica alla luce dell'unica reference approvata e test prestazioni su telefono. La PR era una bozza di resa, non un'approvazione della grafica definitiva.
 - **Riferimenti:** https://github.com/CzekUns/Effettokarmagra/pull/98 ; https://czekuns.github.io/Effettokarmagra/games/for-four-chocolate/reference-play.html
+
+## 2026-10-22 — ChatGPT / camera realmente mobile nel reference-play
+- **Problema segnalato dall'utente:** la telecamera della demo sembrava completamente immobile; la semplice interpolazione originaria da lontano non dava l'effetto di camera dinamica richiesto.
+- **Fatto:** integrato vero camera rig fluido `reference-camera.mjs` nel renderer `reference-play.mjs`; camera avvicinata che **segue e anticipa Ipno** e inquadratura che trasla visibilmente; rotazione orbitale controllabile (pulsanti ↶/↷ o trascinamento sulla scena), zoom (+/− o rotella) e ricentraggio. I comandi direzionali restano relativi allo schermo quando si ruota la camera.
+- **Mobile:** comandi camera aggiunti anche in landscape, mantenendo joystick/D-pad PRENDI/ACCOVACCIATI esistenti. Su tastiera Z/X ruotano, R ripristina, +/- zoom. HTML/CSS hanno cache busting v2.
+- **Verifiche:** sintassi JS verificata in runtime JavaScript, moduli e controlli incrociati; test di comportamento rig eseguiti con simulazione JS (followX da 0 a 3.56, cambio posizione reale). Aggiunto `reference-camera.test.mjs` per prove Node; **non eseguiti** test Chromium end-to-end o su Android fisico in questa sessione.
+- **Restano da fare:** verificare in browser reale che camera e controlli funzionino su touch/Android; eventuale occlusione scaffali in primo piano e rotazioni automatiche in punti critici. Non cambiare la reference grafica unica.
+- **Riferimenti:** `games/for-four-chocolate/reference-play.html`, `reference-camera.mjs`, `reference-play.mjs`, `reference-camera.test.mjs`.
