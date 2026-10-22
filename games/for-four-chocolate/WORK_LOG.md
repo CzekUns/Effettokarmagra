@@ -199,3 +199,9 @@
 - **Fatto:** creato [REVISIONE_START_E_FINALI.md](./REVISIONE_START_E_FINALI.md) e assegnata [issue #109](https://github.com/CzekUns/Effettokarmagra/issues/109) a `ilconsulentelogistico-hue`; aggiornate regole `AGENTS.md` per evitare confusione tra immagine specifica START e unica reference artistica gameplay.
 - **Verifiche:** issue e documenti pubblicati su GitHub; **nessuna modifica al motore** e nessun test eseguito. L'immagine originale START è in chat, non caricata come asset binario nella repo in questo passaggio; servirà consegnare l'immagine al collaboratore per l'implementazione pixel-perfect.
 - **Da fare:** il collaboratore produce la PR con nuova Start e scene riviste, screenshot browser reali desktop/mobile landscape, test game flow e verifica integrazione WhatsApp, senza merge autonomo.
+
+## 2026-10-22 — ChatGPT / caricamento originale grafica START verificato
+- **Fatto:** caricata su `main` l'immagine esatta approvata dall'utente, [`references/start-screen-approved.jpg`](./references/start-screen-approved.jpg), **1536×864 pixel** e **461.692 byte**, senza ridimensionamento o ricompressione. Nome della foto originale in chat `1000235327.png`, ma il file sorgente è realmente un JPEG/JFIF; nella repo è stato dato il suffisso corretto `.jpg`.
+- **Verifiche:** blob GitHub `9af0f7e6b4841d0ea83246ad516b252990a055a8`, che corrisponde al Git object hash calcolato dai byte originali; commit di caricamento `29b7ff9fe221bde5ba0db81c4d1d17f946a09922`. Il file è presente nel ramo `main`.
+- **Collaboratore:** l'issue #109 deve usare **quel file preciso** come sfondo della title screen ufficiale, e mantenere i fix di camera/scala/Praga previsti nella stessa issue. L'immagine START non sostituisce la reference di gameplay.
+- **Stato:** l'**asset è consegnato**; la nuova start screen funzionante nel gioco è ancora un'attività del collaboratore, non implementata da questa sessione.
