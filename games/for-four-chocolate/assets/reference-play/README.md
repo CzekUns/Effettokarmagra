@@ -17,6 +17,12 @@ Prompt di produzione, tutti con la tavola come riferimento e senza altri stili:
 
 `ipno-back.webp`, `ipno-side.webp`, `policie-back.webp`, `policie-side.webp`, `customer-back.webp` e `customer-side.webp` derivano **solo** dalla tavola grafica approvata e dalle rispettive viste frontali come riferimento d'identità. Tre tavole madri a due viste sono state portate a celle uniformi 1024×1536. Il profilo sinistro usa il riflesso del profilo destro. Il confronto di tutti i personaggi alla stessa scala è in `views-comparison.png`; gli screenshot di gioco desktop e mobile landscape sono stati aggiornati.
 
-La cliente ha un lieve alone scuro nei nuovi ritagli, simile a quello della vista frontale già approvata. Gli sprite sono piani orientati verso la camera: le viste rendono leggibile il moto, ma non sono modelli 3D completi né animazioni nuove per tutte le direzioni.
+La cliente ha un lieve alone scuro nei nuovi ritagli, simile a quello della vista frontale già approvata. Gli sprite sono piani orientati verso la camera e non sono modelli 3D completi. Le animazioni direzionali di Ipno e POLICIE sono descritte sotto.
 
 I personaggi hanno sprite trasparenti. Il gioco usa i WebP come texture di Three.js e monta frigoriferi, scaffali, pareti, suolo e collisioni in geometria 3D distinta dalla tavola.
+
+## Animazioni del lotto A (22 ottobre)
+
+Le tavole `ipno-walk-{front,back,left,right}.webp`, `ipno-crouch-{front,back,right}.webp`, `policie-walk-{front,back,left,right}.webp` e `policie-run-{front,back,left,right}.webp` contengono quattro celle trasparenti da 640×768 ciascuna, con piedi allineati e altezza normalizzata. Le pose sono state generate dalla sola artboard approvata, usando gli sprite già approvati per mantenere cappello, camicia, divisa e volto riconoscibili. `ipno-take-{back,right}.webp` e `policie-idle-left.webp` completano le pose singole. Solo il profilo sinistro accovacciato di Ipno e il suo prelievo a sinistra riflettono il destro: non hanno scritte. I profili sinistri degli agenti sono tavole autonome, così «POLICIE» non viene ribaltato.
+
+[`animation-comparison.png`](animation-comparison.png) confronta le quattro direzioni alla stessa scala. La scena sceglie la cella in base al moto reale e la vista in base alla camera; la corsa della guardia è pronta per l'inseguimento del lotto C. Gli originali PNG di lavoro e lo script di ritaglio restano nell'area CODEX-GH2, fuori dal repository. Le animazioni aggiungono circa 4 MB di WebP e restano sprite piani: la resa su un Android fisico va ancora misurata.
