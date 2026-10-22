@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three/three.module.js';
 import { initialScene, updateScene, rayDistance, PICKUP, EXIT } from './reference-play-logic.mjs';
+import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, centerCamera, updateCameraRig } from './reference-camera.mjs';
 
 const host = document.querySelector('#world');
 const ui = {
@@ -222,15 +223,58 @@ for(const button of document.querySelectorAll('[data-key]')) {
   button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);
 }
 let state=initialScene(); let previous=performance.now(), frames=0, frameStart=previous;
+const cameraRig = createCameraRig(state.player);
+const setView = (pose) => {
+  camera.position.set(pose.x,pose.y,pose.z);
+  camera.lookAt(pose.lookX,pose.lookY,pose.lookZ);
+};
+function updateView(movement,seconds){
+  setView(updateCameraRig(cameraRig,state.player,movement,seconds,camera.aspect));
+}
+// Rotazione orbitale volontaria: rotazioni incrementali di 45°, zoom a passi e ricentraggio.
+for(const [id,action] of [
+  ['camera-left',()=>orbitCamera(cameraRig,-Math.PI/4)],
+  ['camera-right',()=>orbitCamera(cameraRig,Math.PI/4)],
+  ['camera-center',()=>centerCamera(cameraRig)],
+  ['camera-closer',()=>zoomCamera(cameraRig,-.13)],
+  ['camera-farther',()=>zoomCamera(cameraRig,.13)]
+]) document.getElementById(id).addEventListener('click', action);
+// Gesti direttamente sulla scena: trascina per ruotare, rotella per zoom.
+let pointerDrag=null;
+host.addEventListener('pointerdown',e=>{
+  if(e.button!==0 || pointerDrag!==null) return;
+  pointerDrag={id:e.pointerId,x:e.clientX};
+  host.setPointerCapture(e.pointerId);
+});
+host.addEventListener('pointermove',e=>{
+  if(!pointerDrag || pointerDrag.id!==e.pointerId)return;
+  const dx=e.clientX-pointerDrag.x;
+  if(Math.abs(dx)>2){orbitCamera(cameraRig,-dx*.005);pointerDrag.x=e.clientX;}
+});
+const endDrag=e=>{if(pointerDrag&&e.pointerId===pointerDrag.id)pointerDrag=null;};
+host.addEventListener('pointerup',endDrag);
+host.addEventListener('pointercancel',endDrag);
+host.addEventListener('wheel',e=>{e.preventDefault();zoomCamera(cameraRig,e.deltaY>0?.10:-.10);},{passive:false});
+addEventListener('keydown',e=>{
+  if(e.repeat)return;
+  if(e.code==='KeyZ')orbitCamera(cameraRig,-Math.PI/4);
+  else if(e.code==='KeyX')orbitCamera(cameraRig,Math.PI/4);
+  else if(e.code==='KeyR')centerCamera(cameraRig);
+  else if(e.code==='Equal'||e.code==='NumpadAdd')zoomCamera(cameraRig,-.13);
+  else if(e.code==='Minus'||e.code==='NumpadSubtract')zoomCamera(cameraRig,.13);
+});
+
 function resize(){const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<1.5?48:36;camera.updateProjectionMatrix();}
 new ResizeObserver(resize).observe(host);resize();
-document.querySelector('#retry').addEventListener('click',()=>{state=initialScene();ui.result.hidden=true;bar.visible=true;pickupGlow.visible=true;exitGlow.visible=false;});
+document.querySelector('#retry').addEventListener('click',()=>{state=initialScene();cameraRig.focusX=state.player.x;cameraRig.focusZ=state.player.z;centerCamera(cameraRig);held.clear();ui.result.hidden=true;bar.visible=true;pickupGlow.visible=true;exitGlow.visible=false;});
 function loop(now) {
   const dt=Math.min((now-previous)/1000,.05);previous=now;
-  const input={x:Number(held.has('right'))-Number(held.has('left')),z:Number(held.has('down'))-Number(held.has('up')),take:held.has('take'),crouch:held.has('crouch')};
+  const screenX=Number(held.has('right'))-Number(held.has('left'));
+  const screenZ=Number(held.has('down'))-Number(held.has('up'));
+  const worldMove=cameraRelativeMovement(screenX,screenZ,cameraRig.yaw);
+  const input={...worldMove,take:held.has('take'),crouch:held.has('crouch')};
   updateScene(state,input,dt);
-  const target=new THREE.Vector3(state.player.x+6.2,8.7,state.player.z+6.95);
-  camera.position.lerp(target,.045); camera.lookAt(state.player.x+1,.75,state.player.z-3.05);
+  updateView(worldMove,dt);
   orientFigure(player,state.player.x,state.player.z,state.player.stride);
   const gaitTexture=state.taking?ipnoTakeTexture:(input.x||input.z)&&Math.floor(state.player.stride*1.2)%2?ipnoWalkTexture:ipnoTexture;
   if(player.image.material.map!==gaitTexture){player.image.material.map=gaitTexture;player.image.material.needsUpdate=true;}
