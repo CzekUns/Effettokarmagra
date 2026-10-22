@@ -87,3 +87,13 @@ Tutte le nuove immagini `revision-*.png` sono screenshot autentici del gioco in 
 ![Accovacciata e nuovi controlli touch](assets/reference-play/mobile-stealth-crouch.png)
 
 Gli screenshot vengono dal gioco renderizzato in Chromium, con stato di prova riproducibile. La stessa tavola continua a guidare proporzioni di Ipno e POLICIE, scaffali fitti, palette viola/arancio/ciano, pavimento caldo riflettente e vista obliqua. La nuova confezione Ciokospira riprende i colori dei prodotti della tavola ed è una proposta da approvare nella PR. Gli scarti visivi già dichiarati persistono: sprite piani, facciate ripetute e tavola disponibile soltanto come anteprima 720×405. La viewport touch non sostituisce la prova su Android fisico.
+
+## Negozio ampliato e difficoltà dopo 45 cioccolate
+
+| Desktop a 45 pezzi, 21 POLICIE e 10 CCTV | Controlli touch in posizione curva |
+|---|---|
+| ![Partita a 45 pezzi](assets/reference-play/difficulty-45-desktop.png) | ![Tre pulsanti tondi e CAMERA](assets/reference-play/difficulty-controls-mobile.png) |
+
+![Stella viola della cioccolata speciale sulla minimappa touch](assets/reference-play/difficulty-special-mobile.png)
+
+Sono catture del gioco reale in Chromium, con stato di prova controllato. La tavola approvata resta l'unica guida artistica: mappa, scaffali e controlli aggiunti ne conservano palette e materiali. Ipno viene allargato in modo progressivo a 15, 30 e 45 pezzi; il risultato si vede nello screenshot desktop, pur restando uno sprite piano. Il browser software del server, sotto carico, non dà una misura attendibile degli FPS su Android fisico.

@@ -1,5 +1,7 @@
 # For Four Chocolate — passaggio a gameplay semidefinitivo
 
+**Aggiornamento successivo alla prova di Simone a 45 pezzi (22/10):** i numeri iniziali di questo piano sono storici. La proposta giocabile ora ha 10 CCTV, agenti POLICIE senza limite fisso (uno ogni due pezzi dal quinto), 56 punti di prelievo in 960 m², Ciokospira ogni quattro prelievi dopo il terzo e comandi touch rivisti. Dettagli in [STEALTH_E_CIOCCOLATE_SPECIALI.md](./STEALTH_E_CIOCCOLATE_SPECIALI.md).
+
 **Aggiornamento Simone, 22/10/2026:** l'obiettivo fisso di quattro cioccolate descritto nel piano iniziale è superato. La nuova partita non ha limite di prelievi: i ripiani si riforniscono, l'uscita è disponibile in ogni momento e il giocatore decide quando salvare il record. La sorveglianza inizia con una CCTV, poi cresce per soglie fino a sei CCTV e otto agenti. Le guardie mostrano `!` quando ricevono o rilevano un allarme. Ogni cioccolata vale 1 Kč; la cattura applica una multa di 50 Kč e non aggiorna il record. Su mobile si usa un joypad analogico. Le parti storiche sotto restano il piano dei lotti A/B/C già realizzati.
 
 **22 ottobre 2026 — brief affidato al collaboratore.** Questo documento definisce la prossima fase di `reference-play.html`. Le attività vanno sviluppate dal collaboratore in **PR separate**; ChatGPT gestisce verifica e merge quando richiesto dall'utente. **Non sono già implementate**.

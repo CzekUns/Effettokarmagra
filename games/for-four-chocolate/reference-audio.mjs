@@ -1,6 +1,6 @@
-const GAMEPLAY_VOLUME = .065; // Half the original soundtrack level (.13)
-const FINALE_VOLUME = .275; // Half the original soundtrack level (.55)
-const DIALOGUE_VOLUME = .085; // Half the original soundtrack level (.17)
+const GAMEPLAY_VOLUME = .0325; // Simone: soundtrack halved again; alert cues are unchanged.
+const FINALE_VOLUME = .1375;
+const DIALOGUE_VOLUME = .0425;
 const CUE_COOLDOWN = 1.5;
 
 export function createAudioState(muted = false) {

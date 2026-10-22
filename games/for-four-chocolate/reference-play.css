@@ -58,3 +58,27 @@ html,body,.game,.game *{user-select:none;-webkit-user-select:none;-webkit-touch-
 .music-toggle{position:absolute;z-index:11;left:14px;top:86px;min-width:120px;min-height:44px;padding:7px 10px;border:1px solid #b6dbd8;border-radius:8px;background:#142d3de8;color:#fff4dc;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation}
 .music-toggle[hidden]{display:none}.music-toggle:focus-visible{outline:3px solid #ffe0a0;outline-offset:2px}
 @media(pointer:coarse){.music-toggle{left:8px;top:45px;min-width:106px;min-height:42px;font-size:11px}}
+.camera-label{font:900 10px Arial,sans-serif;letter-spacing:.08em;color:#d9f3ee;text-shadow:0 1px 3px #000}
+.radar .special-marker{position:absolute;z-index:3;display:block;color:#d79aff;font:900 15px/1 Arial,sans-serif;transform:translate(-50%,-50%);text-shadow:0 0 7px #a500ff,0 0 3px #fff}
+.radar .special-marker[hidden]{display:none}
+@media(pointer:coarse){
+  .camera-label{font-size:9px;letter-spacing:0}
+  .touch.right{width:230px;height:148px;right:8px;bottom:14px;display:block}
+  .touch.right button,.touch.right #crouch{position:absolute;width:68px;height:68px;min-width:68px;max-width:68px;padding:5px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;line-height:1.05;box-shadow:0 4px 15px #050a17b0}
+  .touch.right #take{left:0;bottom:0}
+  .touch.right #crouch{left:80px;bottom:61px;flex-direction:column;gap:1px}
+  .touch.right #crouch-label{max-width:60px;font-size:0;overflow-wrap:normal}
+  .touch.right #crouch-label::after{content:'GIÙ';font-size:9px}
+  .touch.right #crouch[aria-pressed="true"] #crouch-label::after{content:'IN PIEDI'}
+  .touch.right #sprint{right:0;bottom:20px}
+  .mission{max-width:40%}
+}
+@media(max-width:700px) and (orientation:landscape){
+  .touch.right{width:200px;height:128px;right:4px;bottom:7px}
+  .touch.right button,.touch.right #crouch{width:60px;height:60px;min-width:60px;max-width:60px;font-size:9px}
+  .touch.right #crouch{left:68px;bottom:52px}
+  .touch.right #crouch-label{max-width:54px;font-size:0}
+  .touch.right #crouch-label::after{font-size:8px}
+  .touch.right #sprint{bottom:17px}
+  .camera-label{font-size:8px}
+}

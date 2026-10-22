@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {initialScene,updateScene,increaseSecurity,guardSight,nearestSpecial,eatSpecial,
-  SPECIAL_EFFECTS,GUARD_HEARING_RANGE,CAMERA_THRESHOLDS,GUARD_THRESHOLDS,takeDuration} from './reference-play-logic.mjs';
+  SPECIAL_EFFECTS,GUARD_HEARING_RANGE,CAMERA_THRESHOLDS,GUARD_THRESHOLDS,takeDuration,
+  guardTarget,playerBulkScale} from './reference-play-logic.mjs';
 
 function disableOtherEyes(scene){
   scene.cameras.forEach(camera=>camera.range=0);
@@ -52,29 +53,45 @@ test('a 15 pezzi la guardia riconosce Ipno solo nella metà vicina',()=>{
 });
 
 test('la sicurezza cresce prima, le pattuglie cambiano bersaglio e la ricerca dura un poco di più',()=>{
-  assert.deepEqual(CAMERA_THRESHOLDS,[0,2,3,5,7,10]);
-  assert.deepEqual(GUARD_THRESHOLDS,[5,6,8,10,13,16,19,23]);
+  assert.deepEqual(CAMERA_THRESHOLDS,[0,2,3,5,7,10,14,18,24,32]);
+  assert.deepEqual(GUARD_THRESHOLDS,[5,7,9,11,13,15,17,19]);
+  assert.equal(guardTarget(45),21);
+  assert.equal(guardTarget(101),49);
   const scene=initialScene(38);scene.chocolate=5;increaseSecurity(scene);disableOtherEyes(scene);
   const guard=scene.guards[0],targets=new Set();
-  for(let i=0;i<240;i++){
+  for(let i=0;i<600;i++){
     updateScene(scene,{x:0,z:0},.05);
     if(guard.patrolTarget)targets.add(`${guard.patrolTarget.x.toFixed(1)},${guard.patrolTarget.z.toFixed(1)}`);
   }
   assert.ok(targets.size>=2);
 });
 
-test('Ciokospira compare su uno scaffale libero, si scopre e poi si mangia con esito nascosto',()=>{
-  const scene=Array.from({length:200},(_,seed)=>initialScene(seed)).find(item=>item.special);
-  assert.ok(scene?.special);
+test('Ciokospira compare al terzo prelievo, si scopre e poi si mangia con esito nascosto',()=>{
+  const scene=initialScene(8);
+  scene.cameras.forEach(camera=>camera.range=0);
+  for(let piece=0;piece<3;piece++){
+    const spot=scene.pickups[0];scene.player.x=spot.x;scene.player.z=spot.z;
+    for(let i=0;i<30;i++)updateScene(scene,{take:true},.05);
+    updateScene(scene,{take:false},.05);
+  }
+  assert.ok(scene.special);
   assert.ok(!scene.pickups.some(item=>item.id===scene.special.id));
   scene.cameras.forEach(camera=>camera.range=0);
   scene.player.x=scene.special.x;scene.player.z=scene.special.z;
   assert.equal(nearestSpecial(scene)?.name,'Ciokospira');
   updateScene(scene,{take:true,x:0,z:0},.05);
-  assert.equal(scene.specialOffer.stage,'found');assert.equal(scene.chocolate,0);
+  assert.equal(scene.specialOffer.stage,'found');assert.equal(scene.chocolate,3);
   const effect=eatSpecial(scene);
   assert.ok(SPECIAL_EFFECTS.includes(effect));assert.equal(scene.specialOffer.stage,'eaten');
   assert.equal(eatSpecial(scene),null);
+});
+
+test('Ipno cresce a scatti ogni 15 pezzi e continua a crescere',()=>{
+  assert.equal(playerBulkScale(14),1);
+  assert.ok(playerBulkScale(15)>=1.3);
+  assert.ok(playerBulkScale(30)>=1.6);
+  assert.ok(playerBulkScale(45)>=1.9);
+  assert.ok(playerBulkScale(75)>playerBulkScale(45));
 });
 
 test('tutti i dieci esiti hanno effetto sul punteggio, sul rischio o sulla velocità',()=>{
