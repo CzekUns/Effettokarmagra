@@ -38,7 +38,7 @@ export function centerCamera(rig) {
 
 export function updateCameraRig(rig, player, movement, seconds, aspect = 16 / 9) {
   const yawT = smoothing(7.5, seconds);
-  const followT = smoothing(4.3, seconds);
+  const followT = smoothing(6.5, seconds);
   const leadT = smoothing(5.5, seconds);
   rig.yaw += shortestAngle(rig.yaw, rig.targetYaw) * yawT;
   rig.zoom = lerp(rig.zoom, rig.targetZoom, smoothing(7, seconds));
@@ -52,7 +52,7 @@ export function updateCameraRig(rig, player, movement, seconds, aspect = 16 / 9)
   rig.focusZ = lerp(rig.focusZ, clamp(player.z + rig.lookAheadZ, -4.65, 4.65), followT);
   // Nel landscape basso si allarga appena il campo inquadrato.
   const framing = aspect > 2 ? 1.08 : 1;
-  const distance = 14.05 * rig.zoom * framing;
+  const distance = 10.7 * rig.zoom * framing;
   const horizontal = distance * Math.cos(.6);
   return {
     x: rig.focusX + Math.sin(rig.yaw) * horizontal,
