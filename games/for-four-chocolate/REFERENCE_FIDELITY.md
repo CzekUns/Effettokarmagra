@@ -31,3 +31,21 @@ Questa prova si apre in `reference-play.html`. La tavola nel repository è un'an
 **Aggiornamento lotto C (22/10):** l'interfaccia ora mostra chi ha visto il prelievo, le guardie che intervengono e l'ultima posizione nota sulla minimappa. Gli screenshot [POLICIE in inseguimento](assets/reference-play/policie-pursuit.png), [allarme CCTV desktop](assets/reference-play/cctv-alert.png) e [allarme CCTV mobile landscape](assets/reference-play/cctv-mobile-landscape.png) sono catture del gioco renderizzato in Chromium, con posizioni di prova impostate in modo riproducibile. La corsa usa gli sprite del lotto A; ambiente, personaggi e luce restano quelli derivati dalla sola artboard. L'unica camera CCTV e le facciate di scaffali ripetute restano una semplificazione rispetto alla ricchezza della tavola. Prova Android reale ancora mancante.
 
 **Aggiornamento progressione infinita e joypad (22/10):** [screenshot desktop con 10 cioccolate, guardie e `!`](assets/reference-play/progression-desktop.png) e [screenshot mobile landscape con joypad](assets/reference-play/joypad-mobile-landscape.png) sono catture reali del browser. La scena, gli sprite e i prodotti conservano la sola artboard approvata come guida. Il nuovo `!` è un indicatore UI disegnato nel codice: non modifica i costumi dei personaggi. Le differenze visive dalla reference restano quelle già dichiarate sopra; non sono stati introdotti altri asset stilistici. La prova mobile è una viewport Chromium, non un Android fisico.
+
+## Finali a Praga (#107) — confronto e prove visive
+
+| Uscita volontaria a Praga | Cattura: ufficio POLICIE |
+|---|---|
+| ![Ipno e la comitiva nella strada di Praga](assets/reference-play/finale-street.png) | ![Ufficio con Ipno, agente e sottotitolo ceco](assets/reference-play/finale-office.png) |
+
+| Scala mobile | Multa in strada e cameo |
+|---|---|
+| ![Ipno e agente sulla scala mobile](assets/reference-play/finale-escalator.png) | ![Agente con multa e Capellone sullo sfondo](assets/reference-play/finale-fine.png) |
+
+| Risultato e WhatsApp dopo l'uscita | Risultato e WhatsApp dopo la cattura |
+|---|---|
+| ![Risultato positivo](assets/reference-play/finale-success-result.png) | ![Risultato con multa](assets/reference-play/finale-caught-result.png) |
+
+Le sei immagini sopra sono **screenshot autentici di Chromium 1280×720** del gioco renderizzato, con stato di prova riproducibile (3 cioccolate all'uscita; 7 alla cattura). [Scena in viewport mobile landscape 844×390](assets/reference-play/mobile-finale-street.png) e [risultato cattura mobile](assets/reference-play/mobile-finale-caught-result.png) sono anch'essi screenshot reali; non è stata usata una foto come fondale di gioco.
+
+La tavola approvata guida sagome, costume di Ipno/POLICIE, contrasto caldo/freddo e camera obliqua. La miniatura del gruppo ha guidato solo il cast: Ipno entra da sinistra, quattro compagni lo attendono e Capellone è all'estremità destra; nella cattura Capellone ricompare **una sola volta**, in cameo con cintura di salame. Le facciate di Praga e il pavé sono texture WebP illustrate su geometrie 3D, con insegna della Città Vecchia, guglie e orologio nel set. L'ufficio e la scala mobile sono geometrie 3D animate semplici. **Scarti:** le facciate sono ripetute, gli attori rimangono sprite piani e la foto 200×128 limita i dettagli individuali dei compagni. Gli asset sono **provvisori e da approvare da Simone**. Le viewport browser non equivalgono a un test su Android fisico; le prestazioni del rendering software EC2 non rappresentano quelle del dispositivo.

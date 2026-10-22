@@ -24,6 +24,8 @@ La scena campione è stata pubblicata tramite PR #98 e le quattro cioccolate ini
 ## Finali a Praga e condivisione WhatsApp (richiesta 22 ottobre 2026)
 Il prossimo incarico narrativo del collaboratore è [issue #107](https://github.com/CzekUns/Effettokarmagra/issues/107), descritto in [FINALI_E_CONDIVISIONE.md](./FINALI_E_CONDIVISIONE.md): due scene animate di uscita a Praga, cattura con ufficio/battuta ceca/scala mobile/multa/cameo Capellone con cintura di salame, e **condivisione del risultato tramite un pulsante WhatsApp in entrambi i finali**, indipendentemente dal punteggio. La foto del gruppo dei ragazzi è ora disponibile **solo come miniatura ridotta** in [references/gruppo-ragazzi-foto.webp](./references/gruppo-ragazzi-foto.webp); l'originale resta fuori dalla repo. Usare questa precisa foto per il cast e non creare doppioni di Ipno o Capellone. La reference di stile approvata resta l'unica per il disegno.
 
+L'implementazione proposta per #107 vive nella demo `reference-play.html`: sequenza e testi in `reference-finale-logic.mjs`, ambiente e attori in `reference-finale-scene.mjs`, messaggi in `reference-share.mjs`. Le fotografie restano riferimenti; gli asset WebP sotto `assets/reference-play/` sono illustrazioni provvisorie da mostrare a Simone prima del merge. Conservare un solo Capellone per finale: senza cintura nel gruppo del successo, con cintura di salame solo nel cameo della cattura.
+
 ## Obblighi per ogni PR che riguarda grafica, personaggi, inquadratura o asset
 
 1. **Aprire e osservare la reference sopra PRIMA di creare asset o modificare il renderer.** Descrivere in PR che cosa si è riprodotto della tavola, cosa differisce e perché.
