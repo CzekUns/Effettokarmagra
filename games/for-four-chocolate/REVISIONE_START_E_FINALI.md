@@ -50,3 +50,5 @@ Le correzioni sono integrazione a [FINALI_E_CONDIVISIONE.md](./FINALI_E_CONDIVIS
 - [ ] PR dedicata e `WORK_LOG.md` aggiornato; **non fare merge autonomo**.
 
 **Immagine START ora caricata su `main`:** [references/start-screen-approved.jpg](./references/start-screen-approved.jpg), fedele byte-per-byte alla foto/immagine allegata nella conversazione corrente del 22/10/2026, 1536×864, logo giallo/rosso `FOR FOUR CHOCOLATE` a sinistra, Ipno in camicia nero/rossa con cioccolate in primo piano e pulsante `PRESS START` in basso al centro. La tavola artistica unica del gameplay rimane valida per il resto.
+
+**Esito/Stato 22/10/2026:** la revisione #109 è preparata sul ramo `ffc-start-finali` per PR separata. Il file `references/start-screen-approved.jpg` è usato direttamente e senza ricompressione; test Chromium desktop/mobile landscape e 36 test Node superati, screenshot autentici in `assets/reference-play/revision-*.png`. Android fisico resta da provare. Le caselle rimangono aperte fino a merge e collaudo di Simone.
