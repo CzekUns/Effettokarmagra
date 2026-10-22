@@ -21,6 +21,9 @@ Queste istruzioni integrano `/AGENTS.md`. Ultima decisione dell'utente: **22 ott
 ## Fase gameplay semidefinitivo (22 ottobre 2026) — incarichi attivi
 La scena campione è stata pubblicata tramite PR #98 e le quattro cioccolate iniziali tramite PR #99; **l'utente ha autorizzato a espandere il gameplay**. Leggere il nuovo [PIANO_GAMEPLAY_SEMIDEFINITIVO.md](./PIANO_GAMEPLAY_SEMIDEFINITIVO.md), che supera le sole limitazioni di perimetro del primo campione. Il collaboratore `ilconsulentelogistico-hue` è incaricato degli issue [#100 (sprite)](https://github.com/CzekUns/Effettokarmagra/issues/100), [#101 (supermercato e spawn)](https://github.com/CzekUns/Effettokarmagra/issues/101) e [#102 (reazione sorveglianza)](https://github.com/CzekUns/Effettokarmagra/issues/102). Aprire PR separate, **nessun merge automatico**. Rimane assoluto il vincolo grafico della reference sopra.
 
+## Finali a Praga e condivisione WhatsApp (richiesta 22 ottobre 2026)
+Il prossimo incarico narrativo del collaboratore è [issue #107](https://github.com/CzekUns/Effettokarmagra/issues/107), descritto in [FINALI_E_CONDIVISIONE.md](./FINALI_E_CONDIVISIONE.md): due scene animate di uscita a Praga, cattura con ufficio/battuta ceca/scala mobile/multa/cameo Capellone con cintura di salame, e **condivisione del risultato tramite un pulsante WhatsApp in entrambi i finali**, indipendentemente dal punteggio. La foto del gruppo di ragazzi è stata fornita in chat ma **non** è presente nella repo pubblica: prima di realizzare il cast il collaboratore deve ottenerla tramite canale autorizzato; nessun doppione di Ipno e Capellone. La reference di stile approvata resta l'unica per il disegno.
+
 ## Obblighi per ogni PR che riguarda grafica, personaggi, inquadratura o asset
 
 1. **Aprire e osservare la reference sopra PRIMA di creare asset o modificare il renderer.** Descrivere in PR che cosa si è riprodotto della tavola, cosa differisce e perché.
