@@ -18,6 +18,9 @@ Queste istruzioni integrano `/AGENTS.md`. Ultima decisione dell'utente: **22 ott
 - Le foto `references/ipno-foto-1.webp`, `ipno-foto-2.webp` e `totore-capellone.webp` restano fonti **per le identità dei personaggi**, **non** sono ulteriori art-style reference.
 - `assets/ps1-sample-*.png`, `assets/sheet.png`, `STILE_PERSONAGGI.md` e le copertine precedenti restano soltanto **documentazione storica della versione respinta**; non vanno usati per decidere il look futuro.
 
+## Fase gameplay semidefinitivo (22 ottobre 2026) — incarichi attivi
+La scena campione è stata pubblicata tramite PR #98 e le quattro cioccolate iniziali tramite PR #99; **l'utente ha autorizzato a espandere il gameplay**. Leggere il nuovo [PIANO_GAMEPLAY_SEMIDEFINITIVO.md](./PIANO_GAMEPLAY_SEMIDEFINITIVO.md), che supera le sole limitazioni di perimetro del primo campione. Il collaboratore `ilconsulentelogistico-hue` è incaricato degli issue [#100 (sprite)](https://github.com/CzekUns/Effettokarmagra/issues/100), [#101 (supermercato e spawn)](https://github.com/CzekUns/Effettokarmagra/issues/101) e [#102 (reazione sorveglianza)](https://github.com/CzekUns/Effettokarmagra/issues/102). Aprire PR separate, **nessun merge automatico**. Rimane assoluto il vincolo grafico della reference sopra.
+
 ## Obblighi per ogni PR che riguarda grafica, personaggi, inquadratura o asset
 
 1. **Aprire e osservare la reference sopra PRIMA di creare asset o modificare il renderer.** Descrivere in PR che cosa si è riprodotto della tavola, cosa differisce e perché.
