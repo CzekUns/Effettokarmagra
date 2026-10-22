@@ -4,6 +4,7 @@ import {
   createCameraRig, orbitCamera, zoomCamera, tiltCamera, centerCamera,
   updateCameraRig, cameraRelativeMovement, CAMERA_DEFAULT_YAW
 } from './reference-camera.mjs';
+import { LIMITS } from './reference-play-logic.mjs?v=8';
 
 test('camera follows player with look-ahead and changes view position', () => {
   const rig = createCameraRig({ x: 0, z: 0 });
@@ -48,4 +49,16 @@ test('la levetta può inclinare la camera senza alterare i limiti dello zoom',()
   tiltCamera(rig,10);assert.equal(rig.targetPitch,.83);
   tiltCamera(rig,-10);assert.equal(rig.targetPitch,.43);
   centerCamera(rig);assert.equal(rig.targetPitch,.6);
+});
+test('la camera resta dentro il supermercato anche negli angoli con zoom massimo',()=>{
+  for(const player of [{x:LIMITS.minX+.4,z:LIMITS.minZ+.4},{x:LIMITS.minX+.4,z:LIMITS.maxZ-.4},
+    {x:LIMITS.maxX-.4,z:LIMITS.minZ+.4},{x:LIMITS.maxX-.4,z:LIMITS.maxZ-.4}]){
+    const rig=createCameraRig(player);
+    zoomCamera(rig,1);
+    for(let i=0;i<60;i++)updateCameraRig(rig,player,{x:0,z:0},.05);
+    const view=updateCameraRig(rig,player,{x:0,z:0},.05);
+    assert.ok(view.x>LIMITS.minX&&view.x<LIMITS.maxX);
+    assert.ok(view.z>LIMITS.minZ&&view.z<LIMITS.maxZ);
+    assert.ok(Math.abs(view.lookX-player.x)<.01&&Math.abs(view.lookZ-player.z)<.01);
+  }
 });

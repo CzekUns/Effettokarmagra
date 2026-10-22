@@ -11,9 +11,9 @@ function takeAt(s,p) {
   for(let i=0;i<30;i++)updateScene(s,{take:true},.05);
 }
 
-test('mappa quasi quattro volte più grande, scaffali e frigoriferi bloccano movimento e visuale',()=>{
-  assert.ok((LIMITS.maxX-LIMITS.minX)*(LIMITS.maxZ-LIMITS.minZ)>=3.8*11.2*10.2);
-  assert.equal(SHELVES.length,7);
+test('supermercato ampliato: scaffali e frigoriferi bloccano movimento e visuale',()=>{
+  assert.ok((LIMITS.maxX-LIMITS.minX)*(LIMITS.maxZ-LIMITS.minZ)>=900);
+  assert.equal(SHELVES.length,15);
   assert.equal(collides(SHELVES[0].x,SHELVES[0].z),true);
   assert.equal(collides(-8.55,-2.9),false);
   const eye={x:SHELVES[0].x-1.5,z:-2.9,angle:0,halfAngle:.5,range:7};
@@ -29,18 +29,18 @@ test('uno scaffale davanti a Ipno sfuma; scaffali fuori dalla linea restano opac
     {x:shelf.x-2,z:shelf.z+6}),false);
 });
 
-test('18 posizioni candidate su ripiani, 8–12 attive per seed, ogni reparto rappresentato',()=>{
-  assert.equal(PICKUP_CANDIDATES.length,18);
+test('56 posizioni candidate su ripiani, 14–22 attive per seed, ogni reparto rappresentato',()=>{
+  assert.equal(PICKUP_CANDIDATES.length,56);
   for(const p of PICKUP_CANDIDATES){
     assert.equal(collides(p.x,p.z),false,p.id);
     assert.ok(SHELVES.some(s=>s.id===p.shelfId));
     assert.ok(Math.abs(p.x-p.shelfX)<.8,p.id);
   }
-  for(const count of [8,10,12]){
+  for(const count of [14,18,22]){
     const selected=selectPickups(1234,count);
     assert.equal(selected.length,count);
     assert.equal(new Set(selected.map(p=>p.id)).size,count);
-    assert.equal(new Set(selected.map(p=>p.shelfId)).size,6);
+    assert.equal(new Set(selected.map(p=>p.shelfId)).size,14);
     assert.ok(selected.every(p=>p.status==='available'));
     assert.deepEqual(selectPickups(1234,count),selected);
   }
@@ -77,17 +77,17 @@ test('camminare davanti alle guardie non provoca arresto',()=>{
 test('uscita libera e raccolta infinita con rifornimento sugli scaffali',()=>{
   const early=initialScene(7);early.player.x=EXIT.x;early.player.z=EXIT.z;updateScene(early,{},.05);
   assert.equal(early.phase,'escaped');assert.equal(crowns(early),0);
-  const s=initialScene(7);noWatch(s);
+  const s=initialScene(7);s.chocolate=45;increaseSecurity(s);s.chocolate=0;noWatch(s);
   for(let i=0;i<30;i++){
     noWatch(s);const p=s.pickups[0];takeAt(s,p);
-    assert.equal(s.chocolate,i+1);assert.equal(s.pickups.length,10);
-    assert.equal(new Set(s.pickups.map(p=>p.id)).size,10);
+    assert.equal(s.chocolate,i+1);assert.equal(s.pickups.length,14);
+    assert.equal(new Set(s.pickups.map(p=>p.id)).size,14);
     assert.ok(s.pickups.every(p=>p.status==='available'));
     updateScene(s,{take:false},.05);
   }
   assert.equal(s.phase,'playing');assert.equal(crowns(s),30);
   assert.equal(s.cameras.length,CAMERA_THRESHOLDS.length);
-  assert.equal(s.guards.length,GUARD_THRESHOLDS.length);
+  assert.ok(s.guards.length>GUARD_THRESHOLDS.length);
   s.player.x=EXIT.x;s.player.z=EXIT.z;updateScene(s,{},.05);
   assert.equal(s.phase,'escaped');assert.equal(crowns(s),30);
 });
@@ -117,7 +117,7 @@ test('POLICIE vede un prelievo: allarme osservabile, inseguimento fisico e cattu
 });
 
 test('CCTV che vede il prelievo invia una guardia senza cattura magica',()=>{
-  const s=initialScene(2),p=s.pickups.find(item=>item.id==='chocolate-2');
+  const s=initialScene(2),p=s.pickups.find(item=>item.shelfId==='chocolate');
   s.guards.forEach(g=>g.halfAngle=0);s.cameras.forEach(c=>c.range=0);
   s.player.x=p.x;s.player.z=p.z;updateScene(s,{take:true},.05);
   s.cameras[0].x=p.x-Math.cos(2.2)*2;s.cameras[0].z=p.z-Math.sin(2.2)*2;s.cameras[0].range=7;
@@ -137,9 +137,10 @@ test('prelievo nascosto devia una guardia della zona verso il ripiano',()=>{
   assert.equal(s.watchZones[p.zone],1);
   const guard=s.guards.find(g=>g.mode==='inspect');assert.ok(guard);
   assert.equal(guard.zone,p.zone);
-  const before={x:guard.x,z:guard.z};
+  const before=Math.hypot(guard.x-p.x,guard.z-p.z);
   for(let n=0;n<40;n++)updateScene(s,{},.05);
-  assert.ok(Math.hypot(guard.x-before.x,guard.z-before.z)>1);
+  assert.ok(Math.hypot(guard.x-p.x,guard.z-p.z)<=before);
+  assert.ok(Math.hypot(guard.x-p.x,guard.z-p.z)<.55);
   assert.equal(collides(guard.x,guard.z),false);
 });
 

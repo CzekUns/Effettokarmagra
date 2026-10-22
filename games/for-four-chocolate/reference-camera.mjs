@@ -1,6 +1,6 @@
 // Camera cinematografica del campione. Coordinate sul piano X/Z, Y verticale.
 // Lo stato e le trasformazioni pure sono separati da Three.js per poterli testare.
-import { LIMITS } from './reference-play-logic.mjs?v=6';
+import { LIMITS } from './reference-play-logic.mjs?v=8';
 const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
 const lerp = (a, b, t) => a + (b - a) * t;
 const smoothing = (rate, seconds) => 1 - Math.exp(-rate * clamp(seconds, 0, .1));
@@ -63,9 +63,9 @@ export function updateCameraRig(rig, player, movement, seconds, aspect = 16 / 9)
   const distance = 10.7 * rig.zoom * framing;
   const horizontal = distance * Math.cos(rig.pitch);
   return {
-    x: rig.focusX + Math.sin(rig.yaw) * horizontal,
+    x: clamp(rig.focusX + Math.sin(rig.yaw) * horizontal, LIMITS.minX + 1.2, LIMITS.maxX - 1.2),
     y: .85 + distance * Math.sin(rig.pitch),
-    z: rig.focusZ + Math.cos(rig.yaw) * horizontal,
+    z: clamp(rig.focusZ + Math.cos(rig.yaw) * horizontal, LIMITS.minZ + 1.2, LIMITS.maxZ - 1.2),
     lookX: rig.focusX,
     lookY: .85,
     lookZ: rig.focusZ

@@ -1,8 +1,8 @@
 // Metres on the supermarket floor; rendering and rules use the same shelf data.
-export const LIMITS = Object.freeze({ minX: -11, maxX: 11, minZ: -10, maxZ: 10 });
+export const LIMITS = Object.freeze({ minX: -16, maxX: 16, minZ: -15, maxZ: 15 });
 export const FINE = 50;
-export const CAMERA_THRESHOLDS = Object.freeze([0,2,3,5,7,10]);
-export const GUARD_THRESHOLDS = Object.freeze([5,6,8,10,13,16,19,23]);
+export const CAMERA_THRESHOLDS = Object.freeze([0,2,3,5,7,10,14,18,24,32]);
+export const GUARD_THRESHOLDS = Object.freeze([5,7,9,11,13,15,17,19]);
 export const GUARD_HEARING_RANGE = 2.7;
 export const SPECIAL_NAME = 'Ciokospira';
 export const SPECIAL_EFFECTS = Object.freeze([
@@ -16,7 +16,15 @@ export const SHELVES = Object.freeze([
   { id:'drinks', label:'NÁPOJE', x:3.45, z:-2.9, length:5.2, kind:'drinks', zone:'east' },
   { id:'offers', label:'AKCE', x:6.9, z:-2.9, length:5.2, kind:'chocolate', zone:'east' },
   { id:'specials', label:'SPECIÁL', x:-6.9, z:5, length:2.6, kind:'low', zone:'west' },
-  { id:'checkout', label:'POKLADNA', x:6.5, z:5, length:2.6, kind:'checkout', zone:'east' }
+  { id:'checkout', label:'POKLADNA', x:6.5, z:5, length:2.6, kind:'checkout', zone:'east' },
+  { id:'west-north', label:'ČOKOLÁDA', x:-12.5, z:-8.5, length:5.2, kind:'chocolate', zone:'west' },
+  { id:'west-south', label:'POTRAVINY', x:-12.5, z:7.5, length:5.2, kind:'food', zone:'west' },
+  { id:'east-north', label:'NÁPOJE', x:12.5, z:-8.5, length:5.2, kind:'drinks', zone:'east' },
+  { id:'east-south', label:'ČOKOLÁDA', x:12.5, z:7.5, length:5.2, kind:'chocolate', zone:'east' },
+  { id:'north-west', label:'SLADKOSTI', x:-6.9, z:-10.3, length:4, kind:'chocolate', zone:'west' },
+  { id:'north-east', label:'AKCE', x:6.9, z:-10.3, length:4, kind:'chocolate', zone:'east' },
+  { id:'south-west', label:'ČOKOLÁDA', x:-3.45, z:10.3, length:4, kind:'chocolate', zone:'west' },
+  { id:'south-east', label:'POTRAVINY', x:3.45, z:10.3, length:4, kind:'food', zone:'east' }
 ].map(Object.freeze));
 export const PARTITIONS = Object.freeze([
   {minX:-5.0,maxX:-1.7,minZ:2.05,maxZ:2.38,height:1.75},
@@ -31,35 +39,37 @@ const shelfCover = SHELVES.map(shelf => Object.freeze({
 export const COVER = Object.freeze([
   ...shelfCover,
   ...PARTITIONS,
-  Object.freeze({ minX:-10.8,maxX:-10.1,minZ:-8.7,maxZ:1.6,height:3.5 }),
-  Object.freeze({ minX:-9.5,maxX:7.7,minZ:-9.7,maxZ:-9.05,height:3.5 })
+  Object.freeze({ minX:-15.8,maxX:-15.1,minZ:-13.7,maxZ:-3.4,height:3.5 }),
+  Object.freeze({ minX:-14.5,maxX:12.7,minZ:-14.7,maxZ:-14.05,height:3.5 })
 ]);
 const candidateSpots = SHELVES.filter(s=>s.id!=='checkout').flatMap(shelf =>
-  [-1,0,1].map((slot) => {
-    const side = slot===0 ? -1 : 1;
-    const offset = shelf.length>4 ? slot*1.48 : slot*.72;
-    return Object.freeze({ id:`${shelf.id}-${slot+1}`, shelfId:shelf.id,
+  [-2,-1,1,2].map((slot,index) => {
+    const side = Math.sign(slot);
+    const offset = slot*shelf.length/4.8;
+    return Object.freeze({ id:`${shelf.id}-${index+1}`, shelfId:shelf.id,
       x:shelf.x+side*.99, z:shelf.z+offset, shelfX:shelf.x+side*.62,
       reach:.79, zone:shelf.zone, side });
   }));
 export const PICKUP_CANDIDATES = Object.freeze(candidateSpots);
 export const PICKUPS = PICKUP_CANDIDATES; // data for maps and older test tooling
-export const EXIT = Object.freeze({ x:9.6, z:-8.25, reach:.8 });
+export const EXIT = Object.freeze({ x:14.6, z:-13.25, reach:.8 });
 export const TAKE_SECONDS = 1.15;
 export const CAMERA_POSTS = Object.freeze([
   {x:8.9,z:-7.8,baseAngle:2.2}, {x:-8.9,z:-7.8,baseAngle:.85},
   {x:-9.2,z:7.7,baseAngle:-.5}, {x:8.9,z:6.9,baseAngle:-2.5},
-  {x:0,z:8.7,baseAngle:-Math.PI/2}, {x:0,z:-8.4,baseAngle:Math.PI/2}
+  {x:0,z:8.7,baseAngle:-Math.PI/2}, {x:0,z:-8.4,baseAngle:Math.PI/2},
+  {x:-14.2,z:-12.5,baseAngle:.6}, {x:14.1,z:10.8,baseAngle:-2.4},
+  {x:-5,z:13.2,baseAngle:-1.1}, {x:10.2,z:-13.1,baseAngle:1.9}
 ].map(Object.freeze));
 export const GUARD_POSTS = Object.freeze([
   {x:-8.55,z:5.8,dir:-1,minZ:-6.5,maxZ:5.8,zone:'west',baseSpeed:.88},
-  {x:-1,z:-6.3,dir:1,minZ:-6.3,maxZ:6.3,zone:'west',baseSpeed:.74},
-  {x:1,z:6.2,dir:-1,minZ:-6.2,maxZ:6.2,zone:'east',baseSpeed:.8},
-  {x:8.45,z:-6.4,dir:1,minZ:-6.4,maxZ:6,zone:'east',baseSpeed:.85},
-  {x:-9.3,z:-6.3,dir:1,minZ:-6.3,maxZ:6.3,zone:'west',baseSpeed:.83},
-  {x:-5.25,z:7.7,dir:-1,minZ:3.1,maxZ:7.7,zone:'west',baseSpeed:.9},
-  {x:5.4,z:7.7,dir:-1,minZ:3.1,maxZ:7.7,zone:'east',baseSpeed:.9},
-  {x:9.3,z:6.2,dir:-1,minZ:-6.2,maxZ:6.2,zone:'east',baseSpeed:.9}
+  {x:-13.6,z:-11.8,dir:1,minZ:-13,maxZ:12,zone:'west',baseSpeed:.82},
+  {x:12.2,z:2.4,dir:-1,minZ:-13,maxZ:12,zone:'east',baseSpeed:.8},
+  {x:1,z:10.4,dir:-1,minZ:-13,maxZ:12,zone:'east',baseSpeed:.85},
+  {x:-9.3,z:-6.3,dir:1,minZ:-13,maxZ:12,zone:'west',baseSpeed:.83},
+  {x:-13.6,z:11.8,dir:-1,minZ:-13,maxZ:12,zone:'west',baseSpeed:.9},
+  {x:13.6,z:11.8,dir:-1,minZ:-13,maxZ:12,zone:'east',baseSpeed:.9},
+  {x:13.8,z:-11.8,dir:1,minZ:-13,maxZ:12,zone:'east',baseSpeed:.9}
 ].map(Object.freeze));
 export function crowns(s) { return s.chocolate - (s.phase==='caught' ? FINE : 0); }
 const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
@@ -74,7 +84,7 @@ function shuffle(values, random) {
   for(let i=values.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[values[i],values[j]]=[values[j],values[i]];}
   return values;
 }
-export function selectPickups(seed = 1, count = 10) {
+export function selectPickups(seed = 1, count = 14) {
   const random=randomGenerator(seed);
   const chosen=[];
   for(const shelf of SHELVES.filter(s=>s.id!=='checkout')) {
@@ -82,7 +92,7 @@ export function selectPickups(seed = 1, count = 10) {
     chosen.push(options[Math.floor(random()*options.length)]);
   }
   const remaining=shuffle(PICKUP_CANDIDATES.filter(p=>!chosen.includes(p)),random);
-  return [...chosen,...remaining.slice(0,clamp(count,8,12)-chosen.length)]
+  return [...chosen,...remaining.slice(0,clamp(count,chosen.length,22)-chosen.length)]
     .map(p=>({...p,status:'available'}));
 }
 export function collides(x, z, radius = .28) {
@@ -172,9 +182,32 @@ function addCamera(s) {
     halfAngle:.34,range:7});
   return true;
 }
+const PATROL_POINTS=Object.freeze([
+  ...PICKUP_CANDIDATES.map(p=>({x:p.x,z:p.z})),
+  ...[[-14,-12],[-14,12],[14,-12],[14,12],[-9,9],[9,9],[-9,-9],[9,-9]]
+    .map(([x,z])=>({x,z}))
+].filter(p=>!collides(p.x,p.z)).map(Object.freeze));
+function nextRandom(s,key){
+  s[key]=(Math.imul(s[key],1664525)+1013904223)>>>0;
+  return s[key]/4294967296;
+}
+export function guardTarget(chocolate) {
+  return chocolate<5?0:Math.floor((chocolate-5)/2)+1;
+}
+export function playerBulkScale(chocolate) {
+  if(chocolate<15)return 1;
+  return 1+Math.min(1.8,Math.floor(chocolate/15)*.3+(chocolate%15)*.004);
+}
 function addGuard(s) {
-  const index=s.guards.length,post=GUARD_POSTS[index];
-  if(!post)return false;
+  const index=s.guards.length;
+  let post=GUARD_POSTS[index];
+  if(!post){
+    const random=randomGenerator(s.seed^Math.imul(index+1,0x85ebca6b));
+    const options=PATROL_POINTS.filter(point=>Math.hypot(point.x-s.player.x,point.z-s.player.z)>3);
+    const point=options[Math.floor(random()*options.length)]||PATROL_POINTS[index%PATROL_POINTS.length];
+    post={...point,dir:index%2?1:-1,minZ:LIMITS.minZ+1,maxZ:LIMITS.maxZ-1,
+      zone:point.x<0?'west':'east',baseSpeed:.78+random()*.24};
+  }
   s.guards.push({...post,homeX:post.x,angle:post.dir>0?Math.PI/2:-Math.PI/2,
     halfAngle:.5,range:4,stride:0,moving:false,chasing:false,mode:'patrol',
     path:null,repath:0,exclamationTime:0,patrolTarget:null,
@@ -183,24 +216,31 @@ function addGuard(s) {
 }
 export function increaseSecurity(s) {
   while(s.cameras.length<CAMERA_THRESHOLDS.filter(n=>s.chocolate>=n).length)addCamera(s);
-  while(s.guards.length<GUARD_THRESHOLDS.filter(n=>s.chocolate>=n).length)addGuard(s);
+  while(s.guards.length<guardTarget(s.chocolate))addGuard(s);
 }
 function refillPickup(s,used) {
   const active=new Set(s.pickups.filter(p=>p!==used).map(p=>p.id));
-  const available=PICKUP_CANDIDATES.filter(p=>!active.has(p.id)&&p.id!==used.id&&p.id!==s.special?.id);
-  const pool=available.length?available:PICKUP_CANDIDATES.filter(p=>!active.has(p.id)&&p.id!==s.special?.id);
-  const next=pool[(s.seed+s.chocolate*7)%pool.length];
+  const available=PICKUP_CANDIDATES.filter(p=>!active.has(p.id)&&p.id!==s.special?.id);
+  const distant=available.filter(p=>p.shelfId!==used.shelfId&&
+    !s.recentShelves.includes(p.shelfId)&&Math.hypot(p.x-s.player.x,p.z-s.player.z)>=8);
+  const alternatives=available.filter(p=>p.shelfId!==used.shelfId&&
+    Math.hypot(p.x-s.player.x,p.z-s.player.z)>=5);
+  const pool=distant.length?distant:alternatives.length?alternatives:available;
+  const next=pool[Math.floor(nextRandom(s,'refillSeed')*pool.length)];
   s.pickups[s.pickups.indexOf(used)]={...next,status:'available'};
+  s.recentShelves.push(used.shelfId);
+  if(s.recentShelves.length>5)s.recentShelves.shift();
   s.pickupVersion++;
 }
 function maybeSpawnSpecial(s) {
-  if(s.special||s.specialOffer)return;
-  const random=randomGenerator(s.seed^Math.imul(++s.specialRoll,0x45d9f3b));
-  if(random()>.3)return;
+  if(s.normalStolen<3||(s.normalStolen-3)%4!==0||s.specialOffer)return false;
   const occupied=new Set(s.pickups.map(p=>p.id));
-  const choices=PICKUP_CANDIDATES.filter(p=>!occupied.has(p.id));
-  if(!choices.length)return;
-  s.special={...choices[Math.floor(random()*choices.length)],name:SPECIAL_NAME};
+  const options=PICKUP_CANDIDATES.filter(p=>!occupied.has(p.id)&&p.id!==s.special?.id);
+  const distant=options.filter(p=>Math.hypot(p.x-s.player.x,p.z-s.player.z)>5);
+  const choices=distant.length?distant:options;
+  if(!choices.length)return false;
+  s.special={...choices[Math.floor(nextRandom(s,'specialSeed')*choices.length)],name:SPECIAL_NAME};
+  return true;
 }
 export function nearestSpecial(s) {
   if(!s.special)return null;
@@ -273,9 +313,11 @@ function moveGuard(guard,target,dt,speed) {
   guard.repath=(guard.repath||0)-dt;
   if(!guard.path||guard.repath<=0||Math.hypot(target.x-(guard.pathTargetX??Infinity),target.z-(guard.pathTargetZ??Infinity))>.8){
     guard.path=routeAroundCover(guard,target);
-    guard.pathTargetX=target.x;guard.pathTargetZ=target.z;guard.repath=.55;
+    guard.pathTargetX=target.x;guard.pathTargetZ=target.z;
+    guard.repath=guard.mode==='chase'||guard.mode==='respond'?.6:1.25;
   }
-  while(guard.path.length&&Math.hypot(guard.path[0].x-guard.x,guard.path[0].z-guard.z)<.13)guard.path.shift();
+  // Do not cut grid corners: at shelf edges a 13 cm shortcut clips the guard radius.
+  while(guard.path.length&&Math.hypot(guard.path[0].x-guard.x,guard.path[0].z-guard.z)<.015)guard.path.shift();
   const point=guard.path[0]||target;
   const dx=point.x-guard.x,dz=point.z-guard.z,distance=Math.hypot(dx,dz);
   guard.moving=false;
@@ -289,18 +331,22 @@ function patrolRandom(guard){
   guard.patrolSeed=(Math.imul(guard.patrolSeed,1664525)+1013904223)>>>0;
   return guard.patrolSeed/4294967296;
 }
-function patrolGuard(guard,watch,dt) {
+function patrolGuard(guard,watch,dt,s) {
   if(guard.baseSpeed===0){guard.moving=false;return;}
   guard.patrolTimer=(guard.patrolTimer??0)-dt;
   if(!guard.patrolTarget||guard.patrolTimer<=0||
       Math.hypot(guard.x-guard.patrolTarget.x,guard.z-guard.patrolTarget.z)<.3){
     guard.patrolTarget=null;
-    for(let attempt=0;attempt<12;attempt++){
-      const x=clamp(guard.homeX+(patrolRandom(guard)-.5)*3.8,LIMITS.minX+.5,LIMITS.maxX-.5);
-      const z=guard.minZ+patrolRandom(guard)*(guard.maxZ-guard.minZ);
-      if(!collides(x,z)&&routeAroundCover(guard,{x,z}).length){guard.patrolTarget={x,z};break;}
+    const hotspot=s.hotspot&&s.time<s.hotspot.until?s.hotspot:null;
+    const nearby=hotspot&&patrolRandom(guard)<.6?
+      PATROL_POINTS.filter(point=>Math.hypot(point.x-hotspot.x,point.z-hotspot.z)<5):[];
+    const local=PATROL_POINTS.filter(point=>Math.hypot(point.x-guard.x,point.z-guard.z)<14);
+    const pool=nearby.length?nearby:local.length?local:PATROL_POINTS;
+    for(let attempt=0;attempt<8;attempt++){
+      const point=pool[Math.floor(patrolRandom(guard)*pool.length)];
+      if(routeAroundCover(guard,point).length){guard.patrolTarget=point;break;}
     }
-    guard.patrolTimer=4+patrolRandom(guard)*3;
+    guard.patrolTimer=12+patrolRandom(guard)*9;
     guard.path=null;
   }
   if(guard.patrolTarget)moveGuard(guard,guard.patrolTarget,dt,guard.baseSpeed+watch*.13);
@@ -351,12 +397,14 @@ export function initialScene(seed = Math.floor(Math.random()*0xffffffff)) {
   const s={
     phase:'playing',time:0,message:'Prendi quante cioccolate riesci. Esci quando vuoi: ogni pezzo vale 1 Kč.',
     seed,player:{x:.25,z:6.2,facing:-Math.PI/2,stride:0,moving:false,crouched:false,sprinting:false},guards:[],cameras:[],
-    pickups:selectPickups(seed),pickupVersion:0,visible:false,taking:false,takeTime:0,takeId:null,collected:[],chocolate:0,alert:0,
+    pickups:selectPickups(seed),pickupVersion:0,visible:false,taking:false,takeTime:0,takeId:null,takeLatch:false,collected:[],chocolate:0,alert:0,
     security:{mode:'routine',source:null,sourceIndex:null,timer:0,lostTime:0,lastKnown:null,responders:[]},
     watchZones:{west:0,east:0},notificationTime:0,
     effects:{fast:0,invisible:0,fast_take:0,slow:0,slow_take:0,trail:0},
-    special:null,specialOffer:null,specialRoll:0,effectRoll:0,stains:[],stainOrder:0,lastStainAt:-1
-  };addCamera(s);maybeSpawnSpecial(s);return s;
+    special:null,specialOffer:null,normalStolen:0,effectRoll:0,
+    refillSeed:(seed^0xa53a9e11)>>>0,specialSeed:(seed^0x65ccfb2f)>>>0,recentShelves:[],hotspot:null,
+    stains:[],stainOrder:0,lastStainAt:-1
+  };addCamera(s);return s;
 }
 export function updateScene(s, input, delta) {
   if (s.phase !== 'playing') return s;
@@ -368,6 +416,7 @@ export function updateScene(s, input, delta) {
     }
     return s;
   }
+  if(!input.take)s.takeLatch=false;
   s.time += dt;
   for(const effect of Object.keys(s.effects))s.effects[effect]=Math.max(0,s.effects[effect]-dt);
   s.stains=s.stains.filter(stain=>s.time-stain.time<18);
@@ -398,7 +447,7 @@ export function updateScene(s, input, delta) {
   for (const guard of s.guards) {
     guard.exclamationTime=Math.max(0,guard.exclamationTime-dt);
     const watch = s.watchZones[guard.zone];
-    if(guard.mode==='patrol')patrolGuard(guard,watch,dt);
+    if(guard.mode==='patrol')patrolGuard(guard,watch,dt,s);
     else if(guard.mode==='inspect'){
       moveGuard(guard,guard.inspectTarget,dt,1.35);
       if(Math.hypot(guard.x-guard.inspectTarget.x,guard.z-guard.inspectTarget.z)<.55){
@@ -429,7 +478,9 @@ export function updateScene(s, input, delta) {
     Math.sin(s.time*(.7+s.watchZones[index%2?'west':'east']*.25)+index*1.7)*.57;});
   const witness=visibleWitness(s);
   s.visible=!!witness;
-  s.alert = clamp(s.alert + (s.visible && m > .05 && !s.player.crouched ? 6 : -8) * dt, 0, 100);
+  const suspicionFloor=Math.min(60,(s.watchZones.west+s.watchZones.east)*5);
+  s.alert = clamp(Math.max(suspicionFloor,s.alert +
+    (s.visible && m > .05 && !s.player.crouched ? 6 : -2.5) * dt),0,100);
   s.notificationTime = Math.max(0, s.notificationTime - dt);
   const security=s.security;
   if(security.mode==='routine'||security.mode==='routine_increased'){
@@ -485,14 +536,14 @@ export function updateScene(s, input, delta) {
   const pickup = nearestPickup(s);
   const special=nearestSpecial(s);
   const lockdown=security.mode==='alert'||security.mode==='pursuit'||security.mode==='searching';
-  if(input.take&&pickup&&lockdown){
+  if(input.take&&!s.takeLatch&&pickup&&lockdown){
     s.message='POLICIE ti cerca: lascia il ripiano e nasconditi.';
-  }else if(input.take&&special&&!lockdown){
+  }else if(input.take&&!s.takeLatch&&special&&!lockdown){
     s.specialOffer={stage:'found',name:s.special.name};s.special=null;
     s.message=`Hai trovato ${SPECIAL_NAME}: vuoi rischiare e mangiarla?`;
-    s.taking=false;s.takeTime=0;s.takeId=null;
+    s.taking=false;s.takeTime=0;s.takeId=null;s.takeLatch=true;
     return s;
-  }else if (input.take && pickup) {
+  }else if (input.take && !s.takeLatch && pickup) {
     if (!s.taking && s.visible) {
       s.message = 'Troppo esposto: aspetta dietro lo scaffale.'; s.notificationTime = 2.5;
     } else if (!s.visible) {
@@ -506,11 +557,13 @@ export function updateScene(s, input, delta) {
       s.message = `Prelievo ${s.chocolate+1} in corso… resta nascosto.`;
       if (s.takeTime >= takeDuration(s)) {
         pickup.status='collected';s.collected.push(pickup.id);s.chocolate++;
-        s.taking = false; s.takeTime = 0; s.takeId = null;
+        s.taking = false; s.takeTime = 0; s.takeId = null;s.takeLatch=true;
         refillPickup(s,pickup);
-        maybeSpawnSpecial(s);
+        s.normalStolen++;
+        const specialSpawned=maybeSpawnSpecial(s);
         increaseSecurity(s);
         s.watchZones[pickup.zone] = Math.min(6, s.watchZones[pickup.zone] + 1);
+        s.hotspot={x:pickup.x,z:pickup.z,until:s.time+24};
         if(security.mode==='routine'||security.mode==='routine_increased'){
           security.mode='routine_increased';
           const guard=s.guards.filter(g=>g.zone===pickup.zone&&!['respond','chase','search'].includes(g.mode))
@@ -518,7 +571,8 @@ export function updateScene(s, input, delta) {
           if(guard){guard.mode='inspect';guard.inspectTarget={x:pickup.x,z:pickup.z};guard.inspectTimer=3;
             guard.path=null;guard.repath=0;}
         }
-        s.message = `Cioccolata ${s.chocolate} presa. Ora ${s.cameras.length} CCTV e ${s.guards.length} POLICIE: esci o rischia ancora.`;
+        s.message = `Cioccolata ${s.chocolate} presa. Ora ${s.cameras.length} CCTV e ${s.guards.length} POLICIE: esci o rischia ancora.`+
+          (specialSpawned?' ✨ Ciokospira comparsa: cerca la stella viola sulla minimappa!':'');
         s.notificationTime = 4;
       }
     }

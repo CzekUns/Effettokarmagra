@@ -1,12 +1,13 @@
 import * as THREE from './vendor/three/three.module.js';
 import { initialScene, updateScene, eatSpecial, rayDistance, guardRayDistance, nearestPickup, nearestSpecial,
-  takeDuration, shelfBlocksCamera, coverBlocksCamera, SHELVES, PARTITIONS, LIMITS, EXIT, crowns, FINE } from './reference-play-logic.mjs?v=7';
+  takeDuration, shelfBlocksCamera, coverBlocksCamera, SHELVES, PARTITIONS, LIMITS, EXIT, crowns, FINE,
+  playerBulkScale } from './reference-play-logic.mjs?v=8';
 import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, tiltCamera, centerCamera, updateCameraRig } from './reference-camera.mjs?v=7';
 import { spriteView, animationPose } from './reference-sprites.mjs';
 import { createFinale, advanceFinale, nextFinaleStep, skipFinale, finaleSubtitle } from './reference-finale-logic.mjs?v=7';
 import { createFinaleScene } from './reference-finale-scene.mjs?v=8';
 import { buildWhatsAppShareUrl } from './reference-share.mjs?v=7';
-import { createAudioController } from './reference-audio.mjs?v=2';
+import { createAudioController } from './reference-audio.mjs?v=3';
 
 const host = document.querySelector('#world');
 const game=document.querySelector('.game');
@@ -52,17 +53,20 @@ try {
   throw error;
 }
 const scene = new THREE.Scene(); scene.background = new THREE.Color('#171420');
-scene.fog = new THREE.Fog('#171420', 17, 35);
-const camera = new THREE.PerspectiveCamera(36, 1, .1, 65);
+scene.fog = new THREE.Fog('#171420', 24, 52);
+const camera = new THREE.PerspectiveCamera(36, 1, .1, 90);
 camera.position.set(6.2, 8.7, 10.8); camera.lookAt(1, .8, .8);
 const hemi = new THREE.HemisphereLight('#a9cfff', '#59313c', 1.45); scene.add(hemi);
 const key = new THREE.DirectionalLight('#ffbd7c', 2.35); key.position.set(-4, 10, 7);
 key.castShadow = renderer.shadowMap.enabled; key.shadow.mapSize.set(1024, 1024);
 key.shadow.camera.left = -9; key.shadow.camera.right = 9; key.shadow.camera.top = 9; key.shadow.camera.bottom = -9;
 key.shadow.bias = -.00035; scene.add(key);
-const fridgeLight = new THREE.PointLight('#70dfff', 22, 14, 2); fridgeLight.position.set(0, 2, -8.4); scene.add(fridgeLight);
+const fridgeLight = new THREE.PointLight('#70dfff', 22, 14, 2); fridgeLight.position.set(0, 2, -13.4); scene.add(fridgeLight);
 const warmLight = new THREE.PointLight('#ffa25d', 18, 12, 2); warmLight.position.set(-6, 3.3, 2.2); scene.add(warmLight);
 const aisleLight = new THREE.PointLight('#ffd9a9', 14, 13, 2); aisleLight.position.set(6,3.3,-2.4); scene.add(aisleLight);
+for(const [x,z,color] of [[-12,8,'#ffbf8b'],[12,-8,'#a4dcff'],[0,10,'#ffcda1']]){
+  const light=new THREE.PointLight(color,11,12,2);light.position.set(x,3.3,z);scene.add(light);
+}
 
 const loader = new THREE.TextureLoader();
 function load(path) { return new Promise((resolve, reject) => loader.load(path, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); resolve(t); }, undefined, reject)); }
@@ -88,7 +92,7 @@ const [capelloneTexture,capelloneGroupTexture,facadeTexture,cobbleTexture,...cro
   ...['capellone-finale','capellone-group','praha-day-facade','praha-day-cobblestone',
     'friend-left','friend-red','friend-tan','friend-green'].map(name=>load(`./assets/reference-play/${name}.webp`))]);
 floorTexture.wrapS = THREE.RepeatWrapping; floorTexture.wrapT = THREE.RepeatWrapping;
-floorTexture.repeat.set(4, 4);
+floorTexture.repeat.set(6, 6);
 const cache = new Map();
 function material(color, roughness = .72, metalness = 0) {
   const id = `${color}:${roughness}:${metalness}`;
@@ -115,23 +119,25 @@ function disc(parent, radius, color, opacity, x, z) {
   mesh.rotation.x = -Math.PI / 2; mesh.position.set(x, .012, z); parent.add(mesh); return mesh;
 }
 function buildRoom() {
-  box(scene, 22.3, .24, 20.3, '#665d60', 0, -.19, 0, { roughness: .28, metalness: .11, cast: false });
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(22.3, 20.3), new THREE.MeshStandardMaterial({ map:floorTexture, color:'#b6a3a2', roughness:.65, metalness:.04 }));
+  box(scene, 32.3, .24, 30.3, '#665d60', 0, -.19, 0, { roughness: .28, metalness: .11, cast: false });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(32.3, 30.3), new THREE.MeshStandardMaterial({ map:floorTexture, color:'#b6a3a2', roughness:.65, metalness:.04 }));
   floor.rotation.x = -Math.PI / 2; floor.position.y = -.055; floor.receiveShadow = true; scene.add(floor);
-  box(scene, 22.3, 3.6, .22, '#292b3d', 0, 1.75, -9.94);
-  box(scene, .22, 3.6, 20.3, '#252536', -10.94, 1.75, 0);
-  box(scene, .22, 1.15, 20.3, '#292a3b', 10.94, .5, 0);
-  box(scene, 22.3, .2, .28, '#111524', 0, 3.58, -9.94);
-  box(scene, .27, .18, 20.3, '#111524', -10.94, 3.58, 0);
-  for (const [x,z,color,opacity,radius] of [[-7,-3,'#ff9d56',.17,3],[-1,-4,'#63e5ff',.2,3],[6,3,'#ff9654',.13,2.5],[5,-5,'#63e5ff',.16,2.6]]) disc(scene,radius,color,opacity,x,z);
+  box(scene, 32.3, 3.6, .22, '#292b3d', 0, 1.75, -14.94);
+  box(scene, .22, 3.6, 30.3, '#252536', -15.94, 1.75, 0);
+  box(scene, .22, 1.15, 30.3, '#292a3b', 15.94, .5, 0);
+  box(scene, 32.3, 3.6, .22, '#292b3d', 0, 1.75, 14.94);
+  box(scene, 32.3, .2, .28, '#111524', 0, 3.58, -14.94);
+  box(scene, .27, .18, 30.3, '#111524', -15.94, 3.58, 0);
+  box(scene, 32.3, .2, .28, '#111524', 0, 3.58, 14.94);
+  for (const [x,z,color,opacity,radius] of [[-7,-3,'#ff9d56',.17,3],[-1,-4,'#63e5ff',.2,3],[6,3,'#ff9654',.13,2.5],[5,-5,'#63e5ff',.16,2.6],[-12,8,'#ffc073',.12,3],[12,-8,'#65d4ff',.13,3]]) disc(scene,radius,color,opacity,x,z);
   for (const x of [-8,-3,2,7]) {
     box(scene, .12, .08, 5.2, '#ffe4bb', x, 3.48, -2.9, { cast:false });
     box(scene, .42, .02, 5.2, '#c59566', x, 3.53, -2.9, { cast:false });
   }
   // The exit is at the rear, as in the approved reference.
-  box(scene, 1.42, 3.05, .16, '#1b3136', 9.6, 1.52, -9.73);
-  box(scene, 1.18, 2.75, .04, '#b6a76c', 9.6, 1.41, -9.62, { roughness:.24,metalness:.24 });
-  plane(scene, 1.65, .38, sign('VÝCHOD  ↗', 1.65, .38, '#257969'), 9.6, 3.23, -9.59);
+  box(scene, 1.42, 3.05, .16, '#1b3136', EXIT.x, 1.52, -14.73);
+  box(scene, 1.18, 2.75, .04, '#b6a76c', EXIT.x, 1.41, -14.62, { roughness:.24,metalness:.24 });
+  plane(scene, 1.65, .38, sign('VÝCHOD  ↗', 1.65, .38, '#257969'), EXIT.x, 3.23, -14.59);
   const crates = [['#962b58',-9.4,3.4],['#d9813d',-8.85,3.4],['#455b9a',-8.3,3.4],['#c34f42',-9.1,4],['#9257aa',-8.5,4]];
   for (const [color,x,z] of crates) {
     box(scene,.46,.44,.46,'#836348',x,.22,z,{roughness:.9});
@@ -178,9 +184,9 @@ function makeFridgeRow(back = true, shiftX = 0, shiftZ = 0, scaleZ = 1) {
   }
   group.scale.z=scaleZ;group.position.set(shiftX,0,shiftZ);
 }
-makeFridgeRow(true,-4.75,-4.65);
-makeFridgeRow(true,3.5,-4.65);
-makeFridgeRow(false,-5.3,-2.1,1.6);
+makeFridgeRow(true,-4.75,-9.65);
+makeFridgeRow(true,3.5,-9.65);
+makeFridgeRow(false,-10.3,-2.1,1.6);
 
 function makeFadeable(group) {
   const cloned=new Map(),materials=[];
@@ -275,6 +281,8 @@ exitMarker.style.left=`${(EXIT.x-LIMITS.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
 exitMarker.style.top=`${(EXIT.z-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
 radar.append(exitMarker);
 const lastKnownMarker=document.createElement('i');lastKnownMarker.className='last-known-marker';radar.append(lastKnownMarker);
+const specialMarker=document.createElement('i');specialMarker.className='special-marker';
+specialMarker.textContent='★';specialMarker.title='Ciokospira speciale';radar.append(specialMarker);
 for(const old of radar.querySelectorAll('.radar-camera'))old.remove();
 // Packages remain on the shelf; subtle floor light marks their interaction side.
 let bars=[];
@@ -345,10 +353,11 @@ function orientFigure(actor, worldX, worldZ, stride, moving = false) {
   actor.group.rotation.y=Math.atan2(camera.position.x-worldX,camera.position.z-worldZ);
   actor.shadow.position.set(worldX,.015,worldZ);
 }
-function vision(color,opacity) {
-  const points=new Float32Array(30*9);
+function vision(color,opacity,segments=30) {
+  const points=new Float32Array(segments*9);
   const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(points,3));
   const mesh=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false,side:THREE.DoubleSide}));
+  mesh.userData.segments=segments;
   mesh.renderOrder=2;scene.add(mesh);return mesh;
 }
 const guardVisions=[],cctvs=[];
@@ -364,7 +373,7 @@ function syncSecurityVisuals(){
     const mark=new THREE.Sprite(new THREE.SpriteMaterial({map:alertTexture,transparent:true,depthTest:false}));
     mark.position.y=2.35;mark.scale.set(.62,.62,1);mark.visible=false;mark.renderOrder=8;actor.group.add(mark);actor.mark=mark;
     guards.push(actor);guardVisions.push({
-      peripheral:vision('#e86369',.13),far:vision('#eaa75d',.23),near:vision('#ffe08c',.27)
+      peripheral:vision('#e86369',.13,12),far:vision('#eaa75d',.23,12),near:vision('#ffe08c',.27,12)
     });
     const dot=document.createElement('i');dot.className='radar-guard dot guard';radar.append(dot);ui.radarGuards.push(dot);
   }
@@ -378,10 +387,11 @@ function syncSecurityVisuals(){
 syncSecurityVisuals();
 function updateVision(mesh,eye,rangeFactor=1,angleFactor=1,guard=false) {
   const data=mesh.geometry.attributes.position.array; let n=0;
-  for(let i=0;i<30;i++) {
+  const segments=mesh.userData.segments;
+  for(let i=0;i<segments;i++) {
     const half=eye.halfAngle*angleFactor;
-    const a=eye.angle-half+(i/30)*half*2;
-    const b=eye.angle-half+((i+1)/30)*half*2;
+    const a=eye.angle-half+(i/segments)*half*2;
+    const b=eye.angle-half+((i+1)/segments)*half*2;
     const distance=guard?guardRayDistance:rayDistance;
     const ra=distance(eye.x,eye.z,a,eye.range*rangeFactor)-.02;
     const rb=distance(eye.x,eye.z,b,eye.range*rangeFactor)-.02;
@@ -617,9 +627,9 @@ function loop(now) {
   updateView(worldMove,dt);
   updateShelfOcclusion();
   orientFigure(player,state.player.x,state.player.z,state.player.stride,state.player.moving);
-  const growth=state.chocolate>=15?Math.min(.35,.12+(state.chocolate-15)*.015):0;
-  player.group.scale.set(1+growth,1+growth*.12,1);
-  player.shadow.scale.setScalar(1+growth);
+  const bulk=playerBulkScale(state.chocolate);
+  player.group.scale.set(bulk,1+(bulk-1)*.08,1);
+  player.shadow.scale.setScalar(bulk);
   player.image.material.opacity=state.effects.invisible>0?.34:1;
   if(finale?.step==='door')player.group.position.z-=Math.min(1,finale.time/1.3)*1.5;
   setPlayerAnimation();
@@ -664,6 +674,11 @@ function loop(now) {
   if(!lastKnownMarker.hidden){
     lastKnownMarker.style.left=`${(state.security.lastKnown.x-LIMITS.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
     lastKnownMarker.style.top=`${(state.security.lastKnown.z-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
+  }
+  specialMarker.hidden=!state.special;
+  if(state.special){
+    specialMarker.style.left=`${(state.special.x-LIMITS.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
+    specialMarker.style.top=`${(state.special.z-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
   }
   const radarActors=[[ui.radarPlayer,state.player],...state.guards.map((guard,index)=>[ui.radarGuards[index],guard]),
     ...state.cameras.map((eye,index)=>[cctvs[index].dot,eye])];
