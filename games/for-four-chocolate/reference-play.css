@@ -5,3 +5,12 @@
 @media(pointer:coarse){.touch{display:flex}.mission{left:26%;bottom:4px;max-width:48%;font-size:9px}.hint{display:none}.interaction{bottom:67px}.hud{padding:7px 12px}.loot small{display:none}.top-right{gap:9px}.top-right b{font-size:14px}.top-right span{font-size:8px}.loot b{font-size:13px}.chocolate{font-size:13px}}
 @media(max-width:700px) and (orientation:landscape){.touch.left{left:6px;bottom:9px}.touch.right{right:6px;bottom:9px}.touch.left button{width:44px;height:44px}.touch.right button{min-width:78px;height:46px;font-size:9px;padding:0 7px}.mission{left:28%;width:40%;bottom:7px;padding:5px 8px;font-size:9px}.interaction{bottom:62px}.top-right span{display:none}}
 @media(orientation:portrait) and (max-width:700px){.rotate{display:grid}}
+
+
+/* Camera manuale sempre visibile: follow automatico + orbit/zoom espliciti. */
+.camera-controls{position:absolute;z-index:6;top:91px;right:14px;display:flex;align-items:center;gap:5px;background:#080d19a8;border:1px solid #99c2c577;border-radius:11px;padding:5px;box-shadow:0 5px 18px #0008;touch-action:manipulation}
+.camera-controls span{font:800 9px Arial,sans-serif;letter-spacing:.12em;color:#b2e8ee;margin:0 5px 0 2px}
+.camera-controls button{min-width:40px;height:38px;padding:0 8px;background:#234057d9;border:1px solid #8bb6b6b0;border-radius:7px;color:#ffdda0;font-size:22px;font-weight:900;line-height:1;cursor:pointer;touch-action:manipulation;user-select:none}
+.camera-controls button:active,.camera-controls button:focus-visible{background:#bc7740;outline:2px solid #ffe1a6}
+@media(pointer:coarse){.camera-controls{top:50px;right:8px;gap:3px;padding:3px}.camera-controls span{font-size:8px}.camera-controls button{min-width:34px;height:34px;font-size:19px;padding:0 5px}}
+@media(max-width:700px) and (orientation:landscape){.camera-controls{top:40px;right:6px}.camera-controls span{display:none}.camera-controls button{height:32px;min-width:32px}}
