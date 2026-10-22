@@ -109,3 +109,11 @@
 - **Grafica:** artboard approvata come sola guida estetica, viste frontali esistenti usate solo per mantenere l'identità. Confronto alla stessa scala in `assets/reference-play/views-comparison.png`; screenshot reali desktop e mobile landscape aggiornati. Dettagli e scarti in `REFERENCE_FIDELITY.md`.
 - **Verifiche:** test Node su collisioni, visibilità, quattro prelievi, escalation locale, uscita e selezione delle viste; Chromium desktop e mobile landscape senza errori JavaScript e senza overflow; nel browser quattro prelievi e fuga completati, uscita anticipata negata.
 - **Limiti:** sprite piani con tre viste e due pose frontali, non modelli corporei continui; cliente con lieve alone scuro già presente nell'asset frontale; test Android reale non eseguito. Chromium software sulla EC2 rende a circa 1 FPS, quindi non misura le prestazioni su telefono. `index.html` e il catalogo restano nella fase precedente.
+
+## 2026-10-22 — ChatGPT / merge PR #99
+- **Fatto:** su richiesta dell'utente, unita in `main` la PR #99 «For Four Chocolate: quattro prelievi e viste dei personaggi» (merge commit `1ff726fcf76d6d74f8599605b90d086464429ed5`).
+- **Contenuto dichiarato:** quattro cioccolate da scaffali distinti, due pattuglie POLICIE con escalation locale, viste fronte/retro/profilo dei personaggi in `reference-play.html`.
+- **Verifiche:** GitHub conferma merge riuscito. Il collaboratore dichiara 20 test Node superati e verifiche Chromium; **non rieseguiti qui**, Android reale non testato.
+- **Limiti:** sprite personaggi ancora 2D su scena 3D; facciate scaffali con texture ripetute; la tavola unica approvata resta la fonte artistica obbligatoria.
+- **Da fare:** controllo deploy e verifica diretta della demo con telecamera ruotata e quattro prelievi su smartphone landscape; continuare affinamento grafico.
+- **Riferimenti:** https://github.com/CzekUns/Effettokarmagra/pull/99 · https://czekuns.github.io/Effettokarmagra/games/for-four-chocolate/reference-play.html
