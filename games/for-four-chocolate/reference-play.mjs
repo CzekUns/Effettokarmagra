@@ -1,17 +1,16 @@
 import * as THREE from './vendor/three/three.module.js';
-import { initialScene, updateScene, rayDistance, nearestPickup, shelfBlocksCamera, coverBlocksCamera, SHELVES, PARTITIONS, LIMITS, GOAL, EXIT, TAKE_SECONDS } from './reference-play-logic.mjs?v=5';
-import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, centerCamera, updateCameraRig } from './reference-camera.mjs?v=5';
+import { initialScene, updateScene, rayDistance, nearestPickup, shelfBlocksCamera, coverBlocksCamera, SHELVES, PARTITIONS, LIMITS, EXIT, TAKE_SECONDS, crowns, FINE } from './reference-play-logic.mjs?v=6';
+import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, centerCamera, updateCameraRig } from './reference-camera.mjs?v=6';
 import { spriteView, animationPose } from './reference-sprites.mjs';
 
 const host = document.querySelector('#world');
 const ui = {
-  loot: document.querySelector('#loot'), score: document.querySelector('#score'),
+  loot: document.querySelector('#loot'), score: document.querySelector('#score'), best: document.querySelector('#best'),
   mission: document.querySelector('#mission'), watch: document.querySelector('#watch'),
   interaction: document.querySelector('#interaction'), progress: document.querySelector('#progress'),
   result: document.querySelector('#result'), title: document.querySelector('#result-title'),
   kicker: document.querySelector('#result-kicker'), text: document.querySelector('#result-text'),
-  radarPlayer: document.querySelector('#radar-player'), radarGuards: document.querySelectorAll('.radar-guard'),
-  radarCamera: document.querySelector('#radar-camera')
+  radarPlayer: document.querySelector('#radar-player'), radarGuards: [], radarCameras: []
 };
 let renderer;
 try {
@@ -248,7 +247,7 @@ exitMarker.style.left=`${(EXIT.x-LIMITS.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
 exitMarker.style.top=`${(EXIT.z-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
 radar.append(exitMarker);
 const lastKnownMarker=document.createElement('i');lastKnownMarker.className='last-known-marker';radar.append(lastKnownMarker);
-ui.radarGuards=state.guards.map(()=>{const dot=document.createElement('i');dot.className='radar-guard dot guard';radar.append(dot);return dot;});
+for(const old of radar.querySelectorAll('.radar-camera'))old.remove();
 // Packages remain on the shelf; subtle floor light marks their interaction side.
 let bars=[];
 function buildPickupBars() {
@@ -265,18 +264,23 @@ function buildPickupBars() {
     return {bar,glow};
   });
 }
-buildPickupBars();
-const exitGlow = disc(scene,.6,'#64f8bd',.24,EXIT.x,EXIT.z); exitGlow.visible = false;
+buildPickupBars();let shownPickupVersion=state.pickupVersion;
+const exitGlow = disc(scene,.6,'#64f8bd',.24,EXIT.x,EXIT.z);
 
 // Camera rig and floor projections share exactly the same observer geometry as the rules.
-const rig = new THREE.Group(); scene.add(rig); rig.position.set(8.9,0,-7.8);
-box(rig,.12,3.18,.12,'#404e5d',0,1.59,0,{roughness:.3,metalness:.6});
-box(rig,.55,.09,.1,'#748a9b',-.22,3.12,0,{roughness:.22,metalness:.65});
-const head = new THREE.Group(); head.position.set(-.48,3.1,0); rig.add(head);
-box(head,.45,.22,.25,'#202b3a',0,0,0,{roughness:.27,metalness:.5});
-box(head,.035,.14,.15,'#9ee4f6',-.24,0,0,{cast:false});
-box(head,.09,.06,.08,'#fa493c',.1,.15,0,{cast:false});
-const cameraLight = new THREE.PointLight('#e9524c',2.8,3.5); cameraLight.position.set(8.9,3,-7.8); scene.add(cameraLight);
+function cctvVisual(eye){
+  const rig=new THREE.Group();scene.add(rig);rig.position.set(eye.x,0,eye.z);
+  box(rig,.12,3.18,.12,'#404e5d',0,1.59,0,{roughness:.3,metalness:.6});
+  box(rig,.55,.09,.1,'#748a9b',-.22,3.12,0,{roughness:.22,metalness:.65});
+  const head=new THREE.Group();head.position.set(-.48,3.1,0);rig.add(head);
+  box(head,.45,.22,.25,'#202b3a',0,0,0,{roughness:.27,metalness:.5});
+  box(head,.035,.14,.15,'#9ee4f6',-.24,0,0,{cast:false});
+  box(head,.09,.06,.08,'#fa493c',.1,.15,0,{cast:false});
+  const light=new THREE.PointLight('#e9524c',2.8,3.5);light.position.set(eye.x,3,eye.z);scene.add(light);
+  const cone=vision('#f35556',.49);
+  const dot=document.createElement('i');dot.className='radar-camera dot camera';radar.append(dot);
+  return {rig,head,light,cone,dot};
+}
 
 function figure(texture, height) {
   const group = new THREE.Group(); scene.add(group);
@@ -285,7 +289,7 @@ function figure(texture, height) {
   const shadow=disc(scene,.38,'#15101a',.4,0,0);
   return {group,image,shadow};
 }
-const player=figure(ipnoTexture,1.92), guards=state.guards.map(()=>figure(guardTexture,1.86)), customer=figure(customerTexture,1.8);
+const player=figure(ipnoTexture,1.92), guards=[], customer=figure(customerTexture,1.8);
 function orientFigure(actor, worldX, worldZ, stride, moving = false) {
   actor.group.position.set(worldX,moving?Math.abs(Math.sin(stride))*.028:0,worldZ);
   actor.group.rotation.y=Math.atan2(camera.position.x-worldX,camera.position.z-worldZ);
@@ -297,7 +301,28 @@ function vision(color,opacity) {
   const mesh=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false,side:THREE.DoubleSide}));
   mesh.renderOrder=2;scene.add(mesh);return mesh;
 }
-const guardVisions=state.guards.map((_,index)=>vision('#ffb765',index%2?.32:.39)), cameraVision=vision('#f35556',.49);
+const guardVisions=[],cctvs=[];
+const alertCanvas=document.createElement('canvas');alertCanvas.width=128;alertCanvas.height=128;
+const alertContext=alertCanvas.getContext('2d');alertContext.font='900 105px Arial';
+alertContext.textAlign='center';alertContext.textBaseline='middle';alertContext.lineWidth=12;
+alertContext.strokeStyle='#701723';alertContext.strokeText('!',64,65);
+alertContext.fillStyle='#ffe171';alertContext.fillText('!',64,65);
+const alertTexture=new THREE.CanvasTexture(alertCanvas);alertTexture.colorSpace=THREE.SRGBColorSpace;
+function syncSecurityVisuals(){
+  while(guards.length<state.guards.length){
+    const actor=figure(guardTexture,1.86);
+    const mark=new THREE.Sprite(new THREE.SpriteMaterial({map:alertTexture,transparent:true,depthTest:false}));
+    mark.position.y=2.35;mark.scale.set(.62,.62,1);mark.visible=false;mark.renderOrder=8;actor.group.add(mark);actor.mark=mark;
+    guards.push(actor);guardVisions.push(vision('#ffb765',guards.length%2?.32:.39));
+    const dot=document.createElement('i');dot.className='radar-guard dot guard';radar.append(dot);ui.radarGuards.push(dot);
+  }
+  while(cctvs.length<state.cameras.length){cctvs.push(cctvVisual(state.cameras[cctvs.length]));}
+  guards.forEach((actor,index)=>{const visible=index<state.guards.length;actor.group.visible=visible;actor.shadow.visible=visible;
+    guardVisions[index].visible=visible;ui.radarGuards[index].hidden=!visible;});
+  cctvs.forEach((actor,index)=>{const visible=index<state.cameras.length;actor.rig.visible=visible;
+    actor.cone.visible=visible;actor.light.visible=visible;actor.dot.hidden=!visible;});
+}
+syncSecurityVisuals();
 function updateVision(mesh,eye) {
   const data=mesh.geometry.attributes.position.array; let n=0;
   for(let i=0;i<30;i++) {
@@ -312,9 +337,25 @@ function updateVision(mesh,eye) {
 }
 
 const held=new Set();const mapping={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',KeyE:'take',Space:'take',ShiftLeft:'crouch',ShiftRight:'crouch'};
+const joystick=document.querySelector('#joystick'),thumb=document.querySelector('#joystick-thumb');
+const joystickAxis={x:0,z:0};let joystickPointer=null;
+function resetJoystick(){joystickPointer=null;joystickAxis.x=0;joystickAxis.z=0;thumb.style.transform='translate(-50%,-50%)';}
+function moveJoystick(event){
+  const rect=joystick.getBoundingClientRect(),radius=rect.width*.35;
+  const dx=event.clientX-(rect.left+rect.width/2),dz=event.clientY-(rect.top+rect.height/2);
+  const length=Math.hypot(dx,dz),scale=length>radius?radius/length:1;
+  joystickAxis.x=length<radius*.12?0:dx*scale/radius;
+  joystickAxis.z=length<radius*.12?0:dz*scale/radius;
+  thumb.style.transform=`translate(calc(-50% + ${joystickAxis.x*radius}px),calc(-50% + ${joystickAxis.z*radius}px))`;
+}
+joystick.addEventListener('pointerdown',event=>{if(joystickPointer!==null)return;joystickPointer=event.pointerId;
+  joystick.setPointerCapture(event.pointerId);moveJoystick(event);event.preventDefault();});
+joystick.addEventListener('pointermove',event=>{if(event.pointerId===joystickPointer)moveJoystick(event);});
+for(const name of ['pointerup','pointercancel','lostpointercapture'])joystick.addEventListener(name,event=>{
+  if(event.pointerId===joystickPointer)resetJoystick();});
 addEventListener('keydown',event=>{const key=mapping[event.code];if(key){held.add(key);event.preventDefault();}});
 addEventListener('keyup',event=>{const key=mapping[event.code];if(key)held.delete(key);});
-addEventListener('blur',()=>held.clear());
+addEventListener('blur',()=>{held.clear();resetJoystick();});
 for(const button of document.querySelectorAll('[data-key]')) {
   const key=button.dataset.key;
   button.addEventListener('pointerdown',e=>{held.add(key);button.classList.add('active');button.setPointerCapture(e.pointerId);e.preventDefault();});
@@ -365,7 +406,10 @@ addEventListener('keydown',e=>{
 
 function resize(){const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<1.5?48:36;camera.updateProjectionMatrix();}
 new ResizeObserver(resize).observe(host);resize();
-document.querySelector('#retry').addEventListener('click',()=>{state=initialScene();cameraRig.focusX=state.player.x;cameraRig.focusZ=state.player.z;centerCamera(cameraRig);held.clear();ui.result.hidden=true;buildPickupBars();exitGlow.visible=false;});
+document.querySelector('#retry').addEventListener('click',()=>{state=initialScene();cameraRig.focusX=state.player.x;cameraRig.focusZ=state.player.z;centerCamera(cameraRig);held.clear();resetJoystick();ui.result.hidden=true;buildPickupBars();shownPickupVersion=state.pickupVersion;syncSecurityVisuals();});
+const recordKey='ffc-best-crowns-v1';
+let best=0;
+try{best=Math.max(0,Number(localStorage.getItem(recordKey))||0);}catch{}
 function setFigureView(actor, textures, facing, x, z, frontFrame) {
   const {view,flip}=spriteView(facing,x,z,camera.position.x,camera.position.z);
   const texture=view==='front' ? frontFrame || textures.front : textures[view];
@@ -411,11 +455,13 @@ function setGuardAnimation(actor, guard) {
 }
 function loop(now) {
   const dt=Math.min((now-previous)/1000,.05);previous=now;
-  const screenX=Number(held.has('right'))-Number(held.has('left'));
-  const screenZ=Number(held.has('down'))-Number(held.has('up'));
+  const screenX=Number(held.has('right'))-Number(held.has('left'))+joystickAxis.x;
+  const screenZ=Number(held.has('down'))-Number(held.has('up'))+joystickAxis.z;
   const worldMove=cameraRelativeMovement(screenX,screenZ,cameraRig.yaw);
   const input={...worldMove,take:held.has('take'),crouch:held.has('crouch')};
   updateScene(state,input,dt);
+  syncSecurityVisuals();
+  if(shownPickupVersion!==state.pickupVersion){buildPickupBars();shownPickupVersion=state.pickupVersion;}
   updateView(worldMove,dt);
   updateShelfOcclusion();
   orientFigure(player,state.player.x,state.player.z,state.player.stride,state.player.moving);
@@ -423,6 +469,7 @@ function loop(now) {
   state.guards.forEach((guard,index)=>{
     orientFigure(guards[index],guard.x,guard.z,guard.stride,guard.moving);
     setGuardAnimation(guards[index],guard);
+    guards[index].mark.visible=guard.exclamationTime>0;
     updateVision(guardVisions[index],guard);
     guardVisions[index].material.color.set(guard.chasing?'#ff4f53':'#ffb765');
     ui.radarGuards[index].classList.toggle('responding',guard.mode==='respond'||guard.mode==='chase'||guard.mode==='search');
@@ -431,15 +478,16 @@ function loop(now) {
   const customerZ=5.8+Math.sin(state.time*.45)*.65;
   orientFigure(customer,9.2,customerZ,state.time*1.5,true);
   setFigureView(customer,{front:customerTexture,back:customerBackTexture,side:customerSideTexture},Math.cos(state.time*.45)>0?Math.PI/2:-Math.PI/2,9.2,customerZ);
-  head.rotation.y=-state.camera.angle;
-  updateVision(cameraVision,state.camera);
-  ui.radarCamera.classList.toggle('witness',state.security.source==='camera');
-  cameraLight.intensity=state.security.source==='camera'&&state.security.mode!=='routine_increased'
-    ? 3.5+Math.sin(state.time*16)*1.2 : 2.8;
+  state.cameras.forEach((eye,index)=>{
+    const actor=cctvs[index];actor.head.rotation.y=-eye.angle;updateVision(actor.cone,eye);
+    actor.dot.classList.toggle('witness',state.security.source==='camera'&&state.security.sourceIndex===index);
+    actor.light.intensity=state.security.source==='camera'&&state.security.sourceIndex===index&&state.security.mode!=='routine_increased'
+      ?3.5+Math.sin(state.time*16)*1.2:2.8;
+  });
   bars.forEach(({bar,glow},index)=>{const status=state.pickups[index].status;bar.visible=status!=='collected';glow.visible=status!=='collected';glow.scale.setScalar(status==='taking'?1.35:1);});
-  exitGlow.visible=state.chocolate>=GOAL;
-  ui.loot.textContent=`${state.chocolate}/${GOAL}`;
-  ui.score.textContent=String(Math.max(0,state.collected.length*1000-Math.floor(state.time*7))).padStart(6,'0');
+  ui.loot.textContent=String(state.chocolate);
+  ui.score.textContent=`${crowns(state)} Kč`;
+  ui.best.textContent=`RECORD ${best} Kč`;
   const mode=state.security.mode;
   const watchText={alert:`⚠ ${state.security.source==='camera'?'CCTV':'POLICIE'} · ALLARME`,
     pursuit:'⚠ POLICIE · INSEGUIMENTO',searching:'⚠ POLICIE · RICERCA',
@@ -451,7 +499,8 @@ function loop(now) {
     lastKnownMarker.style.left=`${(state.security.lastKnown.x-LIMITS.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
     lastKnownMarker.style.top=`${(state.security.lastKnown.z-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
   }
-  const radarActors=[[ui.radarPlayer,state.player],...Array.from(ui.radarGuards,(dot,index)=>[dot,state.guards[index]]),[ui.radarCamera,state.camera]];
+  const radarActors=[[ui.radarPlayer,state.player],...state.guards.map((guard,index)=>[ui.radarGuards[index],guard]),
+    ...state.cameras.map((eye,index)=>[cctvs[index].dot,eye])];
   for(const [dot,actor] of radarActors) {
     dot.style.left=`${(actor.x-LIMITS.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
     dot.style.top=`${(actor.z-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
@@ -462,9 +511,12 @@ function loop(now) {
   ui.progress.style.width=`${Math.min(100,state.takeTime/TAKE_SECONDS*100)}%`;
   if(state.phase!=='playing'&&ui.result.hidden){
     ui.result.hidden=false;const caught=state.phase==='caught';
+    const previousBest=best;
+    if(!caught&&state.chocolate>best){best=state.chocolate;try{localStorage.setItem(recordKey,String(best));}catch{}}
     ui.kicker.textContent=caught?'POLICIE · PRELIEVO VISTO':'USCITA RAGGIUNTA';
-    ui.title.textContent=caught?'Ti hanno raggiunto.':'Quattro cioccolate al sicuro!';
-    ui.text.textContent=caught?'Dopo il prelievo visto, POLICIE ti ha inseguito e fermato. Usa gli scaffali per spezzare la visuale e attendi la fine della ricerca.':`Hai preso quattro cioccolate dagli scaffali in ${Math.floor(state.time)} secondi e raggiunto l’uscita.`;
+    ui.title.textContent=caught?'Ti hanno raggiunto.':'Cioccolate al sicuro!';
+    ui.text.textContent=caught?`${state.chocolate} cioccolate × 1 Kč = ${state.chocolate} Kč. Multa ${FINE} Kč. Punteggio: ${crowns(state)} Kč. Il record resta ${best} Kč.`:
+      `${state.chocolate} cioccolate × 1 Kč = ${crowns(state)} Kč. ${best>previousBest?'Nuovo record! ':''}Record salvato: ${best} Kč. Riprova e rischia di più!`;
   }
   renderer.render(scene,camera);
   frames++;if(now-frameStart>2000){window.__ffcMetrics={fps:Math.round(frames*1000/(now-frameStart)),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,phase:state.phase};frames=0;frameStart=now;}

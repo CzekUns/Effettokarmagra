@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LIMITS, SHELVES, PICKUP_CANDIDATES, GOAL, collides, canSee, shelfBlocksCamera, routeAroundCover, EXIT,
-  initialScene, nearestPickup, selectPickups, updateScene } from './reference-play-logic.mjs';
+import { LIMITS, SHELVES, PICKUP_CANDIDATES, CAMERA_THRESHOLDS, GUARD_THRESHOLDS, crowns, FINE, collides, canSee, shelfBlocksCamera, routeAroundCover, EXIT,
+  initialScene, nearestPickup, selectPickups, updateScene, increaseSecurity } from './reference-play-logic.mjs';
 
-function noWatch(s) { s.guards.forEach(g=>{g.x=100;g.baseSpeed=0;});s.camera.range=0; }
+function noWatch(s) { s.guards.forEach(g=>{g.x=100;g.baseSpeed=0;g.halfAngle=0;});s.cameras.forEach(c=>c.range=0); }
+function withPatrols(s) {const count=s.chocolate;s.chocolate=27;increaseSecurity(s);s.chocolate=count;return s;}
 function takeAt(s,p) {
   s.player.x=p.x;s.player.z=p.z;
   assert.equal(nearestPickup(s)?.id,p.id);
@@ -73,23 +74,26 @@ test('camminare davanti alle guardie non provoca arresto',()=>{
   assert.equal(s.phase,'playing');
 });
 
-test('quattro prelievi su scaffale sbloccano uscita anche con altri prodotti disponibili',()=>{
+test('uscita libera e raccolta infinita con rifornimento sugli scaffali',()=>{
+  const early=initialScene(7);early.player.x=EXIT.x;early.player.z=EXIT.z;updateScene(early,{},.05);
+  assert.equal(early.phase,'escaped');assert.equal(crowns(early),0);
   const s=initialScene(7);noWatch(s);
-  s.player.x=EXIT.x;s.player.z=EXIT.z;updateScene(s,{},.05);
-  assert.equal(s.phase,'playing');
-  for(let i=0;i<GOAL;i++){
-    const p=s.pickups[i];takeAt(s,p);
-    assert.equal(p.status,'collected');
-    assert.equal(s.chocolate,i+1);
+  for(let i=0;i<30;i++){
+    noWatch(s);const p=s.pickups[0];takeAt(s,p);
+    assert.equal(s.chocolate,i+1);assert.equal(s.pickups.length,10);
+    assert.equal(new Set(s.pickups.map(p=>p.id)).size,10);
+    assert.ok(s.pickups.every(p=>p.status==='available'));
     updateScene(s,{take:false},.05);
   }
-  assert.equal(s.pickups.filter(p=>p.status==='available').length,6);
+  assert.equal(s.phase,'playing');assert.equal(crowns(s),30);
+  assert.equal(s.cameras.length,CAMERA_THRESHOLDS.length);
+  assert.equal(s.guards.length,GUARD_THRESHOLDS.length);
   s.player.x=EXIT.x;s.player.z=EXIT.z;updateScene(s,{},.05);
-  assert.equal(s.phase,'escaped');
+  assert.equal(s.phase,'escaped');assert.equal(crowns(s),30);
 });
 
 test('prelievo interrotto ripristina lo stato del prodotto',()=>{
-  const s=initialScene(3);noWatch(s);const p=s.pickups[0];
+  const s=withPatrols(initialScene(3));noWatch(s);const p=s.pickups[0];
   s.player.x=p.x;s.player.z=p.z;updateScene(s,{take:true},.05);
   assert.equal(p.status,'taking');
   s.player.x=0;s.player.z=8.5;updateScene(s,{take:true},.05);
@@ -97,7 +101,7 @@ test('prelievo interrotto ripristina lo stato del prodotto',()=>{
 });
 
 test('POLICIE vede un prelievo: allarme osservabile, inseguimento fisico e cattura a contatto',()=>{
-  const s=initialScene(3);noWatch(s);const p=s.pickups[0];
+  const s=withPatrols(initialScene(3));noWatch(s);const p=s.pickups[0];
   s.player.x=p.x;s.player.z=p.z;updateScene(s,{take:true},.05);
   assert.equal(s.taking,true);
   const guard=s.guards[0];guard.x=p.x;guard.z=p.z-1.2;guard.dir=1;guard.range=3;
@@ -114,9 +118,9 @@ test('POLICIE vede un prelievo: allarme osservabile, inseguimento fisico e cattu
 
 test('CCTV che vede il prelievo invia una guardia senza cattura magica',()=>{
   const s=initialScene(2),p=s.pickups.find(item=>item.id==='chocolate-2');
-  s.guards.forEach(g=>g.halfAngle=0);s.camera.range=0;
+  s.guards.forEach(g=>g.halfAngle=0);s.cameras.forEach(c=>c.range=0);
   s.player.x=p.x;s.player.z=p.z;updateScene(s,{take:true},.05);
-  s.camera.x=p.x-Math.cos(2.2)*2;s.camera.z=p.z-Math.sin(2.2)*2;s.camera.range=7;
+  s.cameras[0].x=p.x-Math.cos(2.2)*2;s.cameras[0].z=p.z-Math.sin(2.2)*2;s.cameras[0].range=7;
   updateScene(s,{take:true},.05);
   assert.equal(s.security.mode,'alert');assert.equal(s.security.source,'camera');
   assert.equal(s.phase,'playing');assert.ok(s.security.responders.length>=1);
@@ -127,7 +131,7 @@ test('CCTV che vede il prelievo invia una guardia senza cattura magica',()=>{
 });
 
 test('prelievo nascosto devia una guardia della zona verso il ripiano',()=>{
-  const s=initialScene(2);s.guards.forEach(g=>g.halfAngle=0);s.camera.range=0;
+  const s=withPatrols(initialScene(2));s.guards.forEach(g=>g.halfAngle=0);s.cameras.forEach(c=>c.range=0);
   const p=s.pickups[0];takeAt(s,p);
   assert.equal(s.chocolate,1);assert.equal(s.security.mode,'routine_increased');
   assert.equal(s.watchZones[p.zone],1);
@@ -140,7 +144,7 @@ test('prelievo nascosto devia una guardia della zona verso il ripiano',()=>{
 });
 
 test('ogni nuovo prelievo nella stessa zona sposta il controllo locale',()=>{
-  const s=initialScene(2);s.guards.forEach(g=>g.halfAngle=0);s.camera.range=0;
+  const s=withPatrols(initialScene(2));s.guards.forEach(g=>g.halfAngle=0);s.cameras.forEach(c=>c.range=0);
   const spots=s.pickups.filter(p=>p.zone==='west').slice(0,3);
   assert.equal(spots.length,3);
   spots.forEach((spot,index)=>{
@@ -151,7 +155,7 @@ test('ogni nuovo prelievo nella stessa zona sposta il controllo locale',()=>{
 });
 
 test('perde Ipno dietro la copertura, cerca ultima posizione e torna a presidiare',()=>{
-  const s=initialScene(3);noWatch(s);const p=s.pickups[0];
+  const s=withPatrols(initialScene(3));noWatch(s);const p=s.pickups[0];
   s.player.x=p.x;s.player.z=p.z;updateScene(s,{take:true},.05);
   const guard=s.guards[0];guard.x=p.x;guard.z=p.z-1.2;guard.dir=1;
   updateScene(s,{take:true},.05);
@@ -171,10 +175,10 @@ test('il percorso della guardia gira attorno allo scaffale e non passa nei muri'
   assert.ok(path.length>7);
   assert.ok(path.every(point=>!collides(point.x,point.z)));
   assert.ok(path.some(point=>point.z<-5.2||point.z>-.3));
-  const s=initialScene(2),guard=s.guards[0];
+  const s=withPatrols(initialScene(2)),guard=s.guards[0];
   guard.x=start.x;guard.z=start.z;guard.mode='chase';guard.halfAngle=0;
   s.guards.slice(1).forEach(g=>{g.x=100;g.baseSpeed=0;g.halfAngle=0;});
-  s.camera.range=0;s.player.x=target.x;s.player.z=target.z;
+  s.cameras.forEach(c=>c.range=0);s.player.x=target.x;s.player.z=target.z;
   s.security={mode:'pursuit',source:'guard',sourceIndex:0,timer:0,lostTime:0,lastKnown:target,responders:[0]};
   for(let n=0;n<150&&s.phase==='playing';n++){
     updateScene(s,{},.05);assert.equal(collides(guard.x,guard.z),false);
@@ -183,7 +187,7 @@ test('il percorso della guardia gira attorno allo scaffale e non passa nei muri'
 });
 
 test('ogni guardia ha un percorso libero verso ogni ripiano candidabile',()=>{
-  const guards=initialScene(1).guards;
+  const guards=withPatrols(initialScene(1)).guards;
   for(const guard of guards)for(const spot of PICKUP_CANDIDATES){
     const path=routeAroundCover(guard,spot);
     assert.ok(path.length>0,`${guard.homeX} → ${spot.id}`);
@@ -196,4 +200,12 @@ test('ogni guardia ha un percorso libero verso ogni ripiano candidabile',()=>{
       assert.ok(length<.41);
     }
   }
+});
+
+test('progressione a soglie, esclamativo e multa',()=>{
+  const s=initialScene(8);assert.equal(s.cameras.length,1);assert.equal(s.guards.length,0);
+  s.chocolate=4;increaseSecurity(s);assert.equal(s.cameras.length,3);assert.equal(s.guards.length,0);
+  s.chocolate=5;increaseSecurity(s);assert.equal(s.guards.length,1);
+  s.guards[0].exclamationTime=2;updateScene(s,{},.05);assert.ok(s.guards[0].exclamationTime>1.9);
+  s.phase='caught';assert.equal(crowns(s),5-FINE);
 });

@@ -1,6 +1,6 @@
 // Camera cinematografica del campione. Coordinate sul piano X/Z, Y verticale.
 // Lo stato e le trasformazioni pure sono separati da Three.js per poterli testare.
-import { LIMITS } from './reference-play-logic.mjs?v=5';
+import { LIMITS } from './reference-play-logic.mjs?v=6';
 const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
 const lerp = (a, b, t) => a + (b - a) * t;
 const smoothing = (rate, seconds) => 1 - Math.exp(-rate * clamp(seconds, 0, .1));

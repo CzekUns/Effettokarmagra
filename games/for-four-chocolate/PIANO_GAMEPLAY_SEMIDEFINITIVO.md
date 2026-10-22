@@ -1,5 +1,7 @@
 # For Four Chocolate — passaggio a gameplay semidefinitivo
 
+**Aggiornamento Simone, 22/10/2026:** l'obiettivo fisso di quattro cioccolate descritto nel piano iniziale è superato. La nuova partita non ha limite di prelievi: i ripiani si riforniscono, l'uscita è disponibile in ogni momento e il giocatore decide quando salvare il record. La sorveglianza inizia con una CCTV, poi cresce per soglie fino a sei CCTV e otto agenti. Le guardie mostrano `!` quando ricevono o rilevano un allarme. Ogni cioccolata vale 1 Kč; la cattura applica una multa di 50 Kč e non aggiorna il record. Su mobile si usa un joypad analogico. Le parti storiche sotto restano il piano dei lotti A/B/C già realizzati.
+
 **22 ottobre 2026 — brief affidato al collaboratore.** Questo documento definisce la prossima fase di `reference-play.html`. Le attività vanno sviluppate dal collaboratore in **PR separate**; ChatGPT gestisce verifica e merge quando richiesto dall'utente. **Non sono già implementate**.
 
 ## Principi già approvati da preservare
