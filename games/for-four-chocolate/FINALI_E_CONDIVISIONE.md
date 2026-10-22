@@ -47,4 +47,6 @@
 - [ ] Screenshot **autentici del browser** delle due scene a Praga, ufficio, scala mobile e schermate risultato, senza spacciare artwork compositi per screenshot.
 - [ ] `AGENTS.md`, test, `WORK_LOG.md` aggiornati; PR separata da non mergiare autonomamente.
 
+**Esito/Stato 22/10/2026:** implementazione di #107 preparata su `ffc-finali-praga` per revisione in PR separata. Test Node e prove Chromium desktop/mobile landscape superati; nessuna prova su Android fisico. Le caselle restano aperte fino a merge e collaudo di Simone.
+
 **Nota su privacy della reference di gruppo:** è una fotografia reale di persone, utilizzabile unicamente come reference e non come immagine di gioco. È stata caricata solo una **miniatura 200×128 px** nella repository pubblica come riferimento operativo per il collaboratore, non l'originale integrale. Non pubblicare la fotografia come schermata di gioco né condividerne altre versioni ingrandite senza necessità.

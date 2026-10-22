@@ -2,14 +2,20 @@ import * as THREE from './vendor/three/three.module.js';
 import { initialScene, updateScene, rayDistance, nearestPickup, shelfBlocksCamera, coverBlocksCamera, SHELVES, PARTITIONS, LIMITS, EXIT, TAKE_SECONDS, crowns, FINE } from './reference-play-logic.mjs?v=6';
 import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, centerCamera, updateCameraRig } from './reference-camera.mjs?v=6';
 import { spriteView, animationPose } from './reference-sprites.mjs';
+import { createFinale, advanceFinale, nextFinaleStep, skipFinale, finaleSubtitle } from './reference-finale-logic.mjs?v=7';
+import { createFinaleScene } from './reference-finale-scene.mjs?v=7';
+import { buildWhatsAppShareUrl } from './reference-share.mjs?v=7';
 
 const host = document.querySelector('#world');
+const game=document.querySelector('.game');
 const ui = {
   loot: document.querySelector('#loot'), score: document.querySelector('#score'), best: document.querySelector('#best'),
   mission: document.querySelector('#mission'), watch: document.querySelector('#watch'),
   interaction: document.querySelector('#interaction'), progress: document.querySelector('#progress'),
   result: document.querySelector('#result'), title: document.querySelector('#result-title'),
   kicker: document.querySelector('#result-kicker'), text: document.querySelector('#result-text'),
+  finale: document.querySelector('#finale'), finaleStage: document.querySelector('#finale-stage'),
+  finaleSpoken: document.querySelector('#finale-spoken'), finaleTranslation: document.querySelector('#finale-translation'),
   radarPlayer: document.querySelector('#radar-player'), radarGuards: [], radarCameras: []
 };
 let renderer;
@@ -59,6 +65,9 @@ const animationNames = [
 ];
 const animationTextures = Object.fromEntries(await Promise.all(animationNames.map(async name =>
   [name, await load(`./assets/reference-play/${name}.webp`)])));
+const [capelloneTexture,capelloneGroupTexture,facadeTexture,cobbleTexture,...crowdTextures]=await Promise.all([
+  ...['capellone-finale','capellone-group','praha-facade','praha-cobblestone',
+    'friend-left','friend-red','friend-tan','friend-green'].map(name=>load(`./assets/reference-play/${name}.webp`))]);
 floorTexture.wrapS = THREE.RepeatWrapping; floorTexture.wrapT = THREE.RepeatWrapping;
 floorTexture.repeat.set(4, 4);
 const cache = new Map();
@@ -290,6 +299,9 @@ function figure(texture, height) {
   return {group,image,shadow};
 }
 const player=figure(ipnoTexture,1.92), guards=[], customer=figure(customerTexture,1.8);
+const finaleVisual=createFinaleScene({ipnoTexture,guardTexture,capelloneTexture,capelloneGroupTexture,
+  facadeTexture,cobbleTexture,crowdTextures});
+let finale=null,finalResult=null;
 function orientFigure(actor, worldX, worldZ, stride, moving = false) {
   actor.group.position.set(worldX,moving?Math.abs(Math.sin(stride))*.028:0,worldZ);
   actor.group.rotation.y=Math.atan2(camera.position.x-worldX,camera.position.z-worldZ);
@@ -406,10 +418,32 @@ addEventListener('keydown',e=>{
 
 function resize(){const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<1.5?48:36;camera.updateProjectionMatrix();}
 new ResizeObserver(resize).observe(host);resize();
-document.querySelector('#retry').addEventListener('click',()=>{state=initialScene();cameraRig.focusX=state.player.x;cameraRig.focusZ=state.player.z;centerCamera(cameraRig);held.clear();resetJoystick();ui.result.hidden=true;buildPickupBars();shownPickupVersion=state.pickupVersion;syncSecurityVisuals();});
+document.querySelector('#retry').addEventListener('click',()=>{state=initialScene();finale=null;finalResult=null;game.classList.remove('in-finale');
+  cameraRig.focusX=state.player.x;cameraRig.focusZ=state.player.z;centerCamera(cameraRig);held.clear();resetJoystick();
+  ui.result.hidden=true;ui.finale.hidden=true;buildPickupBars();shownPickupVersion=state.pickupVersion;syncSecurityVisuals();});
 const recordKey='ffc-best-crowns-v1';
 let best=0;
 try{best=Math.max(0,Number(localStorage.getItem(recordKey))||0);}catch{}
+function beginFinale(){
+  if(finale||state.phase==='playing')return;
+  const outcome=state.phase;
+  if(outcome==='escaped'&&state.chocolate>best){best=state.chocolate;
+    try{localStorage.setItem(recordKey,String(best));}catch{}}
+  finalResult={outcome,chocolates:state.chocolate,crowns:crowns(state),fine:outcome==='caught'?FINE:0,best};
+  finale=createFinale(outcome);held.clear();resetJoystick();game.classList.add('in-finale');
+  ui.result.hidden=true;ui.finale.hidden=false;
+}
+document.querySelector('#finale-next').addEventListener('click',()=>{if(finale)nextFinaleStep(finale);});
+document.querySelector('#finale-skip').addEventListener('click',()=>{if(finale)skipFinale(finale);});
+addEventListener('keydown',event=>{if(!finale||finale.step==='result')return;
+  if(event.code==='Enter'){nextFinaleStep(finale);event.preventDefault();}
+  if(event.code==='Escape'){skipFinale(finale);event.preventDefault();}
+});
+document.querySelector('#share-whatsapp').addEventListener('click',()=>{
+  if(!finalResult)return;
+  const url=buildWhatsAppShareUrl(finalResult),opened=window.open(url,'_blank');
+  if(opened)opened.opener=null;else location.assign(url);
+});
 function setFigureView(actor, textures, facing, x, z, frontFrame) {
   const {view,flip}=spriteView(facing,x,z,camera.position.x,camera.position.z);
   const texture=view==='front' ? frontFrame || textures.front : textures[view];
@@ -460,11 +494,13 @@ function loop(now) {
   const worldMove=cameraRelativeMovement(screenX,screenZ,cameraRig.yaw);
   const input={...worldMove,take:held.has('take'),crouch:held.has('crouch')};
   updateScene(state,input,dt);
+  beginFinale();if(finale)advanceFinale(finale,dt);
   syncSecurityVisuals();
   if(shownPickupVersion!==state.pickupVersion){buildPickupBars();shownPickupVersion=state.pickupVersion;}
   updateView(worldMove,dt);
   updateShelfOcclusion();
   orientFigure(player,state.player.x,state.player.z,state.player.stride,state.player.moving);
+  if(finale?.step==='door')player.group.position.z-=Math.min(1,finale.time/1.3)*1.5;
   setPlayerAnimation();
   state.guards.forEach((guard,index)=>{
     orientFigure(guards[index],guard.x,guard.z,guard.stride,guard.moving);
@@ -475,6 +511,13 @@ function loop(now) {
     ui.radarGuards[index].classList.toggle('responding',guard.mode==='respond'||guard.mode==='chase'||guard.mode==='search');
     ui.radarGuards[index].classList.toggle('witness',state.security.source==='guard'&&state.security.sourceIndex===index);
   });
+  if(finale?.step==='escort'){
+    const progress=Math.min(1,finale.time/1.3);
+    player.group.position.x+=progress*.65;
+    player.group.position.z-=progress*.65;
+    const escort=guards[state.security.responders[0]];
+    if(escort){escort.group.position.set(player.group.position.x+.55,0,player.group.position.z+.2);}
+  }
   const customerZ=5.8+Math.sin(state.time*.45)*.65;
   orientFigure(customer,9.2,customerZ,state.time*1.5,true);
   setFigureView(customer,{front:customerTexture,back:customerBackTexture,side:customerSideTexture},Math.cos(state.time*.45)>0?Math.PI/2:-Math.PI/2,9.2,customerZ);
@@ -509,16 +552,25 @@ function loop(now) {
   const near=nearestPickup(state);
   ui.interaction.hidden=!near||['alert','pursuit','searching'].includes(mode);
   ui.progress.style.width=`${Math.min(100,state.takeTime/TAKE_SECONDS*100)}%`;
-  if(state.phase!=='playing'&&ui.result.hidden){
+  if(finale){
+    const stageNames={door:'USCITA · PRAHA',escort:'POLICIE · ACCOMPAGNAMENTO',office:'UFFICIO POLICIE',
+      escalator:'SCALA MOBILE · VÝCHOD',street:'PRAHA · ESTERNO',fine:'POKUTA · MULTA'};
+    const subtitle=finaleSubtitle(finale);
+    ui.finale.hidden=finale.step==='result';
+    ui.finaleStage.textContent=stageNames[finale.step]||'';
+    ui.finaleSpoken.textContent=subtitle?.spoken||'';
+    ui.finaleTranslation.textContent=subtitle?.translation||'';
+  }
+  if(finale?.step==='result'&&ui.result.hidden){
     ui.result.hidden=false;const caught=state.phase==='caught';
-    const previousBest=best;
-    if(!caught&&state.chocolate>best){best=state.chocolate;try{localStorage.setItem(recordKey,String(best));}catch{}}
     ui.kicker.textContent=caught?'POLICIE · PRELIEVO VISTO':'USCITA RAGGIUNTA';
     ui.title.textContent=caught?'Ti hanno raggiunto.':'Cioccolate al sicuro!';
     ui.text.textContent=caught?`${state.chocolate} cioccolate × 1 Kč = ${state.chocolate} Kč. Multa ${FINE} Kč. Punteggio: ${crowns(state)} Kč. Il record resta ${best} Kč.`:
-      `${state.chocolate} cioccolate × 1 Kč = ${crowns(state)} Kč. ${best>previousBest?'Nuovo record! ':''}Record salvato: ${best} Kč. Riprova e rischia di più!`;
+      `${state.chocolate} cioccolate × 1 Kč = ${crowns(state)} Kč. Record salvato: ${best} Kč. Riprova e rischia di più!`;
   }
-  renderer.render(scene,camera);
+  if(finale&&!['door','escort'].includes(finale.step)){
+    finaleVisual.update(finale,camera.aspect);renderer.render(finaleVisual.scene,finaleVisual.camera);
+  }else renderer.render(scene,camera);
   frames++;if(now-frameStart>2000){window.__ffcMetrics={fps:Math.round(frames*1000/(now-frameStart)),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,phase:state.phase};frames=0;frameStart=now;}
   requestAnimationFrame(loop);
 }
