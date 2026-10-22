@@ -87,3 +87,10 @@
 - **Limiti:** il risultato **non è ancora la grafica esatta** della tavola: texture scaffali ripetute e personaggi piani, non modelli completi. Solo anteprima della tavola 720×405 nel repo; originale richiesto a Simone. Rendering software EC2 1–2 FPS, dato non valido per Android con GPU; prova reale Android non eseguita. Non approvato per sostituire `index.html`.
 - **Da fare:** confrontare con originale ad alta risoluzione, correggere gli scarti visivi e misurare su Android reale; giudizio esplicito di Simone prima del merge.
 - **Riferimento:** ramo `ffc-reference-giocabile`; PR grafica separata da proporre in bozza.
+
+## 2026-10-22 — ChatGPT / merge PR #98
+- **Fatto:** dopo l'approvazione esplicita dell'utente, la PR #98 «prova giocabile dalla reference definitiva (bozza)» è stata contrassegnata pronta per revisione e unita in `main` con merge commit `34cbf733075c8ddf694f071337fbe616bbdb9856`.
+- **Come e dove:** aggiunge una scena di prova separata in `games/for-four-chocolate/reference-play.html` con risorse in `assets/reference-play/`, logica e test separati; preserva `index.html` e `sample-ps1.html` per confronto.
+- **Verifiche:** GitHub conferma `merged: true`; i 15 test Node e il browser sono dichiarati dal collaboratore nella PR, non rieseguiti durante questo merge. Controllo Android reale non eseguito; prestazioni da verificare.
+- **Da fare:** apertura della pagina demo pubblicata, valutazione grafica alla luce dell'unica reference approvata e test prestazioni su telefono. La PR era una bozza di resa, non un'approvazione della grafica definitiva.
+- **Riferimenti:** https://github.com/CzekUns/Effettokarmagra/pull/98 ; https://czekuns.github.io/Effettokarmagra/games/for-four-chocolate/reference-play.html
