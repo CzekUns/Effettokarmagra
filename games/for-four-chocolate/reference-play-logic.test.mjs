@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LIMITS, SHELVES, PICKUP_CANDIDATES, GOAL, collides, canSee, shelfBlocksCamera, EXIT,
+import { LIMITS, SHELVES, PICKUP_CANDIDATES, GOAL, collides, canSee, shelfBlocksCamera, routeAroundCover, EXIT,
   initialScene, nearestPickup, selectPickups, updateScene } from './reference-play-logic.mjs';
 
 function noWatch(s) { s.guards.forEach(g=>{g.x=100;g.baseSpeed=0;});s.camera.range=0; }
@@ -96,11 +96,104 @@ test('prelievo interrotto ripristina lo stato del prodotto',()=>{
   assert.equal(p.status,'available');assert.equal(s.taking,false);assert.equal(s.takeTime,0);
 });
 
-test('visuale durante il prelievo provoca cattura nella versione precedente al lotto C',()=>{
+test('POLICIE vede un prelievo: allarme osservabile, inseguimento fisico e cattura a contatto',()=>{
   const s=initialScene(3);noWatch(s);const p=s.pickups[0];
   s.player.x=p.x;s.player.z=p.z;updateScene(s,{take:true},.05);
   assert.equal(s.taking,true);
   const guard=s.guards[0];guard.x=p.x;guard.z=p.z-1.2;guard.dir=1;guard.range=3;
   updateScene(s,{take:true},.05);
+  assert.equal(s.phase,'playing');assert.equal(s.security.mode,'alert');
+  assert.equal(s.security.source,'guard');assert.equal(s.taking,false);
+  assert.equal(p.status,'available');
+  assert.equal(s.watchZones[p.zone],1);
+  const start=guard.z;let steps=0;
+  while(s.phase==='playing'&&steps<100){updateScene(s,{},.05);assert.equal(collides(guard.x,guard.z),false);steps++;}
+  assert.equal(s.phase,'caught');assert.ok(steps>1);
+  assert.ok(guard.z>start);assert.ok(Math.hypot(guard.x-p.x,guard.z-p.z)<.55);
+});
+
+test('CCTV che vede il prelievo invia una guardia senza cattura magica',()=>{
+  const s=initialScene(2),p=s.pickups.find(item=>item.id==='chocolate-2');
+  s.guards.forEach(g=>g.halfAngle=0);s.camera.range=0;
+  s.player.x=p.x;s.player.z=p.z;updateScene(s,{take:true},.05);
+  s.camera.x=p.x-Math.cos(2.2)*2;s.camera.z=p.z-Math.sin(2.2)*2;s.camera.range=7;
+  updateScene(s,{take:true},.05);
+  assert.equal(s.security.mode,'alert');assert.equal(s.security.source,'camera');
+  assert.equal(s.phase,'playing');assert.ok(s.security.responders.length>=1);
+  const guard=s.guards[s.security.responders[0]],before={x:guard.x,z:guard.z};
+  for(let n=0;n<20;n++)updateScene(s,{},.05);
+  assert.ok(Math.hypot(guard.x-before.x,guard.z-before.z)>.1);
+  assert.equal(collides(guard.x,guard.z),false);
+});
+
+test('prelievo nascosto devia una guardia della zona verso il ripiano',()=>{
+  const s=initialScene(2);s.guards.forEach(g=>g.halfAngle=0);s.camera.range=0;
+  const p=s.pickups[0];takeAt(s,p);
+  assert.equal(s.chocolate,1);assert.equal(s.security.mode,'routine_increased');
+  assert.equal(s.watchZones[p.zone],1);
+  const guard=s.guards.find(g=>g.mode==='inspect');assert.ok(guard);
+  assert.equal(guard.zone,p.zone);
+  const before={x:guard.x,z:guard.z};
+  for(let n=0;n<40;n++)updateScene(s,{},.05);
+  assert.ok(Math.hypot(guard.x-before.x,guard.z-before.z)>1);
+  assert.equal(collides(guard.x,guard.z),false);
+});
+
+test('ogni nuovo prelievo nella stessa zona sposta il controllo locale',()=>{
+  const s=initialScene(2);s.guards.forEach(g=>g.halfAngle=0);s.camera.range=0;
+  const spots=s.pickups.filter(p=>p.zone==='west').slice(0,3);
+  assert.equal(spots.length,3);
+  spots.forEach((spot,index)=>{
+    takeAt(s,spot);updateScene(s,{take:false},.05);
+    assert.equal(s.watchZones.west,index+1);
+    assert.ok(s.guards.some(g=>g.zone==='west'&&g.mode==='inspect'&&g.inspectTarget.x===spot.x&&g.inspectTarget.z===spot.z));
+  });
+});
+
+test('perde Ipno dietro la copertura, cerca ultima posizione e torna a presidiare',()=>{
+  const s=initialScene(3);noWatch(s);const p=s.pickups[0];
+  s.player.x=p.x;s.player.z=p.z;updateScene(s,{take:true},.05);
+  const guard=s.guards[0];guard.x=p.x;guard.z=p.z-1.2;guard.dir=1;
+  updateScene(s,{take:true},.05);
+  s.player.x=9;s.player.z=8;s.guards.forEach(g=>g.halfAngle=0);
+  for(let n=0;n<30;n++)updateScene(s,{},.05);
+  assert.equal(s.security.mode,'searching');
+  assert.deepEqual(s.security.lastKnown,{x:p.x,z:p.z});
+  for(let n=0;n<250;n++)updateScene(s,{},.05);
+  assert.equal(s.security.mode,'routine_increased');assert.equal(s.phase,'playing');
+  assert.equal(s.watchZones[p.zone],1);
+  assert.equal(guard.mode,'return');
+});
+
+test('il percorso della guardia gira attorno allo scaffale e non passa nei muri',()=>{
+  const start={x:-7.9,z:-4},target={x:-5.9,z:-4};
+  const path=routeAroundCover(start,target);
+  assert.ok(path.length>7);
+  assert.ok(path.every(point=>!collides(point.x,point.z)));
+  assert.ok(path.some(point=>point.z<-5.2||point.z>-.3));
+  const s=initialScene(2),guard=s.guards[0];
+  guard.x=start.x;guard.z=start.z;guard.mode='chase';guard.halfAngle=0;
+  s.guards.slice(1).forEach(g=>{g.x=100;g.baseSpeed=0;g.halfAngle=0;});
+  s.camera.range=0;s.player.x=target.x;s.player.z=target.z;
+  s.security={mode:'pursuit',source:'guard',sourceIndex:0,timer:0,lostTime:0,lastKnown:target,responders:[0]};
+  for(let n=0;n<150&&s.phase==='playing';n++){
+    updateScene(s,{},.05);assert.equal(collides(guard.x,guard.z),false);
+  }
   assert.equal(s.phase,'caught');
+});
+
+test('ogni guardia ha un percorso libero verso ogni ripiano candidabile',()=>{
+  const guards=initialScene(1).guards;
+  for(const guard of guards)for(const spot of PICKUP_CANDIDATES){
+    const path=routeAroundCover(guard,spot);
+    assert.ok(path.length>0,`${guard.homeX} → ${spot.id}`);
+    for(let i=1;i<path.length;i++){
+      const a=path[i-1],b=path[i],length=Math.hypot(a.x-b.x,a.z-b.z);
+      for(let step=0;step<=4;step++){
+        const t=step/4;
+        assert.equal(collides(a.x+(b.x-a.x)*t,a.z+(b.z-a.z)*t),false,`${spot.id} segmento ${i}/${path.length}`);
+      }
+      assert.ok(length<.41);
+    }
+  }
 });
