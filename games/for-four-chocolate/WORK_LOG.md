@@ -162,3 +162,10 @@
 - **Verifiche:** merge confermato da GitHub; il collaboratore riporta 32 test Node e prove Chromium, **non rieseguiti da ChatGPT**. Android fisico e qualità delle prestazioni GPU ancora non verificati.
 - **Nota di processo:** il precedente riferimento a #106 «non unita» è storico e si riferisce allo stato precedente a questo merge. Con questo commit risultano integrate le PR #103–#106; eventuali PR nuove richiedono successivo controllo.
 - **Da fare:** verifica del deploy e del gioco dal browser mobile, in particolare risposta delle guardie dopo prelievo osservato e comportamento del joypad. La reference grafica unica resta obbligatoria.
+
+## 2026-10-22 — ChatGPT / Finali Praga + WhatsApp sempre condivisibile
+- **Richiesta utente:** creare **due finali narrativi animati**: uscita volontaria a Praga accolta dal gruppo di ragazzi; cattura → ufficio con frase ceca «Za čtyři čokolády jste urazil Českou republiku!» e «For four chocolate!» → scala mobile → esterno Praga → multa 50 Kč → cameo sullo sfondo di Capellone con cintura di salame.
+- **Cast:** foto della comitiva inviata in questa conversazione il 22 ottobre 2026. La foto contiene già Ipno e Capellone: **non duplicarli**. Essendo una foto con più persone, **non caricata pubblicamente nella repo**; servirà trasmissione autorizzata al collaboratore prima del disegno del gruppo. Il vecchio `ipno-foto-1.webp` è un'altra foto, non la sostituisce.
+- **WhatsApp:** richiesta esplicita dell'utente di **condividere il risultato qualunque sia l'esito**, quindi pulsante dedicato per vincita e game over, messaggi dinamici separati con bottino, multa/saldo, record e URL pubblico. L'invio deve restare volontario.
+- **Fatto:** creato `FINALI_E_CONDIVISIONE.md`, issue [#107](https://github.com/CzekUns/Effettokarmagra/issues/107) assegnata a `ilconsulentelogistico-hue`, aggiornato `AGENTS.md`.
+- **Verifiche e stato:** incarico/documentazione pubblicati su `main`; **nessuna scena, grafica o condivisione WhatsApp implementata**, nessun test o deploy di queste funzioni effettuato da ChatGPT. Il collaboratore deve produrre PR separata con screenshot autentici, test e verifica Android.
