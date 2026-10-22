@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createCameraRig, orbitCamera, zoomCamera, centerCamera,
+  createCameraRig, orbitCamera, zoomCamera, tiltCamera, centerCamera,
   updateCameraRig, cameraRelativeMovement, CAMERA_DEFAULT_YAW
 } from './reference-camera.mjs';
 
@@ -37,4 +37,15 @@ test('camera relative movement remains consistent when orbiting',()=>{
   assert.ok(Math.abs(a.x-1)<1e-8 && Math.abs(a.z)<1e-8);
   assert.ok(Math.abs(b.x)<1e-8 && Math.abs(b.z+1)<1e-8);
   assert.ok(Math.abs(Math.hypot(b.x,b.z)-1)<1e-8);
+});
+test('la levetta può inclinare la camera senza alterare i limiti dello zoom',()=>{
+  const rig=createCameraRig({x:0,z:0});
+  const before=updateCameraRig(rig,{x:0,z:0},{x:0,z:0},.05);
+  tiltCamera(rig,.2);
+  for(let i=0;i<40;i++)updateCameraRig(rig,{x:0,z:0},{x:0,z:0},.05);
+  const after=updateCameraRig(rig,{x:0,z:0},{x:0,z:0},.05);
+  assert.ok(after.y>before.y);
+  tiltCamera(rig,10);assert.equal(rig.targetPitch,.83);
+  tiltCamera(rig,-10);assert.equal(rig.targetPitch,.43);
+  centerCamera(rig);assert.equal(rig.targetPitch,.6);
 });

@@ -7,7 +7,7 @@
   <meta name="description" content="For Four Chocolate: raccogli cioccolate finché vuoi e raggiungi l'uscita prima che POLICIE ti trovi.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23212139'/%3E%3Ctext x='4' y='25' font-size='23'%3E🍫%3C/text%3E%3C/svg%3E">
   <title>For Four Chocolate · Sfida infinita</title>
-  <link rel="stylesheet" href="./reference-play.css?v=9">
+  <link rel="stylesheet" href="./reference-play.css?v=10">
 </head>
 <body>
   <main class="game" aria-label="For Four Chocolate, gioco stealth">
@@ -17,24 +17,23 @@
       <div class="top-right"><span id="watch">SORVEGLIANZA NORMALE</span><span id="best">RECORD 0 Kč</span><b id="score">0 Kč</b><div class="radar" aria-label="Minimappa"><i class="shelf s1"></i><i class="shelf s2"></i><i class="shelf s3"></i><i id="radar-player" class="dot player"></i></div></div>
     </header>
     <div class="camera-controls" role="group" aria-label="Controlli telecamera">
-      <span>CAMERA</span>
-      <button id="camera-left" type="button" aria-label="Ruota la camera a sinistra" title="Ruota camera a sinistra (Z)">↶</button>
-      <button id="camera-right" type="button" aria-label="Ruota la camera a destra" title="Ruota camera a destra (X)">↷</button>
+      <div id="camera-stick" role="group" aria-label="Levetta per ruotare e inclinare la telecamera" title="Trascina per ruotare e inclinare la telecamera"><div id="camera-thumb"></div></div>
       <button id="camera-closer" type="button" aria-label="Avvicina la camera" title="Avvicina (+)">＋</button>
       <button id="camera-farther" type="button" aria-label="Allontana la camera" title="Allontana (−)">−</button>
-      <button id="camera-center" type="button" aria-label="Reimposta telecamera" title="Reimposta (R)">⦿</button>
     </div>
     <button id="music-toggle" class="music-toggle" type="button" aria-label="Disattiva musica ed effetti" hidden>MUSICA ON</button>
     <div class="mission" id="mission">Raccogli cioccolate finché vuoi: ogni prelievo aumenta i controlli. Esci quando vuoi per salvare il record.</div>
+    <div class="effect-status" id="effect-status" hidden></div>
     <div class="interaction" id="interaction" hidden>PRENDI <span id="progress"></span></div>
     <div class="touch left" aria-label="Movimento">
       <div id="joystick" role="group" aria-label="Joypad analogico per muovere Ipno"><div id="joystick-thumb"></div></div>
     </div>
     <div class="touch right" aria-label="Azioni">
       <button id="take" data-key="take">PRENDI</button>
-      <button id="crouch" data-key="crouch">ACCOVACCIATI</button>
+      <button id="crouch" type="button" aria-pressed="false"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="5" r="3"/><path id="crouch-pose" d="M13 9l-5 5 5 3 5-2 4 5M8 14l-4 5m9-2-3 6m8-8 6-1"/></svg><span id="crouch-label">ACCOVACCIATI</span></button>
+      <button id="sprint" data-key="sprint">SCATTO</button>
     </div>
-    <div class="hint">WASD / FRECCE · E PRENDI · SHIFT ACCOVACCIATI · Z/X CAMERA · R CENTRA · +/- ZOOM <a href="./sample-ps1.html">CAMPIONE PRECEDENTE ↗</a></div>
+    <div class="hint">WASD / FRECCE · E PRENDI · C ACCOVACCIATI · SHIFT SCATTO · Z/X CAMERA · R CENTRA · +/- ZOOM <a href="./sample-ps1.html">CAMPIONE PRECEDENTE ↗</a></div>
     <div class="rotate" id="rotate"><div>↻<strong>Ruota il telefono</strong><span>Questo gioco si usa in orizzontale.</span></div></div>
     <section class="start-screen" id="start-screen" aria-label="Schermata iniziale di For Four Chocolate">
       <div class="start-art"><img src="./references/start-screen-approved.jpg" alt="For Four Chocolate: Ipno nel supermercato ceco, insegna del gioco e PRESS START" width="1536" height="864">
@@ -42,9 +41,15 @@
         <span id="start-status" role="status">Caricamento del gioco…</span>
       </div>
     </section>
+    <section class="special-offer" id="special-offer" aria-live="polite" hidden><div class="special-card">
+      <img src="./assets/reference-play/ciokospira-speciale.png" alt="Ciokospira, cioccolata speciale nella confezione viola e dorata" width="1536" height="1024">
+      <strong id="special-title">Hai trovato Ciokospira!</strong>
+      <p id="special-message">Vuoi mangiarla? Potrebbe essere un bonus o un malus.</p>
+      <button id="special-eat" type="button">MANGIALA</button>
+    </div></section>
     <div class="finale" id="finale" hidden><div class="finale-caption"><small id="finale-stage"></small><strong id="finale-spoken"></strong><span id="finale-translation"></span></div><div class="finale-actions"><button id="finale-next" type="button">CONTINUA</button><button id="finale-skip" type="button">SALTA</button></div></div>
     <div class="result" id="result" hidden><div><small id="result-kicker">POLICIE</small><h1 id="result-title">Ti hanno visto.</h1><p id="result-text"></p><button id="share-whatsapp" type="button">CONDIVIDI SU WHATSAPP</button><button id="retry">RIGIOCA</button></div></div>
   </main>
-  <script type="module" src="./reference-play.mjs?v=10"></script>
+  <script type="module" src="./reference-play.mjs?v=11"></script>
 </body>
 </html>

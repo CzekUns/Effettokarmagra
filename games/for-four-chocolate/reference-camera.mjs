@@ -8,11 +8,13 @@ const shortestAngle = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
 export const CAMERA_DEFAULT_YAW = .49;
 export const CAMERA_MIN_ZOOM = .73;
 export const CAMERA_MAX_ZOOM = 1.42;
+export const CAMERA_MIN_PITCH = .43;
+export const CAMERA_MAX_PITCH = .83;
 
 export function createCameraRig(player) {
   return {
     yaw: CAMERA_DEFAULT_YAW, targetYaw: CAMERA_DEFAULT_YAW,
-    zoom: 1, targetZoom: 1,
+    zoom: 1, targetZoom: 1,pitch:.6,targetPitch:.6,
     focusX: player.x, focusZ: player.z,
     lookAheadX: 0, lookAheadZ: 0
   };
@@ -32,9 +34,13 @@ export function orbitCamera(rig, radians) {
 export function zoomCamera(rig, difference) {
   if (Number.isFinite(difference)) rig.targetZoom = clamp(rig.targetZoom + difference, CAMERA_MIN_ZOOM, CAMERA_MAX_ZOOM);
 }
+export function tiltCamera(rig,difference) {
+  if(Number.isFinite(difference))rig.targetPitch=clamp(rig.targetPitch+difference,CAMERA_MIN_PITCH,CAMERA_MAX_PITCH);
+}
 export function centerCamera(rig) {
   rig.targetYaw = CAMERA_DEFAULT_YAW;
   rig.targetZoom = 1;
+  rig.targetPitch = .6;
 }
 
 export function updateCameraRig(rig, player, movement, seconds, aspect = 16 / 9) {
@@ -43,6 +49,7 @@ export function updateCameraRig(rig, player, movement, seconds, aspect = 16 / 9)
   const leadT = smoothing(5.5, seconds);
   rig.yaw += shortestAngle(rig.yaw, rig.targetYaw) * yawT;
   rig.zoom = lerp(rig.zoom, rig.targetZoom, smoothing(7, seconds));
+  rig.pitch = lerp(rig.pitch, rig.targetPitch, smoothing(7, seconds));
   const magnitude = Math.hypot(movement.x, movement.z);
   const leadX = magnitude > .04 ? movement.x / magnitude * .63 : 0;
   const leadZ = magnitude > .04 ? movement.z / magnitude * .63 : 0;
@@ -54,10 +61,10 @@ export function updateCameraRig(rig, player, movement, seconds, aspect = 16 / 9)
   // Nel landscape basso si allarga appena il campo inquadrato.
   const framing = aspect > 2 ? 1.08 : 1;
   const distance = 10.7 * rig.zoom * framing;
-  const horizontal = distance * Math.cos(.6);
+  const horizontal = distance * Math.cos(rig.pitch);
   return {
     x: rig.focusX + Math.sin(rig.yaw) * horizontal,
-    y: .85 + distance * Math.sin(.6),
+    y: .85 + distance * Math.sin(rig.pitch),
     z: rig.focusZ + Math.cos(rig.yaw) * horizontal,
     lookX: rig.focusX,
     lookY: .85,

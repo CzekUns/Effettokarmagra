@@ -73,3 +73,17 @@ La schermata usa **direttamente e senza ricompressione** `references/start-scree
 [Scala mobile mobile landscape](assets/reference-play/revision-escalator-mobile.png) · [Festa mobile](assets/reference-play/revision-street-mobile.png) · [Multa e cameo di giorno](assets/reference-play/revision-fine-day.png) · [Risultato positivo con WhatsApp](assets/reference-play/revision-success-result.png) · [Risultato cattura con WhatsApp](assets/reference-play/revision-caught-result.png).
 
 Tutte le nuove immagini `revision-*.png` sono screenshot autentici del gioco in Chromium. La camera ora inquadra più da vicino personaggi e interazione; sulla scala segue l'ascesa e mostra le viste posteriori di Ipno/POLICIE con piedi sui gradini, non dentro la geometria. La città usa texture diurne derivate dalle precedenti risorse di Praga, porte e vetrine commerciali, insegne ceche e tram. Restano facciate ripetute, materiali semplificati per le vetrine e sprite piani. Il confronto mobile usa una viewport Chromium, non un Android fisico.
+
+## Accovacciata, pattuglie e Ciokospira
+
+| Reference artistica approvata | Nuova scena giocabile con POLICIE e bottino a 15 |
+|---|---|
+| ![Unica tavola approvata](references/gameplay-mgs-vr-artboard.webp) | ![Ipno individuato dalla guardia](assets/reference-play/desktop-stealth-fat-alert.png) |
+
+| Confezione speciale in browser desktop | Stessa finestra in viewport mobile landscape 844×390 |
+|---|---|
+| ![Ciokospira desktop](assets/reference-play/desktop-stealth-special-found.png) | ![Ciokospira mobile](assets/reference-play/mobile-stealth-special-found.png) |
+
+![Accovacciata e nuovi controlli touch](assets/reference-play/mobile-stealth-crouch.png)
+
+Gli screenshot vengono dal gioco renderizzato in Chromium, con stato di prova riproducibile. La stessa tavola continua a guidare proporzioni di Ipno e POLICIE, scaffali fitti, palette viola/arancio/ciano, pavimento caldo riflettente e vista obliqua. La nuova confezione Ciokospira riprende i colori dei prodotti della tavola ed è una proposta da approvare nella PR. Gli scarti visivi già dichiarati persistono: sprite piani, facciate ripetute e tavola disponibile soltanto come anteprima 720×405. La viewport touch non sostituisce la prova su Android fisico.

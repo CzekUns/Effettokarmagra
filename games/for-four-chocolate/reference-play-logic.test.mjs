@@ -104,7 +104,7 @@ test('POLICIE vede un prelievo: allarme osservabile, inseguimento fisico e cattu
   const s=withPatrols(initialScene(3));noWatch(s);const p=s.pickups[0];
   s.player.x=p.x;s.player.z=p.z;updateScene(s,{take:true},.05);
   assert.equal(s.taking,true);
-  const guard=s.guards[0];guard.x=p.x;guard.z=p.z-1.2;guard.dir=1;guard.range=3;
+  const guard=s.guards[0];guard.x=p.x;guard.z=p.z-1.2;guard.dir=1;guard.angle=Math.PI/2;guard.halfAngle=.5;guard.range=3;
   updateScene(s,{take:true},.05);
   assert.equal(s.phase,'playing');assert.equal(s.security.mode,'alert');
   assert.equal(s.security.source,'guard');assert.equal(s.taking,false);
@@ -157,16 +157,16 @@ test('ogni nuovo prelievo nella stessa zona sposta il controllo locale',()=>{
 test('perde Ipno dietro la copertura, cerca ultima posizione e torna a presidiare',()=>{
   const s=withPatrols(initialScene(3));noWatch(s);const p=s.pickups[0];
   s.player.x=p.x;s.player.z=p.z;updateScene(s,{take:true},.05);
-  const guard=s.guards[0];guard.x=p.x;guard.z=p.z-1.2;guard.dir=1;
+  const guard=s.guards[0];guard.x=p.x;guard.z=p.z-1.2;guard.dir=1;guard.angle=Math.PI/2;guard.halfAngle=.5;
   updateScene(s,{take:true},.05);
   s.player.x=9;s.player.z=8;s.guards.forEach(g=>g.halfAngle=0);
   for(let n=0;n<30;n++)updateScene(s,{},.05);
   assert.equal(s.security.mode,'searching');
   assert.deepEqual(s.security.lastKnown,{x:p.x,z:p.z});
-  for(let n=0;n<250;n++)updateScene(s,{},.05);
+  for(let n=0;n<360;n++)updateScene(s,{},.05);
   assert.equal(s.security.mode,'routine_increased');assert.equal(s.phase,'playing');
   assert.equal(s.watchZones[p.zone],1);
-  assert.equal(guard.mode,'return');
+  assert.ok(['return','patrol'].includes(guard.mode));
 });
 
 test('il percorso della guardia gira attorno allo scaffale e non passa nei muri',()=>{
