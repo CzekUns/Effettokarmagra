@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three/three.module.js';
-import { initialScene, updateScene, rayDistance, PICKUP, EXIT } from './reference-play-logic.mjs';
+import { initialScene, updateScene, rayDistance, nearestPickup, PICKUPS, EXIT, TAKE_SECONDS } from './reference-play-logic.mjs';
 import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, centerCamera, updateCameraRig } from './reference-camera.mjs';
+import { spriteView } from './reference-sprites.mjs';
 
 const host = document.querySelector('#world');
 const ui = {
@@ -9,7 +10,7 @@ const ui = {
   interaction: document.querySelector('#interaction'), progress: document.querySelector('#progress'),
   result: document.querySelector('#result'), title: document.querySelector('#result-title'),
   kicker: document.querySelector('#result-kicker'), text: document.querySelector('#result-text'),
-  radarPlayer: document.querySelector('#radar-player'), radarGuard: document.querySelector('#radar-guard'),
+  radarPlayer: document.querySelector('#radar-player'), radarGuards: document.querySelectorAll('.radar-guard'),
   radarCamera: document.querySelector('#radar-camera')
 };
 let renderer;
@@ -40,9 +41,13 @@ const warmLight = new THREE.PointLight('#ffa25d', 18, 10, 2); warmLight.position
 
 const loader = new THREE.TextureLoader();
 function load(path) { return new Promise((resolve, reject) => loader.load(path, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); resolve(t); }, undefined, reject)); }
-const [ipnoTexture, ipnoWalkTexture, ipnoTakeTexture, guardTexture, customerTexture, fridgeTexture, chocolateTexture, floorTexture] = await Promise.all([
-  './assets/reference-play/ipno.webp', './assets/reference-play/ipno-walk.webp', './assets/reference-play/ipno-take.webp', './assets/reference-play/policie.webp',
-  './assets/reference-play/customer.webp',
+const [ipnoTexture, ipnoWalkTexture, ipnoTakeTexture, ipnoBackTexture, ipnoSideTexture,
+  guardTexture, guardBackTexture, guardSideTexture, customerTexture, customerBackTexture, customerSideTexture,
+  fridgeTexture, chocolateTexture, floorTexture] = await Promise.all([
+  './assets/reference-play/ipno.webp', './assets/reference-play/ipno-walk.webp', './assets/reference-play/ipno-take.webp',
+  './assets/reference-play/ipno-back.webp', './assets/reference-play/ipno-side.webp', './assets/reference-play/policie.webp',
+  './assets/reference-play/policie-back.webp', './assets/reference-play/policie-side.webp',
+  './assets/reference-play/customer.webp', './assets/reference-play/customer-back.webp', './assets/reference-play/customer-side.webp',
   './assets/reference-play/fridge.webp', './assets/reference-play/chocolate-shelf.webp',
   './assets/reference-play/floor.webp'
 ].map(load));
@@ -162,11 +167,14 @@ function makeAisle(x, z, length, chocolate = false) {
 const chocolateAisle = makeAisle(-1.15,0,3.56,true);
 makeAisle(3,-.35,3.9,false);
 makeAisle(3.75,3.3,1.5,false);
-// One selectable bar really sits on the shelf at hand height.
-const bar = new THREE.Group(); scene.add(bar);
-box(bar,.065,.2,.31,'#e8a528',-.495,1.18,.4,{roughness:.25,metalness:.2});
-box(bar,.015,.17,.24,'#b42569',-.452,1.18,.4,{roughness:.3});
-const pickupGlow = disc(scene,.43,'#e745b2',.33,PICKUP.x,PICKUP.z);
+// Each package is attached to a shelf face; the circles indicate where Ipno can stand.
+const bars = PICKUPS.map((spot,index) => {
+  const bar = new THREE.Group();scene.add(bar);
+  box(bar,.065,.2,.31,['#e8a528','#a33dd4','#e4b84b','#b73655'][index],spot.shelfX,1.18,spot.z,{roughness:.25,metalness:.2});
+  box(bar,.015,.17,.24,'#b42569',spot.shelfX+(spot.x>spot.shelfX?.043:-.043),1.18,spot.z,{roughness:.3});
+  const glow = disc(scene,.38,'#e745b2',.26,spot.x,spot.z);
+  return {bar,glow};
+});
 const exitGlow = disc(scene,.6,'#64f8bd',.24,EXIT.x,EXIT.z); exitGlow.visible = false;
 
 // Camera rig and floor projections share exactly the same observer geometry as the rules.
@@ -186,7 +194,7 @@ function figure(texture, height) {
   const shadow=disc(scene,.38,'#15101a',.4,0,0);
   return {group,image,shadow};
 }
-const player=figure(ipnoTexture,1.92), guard=figure(guardTexture,1.86), customer=figure(customerTexture,1.8);
+const player=figure(ipnoTexture,1.92), guards=[figure(guardTexture,1.86),figure(guardTexture,1.86)], customer=figure(customerTexture,1.8);
 function orientFigure(actor, worldX, worldZ, stride) {
   actor.group.position.set(worldX,Math.abs(Math.sin(stride))*.028,worldZ);
   actor.group.rotation.y=Math.atan2(camera.position.x-worldX,camera.position.z-worldZ);
@@ -198,7 +206,7 @@ function vision(color,opacity) {
   const mesh=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false,side:THREE.DoubleSide}));
   mesh.renderOrder=2;scene.add(mesh);return mesh;
 }
-const guardVision=vision('#ffb765',.39), cameraVision=vision('#f35556',.49);
+const guardVisions=[vision('#ffb765',.39),vision('#ffb765',.32)], cameraVision=vision('#f35556',.49);
 function updateVision(mesh,eye) {
   const data=mesh.geometry.attributes.position.array; let n=0;
   for(let i=0;i<30;i++) {
@@ -266,7 +274,13 @@ addEventListener('keydown',e=>{
 
 function resize(){const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<1.5?48:36;camera.updateProjectionMatrix();}
 new ResizeObserver(resize).observe(host);resize();
-document.querySelector('#retry').addEventListener('click',()=>{state=initialScene();cameraRig.focusX=state.player.x;cameraRig.focusZ=state.player.z;centerCamera(cameraRig);held.clear();ui.result.hidden=true;bar.visible=true;pickupGlow.visible=true;exitGlow.visible=false;});
+document.querySelector('#retry').addEventListener('click',()=>{state=initialScene();cameraRig.focusX=state.player.x;cameraRig.focusZ=state.player.z;centerCamera(cameraRig);held.clear();ui.result.hidden=true;bars.forEach(({bar,glow})=>{bar.visible=true;glow.visible=true;});exitGlow.visible=false;});
+function setFigureView(actor, textures, facing, x, z, frontFrame) {
+  const {view,flip}=spriteView(facing,x,z,camera.position.x,camera.position.z);
+  const texture=view==='front' ? frontFrame || textures.front : textures[view];
+  if(actor.image.material.map!==texture){actor.image.material.map=texture;actor.image.material.needsUpdate=true;}
+  actor.image.scale.x=flip?-1:1;
+}
 function loop(now) {
   const dt=Math.min((now-previous)/1000,.05);previous=now;
   const screenX=Number(held.has('right'))-Number(held.has('left'));
@@ -277,29 +291,37 @@ function loop(now) {
   updateView(worldMove,dt);
   orientFigure(player,state.player.x,state.player.z,state.player.stride);
   const gaitTexture=state.taking?ipnoTakeTexture:(input.x||input.z)&&Math.floor(state.player.stride*1.2)%2?ipnoWalkTexture:ipnoTexture;
-  if(player.image.material.map!==gaitTexture){player.image.material.map=gaitTexture;player.image.material.needsUpdate=true;}
-  player.image.scale.x=state.taking?-1:1;
-  orientFigure(guard,state.guard.x,state.guard.z,state.time*4);
-  orientFigure(customer,4.85,1.3+Math.sin(state.time*.45)*.65,state.time*1.5);
+  setFigureView(player,{front:ipnoTexture,back:ipnoBackTexture,side:ipnoSideTexture},state.player.facing,state.player.x,state.player.z,gaitTexture);
+  state.guards.forEach((guard,index)=>{
+    orientFigure(guards[index],guard.x,guard.z,state.time*4);
+    setFigureView(guards[index],{front:guardTexture,back:guardBackTexture,side:guardSideTexture},guard.angle,guard.x,guard.z);
+    updateVision(guardVisions[index],guard);
+  });
+  const customerZ=1.3+Math.sin(state.time*.45)*.65;
+  orientFigure(customer,4.85,customerZ,state.time*1.5);
+  setFigureView(customer,{front:customerTexture,back:customerBackTexture,side:customerSideTexture},Math.cos(state.time*.45)>0?Math.PI/2:-Math.PI/2,4.85,customerZ);
   head.rotation.y=-state.camera.angle;
-  updateVision(guardVision,state.guard);updateVision(cameraVision,state.camera);
-  bar.visible=!state.chocolate;pickupGlow.visible=!state.chocolate;exitGlow.visible=!!state.chocolate;
-  ui.loot.textContent=`${state.chocolate}/1`;
-  ui.score.textContent=String(state.chocolate?Math.max(0,1000-Math.floor(state.time*7)):0).padStart(6,'0');
-  ui.watch.textContent=state.increasedWatch?'SORVEGLIANZA AUMENTATA':state.alert>25?'TI STANNO OSSERVANDO':'SORVEGLIANZA NORMALE';
-  ui.watch.classList.toggle('alert',state.increasedWatch||state.alert>25);
-  for(const [dot,actor] of [[ui.radarPlayer,state.player],[ui.radarGuard,state.guard],[ui.radarCamera,state.camera]]) {
+  updateVision(cameraVision,state.camera);
+  bars.forEach(({bar,glow},index)=>{const visible=!state.collected.includes(PICKUPS[index].id);bar.visible=visible;glow.visible=visible;});
+  exitGlow.visible=state.chocolate===PICKUPS.length;
+  ui.loot.textContent=`${state.chocolate}/${PICKUPS.length}`;
+  ui.score.textContent=String(Math.max(0,state.chocolate*1000-Math.floor(state.time*7))).padStart(6,'0');
+  const heightened=state.watchZones.west+state.watchZones.east>0;
+  ui.watch.textContent=heightened?'ZONE SORVEGLIATE':state.alert>25?'TI STANNO OSSERVANDO':'SORVEGLIANZA NORMALE';
+  ui.watch.classList.toggle('alert',heightened||state.alert>25);
+  const radarActors=[[ui.radarPlayer,state.player],...Array.from(ui.radarGuards,(dot,index)=>[dot,state.guards[index]]),[ui.radarCamera,state.camera]];
+  for(const [dot,actor] of radarActors) {
     dot.style.left=`${(actor.x+5.6)/11.2*100}%`;
     dot.style.top=`${(actor.z+5.1)/10.2*100}%`;
   }
   ui.mission.textContent=state.message;
-  const near=Math.hypot(state.player.x-PICKUP.x,state.player.z-PICKUP.z)<PICKUP.reach;
-  ui.interaction.hidden=!!state.chocolate||!near;ui.progress.style.width=`${Math.min(100,state.takeTime/1.15*100)}%`;
+  const near=nearestPickup(state);
+  ui.interaction.hidden=!near;ui.progress.style.width=`${Math.min(100,state.takeTime/TAKE_SECONDS*100)}%`;
   if(state.phase!=='playing'&&ui.result.hidden){
     ui.result.hidden=false;const caught=state.phase==='caught';
     ui.kicker.textContent=caught?'POLICIE · PRELIEVO VISTO':'USCITA RAGGIUNTA';
-    ui.title.textContent=caught?'Ti hanno visto.':'Cioccolata al sicuro!';
-    ui.text.textContent=caught?'Camminare nella corsia è consentito. Aspetta che la visuale sia interrotta durante tutto il prelievo.':'Hai preso la cioccolata dallo scaffale e raggiunto l’uscita. Questo è il reparto campione.';
+    ui.title.textContent=caught?'Ti hanno visto.':'Quattro cioccolate al sicuro!';
+    ui.text.textContent=caught?'Camminare nella corsia è consentito. Aspetta che la visuale sia interrotta durante tutto il prelievo.':`Hai preso quattro cioccolate dagli scaffali in ${Math.floor(state.time)} secondi e raggiunto l’uscita.`;
   }
   renderer.render(scene,camera);
   frames++;if(now-frameStart>2000){window.__ffcMetrics={fps:Math.round(frames*1000/(now-frameStart)),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,phase:state.phase};frames=0;frameStart=now;}
