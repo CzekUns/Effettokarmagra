@@ -169,3 +169,8 @@
 - **WhatsApp:** richiesta esplicita dell'utente di **condividere il risultato qualunque sia l'esito**, quindi pulsante dedicato per vincita e game over, messaggi dinamici separati con bottino, multa/saldo, record e URL pubblico. L'invio deve restare volontario.
 - **Fatto:** creato `FINALI_E_CONDIVISIONE.md`, issue [#107](https://github.com/CzekUns/Effettokarmagra/issues/107) assegnata a `ilconsulentelogistico-hue`, aggiornato `AGENTS.md`.
 - **Verifiche e stato:** incarico/documentazione pubblicati su `main`; **nessuna scena, grafica o condivisione WhatsApp implementata**, nessun test o deploy di queste funzioni effettuato da ChatGPT. Il collaboratore deve produrre PR separata con screenshot autentici, test e verifica Android.
+
+## 2026-10-22 — ChatGPT / caricata miniatura reference gruppo
+- **Correzione:** dopo la domanda dell'utente sulla disponibilità dell'immagine, caricata su `main` la reference `references/gruppo-ragazzi-foto.webp` (miniatura **200×128 px**, ridotta dalla foto del 22 ottobre 2026), blob `deca3685cc89d9f4a0dc56ba96c7bdc2ec456013`, commit binario `60c531d865f4c69bdcae66a2a7c653562569398e`.
+- **Portata:** questo supera la precedente nota «non caricata». L'originale non è stato caricato; la miniatura serve al collaboratore della issue #107 per comporre il gruppo (senza duplicare Ipno e Capellone), **non** come asset del gioco.
+- **Verifiche:** caricamento binario su `main` confermato; rendering finale/animazioni e test gameplay non svolti.
