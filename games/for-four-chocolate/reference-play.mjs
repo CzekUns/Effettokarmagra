@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three/three.module.js';
-import { initialScene, updateScene, rayDistance, nearestPickup, PICKUPS, EXIT, TAKE_SECONDS } from './reference-play-logic.mjs';
-import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, centerCamera, updateCameraRig } from './reference-camera.mjs';
+import { initialScene, updateScene, rayDistance, nearestPickup, shelfBlocksCamera, coverBlocksCamera, SHELVES, PARTITIONS, LIMITS, GOAL, EXIT, TAKE_SECONDS } from './reference-play-logic.mjs?v=4';
+import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, centerCamera, updateCameraRig } from './reference-camera.mjs?v=4';
 import { spriteView, animationPose } from './reference-sprites.mjs';
 
 const host = document.querySelector('#world');
@@ -36,8 +36,9 @@ const key = new THREE.DirectionalLight('#ffbd7c', 2.35); key.position.set(-4, 10
 key.castShadow = renderer.shadowMap.enabled; key.shadow.mapSize.set(1024, 1024);
 key.shadow.camera.left = -9; key.shadow.camera.right = 9; key.shadow.camera.top = 9; key.shadow.camera.bottom = -9;
 key.shadow.bias = -.00035; scene.add(key);
-const fridgeLight = new THREE.PointLight('#70dfff', 22, 12, 2); fridgeLight.position.set(0, 2, -4.1); scene.add(fridgeLight);
-const warmLight = new THREE.PointLight('#ffa25d', 18, 10, 2); warmLight.position.set(-1.8, 3.3, 2.2); scene.add(warmLight);
+const fridgeLight = new THREE.PointLight('#70dfff', 22, 14, 2); fridgeLight.position.set(0, 2, -8.4); scene.add(fridgeLight);
+const warmLight = new THREE.PointLight('#ffa25d', 18, 12, 2); warmLight.position.set(-6, 3.3, 2.2); scene.add(warmLight);
+const aisleLight = new THREE.PointLight('#ffd9a9', 14, 13, 2); aisleLight.position.set(6,3.3,-2.4); scene.add(aisleLight);
 
 const loader = new THREE.TextureLoader();
 function load(path) { return new Promise((resolve, reject) => loader.load(path, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); resolve(t); }, undefined, reject)); }
@@ -60,7 +61,7 @@ const animationNames = [
 const animationTextures = Object.fromEntries(await Promise.all(animationNames.map(async name =>
   [name, await load(`./assets/reference-play/${name}.webp`)])));
 floorTexture.wrapS = THREE.RepeatWrapping; floorTexture.wrapT = THREE.RepeatWrapping;
-floorTexture.repeat.set(2, 2);
+floorTexture.repeat.set(4, 4);
 const cache = new Map();
 function material(color, roughness = .72, metalness = 0) {
   const id = `${color}:${roughness}:${metalness}`;
@@ -87,34 +88,34 @@ function disc(parent, radius, color, opacity, x, z) {
   mesh.rotation.x = -Math.PI / 2; mesh.position.set(x, .012, z); parent.add(mesh); return mesh;
 }
 function buildRoom() {
-  box(scene, 12.2, .24, 11.3, '#665d60', 0, -.19, 0, { roughness: .28, metalness: .11, cast: false });
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(12.2, 11.3), new THREE.MeshStandardMaterial({ map:floorTexture, color:'#b6a3a2', roughness:.65, metalness:.04 }));
+  box(scene, 22.3, .24, 20.3, '#665d60', 0, -.19, 0, { roughness: .28, metalness: .11, cast: false });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(22.3, 20.3), new THREE.MeshStandardMaterial({ map:floorTexture, color:'#b6a3a2', roughness:.65, metalness:.04 }));
   floor.rotation.x = -Math.PI / 2; floor.position.y = -.055; floor.receiveShadow = true; scene.add(floor);
-  box(scene, 12.2, 3.6, .22, '#292b3d', 0, 1.75, -5.57);
-  box(scene, .22, 3.6, 11.3, '#252536', -6.03, 1.75, 0);
-  box(scene, .22, 1.15, 11.3, '#292a3b', 6.03, .5, 0);
-  box(scene, 12.2, .2, .28, '#111524', 0, 3.58, -5.53);
-  box(scene, .27, .18, 11.3, '#111524', -6, 3.58, 0);
-  for (const [x,z,color,opacity,radius] of [[-2,-.9,'#ff9d56',.17,2.9],[2,-3.1,'#63e5ff',.22,2.7],[2.9,2.2,'#ff9654',.13,2.2]]) disc(scene,radius,color,opacity,x,z);
-  for (const x of [-3.7,-.2,3.3]) {
-    box(scene, .12, .08, 3.7, '#ffe4bb', x, 3.48, 0, { cast:false });
-    box(scene, .42, .02, 3.75, '#c59566', x, 3.53, 0, { cast:false });
+  box(scene, 22.3, 3.6, .22, '#292b3d', 0, 1.75, -9.94);
+  box(scene, .22, 3.6, 20.3, '#252536', -10.94, 1.75, 0);
+  box(scene, .22, 1.15, 20.3, '#292a3b', 10.94, .5, 0);
+  box(scene, 22.3, .2, .28, '#111524', 0, 3.58, -9.94);
+  box(scene, .27, .18, 20.3, '#111524', -10.94, 3.58, 0);
+  for (const [x,z,color,opacity,radius] of [[-7,-3,'#ff9d56',.17,3],[-1,-4,'#63e5ff',.2,3],[6,3,'#ff9654',.13,2.5],[5,-5,'#63e5ff',.16,2.6]]) disc(scene,radius,color,opacity,x,z);
+  for (const x of [-8,-3,2,7]) {
+    box(scene, .12, .08, 5.2, '#ffe4bb', x, 3.48, -2.9, { cast:false });
+    box(scene, .42, .02, 5.2, '#c59566', x, 3.53, -2.9, { cast:false });
   }
   // The exit is at the rear, as in the approved reference.
-  box(scene, 1.42, 3.05, .16, '#1b3136', 5.05, 1.52, -5.35);
-  box(scene, 1.18, 2.75, .04, '#b6a76c', 5.05, 1.41, -5.24, { roughness:.24,metalness:.24 });
-  plane(scene, 1.65, .38, sign('VÝCHOD  ↗', 1.65, .38, '#257969'), 5.05, 3.23, -5.22);
-  const crates = [['#962b58',-3.95,-3.2],['#d9813d',-3.37,-3.22],['#455b9a',-2.79,-3.2],['#c34f42',-3.65,-2.64],['#9257aa',-2.86,-2.58]];
+  box(scene, 1.42, 3.05, .16, '#1b3136', 9.6, 1.52, -9.73);
+  box(scene, 1.18, 2.75, .04, '#b6a76c', 9.6, 1.41, -9.62, { roughness:.24,metalness:.24 });
+  plane(scene, 1.65, .38, sign('VÝCHOD  ↗', 1.65, .38, '#257969'), 9.6, 3.23, -9.59);
+  const crates = [['#962b58',-9.4,3.4],['#d9813d',-8.85,3.4],['#455b9a',-8.3,3.4],['#c34f42',-9.1,4],['#9257aa',-8.5,4]];
   for (const [color,x,z] of crates) {
     box(scene,.46,.44,.46,'#836348',x,.22,z,{roughness:.9});
     for(let j=0;j<3;j++) box(scene,.12,.26,.31,color,x-.13+j*.13,.55,z,{cast:false});
   }
-  for(const [x,z] of [[-4.55,3.7],[-4.95,3.05],[4.95,2.45],[4.6,3.65]]) {
+  for(const [x,z] of [[-9.55,7.7],[-9.5,7.05],[9.5,4.1],[9.3,5.35]]) {
     box(scene,.65,.12,.65,'#51334b',x,.1,z,{roughness:.55});
     for(let i=0;i<3;i++) box(scene,.16,.5,.38,['#dd3c64','#d48a34','#6444a7'][i],x-.2+i*.2,.42,z,{roughness:.46,cast:false});
   }
   // Baskets and a trolley make the playable slice feel inhabited.
-  const cart=new THREE.Group();scene.add(cart);cart.position.set(4.55,0,3.05);
+  const cart=new THREE.Group();scene.add(cart);cart.position.set(9.3,0,5.8);
   box(cart,.82,.08,.49,'#748b9a',0,.6,0,{roughness:.28,metalness:.65});
   for(const side of [-1,1]) {
     box(cart,.035,.52,.55,'#7899a6',side*.4,.8,0,{roughness:.25,metalness:.7});
@@ -128,7 +129,7 @@ function buildRoom() {
 }
 buildRoom();
 
-function makeFridgeRow(back = true) {
+function makeFridgeRow(back = true, shiftX = 0, shiftZ = 0, scaleZ = 1) {
   const group = new THREE.Group(); scene.add(group);
   if (back) {
     box(group, 8.85, 2.98, .67, '#15202d', -.25, 1.49, -4.95, { roughness:.28, metalness:.55 });
@@ -148,12 +149,35 @@ function makeFridgeRow(back = true) {
     const label = plane(group, 2.7, .4, sign('NÁPOJE',2.7,.4,'#225f83'), -4.77, 3.08, -.9, Math.PI/2);
     label.material.depthWrite = false;
   }
+  group.scale.z=scaleZ;group.position.set(shiftX,0,shiftZ);
 }
-makeFridgeRow(); makeFridgeRow(false);
+makeFridgeRow(true,-4.75,-4.65);
+makeFridgeRow(true,3.5,-4.65);
+makeFridgeRow(false,-5.3,-2.1,1.6);
 
-function makeAisle(x, z, length, chocolate = false) {
+function makeFadeable(group) {
+  const cloned=new Map(),materials=[];
+  group.traverse(object=>{
+    if(!object.isMesh)return;
+    if(!cloned.has(object.material)){const copy=object.material.clone();cloned.set(object.material,copy);materials.push(copy);}
+    object.material=cloned.get(object.material);
+  });
+  group.userData.materials=materials;
+  return group;
+}
+function setFaded(group,faded) {
+  if(group.userData.faded===faded)return;
+  group.userData.faded=faded;
+  for(const material of group.userData.materials){
+    material.transparent=faded;material.opacity=faded?.28:1;
+    material.depthWrite=!faded;material.needsUpdate=true;
+  }
+}
+function makeAisle(shelf) {
+  const {x,z,length,kind,label}=shelf;
+  const chocolate=kind==='chocolate';
   const group = new THREE.Group(); scene.add(group);
-  const width = chocolate ? 1.2 : 1.1, height = chocolate ? 2.5 : 2.42;
+  const width = 1.2, height = kind==='checkout' ? 1.5 : chocolate ? 2.5 : 2.42;
   box(group,width,height,length,'#252337',x,height/2,z,{roughness:.46,metalness:.18});
   const image = chocolate ? chocolateTexture : fridgeTexture;
   plane(group,length-.12,height-.18,image,x+width/2+.01,height/2,z,Math.PI/2,{toneMapped:!chocolate});
@@ -162,7 +186,7 @@ function makeAisle(x, z, length, chocolate = false) {
   for (const end of [-1,1]) {
     const zz=z+end*length/2;
     box(group,width+.11,.23,.08,'#493453',x,height+.02,zz);
-    plane(group,width+.01,.44,sign(chocolate?'ČOKOLÁDA':'AKCE',width,.44,chocolate?'#a52d63':'#d27637'),x,height+.03,zz+end*.049,end<0?Math.PI:0);
+    plane(group,width+.01,.44,sign(label,width,.44,chocolate?'#a52d63':'#d27637'),x,height+.03,zz+end*.049,end<0?Math.PI:0);
     plane(group,width-.07,height-.38,image,x,height/2,zz+end*.055,end<0?Math.PI:0,{toneMapped:!chocolate});
   }
   const colors=chocolate?['#8f306a','#e7a12f','#5b48ac','#c83947']:['#3577b3','#e89034','#a0458a','#58b3c4'];
@@ -170,30 +194,88 @@ function makeAisle(x, z, length, chocolate = false) {
     const zz=z-length/2+.38+(i%6)*((length-.7)/6);
     box(group,.22,.14,.34,colors[i%4],x+(i<6?-.27:.27),height+.18,zz,{roughness:.4,cast:false});
   }
-  return group;
+  const trims={chocolate:'#ed649e',food:'#e2bb64',drinks:'#65cfe6',checkout:'#75d2ac'};
+  for(const side of [-1,1])box(group,.07,.08,length+.18,trims[kind],x+side*.63,height+.18,z,{cast:false});
+  return makeFadeable(group);
 }
-const chocolateAisle = makeAisle(-1.15,0,3.56,true);
-makeAisle(3,-.35,3.9,false);
-makeAisle(3.75,3.3,1.5,false);
-// Each package is attached to a shelf face; the circles indicate where Ipno can stand.
-const bars = PICKUPS.map((spot,index) => {
-  const bar = new THREE.Group();scene.add(bar);
-  box(bar,.065,.2,.31,['#e8a528','#a33dd4','#e4b84b','#b73655'][index],spot.shelfX,1.18,spot.z,{roughness:.25,metalness:.2});
-  box(bar,.015,.17,.24,'#b42569',spot.shelfX+(spot.x>spot.shelfX?.043:-.043),1.18,spot.z,{roughness:.3});
-  const glow = disc(scene,.38,'#e745b2',.26,spot.x,spot.z);
-  return {bar,glow};
+const aisles=SHELVES.map(makeAisle);
+const partitions=PARTITIONS.map((divider,index)=>{
+  const group=new THREE.Group();scene.add(group);
+  const width=divider.maxX-divider.minX,depth=divider.maxZ-divider.minZ;
+  const x=(divider.minX+divider.maxX)/2,z=(divider.minZ+divider.maxZ)/2;
+  box(group,width,divider.height,depth,'#60405d',x,divider.height/2,z);
+  box(group,width+.05,.08,depth+.05,'#e99d68',x,divider.height+.04,z,{cast:false});
+  const image=index%2?fridgeTexture:chocolateTexture;
+  if(width>depth){
+    plane(group,width-.06,divider.height-.13,image,x,divider.height/2,z+depth/2+.012,0,{toneMapped:false});
+    plane(group,width-.06,divider.height-.13,image,x,divider.height/2,z-depth/2-.012,Math.PI,{toneMapped:false});
+  }else{
+    plane(group,depth-.06,divider.height-.13,image,x+width/2+.012,divider.height/2,z,Math.PI/2,{toneMapped:false});
+    plane(group,depth-.06,divider.height-.13,image,x-width/2-.012,divider.height/2,z,-Math.PI/2,{toneMapped:false});
+  }
+  return makeFadeable(group);
 });
+function updateShelfOcclusion() {
+  SHELVES.forEach((shelf,index)=>{
+    setFaded(aisles[index],shelfBlocksCamera(shelf,camera,state.player));
+  });
+  PARTITIONS.forEach((bounds,index)=>setFaded(partitions[index],
+    coverBlocksCamera(bounds,bounds.height,camera,state.player)));
+}
+let state=initialScene();
+const radar=document.querySelector('.radar');
+for(const old of radar.querySelectorAll('.shelf,.radar-guard'))old.remove();
+for(const shelf of SHELVES){
+  const marker=document.createElement('i');marker.className='shelf';
+  marker.title=shelf.label;
+  marker.style.left=`${(shelf.x-.6-LIMITS.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
+  marker.style.top=`${(shelf.z-shelf.length/2-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
+  marker.style.width=`${1.2/(LIMITS.maxX-LIMITS.minX)*100}%`;
+  marker.style.height=`${shelf.length/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
+  marker.style.background={chocolate:'#ce5d9a',food:'#e2bb64',drinks:'#65cfe6',checkout:'#75d2ac'}[shelf.kind];
+  radar.append(marker);
+}
+for(const divider of PARTITIONS){
+  const marker=document.createElement('i');marker.className='shelf';
+  marker.style.left=`${(divider.minX-LIMITS.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
+  marker.style.top=`${(divider.minZ-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
+  marker.style.width=`${(divider.maxX-divider.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
+  marker.style.height=`${(divider.maxZ-divider.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
+  radar.append(marker);
+}
+const exitMarker=document.createElement('i');exitMarker.className='exit-marker';
+exitMarker.style.left=`${(EXIT.x-LIMITS.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
+exitMarker.style.top=`${(EXIT.z-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
+radar.append(exitMarker);
+ui.radarGuards=state.guards.map(()=>{const dot=document.createElement('i');dot.className='radar-guard dot guard';radar.append(dot);return dot;});
+// Packages remain on the shelf; subtle floor light marks their interaction side.
+let bars=[];
+function buildPickupBars() {
+  for(const {bar,glow} of bars){
+    scene.remove(bar);scene.remove(glow);
+    bar.traverse(object=>{if(object.isMesh)object.geometry.dispose();});
+    glow.geometry.dispose();glow.material.dispose();
+  }
+  bars=state.pickups.map((spot,index)=>{
+    const bar=new THREE.Group();scene.add(bar);
+    box(bar,.11,.26,.4,['#e8a528','#a33dd4','#e4b84b','#b73655'][index%4],spot.shelfX,1.18,spot.z,{roughness:.25,metalness:.2});
+    box(bar,.02,.21,.29,'#b42569',spot.shelfX+(spot.side<0?-.064:.064),1.18,spot.z,{roughness:.3});
+    const glow=disc(scene,.26,'#e745b2',.15,spot.x,spot.z);
+    return {bar,glow};
+  });
+}
+buildPickupBars();
 const exitGlow = disc(scene,.6,'#64f8bd',.24,EXIT.x,EXIT.z); exitGlow.visible = false;
 
 // Camera rig and floor projections share exactly the same observer geometry as the rules.
-const rig = new THREE.Group(); scene.add(rig); rig.position.set(4.5,0,-4.25);
+const rig = new THREE.Group(); scene.add(rig); rig.position.set(8.9,0,-7.8);
 box(rig,.12,3.18,.12,'#404e5d',0,1.59,0,{roughness:.3,metalness:.6});
 box(rig,.55,.09,.1,'#748a9b',-.22,3.12,0,{roughness:.22,metalness:.65});
 const head = new THREE.Group(); head.position.set(-.48,3.1,0); rig.add(head);
 box(head,.45,.22,.25,'#202b3a',0,0,0,{roughness:.27,metalness:.5});
 box(head,.035,.14,.15,'#9ee4f6',-.24,0,0,{cast:false});
 box(head,.09,.06,.08,'#fa493c',.1,.15,0,{cast:false});
-const cameraLight = new THREE.PointLight('#e9524c',2.8,3.5); cameraLight.position.set(4.5,3,-4.25); scene.add(cameraLight);
+const cameraLight = new THREE.PointLight('#e9524c',2.8,3.5); cameraLight.position.set(8.9,3,-7.8); scene.add(cameraLight);
 
 function figure(texture, height) {
   const group = new THREE.Group(); scene.add(group);
@@ -202,7 +284,7 @@ function figure(texture, height) {
   const shadow=disc(scene,.38,'#15101a',.4,0,0);
   return {group,image,shadow};
 }
-const player=figure(ipnoTexture,1.92), guards=[figure(guardTexture,1.86),figure(guardTexture,1.86)], customer=figure(customerTexture,1.8);
+const player=figure(ipnoTexture,1.92), guards=state.guards.map(()=>figure(guardTexture,1.86)), customer=figure(customerTexture,1.8);
 function orientFigure(actor, worldX, worldZ, stride, moving = false) {
   actor.group.position.set(worldX,moving?Math.abs(Math.sin(stride))*.028:0,worldZ);
   actor.group.rotation.y=Math.atan2(camera.position.x-worldX,camera.position.z-worldZ);
@@ -214,7 +296,7 @@ function vision(color,opacity) {
   const mesh=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false,side:THREE.DoubleSide}));
   mesh.renderOrder=2;scene.add(mesh);return mesh;
 }
-const guardVisions=[vision('#ffb765',.39),vision('#ffb765',.32)], cameraVision=vision('#f35556',.49);
+const guardVisions=state.guards.map((_,index)=>vision('#ffb765',index%2?.32:.39)), cameraVision=vision('#f35556',.49);
 function updateVision(mesh,eye) {
   const data=mesh.geometry.attributes.position.array; let n=0;
   for(let i=0;i<30;i++) {
@@ -238,7 +320,7 @@ for(const button of document.querySelectorAll('[data-key]')) {
   const release=()=>{held.delete(key);button.classList.remove('active');};
   button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);
 }
-let state=initialScene(); let previous=performance.now(), frames=0, frameStart=previous;
+let previous=performance.now(), frames=0, frameStart=previous;
 const cameraRig = createCameraRig(state.player);
 const setView = (pose) => {
   camera.position.set(pose.x,pose.y,pose.z);
@@ -282,7 +364,7 @@ addEventListener('keydown',e=>{
 
 function resize(){const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<1.5?48:36;camera.updateProjectionMatrix();}
 new ResizeObserver(resize).observe(host);resize();
-document.querySelector('#retry').addEventListener('click',()=>{state=initialScene();cameraRig.focusX=state.player.x;cameraRig.focusZ=state.player.z;centerCamera(cameraRig);held.clear();ui.result.hidden=true;bars.forEach(({bar,glow})=>{bar.visible=true;glow.visible=true;});exitGlow.visible=false;});
+document.querySelector('#retry').addEventListener('click',()=>{state=initialScene();cameraRig.focusX=state.player.x;cameraRig.focusZ=state.player.z;centerCamera(cameraRig);held.clear();ui.result.hidden=true;buildPickupBars();exitGlow.visible=false;});
 function setFigureView(actor, textures, facing, x, z, frontFrame) {
   const {view,flip}=spriteView(facing,x,z,camera.position.x,camera.position.z);
   const texture=view==='front' ? frontFrame || textures.front : textures[view];
@@ -334,6 +416,7 @@ function loop(now) {
   const input={...worldMove,take:held.has('take'),crouch:held.has('crouch')};
   updateScene(state,input,dt);
   updateView(worldMove,dt);
+  updateShelfOcclusion();
   orientFigure(player,state.player.x,state.player.z,state.player.stride,state.player.moving);
   setPlayerAnimation();
   state.guards.forEach((guard,index)=>{
@@ -341,22 +424,22 @@ function loop(now) {
     setGuardAnimation(guards[index],guard);
     updateVision(guardVisions[index],guard);
   });
-  const customerZ=1.3+Math.sin(state.time*.45)*.65;
-  orientFigure(customer,4.85,customerZ,state.time*1.5,true);
-  setFigureView(customer,{front:customerTexture,back:customerBackTexture,side:customerSideTexture},Math.cos(state.time*.45)>0?Math.PI/2:-Math.PI/2,4.85,customerZ);
+  const customerZ=5.8+Math.sin(state.time*.45)*.65;
+  orientFigure(customer,9.2,customerZ,state.time*1.5,true);
+  setFigureView(customer,{front:customerTexture,back:customerBackTexture,side:customerSideTexture},Math.cos(state.time*.45)>0?Math.PI/2:-Math.PI/2,9.2,customerZ);
   head.rotation.y=-state.camera.angle;
   updateVision(cameraVision,state.camera);
-  bars.forEach(({bar,glow},index)=>{const visible=!state.collected.includes(PICKUPS[index].id);bar.visible=visible;glow.visible=visible;});
-  exitGlow.visible=state.chocolate===PICKUPS.length;
-  ui.loot.textContent=`${state.chocolate}/${PICKUPS.length}`;
-  ui.score.textContent=String(Math.max(0,state.chocolate*1000-Math.floor(state.time*7))).padStart(6,'0');
+  bars.forEach(({bar,glow},index)=>{const status=state.pickups[index].status;bar.visible=status!=='collected';glow.visible=status!=='collected';glow.scale.setScalar(status==='taking'?1.35:1);});
+  exitGlow.visible=state.chocolate>=GOAL;
+  ui.loot.textContent=`${state.chocolate}/${GOAL}`;
+  ui.score.textContent=String(Math.max(0,state.collected.length*1000-Math.floor(state.time*7))).padStart(6,'0');
   const heightened=state.watchZones.west+state.watchZones.east>0;
   ui.watch.textContent=heightened?'ZONE SORVEGLIATE':state.alert>25?'TI STANNO OSSERVANDO':'SORVEGLIANZA NORMALE';
   ui.watch.classList.toggle('alert',heightened||state.alert>25);
   const radarActors=[[ui.radarPlayer,state.player],...Array.from(ui.radarGuards,(dot,index)=>[dot,state.guards[index]]),[ui.radarCamera,state.camera]];
   for(const [dot,actor] of radarActors) {
-    dot.style.left=`${(actor.x+5.6)/11.2*100}%`;
-    dot.style.top=`${(actor.z+5.1)/10.2*100}%`;
+    dot.style.left=`${(actor.x-LIMITS.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
+    dot.style.top=`${(actor.z-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
   }
   ui.mission.textContent=state.message;
   const near=nearestPickup(state);

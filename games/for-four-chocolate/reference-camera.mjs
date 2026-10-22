@@ -1,5 +1,6 @@
 // Camera cinematografica del campione. Coordinate sul piano X/Z, Y verticale.
 // Lo stato e le trasformazioni pure sono separati da Three.js per poterli testare.
+import { LIMITS } from './reference-play-logic.mjs?v=4';
 const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
 const lerp = (a, b, t) => a + (b - a) * t;
 const smoothing = (rate, seconds) => 1 - Math.exp(-rate * clamp(seconds, 0, .1));
@@ -48,8 +49,8 @@ export function updateCameraRig(rig, player, movement, seconds, aspect = 16 / 9)
   rig.lookAheadX = lerp(rig.lookAheadX, leadX, leadT);
   rig.lookAheadZ = lerp(rig.lookAheadZ, leadZ, leadT);
   // Seguire un po' in anticipo, senza spostare Ipno troppo ai margini dello schermo.
-  rig.focusX = lerp(rig.focusX, clamp(player.x + rig.lookAheadX, -5.25, 5.25), followT);
-  rig.focusZ = lerp(rig.focusZ, clamp(player.z + rig.lookAheadZ, -4.65, 4.65), followT);
+  rig.focusX = lerp(rig.focusX, clamp(player.x + rig.lookAheadX, LIMITS.minX+.35, LIMITS.maxX-.35), followT);
+  rig.focusZ = lerp(rig.focusZ, clamp(player.z + rig.lookAheadZ, LIMITS.minZ+.35, LIMITS.maxZ-.35), followT);
   // Nel landscape basso si allarga appena il campo inquadrato.
   const framing = aspect > 2 ? 1.08 : 1;
   const distance = 10.7 * rig.zoom * framing;

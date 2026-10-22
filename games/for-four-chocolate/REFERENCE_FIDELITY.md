@@ -6,6 +6,8 @@
 
 ![Gioco in viewport mobile landscape 844×390](assets/reference-play/mobile-landscape-gameplay.png)
 
+![Ipno accanto a una cioccolata attiva sul ripiano, nella mappa ampliata](assets/reference-play/shelf-gameplay.png)
+
 ![Fronte, retro e profilo dei tre personaggi alla stessa scala](assets/reference-play/views-comparison.png)
 
 Questa prova si apre in `reference-play.html`. La tavola nel repository è un'anteprima WebP 720×405; l'originale ad alta risoluzione non era disponibile al momento del lavoro. Le immagini della tavola sono state usate **solo come riferimento**: non sono state incollate come fondale o UI del gioco.
@@ -23,3 +25,5 @@ Questa prova si apre in `reference-play.html`. La tavola nel repository è un'an
 **Aggiornamento lotto A animazioni (22/10):** Ipno e POLICIE ora hanno quattro fotogrammi per camminata nelle quattro direzioni; Ipno ha passo accovacciato direzionale e prelievo fronte/retro/lato, gli agenti hanno corsa direzionale pronta per l'inseguimento. La [tavola di confronto delle animazioni](assets/reference-play/animation-comparison.png) mostra personaggi alla stessa scala; gli screenshot desktop e mobile qui sopra sono stati ricatturati dal gioco reale. Lo stile della tavola, i colori, le luci e la camera restano coerenti con la scena approvata. Persistono gli scarti strutturali già indicati: sprite piani, texture ripetute degli scaffali, tavola reference disponibile solo a 720 px. Nel browser software EC2 abbiamo misurato 1–2 FPS; un dispositivo Android reale non è stato ancora provato. Le pose di corsa verranno usate quando il lotto C introdurrà l'inseguimento.
 
 **Stato:** scena giocabile per revisione del gameplay. `index.html` resta il gioco precedente finché i lotti narrativi e di punteggio non saranno integrati.
+
+**Aggiornamento lotto B (22/10):** la superficie giocabile è passata da circa 114 a 440 m², con reparti cioccolato, dolci, alimentari, bevande, promozioni, frigoriferi e casse. Quattro espositori divisori aprono percorsi alternativi; alcuni scaffali diventano semitrasparenti solo quando coprono Ipno. Ci sono 18 posizioni candidate sui ripiani e 10 attive per partita; dopo 4 cioccolate si può uscire, le altre danno punti extra. Gli screenshot sopra sono stati ricatturati dalla mappa ampliata. Rispetto all'artboard approvata, la merce usa ancora texture ripetute e gli espositori aggiunti sono geometrici; le prestazioni su Android fisico restano da verificare.
