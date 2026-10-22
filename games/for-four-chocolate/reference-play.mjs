@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three/three.module.js';
-import { initialScene, updateScene, rayDistance, nearestPickup, shelfBlocksCamera, coverBlocksCamera, SHELVES, PARTITIONS, LIMITS, GOAL, EXIT, TAKE_SECONDS } from './reference-play-logic.mjs?v=4';
-import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, centerCamera, updateCameraRig } from './reference-camera.mjs?v=4';
+import { initialScene, updateScene, rayDistance, nearestPickup, shelfBlocksCamera, coverBlocksCamera, SHELVES, PARTITIONS, LIMITS, GOAL, EXIT, TAKE_SECONDS } from './reference-play-logic.mjs?v=5';
+import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, centerCamera, updateCameraRig } from './reference-camera.mjs?v=5';
 import { spriteView, animationPose } from './reference-sprites.mjs';
 
 const host = document.querySelector('#world');
@@ -247,6 +247,7 @@ const exitMarker=document.createElement('i');exitMarker.className='exit-marker';
 exitMarker.style.left=`${(EXIT.x-LIMITS.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
 exitMarker.style.top=`${(EXIT.z-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
 radar.append(exitMarker);
+const lastKnownMarker=document.createElement('i');lastKnownMarker.className='last-known-marker';radar.append(lastKnownMarker);
 ui.radarGuards=state.guards.map(()=>{const dot=document.createElement('i');dot.className='radar-guard dot guard';radar.append(dot);return dot;});
 // Packages remain on the shelf; subtle floor light marks their interaction side.
 let bars=[];
@@ -423,19 +424,33 @@ function loop(now) {
     orientFigure(guards[index],guard.x,guard.z,guard.stride,guard.moving);
     setGuardAnimation(guards[index],guard);
     updateVision(guardVisions[index],guard);
+    guardVisions[index].material.color.set(guard.chasing?'#ff4f53':'#ffb765');
+    ui.radarGuards[index].classList.toggle('responding',guard.mode==='respond'||guard.mode==='chase'||guard.mode==='search');
+    ui.radarGuards[index].classList.toggle('witness',state.security.source==='guard'&&state.security.sourceIndex===index);
   });
   const customerZ=5.8+Math.sin(state.time*.45)*.65;
   orientFigure(customer,9.2,customerZ,state.time*1.5,true);
   setFigureView(customer,{front:customerTexture,back:customerBackTexture,side:customerSideTexture},Math.cos(state.time*.45)>0?Math.PI/2:-Math.PI/2,9.2,customerZ);
   head.rotation.y=-state.camera.angle;
   updateVision(cameraVision,state.camera);
+  ui.radarCamera.classList.toggle('witness',state.security.source==='camera');
+  cameraLight.intensity=state.security.source==='camera'&&state.security.mode!=='routine_increased'
+    ? 3.5+Math.sin(state.time*16)*1.2 : 2.8;
   bars.forEach(({bar,glow},index)=>{const status=state.pickups[index].status;bar.visible=status!=='collected';glow.visible=status!=='collected';glow.scale.setScalar(status==='taking'?1.35:1);});
   exitGlow.visible=state.chocolate>=GOAL;
   ui.loot.textContent=`${state.chocolate}/${GOAL}`;
   ui.score.textContent=String(Math.max(0,state.collected.length*1000-Math.floor(state.time*7))).padStart(6,'0');
-  const heightened=state.watchZones.west+state.watchZones.east>0;
-  ui.watch.textContent=heightened?'ZONE SORVEGLIATE':state.alert>25?'TI STANNO OSSERVANDO':'SORVEGLIANZA NORMALE';
-  ui.watch.classList.toggle('alert',heightened||state.alert>25);
+  const mode=state.security.mode;
+  const watchText={alert:`⚠ ${state.security.source==='camera'?'CCTV':'POLICIE'} · ALLARME`,
+    pursuit:'⚠ POLICIE · INSEGUIMENTO',searching:'⚠ POLICIE · RICERCA',
+    routine_increased:'CONTROLLI RAFFORZATI'};
+  ui.watch.textContent=watchText[mode]|| (state.alert>25?'TI STANNO OSSERVANDO':'SORVEGLIANZA NORMALE');
+  ui.watch.classList.toggle('alert',mode!=='routine'||state.alert>25);
+  lastKnownMarker.hidden=!['alert','pursuit','searching'].includes(mode)||!state.security.lastKnown;
+  if(!lastKnownMarker.hidden){
+    lastKnownMarker.style.left=`${(state.security.lastKnown.x-LIMITS.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
+    lastKnownMarker.style.top=`${(state.security.lastKnown.z-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
+  }
   const radarActors=[[ui.radarPlayer,state.player],...Array.from(ui.radarGuards,(dot,index)=>[dot,state.guards[index]]),[ui.radarCamera,state.camera]];
   for(const [dot,actor] of radarActors) {
     dot.style.left=`${(actor.x-LIMITS.minX)/(LIMITS.maxX-LIMITS.minX)*100}%`;
@@ -443,12 +458,13 @@ function loop(now) {
   }
   ui.mission.textContent=state.message;
   const near=nearestPickup(state);
-  ui.interaction.hidden=!near;ui.progress.style.width=`${Math.min(100,state.takeTime/TAKE_SECONDS*100)}%`;
+  ui.interaction.hidden=!near||['alert','pursuit','searching'].includes(mode);
+  ui.progress.style.width=`${Math.min(100,state.takeTime/TAKE_SECONDS*100)}%`;
   if(state.phase!=='playing'&&ui.result.hidden){
     ui.result.hidden=false;const caught=state.phase==='caught';
     ui.kicker.textContent=caught?'POLICIE · PRELIEVO VISTO':'USCITA RAGGIUNTA';
-    ui.title.textContent=caught?'Ti hanno visto.':'Quattro cioccolate al sicuro!';
-    ui.text.textContent=caught?'Camminare nella corsia è consentito. Aspetta che la visuale sia interrotta durante tutto il prelievo.':`Hai preso quattro cioccolate dagli scaffali in ${Math.floor(state.time)} secondi e raggiunto l’uscita.`;
+    ui.title.textContent=caught?'Ti hanno raggiunto.':'Quattro cioccolate al sicuro!';
+    ui.text.textContent=caught?'Dopo il prelievo visto, POLICIE ti ha inseguito e fermato. Usa gli scaffali per spezzare la visuale e attendi la fine della ricerca.':`Hai preso quattro cioccolate dagli scaffali in ${Math.floor(state.time)} secondi e raggiunto l’uscita.`;
   }
   renderer.render(scene,camera);
   frames++;if(now-frameStart>2000){window.__ffcMetrics={fps:Math.round(frames*1000/(now-frameStart)),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,phase:state.phase};frames=0;frameStart=now;}

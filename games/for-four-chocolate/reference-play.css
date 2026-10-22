@@ -14,6 +14,7 @@
 .camera-controls button:active,.camera-controls button:focus-visible{background:#bc7740;outline:2px solid #ffe1a6}
 .radar{width:136px;height:92px;flex:none}.radar .shelf{width:auto;height:auto;top:auto}.radar .dot{width:5px;height:5px}
 .radar .exit-marker{position:absolute;width:7px;height:7px;border:1px solid #d9fff1;background:#44e5a1;transform:translate(-50%,-50%);box-shadow:0 0 7px #5cffbb}
+.radar .dot.responding{background:#ff394c;color:#ff394c;width:8px;height:8px;box-shadow:0 0 9px #ff394c}.radar .dot.witness{outline:2px solid #fff5aa;outline-offset:2px}.radar .last-known-marker{position:absolute;width:11px;height:11px;border:2px dashed #ffdd7c;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 8px #ff834d}.radar .last-known-marker[hidden]{display:none}
 @media(pointer:coarse){.camera-controls{top:50px;right:8px;gap:3px;padding:3px}.camera-controls span{font-size:8px}.camera-controls button{min-width:34px;height:34px;font-size:19px;padding:0 5px}}
 @media(pointer:coarse){.radar{width:108px;height:73px}}
 @media(max-width:700px) and (orientation:landscape){.camera-controls{top:40px;right:6px}.camera-controls span{display:none}.camera-controls button{height:32px;min-width:32px}}
