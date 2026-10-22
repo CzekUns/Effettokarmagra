@@ -53,12 +53,12 @@ export function nearestPickup(s) {
 }
 export function initialScene() {
   const guards = [
-    { x: -3.25, z: 2.1, angle: -Math.PI / 2, halfAngle: .52, range: 4.25, dir: -1, minZ: -2.1, maxZ: 2.1, zone: 'west', baseSpeed: .88 },
-    { x: 1.23, z: -2.5, angle: Math.PI / 2, halfAngle: .48, range: 3.3, dir: 1, minZ: -2.5, maxZ: 2.1, zone: 'east', baseSpeed: .74 }
+    { x: -3.25, z: 2.1, angle: -Math.PI / 2, halfAngle: .52, range: 4.25, dir: -1, minZ: -2.1, maxZ: 2.1, zone: 'west', baseSpeed: .88, stride: 0, moving: false, chasing: false },
+    { x: 1.23, z: -2.5, angle: Math.PI / 2, halfAngle: .48, range: 3.3, dir: 1, minZ: -2.5, maxZ: 2.1, zone: 'east', baseSpeed: .74, stride: 0, moving: false, chasing: false }
   ];
   return {
     phase: 'playing', time: 0, message: 'Prendi quattro cioccolate dagli scaffali. Puoi essere visto mentre cammini, non mentre prelevi.',
-    player: { x: .25, z: 3.85, facing: -Math.PI / 2, stride: 0 },
+    player: { x: .25, z: 3.85, facing: -Math.PI / 2, stride: 0, moving: false },
     guards,
     camera: { x: 4.5, z: -4.25, angle: 2.25, halfAngle: .34, range: 7 },
     visible: false, taking: false, takeTime: 0, takeId: null, collected: [], chocolate: 0, alert: 0,
@@ -70,21 +70,30 @@ export function updateScene(s, input, delta) {
   const dt = clamp(Number.isFinite(delta) ? delta : 0, 0, .05);
   s.time += dt;
   const m = Math.hypot(input.x || 0, input.z || 0);
+  s.player.moving = false;
   if (m > .001 && !s.taking) {
+    const startX = s.player.x, startZ = s.player.z;
     const speed = input.crouch ? 1.45 : 2.7;
     const dx = (input.x / Math.max(1, m)) * speed * dt;
     const dz = (input.z / Math.max(1, m)) * speed * dt;
     if (!collides(s.player.x + dx, s.player.z)) s.player.x += dx;
     if (!collides(s.player.x, s.player.z + dz)) s.player.z += dz;
-    s.player.facing = Math.atan2(dz, dx);
-    s.player.stride += dt * (input.crouch ? 4 : 7);
+    const travel = Math.hypot(s.player.x - startX, s.player.z - startZ);
+    s.player.moving = travel > .001;
+    if (s.player.moving) {
+      s.player.facing = Math.atan2(s.player.z - startZ, s.player.x - startX);
+      s.player.stride += travel * (input.crouch ? 5.4 : 4.8);
+    }
   }
   for (const guard of s.guards) {
     const watch = s.watchZones[guard.zone];
+    const startZ = guard.z;
     guard.z += guard.dir * (guard.baseSpeed + watch * .28) * dt;
     if (guard.z > guard.maxZ) { guard.z = guard.maxZ; guard.dir = -1; }
     if (guard.z < guard.minZ) { guard.z = guard.minZ; guard.dir = 1; }
     guard.angle = guard.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+    guard.moving = Math.abs(guard.z - startZ) > .001;
+    if (guard.moving) guard.stride += Math.abs(guard.z - startZ) * (guard.chasing ? 7 : 5);
     guard.range = (guard.zone === 'west' ? 4.25 : 3.3) + watch * .32;
   }
   s.camera.angle = 2.2 + Math.sin(s.time * (.7 + s.watchZones.east * .25)) * .57;
@@ -100,6 +109,7 @@ export function updateScene(s, input, delta) {
     if (!s.taking && s.visible) {
       s.message = 'Troppo esposto: aspetta dietro lo scaffale.'; s.notificationTime = 2.5;
     } else if (!s.visible) {
+      s.player.facing = Math.atan2(pickup.z - s.player.z, pickup.shelfX - s.player.x);
       if (s.takeId !== pickup.id) { s.takeTime = 0; s.takeId = pickup.id; }
       s.taking = true; s.takeTime += dt;
       s.message = `Prelievo ${s.chocolate + 1}/4 in corso… resta nascosto.`;

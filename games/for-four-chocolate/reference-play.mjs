@@ -1,7 +1,7 @@
 import * as THREE from './vendor/three/three.module.js';
 import { initialScene, updateScene, rayDistance, nearestPickup, PICKUPS, EXIT, TAKE_SECONDS } from './reference-play-logic.mjs';
 import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, centerCamera, updateCameraRig } from './reference-camera.mjs';
-import { spriteView } from './reference-sprites.mjs';
+import { spriteView, animationPose } from './reference-sprites.mjs';
 
 const host = document.querySelector('#world');
 const ui = {
@@ -41,16 +41,24 @@ const warmLight = new THREE.PointLight('#ffa25d', 18, 10, 2); warmLight.position
 
 const loader = new THREE.TextureLoader();
 function load(path) { return new Promise((resolve, reject) => loader.load(path, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); resolve(t); }, undefined, reject)); }
-const [ipnoTexture, ipnoWalkTexture, ipnoTakeTexture, ipnoBackTexture, ipnoSideTexture,
+const [ipnoTexture, ipnoTakeTexture, ipnoBackTexture, ipnoSideTexture,
   guardTexture, guardBackTexture, guardSideTexture, customerTexture, customerBackTexture, customerSideTexture,
   fridgeTexture, chocolateTexture, floorTexture] = await Promise.all([
-  './assets/reference-play/ipno.webp', './assets/reference-play/ipno-walk.webp', './assets/reference-play/ipno-take.webp',
+  './assets/reference-play/ipno.webp', './assets/reference-play/ipno-take.webp',
   './assets/reference-play/ipno-back.webp', './assets/reference-play/ipno-side.webp', './assets/reference-play/policie.webp',
   './assets/reference-play/policie-back.webp', './assets/reference-play/policie-side.webp',
   './assets/reference-play/customer.webp', './assets/reference-play/customer-back.webp', './assets/reference-play/customer-side.webp',
   './assets/reference-play/fridge.webp', './assets/reference-play/chocolate-shelf.webp',
   './assets/reference-play/floor.webp'
 ].map(load));
+const animationNames = [
+  ...['front','back','left','right'].map(direction => `ipno-walk-${direction}`),
+  ...['front','back','right'].map(direction => `ipno-crouch-${direction}`),
+  'ipno-take-back','ipno-take-right','policie-idle-left',
+  ...['walk','run'].flatMap(action => ['front','back','left','right'].map(direction => `policie-${action}-${direction}`))
+];
+const animationTextures = Object.fromEntries(await Promise.all(animationNames.map(async name =>
+  [name, await load(`./assets/reference-play/${name}.webp`)])));
 floorTexture.wrapS = THREE.RepeatWrapping; floorTexture.wrapT = THREE.RepeatWrapping;
 floorTexture.repeat.set(2, 2);
 const cache = new Map();
@@ -195,8 +203,8 @@ function figure(texture, height) {
   return {group,image,shadow};
 }
 const player=figure(ipnoTexture,1.92), guards=[figure(guardTexture,1.86),figure(guardTexture,1.86)], customer=figure(customerTexture,1.8);
-function orientFigure(actor, worldX, worldZ, stride) {
-  actor.group.position.set(worldX,Math.abs(Math.sin(stride))*.028,worldZ);
+function orientFigure(actor, worldX, worldZ, stride, moving = false) {
+  actor.group.position.set(worldX,moving?Math.abs(Math.sin(stride))*.028:0,worldZ);
   actor.group.rotation.y=Math.atan2(camera.position.x-worldX,camera.position.z-worldZ);
   actor.shadow.position.set(worldX,.015,worldZ);
 }
@@ -278,8 +286,45 @@ document.querySelector('#retry').addEventListener('click',()=>{state=initialScen
 function setFigureView(actor, textures, facing, x, z, frontFrame) {
   const {view,flip}=spriteView(facing,x,z,camera.position.x,camera.position.z);
   const texture=view==='front' ? frontFrame || textures.front : textures[view];
+  applySprite(actor,texture,1,0,flip);
+}
+function applySprite(actor, texture, columns = 1, frame = 0, flip = false) {
   if(actor.image.material.map!==texture){actor.image.material.map=texture;actor.image.material.needsUpdate=true;}
-  actor.image.scale.x=flip?-1:1;
+  if(actor.columns!==columns||actor.frame!==frame){
+    const uv=actor.image.geometry.attributes.uv;
+    const left=frame/columns,right=(frame+1)/columns;
+    uv.setX(0,left);uv.setX(1,right);uv.setX(2,left);uv.setX(3,right);
+    uv.needsUpdate=true;actor.columns=columns;actor.frame=frame;
+  }
+  actor.image.scale.x=(columns===4?1.25:1)*(flip?-1:1);
+}
+function setPlayerAnimation() {
+  const pose=animationPose({facing:state.player.facing,x:state.player.x,z:state.player.z,
+    cameraX:camera.position.x,cameraZ:camera.position.z,moving:state.player.moving,
+    crouch:held.has('crouch'),taking:state.taking,stride:state.player.stride});
+  if(pose.state==='walk'||pose.state==='crouch') {
+    const direction=pose.direction==='left'&&pose.state==='crouch'?'right':pose.direction;
+    applySprite(player,animationTextures[`ipno-${pose.state}-${direction}`],4,pose.frame,
+      pose.state==='crouch'&&pose.direction==='left');
+  } else if(pose.state==='take') {
+    const direction=pose.direction==='left'?'right':pose.direction;
+    const texture=direction==='front'?ipnoTakeTexture:animationTextures[`ipno-take-${direction}`];
+    applySprite(player,texture,1,0,pose.direction==='left');
+  } else {
+    const direction=pose.direction==='left'?'right':pose.direction;
+    applySprite(player,{front:ipnoTexture,back:ipnoBackTexture,right:ipnoSideTexture}[direction],1,0,pose.direction==='left');
+  }
+}
+function setGuardAnimation(actor, guard) {
+  const pose=animationPose({facing:guard.angle,x:guard.x,z:guard.z,
+    cameraX:camera.position.x,cameraZ:camera.position.z,moving:guard.moving,
+    chasing:guard.chasing,stride:guard.stride});
+  if(pose.state==='walk'||pose.state==='run') {
+    applySprite(actor,animationTextures[`policie-${pose.state}-${pose.direction}`],4,pose.frame);
+  } else {
+    applySprite(actor,{front:guardTexture,back:guardBackTexture,right:guardSideTexture,
+      left:animationTextures['policie-idle-left']}[pose.direction]);
+  }
 }
 function loop(now) {
   const dt=Math.min((now-previous)/1000,.05);previous=now;
@@ -289,16 +334,15 @@ function loop(now) {
   const input={...worldMove,take:held.has('take'),crouch:held.has('crouch')};
   updateScene(state,input,dt);
   updateView(worldMove,dt);
-  orientFigure(player,state.player.x,state.player.z,state.player.stride);
-  const gaitTexture=state.taking?ipnoTakeTexture:(input.x||input.z)&&Math.floor(state.player.stride*1.2)%2?ipnoWalkTexture:ipnoTexture;
-  setFigureView(player,{front:ipnoTexture,back:ipnoBackTexture,side:ipnoSideTexture},state.player.facing,state.player.x,state.player.z,gaitTexture);
+  orientFigure(player,state.player.x,state.player.z,state.player.stride,state.player.moving);
+  setPlayerAnimation();
   state.guards.forEach((guard,index)=>{
-    orientFigure(guards[index],guard.x,guard.z,state.time*4);
-    setFigureView(guards[index],{front:guardTexture,back:guardBackTexture,side:guardSideTexture},guard.angle,guard.x,guard.z);
+    orientFigure(guards[index],guard.x,guard.z,guard.stride,guard.moving);
+    setGuardAnimation(guards[index],guard);
     updateVision(guardVisions[index],guard);
   });
   const customerZ=1.3+Math.sin(state.time*.45)*.65;
-  orientFigure(customer,4.85,customerZ,state.time*1.5);
+  orientFigure(customer,4.85,customerZ,state.time*1.5,true);
   setFigureView(customer,{front:customerTexture,back:customerBackTexture,side:customerSideTexture},Math.cos(state.time*.45)>0?Math.PI/2:-Math.PI/2,4.85,customerZ);
   head.rotation.y=-state.camera.angle;
   updateVision(cameraVision,state.camera);
