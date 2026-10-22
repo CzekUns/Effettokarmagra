@@ -1,15 +1,21 @@
 // Metres on the supermarket floor; rendering and rules use the same shelf data.
 export const LIMITS = Object.freeze({ minX: -11, maxX: 11, minZ: -10, maxZ: 10 });
 export const FINE = 50;
-export const CAMERA_THRESHOLDS = Object.freeze([0,2,4,6,9,12]);
-export const GUARD_THRESHOLDS = Object.freeze([5,7,10,13,16,19,23,27]);
+export const CAMERA_THRESHOLDS = Object.freeze([0,2,3,5,7,10]);
+export const GUARD_THRESHOLDS = Object.freeze([5,6,8,10,13,16,19,23]);
+export const GUARD_HEARING_RANGE = 2.7;
+export const SPECIAL_NAME = 'Ciokospira';
+export const SPECIAL_EFFECTS = Object.freeze([
+  'fast','invisible','fast_take','calm','plus_five',
+  'slow','slow_take','suspicious','minus_five','trail'
+]);
 export const SHELVES = Object.freeze([
   { id:'chocolate', label:'ČOKOLÁDA', x:-6.9, z:-2.9, length:5.2, kind:'chocolate', zone:'west' },
   { id:'sweets', label:'SLADKOSTI', x:-3.45, z:-2.9, length:5.2, kind:'chocolate', zone:'west' },
   { id:'food', label:'POTRAVINY', x:0, z:-2.9, length:5.2, kind:'food', zone:'east' },
   { id:'drinks', label:'NÁPOJE', x:3.45, z:-2.9, length:5.2, kind:'drinks', zone:'east' },
   { id:'offers', label:'AKCE', x:6.9, z:-2.9, length:5.2, kind:'chocolate', zone:'east' },
-  { id:'specials', label:'SPECIÁL', x:-6.9, z:5, length:2.6, kind:'chocolate', zone:'west' },
+  { id:'specials', label:'SPECIÁL', x:-6.9, z:5, length:2.6, kind:'low', zone:'west' },
   { id:'checkout', label:'POKLADNA', x:6.5, z:5, length:2.6, kind:'checkout', zone:'east' }
 ].map(Object.freeze));
 export const PARTITIONS = Object.freeze([
@@ -19,13 +25,14 @@ export const PARTITIONS = Object.freeze([
   {minX:4.45,maxX:4.77,minZ:4.1,maxZ:7.15,height:1.8}
 ].map(Object.freeze));
 const shelfCover = SHELVES.map(shelf => Object.freeze({
-  minX:shelf.x-.6,maxX:shelf.x+.6,minZ:shelf.z-shelf.length/2,maxZ:shelf.z+shelf.length/2
+  minX:shelf.x-.6,maxX:shelf.x+.6,minZ:shelf.z-shelf.length/2,maxZ:shelf.z+shelf.length/2,
+  height:shelf.kind==='checkout'||shelf.kind==='low'?1.15:2.5
 }));
 export const COVER = Object.freeze([
   ...shelfCover,
   ...PARTITIONS,
-  Object.freeze({ minX:-10.8,maxX:-10.1,minZ:-8.7,maxZ:1.6 }),
-  Object.freeze({ minX:-9.5,maxX:7.7,minZ:-9.7,maxZ:-9.05 })
+  Object.freeze({ minX:-10.8,maxX:-10.1,minZ:-8.7,maxZ:1.6,height:3.5 }),
+  Object.freeze({ minX:-9.5,maxX:7.7,minZ:-9.7,maxZ:-9.05,height:3.5 })
 ]);
 const candidateSpots = SHELVES.filter(s=>s.id!=='checkout').flatMap(shelf =>
   [-1,0,1].map((slot) => {
@@ -84,18 +91,26 @@ export function collides(x, z, radius = .28) {
   return COVER.some(r => x + radius > r.minX && x - radius < r.maxX &&
                          z + radius > r.minZ && z - radius < r.maxZ);
 }
-function rayRect(x, z, dx, dz, r) {
+function rayRectInterval(x, z, dx, dz, r) {
   let near = -Infinity, far = Infinity;
   for (const [p, v, min, max] of [[x, dx, r.minX, r.maxX], [z, dz, r.minZ, r.maxZ]]) {
-    if (Math.abs(v) < 1e-8) { if (p < min || p > max) return Infinity; continue; }
+    if (Math.abs(v) < 1e-8) { if (p < min || p > max) return null; continue; }
     const a = (min - p) / v, b = (max - p) / v;
     near = Math.max(near, Math.min(a, b)); far = Math.min(far, Math.max(a, b));
   }
-  return far < 0 ? Infinity : Math.max(0, near);
+  return far < 0 ? null : [Math.max(0,near),far];
+}
+function rayRect(x,z,dx,dz,r) {
+  return rayRectInterval(x,z,dx,dz,r)?.[0]??Infinity;
 }
 export function rayDistance(x, z, angle, maxDistance) {
   const dx = Math.cos(angle), dz = Math.sin(angle);
   return Math.min(maxDistance, ...COVER.map(r => rayRect(x, z, dx, dz, r)));
+}
+export function guardRayDistance(x,z,angle,maxDistance) {
+  const dx=Math.cos(angle),dz=Math.sin(angle);
+  return Math.min(maxDistance,...COVER.filter(cover=>(cover.height??2.5)>1.6)
+    .map(cover=>rayRect(x,z,dx,dz,cover)));
 }
 export function canSee(eye, point) {
   const dx = point.x - eye.x, dz = point.z - eye.z, length = Math.hypot(dx, dz);
@@ -103,6 +118,27 @@ export function canSee(eye, point) {
   const angle = Math.atan2(dz, dx);
   if (Math.abs(deltaAngle(angle, eye.angle)) > eye.halfAngle) return false;
   return rayDistance(eye.x, eye.z, angle, length) >= length - .02;
+}
+// The guard sees over low displays while standing; a crouching target disappears behind them.
+export function guardSight(guard,point,{crouch=false,invisible=false}={}) {
+  if(invisible)return null;
+  const dx=point.x-guard.x,dz=point.z-guard.z,length=Math.hypot(dx,dz);
+  if(length>.001&&length<=guard.range){
+    const angle=Math.abs(deltaAngle(Math.atan2(dz,dx),guard.angle));
+    const peripheral=angle>guard.halfAngle;
+    if(angle<=guard.halfAngle*1.2&&(!peripheral||!crouch)){
+      const ux=dx/length,uz=dz/length,targetEye=crouch?.8:1.65;
+      const blocked=COVER.some(cover=>{
+        const interval=rayRectInterval(guard.x,guard.z,ux,uz,cover);
+        if(!interval||interval[0]>=length-.02)return false;
+        const nearHeight=1.68+(targetEye-1.68)*interval[0]/length;
+        const farHeight=1.68+(targetEye-1.68)*Math.min(interval[1],length)/length;
+        return (cover.height??2.5)>=Math.min(nearHeight,farHeight)-.03;
+      });
+      if(!blocked)return peripheral?'peripheral':length<=guard.range*.5?'near':'far';
+    }
+  }
+  return null;
 }
 // A display fades only if its volume is between the orbiting camera and Ipno.
 export function coverBlocksCamera(bounds, height, camera, player) {
@@ -121,7 +157,7 @@ export function coverBlocksCamera(bounds, height, camera, player) {
 export function shelfBlocksCamera(shelf, camera, player) {
   return coverBlocksCamera({minX:shelf.x-.6,maxX:shelf.x+.6,
     minZ:shelf.z-shelf.length/2,maxZ:shelf.z+shelf.length/2},
-    shelf.kind==='checkout'?1.5:2.5,camera,player);
+    shelf.kind==='checkout'||shelf.kind==='low'?1.15:2.5,camera,player);
 }
 export function nearestPickup(s) {
   return s.pickups.filter(p => p.status === 'available' || p.status === 'taking')
@@ -137,11 +173,12 @@ function addCamera(s) {
   return true;
 }
 function addGuard(s) {
-  const post=GUARD_POSTS[s.guards.length];
+  const index=s.guards.length,post=GUARD_POSTS[index];
   if(!post)return false;
   s.guards.push({...post,homeX:post.x,angle:post.dir>0?Math.PI/2:-Math.PI/2,
     halfAngle:.5,range:4,stride:0,moving:false,chasing:false,mode:'patrol',
-    path:null,repath:0,exclamationTime:0});
+    path:null,repath:0,exclamationTime:0,patrolTarget:null,
+    patrolSeed:(s.seed^Math.imul(index+1,0x9e3779b9))>>>0});
   return true;
 }
 export function increaseSecurity(s) {
@@ -150,11 +187,44 @@ export function increaseSecurity(s) {
 }
 function refillPickup(s,used) {
   const active=new Set(s.pickups.filter(p=>p!==used).map(p=>p.id));
-  const available=PICKUP_CANDIDATES.filter(p=>!active.has(p.id)&&p.id!==used.id);
-  const pool=available.length?available:PICKUP_CANDIDATES.filter(p=>!active.has(p.id));
+  const available=PICKUP_CANDIDATES.filter(p=>!active.has(p.id)&&p.id!==used.id&&p.id!==s.special?.id);
+  const pool=available.length?available:PICKUP_CANDIDATES.filter(p=>!active.has(p.id)&&p.id!==s.special?.id);
   const next=pool[(s.seed+s.chocolate*7)%pool.length];
   s.pickups[s.pickups.indexOf(used)]={...next,status:'available'};
   s.pickupVersion++;
+}
+function maybeSpawnSpecial(s) {
+  if(s.special||s.specialOffer)return;
+  const random=randomGenerator(s.seed^Math.imul(++s.specialRoll,0x45d9f3b));
+  if(random()>.3)return;
+  const occupied=new Set(s.pickups.map(p=>p.id));
+  const choices=PICKUP_CANDIDATES.filter(p=>!occupied.has(p.id));
+  if(!choices.length)return;
+  s.special={...choices[Math.floor(random()*choices.length)],name:SPECIAL_NAME};
+}
+export function nearestSpecial(s) {
+  if(!s.special)return null;
+  return Math.hypot(s.player.x-s.special.x,s.player.z-s.special.z)<=s.special.reach?s.special:null;
+}
+export function eatSpecial(s) {
+  if(s.specialOffer?.stage!=='found')return null;
+  const random=randomGenerator(s.seed^Math.imul(++s.effectRoll,0x27d4eb2d));
+  const effect=SPECIAL_EFFECTS[Math.floor(random()*SPECIAL_EFFECTS.length)];
+  s.specialOffer={stage:'eaten',name:SPECIAL_NAME,effect,timer:2.8};
+  s.chocolate++;
+  if(effect==='plus_five')s.chocolate+=5;
+  if(effect==='minus_five')s.chocolate=Math.max(0,s.chocolate-5);
+  if(effect==='calm'||effect==='suspicious'){
+    const change=effect==='calm'?-1:2;
+    for(const zone of ['west','east'])s.watchZones[zone]=clamp(s.watchZones[zone]+change,0,6);
+    s.alert=clamp(s.alert+change*20,0,100);
+  }
+  if(['fast','invisible','fast_take','slow','slow_take','trail'].includes(effect)){
+    s.effects[effect]=effect==='trail'?14:16;
+  }
+  increaseSecurity(s);
+  s.message=`${SPECIAL_NAME} mangiata: ${effect}. Hai ${s.chocolate} cioccolate.`;
+  return effect;
 }
 const NAV_STEP=.4;
 const NAV_COLS=Math.round((LIMITS.maxX-LIMITS.minX)/NAV_STEP)+1;
@@ -215,15 +285,26 @@ function moveGuard(guard,target,dt,speed) {
   guard.x=nx;guard.z=nz;guard.angle=Math.atan2(dz,dx);
   guard.stride+=step*(guard.mode==='chase'?7:5);guard.moving=true;
 }
+function patrolRandom(guard){
+  guard.patrolSeed=(Math.imul(guard.patrolSeed,1664525)+1013904223)>>>0;
+  return guard.patrolSeed/4294967296;
+}
 function patrolGuard(guard,watch,dt) {
-  const before=guard.z;
-  guard.z+=guard.dir*(guard.baseSpeed+watch*.28)*dt;
-  if(guard.z>guard.maxZ){guard.z=guard.maxZ;guard.dir=-1;}
-  if(guard.z<guard.minZ){guard.z=guard.minZ;guard.dir=1;}
-  if(collides(guard.x,guard.z)){guard.z=before;guard.dir*=-1;}
-  guard.angle=guard.dir>0?Math.PI/2:-Math.PI/2;
-  guard.moving=Math.abs(guard.z-before)>.001;
-  if(guard.moving)guard.stride+=Math.abs(guard.z-before)*5;
+  if(guard.baseSpeed===0){guard.moving=false;return;}
+  guard.patrolTimer=(guard.patrolTimer??0)-dt;
+  if(!guard.patrolTarget||guard.patrolTimer<=0||
+      Math.hypot(guard.x-guard.patrolTarget.x,guard.z-guard.patrolTarget.z)<.3){
+    guard.patrolTarget=null;
+    for(let attempt=0;attempt<12;attempt++){
+      const x=clamp(guard.homeX+(patrolRandom(guard)-.5)*3.8,LIMITS.minX+.5,LIMITS.maxX-.5);
+      const z=guard.minZ+patrolRandom(guard)*(guard.maxZ-guard.minZ);
+      if(!collides(x,z)&&routeAroundCover(guard,{x,z}).length){guard.patrolTarget={x,z};break;}
+    }
+    guard.patrolTimer=4+patrolRandom(guard)*3;
+    guard.path=null;
+  }
+  if(guard.patrolTarget)moveGuard(guard,guard.patrolTarget,dt,guard.baseSpeed+watch*.13);
+  else guard.moving=false;
 }
 function assignResponders(s,source) {
   if(!s.guards.length)addGuard(s); // An early CCTV alarm summons the first patrol.
@@ -237,52 +318,82 @@ function assignResponders(s,source) {
     guard.exclamationTime=2;
   }
 }
-function startAlarm(s,source) {
+function startAlarm(s,source,reason='theft') {
   const previous=s.pickups.find(p=>p.id===s.takeId);
-  if(previous)s.watchZones[previous.zone]=Math.min(4,s.watchZones[previous.zone]+1);
+  if(previous)s.watchZones[previous.zone]=Math.min(6,s.watchZones[previous.zone]+1);
   s.security={mode:'alert',source:source.type,sourceIndex:source.index??null,
     timer:.75,lostTime:0,lastKnown:{x:s.player.x,z:s.player.z},responders:[]};
   assignResponders(s,source);
-  s.message=source.type==='camera'?'⚠ CCTV ha visto il prelievo: POLICIE in arrivo!'
-    :'⚠ POLICIE ha visto il prelievo: scappa e usa gli scaffali!';
+  s.message=reason==='run'?'⚠ POLICIE ha sentito lo scatto vicino a sé!':
+    reason==='fat'?'⚠ POLICIE ha visto le cioccolate nascoste addosso a Ipno!':
+    reason==='trail'?'⚠ POLICIE ha seguito le macchie fino a Ipno!':
+    source.type==='camera'?'⚠ CCTV ha visto il prelievo: POLICIE in arrivo!':
+    '⚠ POLICIE ha visto il prelievo: scappa e usa gli scaffali!';
   if(previous?.status==='taking')previous.status='available';
   s.taking=false;s.takeTime=0;s.takeId=null;
 }
 function visibleWitness(s) {
-  const index=s.guards.findIndex(guard=>canSee(guard,s.player));
-  if(index>=0)return {type:'guard',index};
+  if(s.effects.invisible>0)return null;
+  const index=s.guards.findIndex(guard=>guardSight(guard,s.player,{crouch:s.player.crouched}));
+  if(index>=0)return {type:'guard',index,tier:guardSight(s.guards[index],s.player,{crouch:s.player.crouched})};
   const cameraIndex=s.cameras.findIndex(camera=>canSee(camera,s.player));
   if(cameraIndex>=0)return {type:'camera',index:cameraIndex};
   return null;
 }
+function visibleStain(guard,stains) {
+  return stains.filter(stain=>stain.order>(guard.lastStainOrder??-1)&&canSee(guard,stain))
+    .sort((a,b)=>a.order-b.order)[0]||null;
+}
+export function takeDuration(s) {
+  return TAKE_SECONDS*(s.effects.fast_take>0?.62:1)*(s.effects.slow_take>0?1.6:1);
+}
 export function initialScene(seed = Math.floor(Math.random()*0xffffffff)) {
   const s={
     phase:'playing',time:0,message:'Prendi quante cioccolate riesci. Esci quando vuoi: ogni pezzo vale 1 Kč.',
-    seed,player:{x:.25,z:6.2,facing:-Math.PI/2,stride:0,moving:false},guards:[],cameras:[],
+    seed,player:{x:.25,z:6.2,facing:-Math.PI/2,stride:0,moving:false,crouched:false,sprinting:false},guards:[],cameras:[],
     pickups:selectPickups(seed),pickupVersion:0,visible:false,taking:false,takeTime:0,takeId:null,collected:[],chocolate:0,alert:0,
     security:{mode:'routine',source:null,sourceIndex:null,timer:0,lostTime:0,lastKnown:null,responders:[]},
-    watchZones:{west:0,east:0},notificationTime:0
-  };addCamera(s);return s;
+    watchZones:{west:0,east:0},notificationTime:0,
+    effects:{fast:0,invisible:0,fast_take:0,slow:0,slow_take:0,trail:0},
+    special:null,specialOffer:null,specialRoll:0,effectRoll:0,stains:[],stainOrder:0,lastStainAt:-1
+  };addCamera(s);maybeSpawnSpecial(s);return s;
 }
 export function updateScene(s, input, delta) {
   if (s.phase !== 'playing') return s;
   const dt = clamp(Number.isFinite(delta) ? delta : 0, 0, .05);
+  if(s.specialOffer){
+    if(s.specialOffer.stage==='eaten'){
+      s.specialOffer.timer-=dt;
+      if(s.specialOffer.timer<=0)s.specialOffer=null;
+    }
+    return s;
+  }
   s.time += dt;
+  for(const effect of Object.keys(s.effects))s.effects[effect]=Math.max(0,s.effects[effect]-dt);
+  s.stains=s.stains.filter(stain=>s.time-stain.time<18);
   const m = Math.hypot(input.x || 0, input.z || 0);
+  s.player.crouched=!!input.crouch;
+  s.player.sprinting=!!input.sprint&&!s.player.crouched&&m>.05;
   s.player.moving = false;
   if (m > .001 && !s.taking) {
     const startX = s.player.x, startZ = s.player.z;
-    const speed = input.crouch ? 1.45 : 2.7;
-    const dx = (input.x / Math.max(1, m)) * speed * dt;
-    const dz = (input.z / Math.max(1, m)) * speed * dt;
+    const speed=(s.player.crouched?1.45:s.player.sprinting?4.35:2.7)*
+      (s.effects.fast>0?1.4:1)*(s.effects.slow>0?.62:1);
+    const dx = ((input.x||0) / Math.max(1, m)) * speed * dt;
+    const dz = ((input.z||0) / Math.max(1, m)) * speed * dt;
     if (!collides(s.player.x + dx, s.player.z)) s.player.x += dx;
     if (!collides(s.player.x, s.player.z + dz)) s.player.z += dz;
     const travel = Math.hypot(s.player.x - startX, s.player.z - startZ);
     s.player.moving = travel > .001;
     if (s.player.moving) {
       s.player.facing = Math.atan2(s.player.z - startZ, s.player.x - startX);
-      s.player.stride += travel * (input.crouch ? 5.4 : 4.8);
+      s.player.stride += travel * (s.player.crouched ? 5.4 :s.player.sprinting?7:4.8);
     }
+  }
+  if(s.effects.trail>0&&s.player.moving&&s.time-s.lastStainAt>=.55){
+    s.stains.push({x:s.player.x,z:s.player.z,time:s.time,order:++s.stainOrder});
+    s.lastStainAt=s.time;
+    if(s.stains.length>30)s.stains.shift();
   }
   for (const guard of s.guards) {
     guard.exclamationTime=Math.max(0,guard.exclamationTime-dt);
@@ -296,6 +407,12 @@ export function updateScene(s, input, delta) {
       }
     }else if(guard.mode==='respond'||guard.mode==='chase'){
       moveGuard(guard,s.security.lastKnown,dt,guard.mode==='chase'?2.2:1.75);
+    }else if(guard.mode==='track'){
+      guard.trackTimer-=dt;
+      const newer=visibleStain(guard,s.stains);
+      if(newer){guard.trackTarget={x:newer.x,z:newer.z};guard.lastStainOrder=newer.order;}
+      if(guard.trackTarget)moveGuard(guard,guard.trackTarget,dt,1.55);
+      if(guard.trackTimer<=0){guard.mode='return';guard.path=null;}
     }else if(guard.mode==='search'){
       const target=guard.searchTarget||s.security.lastKnown;
       moveGuard(guard,target,dt,1.3);
@@ -312,9 +429,25 @@ export function updateScene(s, input, delta) {
     Math.sin(s.time*(.7+s.watchZones[index%2?'west':'east']*.25)+index*1.7)*.57;});
   const witness=visibleWitness(s);
   s.visible=!!witness;
-  s.alert = clamp(s.alert + (s.visible && m > .05 && !input.crouch ? 6 : -8) * dt, 0, 100);
+  s.alert = clamp(s.alert + (s.visible && m > .05 && !s.player.crouched ? 6 : -8) * dt, 0, 100);
   s.notificationTime = Math.max(0, s.notificationTime - dt);
   const security=s.security;
+  if(security.mode==='routine'||security.mode==='routine_increased'){
+    const close=s.guards.findIndex(guard=>
+      s.player.sprinting&&s.player.moving&&Math.hypot(guard.x-s.player.x,guard.z-s.player.z)<=GUARD_HEARING_RANGE);
+    const overloaded=s.chocolate>=15&&witness?.type==='guard'&&witness.tier==='near'?witness.index:-1;
+    const trail=s.guards.findIndex(guard=>guard.mode==='track'&&
+      Math.hypot(guard.x-s.player.x,guard.z-s.player.z)<1.3);
+    if(close>=0){startAlarm(s,{type:'guard',index:close},'run');return s;}
+    if(overloaded>=0){startAlarm(s,{type:'guard',index:overloaded},'fat');return s;}
+    if(trail>=0){startAlarm(s,{type:'guard',index:trail},'trail');return s;}
+    for(const guard of s.guards){
+      if(guard.mode!=='patrol'&&guard.mode!=='return')continue;
+      const stain=visibleStain(guard,s.stains);
+      if(stain){guard.mode='track';guard.trackTarget={x:stain.x,z:stain.z};
+        guard.lastStainOrder=stain.order;guard.trackTimer=9;guard.path=null;}
+    }
+  }
   if(security.mode==='alert'||security.mode==='pursuit'||security.mode==='searching'){
     if(witness){security.lastKnown={x:s.player.x,z:s.player.z};security.lostTime=0;}
     else security.lostTime+=dt;
@@ -322,7 +455,7 @@ export function updateScene(s, input, delta) {
       security.timer-=dt;
       if(security.timer<=0){security.mode='pursuit';for(const index of security.responders)s.guards[index].mode='chase';}
     }else if(security.mode==='pursuit'&&security.lostTime>1.15){
-      security.mode='searching';security.timer=12;
+      security.mode='searching';security.timer=14.5;
       security.responders.forEach((index,order)=>{
         const guard=s.guards[index];guard.mode='search';guard.path=null;
         guard.searchTarget=order===0?security.lastKnown:
@@ -350,9 +483,15 @@ export function updateScene(s, input, delta) {
     return s;
   }
   const pickup = nearestPickup(s);
+  const special=nearestSpecial(s);
   const lockdown=security.mode==='alert'||security.mode==='pursuit'||security.mode==='searching';
   if(input.take&&pickup&&lockdown){
     s.message='POLICIE ti cerca: lascia il ripiano e nasconditi.';
+  }else if(input.take&&special&&!lockdown){
+    s.specialOffer={stage:'found',name:s.special.name};s.special=null;
+    s.message=`Hai trovato ${SPECIAL_NAME}: vuoi rischiare e mangiarla?`;
+    s.taking=false;s.takeTime=0;s.takeId=null;
+    return s;
   }else if (input.take && pickup) {
     if (!s.taking && s.visible) {
       s.message = 'Troppo esposto: aspetta dietro lo scaffale.'; s.notificationTime = 2.5;
@@ -365,12 +504,13 @@ export function updateScene(s, input, delta) {
       }
       pickup.status='taking';s.taking = true; s.takeTime += dt;
       s.message = `Prelievo ${s.chocolate+1} in corso… resta nascosto.`;
-      if (s.takeTime >= TAKE_SECONDS) {
+      if (s.takeTime >= takeDuration(s)) {
         pickup.status='collected';s.collected.push(pickup.id);s.chocolate++;
         s.taking = false; s.takeTime = 0; s.takeId = null;
         refillPickup(s,pickup);
+        maybeSpawnSpecial(s);
         increaseSecurity(s);
-        s.watchZones[pickup.zone] = Math.min(4, s.watchZones[pickup.zone] + 1);
+        s.watchZones[pickup.zone] = Math.min(6, s.watchZones[pickup.zone] + 1);
         if(security.mode==='routine'||security.mode==='routine_increased'){
           security.mode='routine_increased';
           const guard=s.guards.filter(g=>g.zone===pickup.zone&&!['respond','chase','search'].includes(g.mode))

@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three/three.module.js';
-import { initialScene, updateScene, rayDistance, nearestPickup, shelfBlocksCamera, coverBlocksCamera, SHELVES, PARTITIONS, LIMITS, EXIT, TAKE_SECONDS, crowns, FINE } from './reference-play-logic.mjs?v=6';
-import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, centerCamera, updateCameraRig } from './reference-camera.mjs?v=6';
+import { initialScene, updateScene, eatSpecial, rayDistance, guardRayDistance, nearestPickup, nearestSpecial,
+  takeDuration, shelfBlocksCamera, coverBlocksCamera, SHELVES, PARTITIONS, LIMITS, EXIT, crowns, FINE } from './reference-play-logic.mjs?v=7';
+import { createCameraRig, cameraRelativeMovement, orbitCamera, zoomCamera, tiltCamera, centerCamera, updateCameraRig } from './reference-camera.mjs?v=7';
 import { spriteView, animationPose } from './reference-sprites.mjs';
 import { createFinale, advanceFinale, nextFinaleStep, skipFinale, finaleSubtitle } from './reference-finale-logic.mjs?v=7';
 import { createFinaleScene } from './reference-finale-scene.mjs?v=8';
@@ -26,6 +27,9 @@ addEventListener('blur',()=>{audio.hide();syncMusicButton();});
 const ui = {
   loot: document.querySelector('#loot'), score: document.querySelector('#score'), best: document.querySelector('#best'),
   mission: document.querySelector('#mission'), watch: document.querySelector('#watch'),
+  effects: document.querySelector('#effect-status'),special:document.querySelector('#special-offer'),
+  specialTitle:document.querySelector('#special-title'),specialMessage:document.querySelector('#special-message'),
+  specialEat:document.querySelector('#special-eat'),
   interaction: document.querySelector('#interaction'), progress: document.querySelector('#progress'),
   result: document.querySelector('#result'), title: document.querySelector('#result-title'),
   kicker: document.querySelector('#result-kicker'), text: document.querySelector('#result-text'),
@@ -198,9 +202,9 @@ function setFaded(group,faded) {
 }
 function makeAisle(shelf) {
   const {x,z,length,kind,label}=shelf;
-  const chocolate=kind==='chocolate';
+  const chocolate=kind==='chocolate'||kind==='low';
   const group = new THREE.Group(); scene.add(group);
-  const width = 1.2, height = kind==='checkout' ? 1.5 : chocolate ? 2.5 : 2.42;
+  const width = 1.2, height = kind==='checkout'||kind==='low' ? 1.15 : chocolate ? 2.5 : 2.42;
   box(group,width,height,length,'#252337',x,height/2,z,{roughness:.46,metalness:.18});
   const image = chocolate ? chocolateTexture : fridgeTexture;
   plane(group,length-.12,height-.18,image,x+width/2+.01,height/2,z,Math.PI/2,{toneMapped:!chocolate});
@@ -217,7 +221,7 @@ function makeAisle(shelf) {
     const zz=z-length/2+.38+(i%6)*((length-.7)/6);
     box(group,.22,.14,.34,colors[i%4],x+(i<6?-.27:.27),height+.18,zz,{roughness:.4,cast:false});
   }
-  const trims={chocolate:'#ed649e',food:'#e2bb64',drinks:'#65cfe6',checkout:'#75d2ac'};
+  const trims={chocolate:'#ed649e',low:'#f2b45d',food:'#e2bb64',drinks:'#65cfe6',checkout:'#75d2ac'};
   for(const side of [-1,1])box(group,.07,.08,length+.18,trims[kind],x+side*.63,height+.18,z,{cast:false});
   return makeFadeable(group);
 }
@@ -255,7 +259,7 @@ for(const shelf of SHELVES){
   marker.style.top=`${(shelf.z-shelf.length/2-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
   marker.style.width=`${1.2/(LIMITS.maxX-LIMITS.minX)*100}%`;
   marker.style.height=`${shelf.length/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
-  marker.style.background={chocolate:'#ce5d9a',food:'#e2bb64',drinks:'#65cfe6',checkout:'#75d2ac'}[shelf.kind];
+  marker.style.background={chocolate:'#ce5d9a',low:'#f2b45d',food:'#e2bb64',drinks:'#65cfe6',checkout:'#75d2ac'}[shelf.kind];
   radar.append(marker);
 }
 for(const divider of PARTITIONS){
@@ -289,6 +293,24 @@ function buildPickupBars() {
   });
 }
 buildPickupBars();let shownPickupVersion=state.pickupVersion;
+const specialBar=new THREE.Group();scene.add(specialBar);
+box(specialBar,.17,.3,.46,'#702aa3',0,1.18,0,{roughness:.23,metalness:.28});
+box(specialBar,.03,.25,.33,'#ffc458',.1,1.18,0,{roughness:.2,metalness:.4});
+const specialGlow=disc(scene,.34,'#f6b44c',.34,0,0);
+const stainMeshes=new Map();
+function syncSpecialWorld(){
+  specialBar.visible=!!state.special;specialGlow.visible=!!state.special;
+  if(state.special){specialBar.position.set(state.special.shelfX,0,state.special.z);
+    specialGlow.position.set(state.special.x,.018,state.special.z);}
+  const active=new Set(state.stains.map(stain=>stain.order));
+  for(const [id,mesh] of stainMeshes)if(!active.has(id)){
+    scene.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();stainMeshes.delete(id);
+  }
+  for(const stain of state.stains)if(!stainMeshes.has(stain.order)){
+    const mesh=disc(scene,.16,'#63361f',.82,stain.x,stain.z);
+    mesh.position.y=.022;mesh.renderOrder=4;stainMeshes.set(stain.order,mesh);
+  }
+}
 const exitGlow = disc(scene,.6,'#64f8bd',.24,EXIT.x,EXIT.z);
 
 // Camera rig and floor projections share exactly the same observer geometry as the rules.
@@ -341,22 +363,28 @@ function syncSecurityVisuals(){
     const actor=figure(guardTexture,1.86);
     const mark=new THREE.Sprite(new THREE.SpriteMaterial({map:alertTexture,transparent:true,depthTest:false}));
     mark.position.y=2.35;mark.scale.set(.62,.62,1);mark.visible=false;mark.renderOrder=8;actor.group.add(mark);actor.mark=mark;
-    guards.push(actor);guardVisions.push(vision('#ffb765',guards.length%2?.32:.39));
+    guards.push(actor);guardVisions.push({
+      peripheral:vision('#e86369',.13),far:vision('#eaa75d',.23),near:vision('#ffe08c',.27)
+    });
     const dot=document.createElement('i');dot.className='radar-guard dot guard';radar.append(dot);ui.radarGuards.push(dot);
   }
   while(cctvs.length<state.cameras.length){cctvs.push(cctvVisual(state.cameras[cctvs.length]));}
   guards.forEach((actor,index)=>{const visible=index<state.guards.length;actor.group.visible=visible;actor.shadow.visible=visible;
-    guardVisions[index].visible=visible;ui.radarGuards[index].hidden=!visible;});
+    for(const mesh of Object.values(guardVisions[index]))mesh.visible=visible;
+    ui.radarGuards[index].hidden=!visible;});
   cctvs.forEach((actor,index)=>{const visible=index<state.cameras.length;actor.rig.visible=visible;
     actor.cone.visible=visible;actor.light.visible=visible;actor.dot.hidden=!visible;});
 }
 syncSecurityVisuals();
-function updateVision(mesh,eye) {
+function updateVision(mesh,eye,rangeFactor=1,angleFactor=1,guard=false) {
   const data=mesh.geometry.attributes.position.array; let n=0;
   for(let i=0;i<30;i++) {
-    const a=eye.angle-eye.halfAngle+(i/30)*eye.halfAngle*2;
-    const b=eye.angle-eye.halfAngle+((i+1)/30)*eye.halfAngle*2;
-    const ra=rayDistance(eye.x,eye.z,a,eye.range)-.02,rb=rayDistance(eye.x,eye.z,b,eye.range)-.02;
+    const half=eye.halfAngle*angleFactor;
+    const a=eye.angle-half+(i/30)*half*2;
+    const b=eye.angle-half+((i+1)/30)*half*2;
+    const distance=guard?guardRayDistance:rayDistance;
+    const ra=distance(eye.x,eye.z,a,eye.range*rangeFactor)-.02;
+    const rb=distance(eye.x,eye.z,b,eye.range*rangeFactor)-.02;
     for(const [x,z] of [[eye.x,eye.z],[eye.x+Math.cos(a)*ra,eye.z+Math.sin(a)*ra],[eye.x+Math.cos(b)*rb,eye.z+Math.sin(b)*rb]]) {
       data[n++]=x;data[n++]=.02;data[n++]=z;
     }
@@ -364,7 +392,19 @@ function updateVision(mesh,eye) {
   mesh.geometry.attributes.position.needsUpdate=true;
 }
 
-const held=new Set();const mapping={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',KeyE:'take',Space:'take',ShiftLeft:'crouch',ShiftRight:'crouch'};
+const held=new Set();const mapping={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',KeyE:'take',Space:'take',ShiftLeft:'sprint',ShiftRight:'sprint'};
+const crouchButton=document.querySelector('#crouch'),crouchLabel=document.querySelector('#crouch-label'),crouchPose=document.querySelector('#crouch-pose');
+let crouched=false;
+function setCrouched(value){
+  crouched=value;crouchButton.setAttribute('aria-pressed',String(value));
+  crouchLabel.textContent=value?'IN PIEDI':'ACCOVACCIATI';
+  crouchPose.setAttribute('d',value?
+    'M14 9v8m0-5-5 4m5-4 5 4m-5 1-5 8m5-8 5 8':
+    'M13 9l-5 5 5 3 5-2 4 5M8 14l-4 5m9-2-3 6m8-8 6-1');
+  if(value)held.delete('sprint');
+}
+crouchButton.addEventListener('click',()=>{if(started&&!state.specialOffer&&!finale)setCrouched(!crouched);});
+setCrouched(false);
 const joystick=document.querySelector('#joystick'),thumb=document.querySelector('#joystick-thumb');
 const joystickAxis={x:0,z:0};let joystickPointer=null;
 function resetJoystick(){joystickPointer=null;joystickAxis.x=0;joystickAxis.z=0;thumb.style.transform='translate(-50%,-50%)';}
@@ -381,17 +421,38 @@ joystick.addEventListener('pointerdown',event=>{if(!started||joystickPointer!==n
 joystick.addEventListener('pointermove',event=>{if(event.pointerId===joystickPointer)moveJoystick(event);});
 for(const name of ['pointerup','pointercancel','lostpointercapture'])joystick.addEventListener(name,event=>{
   if(event.pointerId===joystickPointer)resetJoystick();});
-addEventListener('keydown',event=>{if(!started)return;const key=mapping[event.code];if(key){held.add(key);event.preventDefault();}});
+addEventListener('keydown',event=>{
+  if(!started||state.specialOffer||finale)return;
+  if(event.code==='KeyC'&&!event.repeat){setCrouched(!crouched);event.preventDefault();return;}
+  const key=mapping[event.code];if(key){held.add(key);event.preventDefault();}
+});
 addEventListener('keyup',event=>{const key=mapping[event.code];if(key)held.delete(key);});
 addEventListener('blur',()=>{held.clear();resetJoystick();});
 for(const button of document.querySelectorAll('[data-key]')) {
   const key=button.dataset.key;
-  button.addEventListener('pointerdown',e=>{if(!started)return;held.add(key);button.classList.add('active');button.setPointerCapture(e.pointerId);e.preventDefault();});
+  button.addEventListener('pointerdown',e=>{if(!started||state.specialOffer||finale)return;held.add(key);button.classList.add('active');button.setPointerCapture(e.pointerId);e.preventDefault();});
   const release=()=>{held.delete(key);button.classList.remove('active');};
   button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);
+  button.addEventListener('lostpointercapture',release);
 }
 let previous=performance.now(), frames=0, frameStart=previous;
 const cameraRig = createCameraRig(state.player);
+const cameraStick=document.querySelector('#camera-stick'),cameraThumb=document.querySelector('#camera-thumb');
+const cameraAxis={x:0,y:0};let cameraPointer=null;
+function resetCameraStick(){cameraPointer=null;cameraAxis.x=0;cameraAxis.y=0;cameraThumb.style.transform='translate(-50%,-50%)';}
+function moveCameraStick(event){
+  const rect=cameraStick.getBoundingClientRect(),radius=rect.width*.33;
+  const dx=event.clientX-rect.left-rect.width/2,dy=event.clientY-rect.top-rect.height/2;
+  const scale=Math.min(1,radius/Math.max(1,Math.hypot(dx,dy)));
+  cameraAxis.x=dx*scale/radius;cameraAxis.y=dy*scale/radius;
+  cameraThumb.style.transform=`translate(calc(-50% + ${cameraAxis.x*radius}px),calc(-50% + ${cameraAxis.y*radius}px))`;
+}
+cameraStick.addEventListener('pointerdown',event=>{if(!started||cameraPointer!==null)return;
+  cameraPointer=event.pointerId;cameraStick.setPointerCapture(event.pointerId);moveCameraStick(event);event.preventDefault();});
+cameraStick.addEventListener('pointermove',event=>{if(event.pointerId===cameraPointer)moveCameraStick(event);});
+for(const name of ['pointerup','pointercancel','lostpointercapture'])cameraStick.addEventListener(name,event=>{
+  if(event.pointerId===cameraPointer)resetCameraStick();});
+addEventListener('blur',resetCameraStick);
 const setView = (pose) => {
   camera.position.set(pose.x,pose.y,pose.z);
   camera.lookAt(pose.lookX,pose.lookY,pose.lookZ);
@@ -401,9 +462,6 @@ function updateView(movement,seconds){
 }
 // Rotazione orbitale volontaria: rotazioni incrementali di 45°, zoom a passi e ricentraggio.
 for(const [id,action] of [
-  ['camera-left',()=>orbitCamera(cameraRig,-Math.PI/4)],
-  ['camera-right',()=>orbitCamera(cameraRig,Math.PI/4)],
-  ['camera-center',()=>centerCamera(cameraRig)],
   ['camera-closer',()=>zoomCamera(cameraRig,-.13)],
   ['camera-farther',()=>zoomCamera(cameraRig,.13)]
 ]) document.getElementById(id).addEventListener('click',()=>{if(started)action();});
@@ -448,8 +506,32 @@ startAction.disabled=false;document.querySelector('#start-status').hidden=true;
 document.querySelector('#retry').addEventListener('click',()=>{audio.stop();musicButton.hidden=true;
   state=initialScene();finale=null;finalResult=null;started=false;
   startScreen.hidden=false;startAction.focus();game.classList.remove('in-finale');
-  cameraRig.focusX=state.player.x;cameraRig.focusZ=state.player.z;centerCamera(cameraRig);held.clear();resetJoystick();
+  cameraRig.focusX=state.player.x;cameraRig.focusZ=state.player.z;centerCamera(cameraRig);held.clear();resetJoystick();resetCameraStick();setCrouched(false);
   ui.result.hidden=true;ui.finale.hidden=true;buildPickupBars();shownPickupVersion=state.pickupVersion;syncSecurityVisuals();});
+const specialMessages={
+  fast:'BONUS · Cammini più veloce per 16 secondi.',
+  invisible:'BONUS · Ipno è trasparente e invisibile per 16 secondi.',
+  fast_take:'BONUS · Prelievo più veloce per 16 secondi.',
+  calm:'BONUS · Sospetto ridotto di 1 livello.',
+  plus_five:'BONUS · Cinque cioccolate extra!',
+  slow:'MALUS · Cammini più lentamente per 16 secondi.',
+  slow_take:'MALUS · Prelievo più lento per 16 secondi.',
+  suspicious:'MALUS · Sospetto aumentato di 2 livelli.',
+  minus_five:'MALUS · Hai perso cinque cioccolate.',
+  trail:'MALUS · Ipno lascia macchie: POLICIE può seguirle!'
+};
+ui.specialEat.addEventListener('click',()=>{if(state.specialOffer?.stage==='found'){
+  eatSpecial(state);held.clear();resetJoystick();syncSpecialUi();
+}});
+function syncSpecialUi(){
+  const offer=state.specialOffer;
+  ui.special.hidden=!offer;
+  if(!offer)return;
+  ui.specialTitle.textContent=offer.stage==='found'?`Hai trovato ${offer.name}!`:`${offer.name} mangiata!`;
+  ui.specialMessage.textContent=offer.stage==='found'?
+    'Vuoi mangiarla? Potrebbe dare un bonus o un malus.':specialMessages[offer.effect];
+  ui.specialEat.hidden=offer.stage!=='found';
+}
 const recordKey='ffc-best-crowns-v1';
 let best=0;
 try{best=Math.max(0,Number(localStorage.getItem(recordKey))||0);}catch{}
@@ -491,7 +573,7 @@ function applySprite(actor, texture, columns = 1, frame = 0, flip = false) {
 function setPlayerAnimation() {
   const pose=animationPose({facing:state.player.facing,x:state.player.x,z:state.player.z,
     cameraX:camera.position.x,cameraZ:camera.position.z,moving:state.player.moving,
-    crouch:held.has('crouch'),taking:state.taking,stride:state.player.stride});
+    crouch:state.player.crouched,taking:state.taking,stride:state.player.stride});
   if(pose.state==='walk'||pose.state==='crouch') {
     const direction=pose.direction==='left'&&pose.state==='crouch'?'right':pose.direction;
     applySprite(player,animationTextures[`ipno-${pose.state}-${direction}`],4,pose.frame,
@@ -520,27 +602,36 @@ function loop(now) {
   const dt=Math.min((now-previous)/1000,.05);previous=now;
   if(!started)audio.update(state,finale,dt);
   if(!started){requestAnimationFrame(loop);return;}
+  if(cameraPointer!==null){orbitCamera(cameraRig,cameraAxis.x*dt*1.8);tiltCamera(cameraRig,-cameraAxis.y*dt*.62);}
   const screenX=Number(held.has('right'))-Number(held.has('left'))+joystickAxis.x;
   const screenZ=Number(held.has('down'))-Number(held.has('up'))+joystickAxis.z;
   const worldMove=cameraRelativeMovement(screenX,screenZ,cameraRig.yaw);
-  const input={...worldMove,take:held.has('take'),crouch:held.has('crouch')};
+  const input={...worldMove,take:held.has('take'),crouch:crouched,sprint:held.has('sprint')};
   updateScene(state,input,dt);
+  if(state.specialOffer)held.delete('take');
   beginFinale();if(finale)advanceFinale(finale,dt);
   audio.update(state,finale,dt);
   syncSecurityVisuals();
   if(shownPickupVersion!==state.pickupVersion){buildPickupBars();shownPickupVersion=state.pickupVersion;}
+  syncSpecialWorld();syncSpecialUi();
   updateView(worldMove,dt);
   updateShelfOcclusion();
   orientFigure(player,state.player.x,state.player.z,state.player.stride,state.player.moving);
+  const growth=state.chocolate>=15?Math.min(.35,.12+(state.chocolate-15)*.015):0;
+  player.group.scale.set(1+growth,1+growth*.12,1);
+  player.shadow.scale.setScalar(1+growth);
+  player.image.material.opacity=state.effects.invisible>0?.34:1;
   if(finale?.step==='door')player.group.position.z-=Math.min(1,finale.time/1.3)*1.5;
   setPlayerAnimation();
   state.guards.forEach((guard,index)=>{
     orientFigure(guards[index],guard.x,guard.z,guard.stride,guard.moving);
     setGuardAnimation(guards[index],guard);
     guards[index].mark.visible=guard.exclamationTime>0||guard.mode==='respond'||guard.mode==='chase';
-    updateVision(guardVisions[index],guard);
-    guardVisions[index].material.color.set(guard.chasing?'#ff4f53':'#ffb765');
-    ui.radarGuards[index].classList.toggle('responding',guard.mode==='respond'||guard.mode==='chase'||guard.mode==='search');
+    updateVision(guardVisions[index].peripheral,guard,1,1.2,true);
+    updateVision(guardVisions[index].far,guard,1,1,true);
+    updateVision(guardVisions[index].near,guard,.5,1,true);
+    guardVisions[index].near.material.color.set(guard.chasing?'#ff705b':'#ffe08c');
+    ui.radarGuards[index].classList.toggle('responding',guard.mode==='respond'||guard.mode==='chase'||guard.mode==='search'||guard.mode==='track');
     ui.radarGuards[index].classList.toggle('witness',state.security.source==='guard'&&state.security.sourceIndex===index);
   });
   if(finale?.step==='escort'){
@@ -581,9 +672,14 @@ function loop(now) {
     dot.style.top=`${(actor.z-LIMITS.minZ)/(LIMITS.maxZ-LIMITS.minZ)*100}%`;
   }
   ui.mission.textContent=state.message;
-  const near=nearestPickup(state);
+  const activeEffects=Object.entries(state.effects).filter(([,seconds])=>seconds>0)
+    .map(([effect,seconds])=>`${effect==='trail'?'TRACCIA':effect==='invisible'?'INVISIBILE':effect==='fast'?'PASSO +':effect==='slow'?'PASSO −':effect==='fast_take'?'FURTO +':'FURTO −'} ${Math.ceil(seconds)}s`);
+  ui.effects.hidden=!activeEffects.length;ui.effects.textContent=activeEffects.join(' · ');
+  const special=nearestSpecial(state),near=nearestPickup(state);
   ui.interaction.hidden=!near||['alert','pursuit','searching'].includes(mode);
-  ui.progress.style.width=`${Math.min(100,state.takeTime/TAKE_SECONDS*100)}%`;
+  if(special&&!['alert','pursuit','searching'].includes(mode))ui.interaction.hidden=false;
+  ui.interaction.firstChild.textContent=special?'SCOPRI ':'PRENDI ';
+  ui.progress.style.width=`${Math.min(100,state.takeTime/takeDuration(state)*100)}%`;
   if(finale){
     const stageNames={door:'USCITA · PRAHA',escort:'POLICIE · ACCOMPAGNAMENTO',office:'UFFICIO POLICIE',
       escalator:'SCALA MOBILE · VÝCHOD',street:'PRAHA · ESTERNO',fine:'POKUTA · MULTA'};
@@ -596,7 +692,7 @@ function loop(now) {
   }
   if(finale?.step==='result'&&ui.result.hidden){
     ui.result.hidden=false;const caught=state.phase==='caught';
-    ui.kicker.textContent=caught?'POLICIE · PRELIEVO VISTO':'USCITA RAGGIUNTA';
+    ui.kicker.textContent=caught?'POLICIE · CATTURA':'USCITA RAGGIUNTA';
     ui.title.textContent=caught?'Ti hanno raggiunto.':'Cioccolate al sicuro!';
     ui.text.textContent=caught?`${state.chocolate} cioccolate × 1 Kč = ${state.chocolate} Kč. Multa ${FINE} Kč. Punteggio: ${crowns(state)} Kč. Il record resta ${best} Kč.`:
       `${state.chocolate} cioccolate × 1 Kč = ${crowns(state)} Kč. Record salvato: ${best} Kč. Riprova e rischia di più!`;
