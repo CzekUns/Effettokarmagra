@@ -38,7 +38,10 @@ Arcade stealth umoristico **For Four Chocolate**, con protagonista **Domenico �
 - **Tecnologia:** statico HTML/CSS/JS su GitHub Pages, salvataggio punteggi in `localStorage`, nessun backend obbligatorio.
 - **Privacy/uso delle reference:** fotografie fornite dall'utente da utilizzare come guida grafica, senza riprodurre volti reali di terzi non necessari.
 
-## 5. Limite dell'intervento richiesto ora
+## Nuova roadmap gameplay — 22 ottobre 2026
+La PR #98 (campione della reference approvata) e la PR #99 (prime quattro cioccolate con viste sprite) sono state unite in `main`. **È attiva la fase [PIANO_GAMEPLAY_SEMIDEFINITIVO.md](./PIANO_GAMEPLAY_SEMIDEFINITIVO.md)**, affidata al collaboratore: 4-direzioni animate per Ipno/POLICIE, supermercato esteso con spawn numerosi sugli scaffali, zone di sicurezza differenziate e risposta di guardie/CCTV **fisica e visibile** al furto in flagrante. Issue #100–#102. La regola delle quattro cioccolate per vincere rimane valida.
+
+## 5. Limite dell'intervento richiesto ora (storico)
 **Nota storica:** questa sezione descriveva il primo incarico, ormai superato. Le PR #94 e #95 hanno pubblicato un **vertical slice tecnico giocabile**, ma la resa a quadrettoni/sprite miniaturizzati è stata criticata. Ora il prossimo traguardo non è aggiungere funzionalità: è sostituire la grafica con il **campione PS1**, da validare prima del resto.
 
 ## 6. Accettazione
