@@ -52,7 +52,10 @@ Una **schermata di gameplay 16:9 landscape**, ripresa alta inclinata alla Metal 
 - NON confondere il primo campione 3D col traguardo estetico.
 - NON limitarsi a “leggermente più definito”: obiettivo è un salto di qualità percepibile in un fermo immagine gameplay.
 
-## 5. Procedura di consegna
+## Aggiornamento di fase — 22 ottobre 2026
+Il primo campione e la prima espansione a quattro cioccolate sono ormai in `main`. **Il prossimo lotto attivo è il [PIANO_GAMEPLAY_SEMIDEFINITIVO.md](./PIANO_GAMEPLAY_SEMIDEFINITIVO.md)**: sprite di movimento in tutte le direzioni per Ipno/agenti, supermercato 3–4× con più spawn da scaffale, allerta e inseguimento reale quando viene visto il furto. Il precedente limite di una sola corsia resta *storico* e non limita i lavori richiesti ora.
+
+## 5. Procedura di consegna (storica: primo campione)
 1. **Prima dello sviluppo completo**, offrire un nuovo fermo immagine grafico approvabile: uno screenshot **reale dal browser** del prototipo campione (non compositing), affiancato al riferimento illustrato di questa chat.
 2. Nel prototipo, implementare soltanto **Ipno + 1 scaffale/frigo interagibile + 1 agente + 1 CCTV + copertura + indicatore PRENDI**. Proporzioni, materiali e telecamera hanno priorità su nuove feature.
 3. Validare l'assenza di errori di console e la leggibilità in landscape Android, includendo screenshot desktop/mobile nella PR, senza merge automatico.
