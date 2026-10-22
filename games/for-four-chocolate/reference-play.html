@@ -7,7 +7,7 @@
   <meta name="description" content="For Four Chocolate: raccogli cioccolate finché vuoi e raggiungi l'uscita prima che POLICIE ti trovi.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23212139'/%3E%3Ctext x='4' y='25' font-size='23'%3E🍫%3C/text%3E%3C/svg%3E">
   <title>For Four Chocolate · Sfida infinita</title>
-  <link rel="stylesheet" href="./reference-play.css?v=8">
+  <link rel="stylesheet" href="./reference-play.css?v=9">
 </head>
 <body>
   <main class="game" aria-label="For Four Chocolate, gioco stealth">
@@ -24,6 +24,7 @@
       <button id="camera-farther" type="button" aria-label="Allontana la camera" title="Allontana (−)">−</button>
       <button id="camera-center" type="button" aria-label="Reimposta telecamera" title="Reimposta (R)">⦿</button>
     </div>
+    <button id="music-toggle" class="music-toggle" type="button" aria-label="Disattiva musica ed effetti" hidden>MUSICA ON</button>
     <div class="mission" id="mission">Raccogli cioccolate finché vuoi: ogni prelievo aumenta i controlli. Esci quando vuoi per salvare il record.</div>
     <div class="interaction" id="interaction" hidden>PRENDI <span id="progress"></span></div>
     <div class="touch left" aria-label="Movimento">
@@ -44,6 +45,6 @@
     <div class="finale" id="finale" hidden><div class="finale-caption"><small id="finale-stage"></small><strong id="finale-spoken"></strong><span id="finale-translation"></span></div><div class="finale-actions"><button id="finale-next" type="button">CONTINUA</button><button id="finale-skip" type="button">SALTA</button></div></div>
     <div class="result" id="result" hidden><div><small id="result-kicker">POLICIE</small><h1 id="result-title">Ti hanno visto.</h1><p id="result-text"></p><button id="share-whatsapp" type="button">CONDIVIDI SU WHATSAPP</button><button id="retry">RIGIOCA</button></div></div>
   </main>
-  <script type="module" src="./reference-play.mjs?v=8"></script>
+  <script type="module" src="./reference-play.mjs?v=9"></script>
 </body>
 </html>
