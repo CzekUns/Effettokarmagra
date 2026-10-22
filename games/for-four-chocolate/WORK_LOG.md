@@ -174,3 +174,9 @@
 - **Correzione:** dopo la domanda dell'utente sulla disponibilità dell'immagine, caricata su `main` la reference `references/gruppo-ragazzi-foto.webp` (miniatura **200×128 px**, ridotta dalla foto del 22 ottobre 2026), blob `deca3685cc89d9f4a0dc56ba96c7bdc2ec456013`, commit binario `60c531d865f4c69bdcae66a2a7c653562569398e`.
 - **Portata:** questo supera la precedente nota «non caricata». L'originale non è stato caricato; la miniatura serve al collaboratore della issue #107 per comporre il gruppo (senza duplicare Ipno e Capellone), **non** come asset del gioco.
 - **Verifiche:** caricamento binario su `main` confermato; rendering finale/animazioni e test gameplay non svolti.
+
+## 2026-10-22 — ChatGPT / riparata WebP reference gruppo del finale
+- **Segnalazione collaboratore** (screenshot utente): `references/gruppo-ragazzi-foto.webp` nel GitHub era un WebP corrotto/troncato: lunghezza 3.510 byte vs 4.004 dichiarati nel contenitore RIFF, file non decodificabile. La precedente conferma di upload non includeva verifica integrità ed era quindi inesatta.
+- **Fatto:** caricato il **blob WebP completo e valido** dalla miniatura originale disponibile, 200×128 px / 4.004 byte. Nuovo SHA blob `6947971422b0e0c0b4699fb531ebca8cc1ff8f65`, commit su `main` `041ab2761e2b93f6fb37e0964e854e3c7d7d9105`. File originale con header e immagine verificati in PIL; SHA e 4.004 byte verificati nuovamente su GitHub.
+- **Handoff:** commento sulla issue [#107](https://github.com/CzekUns/Effettokarmagra/issues/107) a `ilconsulentelogistico-hue` con URL raw, invito a riscaricare e validare il file prima del lavoro. Nessuna necessità di toccare l'attuale gioco.
+- **Da fare:** collaboratore produce le sequenze finali, versione WhatsApp sui due esiti e screenshot reali da PR; se necessita maggiore definizione rispetto alla miniatura chiedere la foto originale. Evitare nuovi upload base64 senza verifica delle dimensioni RIFF e SHA.
