@@ -47,7 +47,7 @@ import {loadCarSprites,drawCarSprite,carDrawSize,CAR_TRAFFIC_SPRITE_IDS,CAR_TRAF
 import {DAMAGE_RULES,DAMAGE_LABEL,addDamage,damagePoints,damageLevel,damagedProfile,repairCost,payRepair,repairMessage,healOutOfView,drawVehicleDamage,placeWorkshop,nearWorkshop,drawWorkshop} from './vehicle-damage.mjs?v=001';
 import {loadPedestrianSprites} from './pedestrian-sprites.mjs?v=002';
 import {loadExtraPedestrianSprites,loadPedestrianSheets,PEDESTRIAN_KIND_COUNT} from './extra-pedestrian-sprites.mjs?v=007';
-import {applyLoadingScreen} from './loading-screens.mjs?v=001';
+import {applyLoadingScreen,setLoadingProgress,LOADING_PHASES} from './loading-screens.mjs?v=001&gam=1';
 import {loadFryerSprite} from './friggitore-sprites.mjs?v=002';
 import {loadProfessionSprites} from './profession-sprites.mjs?v=003';
 import {trafficApeModel,placeStreetFoodVendors,createStreetProfessionActors} from './street-professions.mjs?v=007';
@@ -204,7 +204,7 @@ const hash=n=>{let x=(Number(n)||1)|0;x=Math.imul(x^x>>>16,2246822519);x=Math.im
 const rnd=n=>hash(n)/4294967295;
 function loading(title,message,retry=false){
  $('loading').hidden=false;$('loading-title').textContent=title;$('loading-text').textContent=message;
- $('retry').hidden=!retry;
+ $('retry').hidden=!retry;$('loading').dataset.error=String(retry);$('loading').dataset.preview='false';
 }
 function hideLoading(){ $('loading').hidden=true; }
 function makeIndex(items){
@@ -889,7 +889,7 @@ function prepareMap(map,surveyData=[],infillCache=null,placement=null,enclosureD
  $('inferred-count').textContent=String(state.inferredBuildings.length);
  $('junction-count').textContent=String(state.graph.junctions);
  $('place').textContent='MELITO DI NAPOLI · MAPPA REALE';
- state.ready=true;hideLoading();if(SLOT_FROM_URL)openSlotGame();else if(POKER_FROM_URL)openPokerGame();else if(GORIZIANA_FROM_URL)openGorizianaGame();else if(POOL_FROM_URL)openPoolGame();{const v=satelliteFromUrl(globalThis.location?.search||'');if(v){satelliteOverlay()?.setEnabled(true);state.satellite?.setOpacity(v);}satelliteLabel();}state.last=0;canvas.focus({preventScroll:true});prepareMini();refreshCampaign();updateRoadWidthLabel();updateHud();
+ state.ready=true;if(SLOT_FROM_URL)openSlotGame();else if(POKER_FROM_URL)openPokerGame();else if(GORIZIANA_FROM_URL)openGorizianaGame();else if(POOL_FROM_URL)openPoolGame();{const v=satelliteFromUrl(globalThis.location?.search||'');if(v){satelliteOverlay()?.setEnabled(true);state.satellite?.setOpacity(v);}satelliteLabel();}state.last=0;canvas.focus({preventScroll:true});prepareMini();refreshCampaign();updateRoadWidthLabel();updateHud();
 }
 
 /* Campaign v0.3 — map positions always resolved from the downloaded OSM snapshot. */
@@ -2509,10 +2509,13 @@ function frame(now){
 }
 async function load(){
  if(state.loading)return;
- state.loading=true;loading('CARICO MELITO…','Recupero i confini ISTAT e la cartografia delle strade.');
+ state.loading=true;setLoadingProgress(0);loading('CARICO MELITO…','Recupero i confini ISTAT e la cartografia delle strade.');
+ let completed=0;const advance=()=>setLoadingProgress(++completed);
+ // Allow the browser to paint between loading and synchronous world construction.
+ const paint=()=>new Promise(resolve=>{const t=setTimeout(resolve,120);requestAnimationFrame(()=>requestAnimationFrame(()=>{clearTimeout(t);resolve();}));});
  try{
   const resp=await fetch('./data/boundary.json',{cache:'no-cache'});if(!resp.ok)throw Error('Confine comunale mancante');
-  const boundary=await resp.json();let map=null,staticError='';
+  const boundary=await resp.json();advance();let map=null,staticError='';
   try{
    const req=await fetch('./data/melito-map.json',{cache:'no-cache'});
    if(req.ok){const json=await req.json();if(json.roads?.length>20)map=json;}
@@ -2526,29 +2529,38 @@ async function load(){
    map=await fetchOverpass(boundary,url=>{$('loading-text').textContent='Collegamento cartografico: '+new URL(url).hostname+'. Le strade resteranno fedeli ai dati OSM.';});
    try{localStorage.setItem('gta-melito-osm-v1',JSON.stringify(map));}catch(e){console.warn('Cache della mappa non disponibile:',e);}
   }
+  advance();
   const surveyData=[];
   for(const path of ['./survey/sector-001-002.json','./survey/town-visuals.json','./survey/piazza-santo-stefano.json']){
    try{
     const surveyReq=await fetch(path,{cache:'no-cache'});
     if(surveyReq.ok)surveyData.push(await surveyReq.json());
    }catch(error){console.warn('Optional building survey unavailable',path,error);}
+   advance();
   }
   let infillCache=null;
   try{
    const req=await fetch('./data/urban-infill.json',{cache:'no-cache'});
    if(req.ok)infillCache=await req.json();
   }catch(error){console.warn('Optional synthetic art cache unavailable',error);}
+  advance();
   let placement=null;
   try{
    const req=await fetch('./data/building-placement.json',{cache:'no-cache'});
    if(req.ok)placement=await req.json();
   }catch(error){console.warn('Optional building placement unavailable',error);}
+  advance();
   let enclosureData=null;
   try{
    const req=await fetch('./data/enclosures.json',{cache:'no-cache'});
    if(req.ok)enclosureData=await req.json();
   }catch(error){console.warn('Optional enclosures unavailable',error);}
+  advance();
+  $('loading-text').textContent='Preparo il mondo di gioco.';
+  await paint();
   prepareMap(map,surveyData,infillCache,placement,enclosureData);
+  setLoadingProgress(LOADING_PHASES);
+  await paint();hideLoading();
  }catch(e){console.error('GTA Melito map load',e);loading('MAPPA NON DISPONIBILE','Non posso mostrare una Melito inventata: '+e.message+'. Riprova quando la cartografia è disponibile.',true);}
  finally{state.loading=false;}
 }
@@ -2672,8 +2684,9 @@ function bind(){
     if(entry.prova==='dialogo'){closePause();openDialogue(DEMO_DIALOGUE);}
     if(entry.prova==='caricamento'){
      closePause();applyLoadingScreen();
-     $('loading-title').textContent='MELITO IN ARTWORK';
-     $('loading-text').textContent='Una scena diversa a ogni avvio.';
+     $('loading').dataset.preview='true';$('loading').dataset.error='false';
+     $('loading-title').textContent='GRAND ASSE MEDIANO';
+     $('loading-text').textContent='Artwork ufficiale di GAM.';
      $('retry').hidden=true;$('loading-preview-close').hidden=false;$('loading').hidden=false;
     }
    },
