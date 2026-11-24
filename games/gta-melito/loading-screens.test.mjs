@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,stat} from 'node:fs/promises';
-import {LOADING_SCREENS,LOADING_SCREEN_STORAGE_KEY,chooseLoadingScreen,applyLoadingScreen} from './loading-screens.mjs';
+import {LOADING_SCREENS,LOADING_SCREEN_STORAGE_KEY,chooseLoadingScreen,applyLoadingScreen,GAM_LOADING_SCREEN,setLoadingProgress,LOADING_PHASES} from './loading-screens.mjs';
 
 function dimensions(bytes){
  if(bytes.subarray(0,8).toString('hex')==='89504e470d0a1a0a')return [bytes.readUInt32BE(16),bytes.readUInt32BE(20)];
@@ -65,4 +65,28 @@ test('collegamento all’avvio e anteprima da NOVITÀ con sfumatura sotto il tes
  assert.match(html,/\.loading::before\{[^}]*linear-gradient/);
  assert.match(html,/id="loading-scene-title"/);
  assert.match(novita,/id:'caricamento-artwork'/);
+});
+
+test('GAM ufficiale è lo sfondo di default, senza sostituire gli asset storici',async()=>{
+ const properties=new Map(),loading={style:{setProperty:(k,v)=>properties.set(k,v)},dataset:{}};
+ const document={getElementById:id=>id==='loading'?loading:null};
+ assert.equal(applyLoadingScreen({document}),GAM_LOADING_SCREEN);
+ assert.equal(loading.dataset.screen,'gam');
+ assert.match(properties.get('--loading-desktop'),/gam-loading\.webp/);
+ const bytes=await readFile(new URL(GAM_LOADING_SCREEN.desktop,import.meta.url));
+ assert.equal(bytes.toString('ascii',0,4),'RIFF');
+ assert.equal(bytes.toString('ascii',8,12),'WEBP');
+ assert.ok(bytes.length<400_000);
+});
+test('il progresso avanza solo con operazioni completate, si azzera e resta entro i limiti',()=>{
+ const css=new Map(),attrs=new Map(),label={textContent:''};
+ const bar={style:{setProperty:(k,v)=>css.set(k,v)},setAttribute:(k,v)=>attrs.set(k,v)};
+ const document={getElementById:id=>id==='loading-bar'?bar:label};
+ const values=Array.from({length:LOADING_PHASES+1},(_,i)=>setLoadingProgress(i,{document}));
+ assert.deepEqual(values,[0,11,22,33,44,56,67,78,89,100]);
+ assert.equal(css.get('--loading-progress'),'100%');
+ assert.equal(attrs.get('aria-valuenow'),'100');
+ assert.equal(label.textContent,'100%');
+ assert.equal(setLoadingProgress(-1,{document}),0);
+ assert.equal(setLoadingProgress(99,{document}),100);
 });

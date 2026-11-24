@@ -852,3 +852,6 @@ Secondo screenshot e correzione dell'utente, **mantenere la torre molto grande e
 - Divise ROSSI/BLU/portieri dal foglio pixel art 24×40 generato da CODEX-GH; HUD e pulsanti touch TIRO/PASSA, conferma ESC/ESCI, bambini nascosti sul campo attivo. I campetti piccoli, incluso Corso Europa, mostrano solo l’avviso per il campo grande perché troppo stretti per dieci giocatori alla scala cittadina.
 - Grafica **PROVVISORIA, da approvare da Simone**. Le note precedenti sul calcetto nei due campetti descrivono la bozza superata da questa integrazione.
 - **Verifica finale:** suite 680/680; audit 199 moduli MJS, zero import discordanti, file mancanti, ID HTML doppi o JSON invalidi. Browser PC 1280×720 e telefono 844×390: 55,0 e 59,7 FPS, rispettivamente; gol, fischio finale, salvataggio unico e camminata dopo il gioco; zero errori console/404. Screenshot 3× in `sim-calcetto/`. Nessun push.
+
+### 2026-11-24 — Artwork ufficiale Grand Asse Mediano: Melito — APPROVATO
+- Copertina illustrata approvata dall'utente, logo con skyline interamente nero e fungo nero, fungo rosso/bianco separato nello sfondo; segnaletica blu Aversa–Melito. WebP 1440×758 (circa 260 KiB), barra finta rimossa con crop; sfondo contain e barra rosa reale separata nell'HTML. I sette asset storici restano conservati. Verifica browser/telefono ancora da fare.

@@ -45,17 +45,17 @@ test('lotto 4: il CSS di .loading usa i due sfondi (PC e telefono) con pixel net
  assert.ok(media,'media query per telefono stretto o orizzontale');
  assert.match(media[1],/\.loading\{[^}]*url\('\.\/assets\/ui\/loading-844x390\.png'\)/,'sfondo 844×390 sul telefono');
  assert.match(css,/\.loading-bar\{/,'barra di caricamento (solo CSS)');
- assert.match(css,/@keyframes loading-sweep/,'animazione della barra');
- assert.match(css,/\.loading\[hidden\] \.loading-bar::before\{animation:none\}/,'barra ferma quando la schermata è nascosta');
+ assert.match(css,/width:var\(--loading-progress,0%\)/,'avanzamento collegato alle fasi reali');
+ assert.doesNotMatch(css,/@keyframes loading-sweep/,'nessuna animazione fittizia');
 });
 
 test('lotto 4: la sezione .loading resta con i suoi id (loading, loading-title, loading-text, retry) più la barra decorativa',async()=>{
  const page=await readFile(new URL('./index.html',import.meta.url),'utf8');
- const section=page.match(/<section class="loading" id="loading">([\s\S]*?)<\/section>/);
+ const section=page.match(/<section class="loading" id="loading"[^>]*>([\s\S]*?)<\/section>/);
  assert.ok(section,'sezione .loading#loading');
  assert.match(section[1],/<h2 id="loading-title">/);
  assert.match(section[1],/<p id="loading-text">/);
- assert.match(section[1],/<div class="loading-bar" aria-hidden="true"><\/div>/);
+ assert.match(section[1],/<div class="loading-bar" id="loading-bar" role="progressbar"/);
  assert.match(section[1],/<button id="retry" hidden>/);
  assert.match(page,/\.loading\[hidden\]\{display:none\}/,'[hidden] continua a nascondere la schermata');
  assert.ok(Number((page.match(/game\.mjs\?v=(\d+)/)||[])[1])>=202,'versione cache di game.mjs invariata o superiore');

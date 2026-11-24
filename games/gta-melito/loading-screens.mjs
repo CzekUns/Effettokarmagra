@@ -11,6 +11,20 @@ export const LOADING_SCREENS=Object.freeze([
  {id:'festa-patronale',title:'La festa patronale',desktop:'./assets/ui/loading-art-festa-patronale-1280x720.jpg',mobile:'./assets/ui/loading-art-festa-patronale-844x390.jpg',credit:'artwork provvisoria'}
 ].map(Object.freeze));
 
+export const GAM_LOADING_SCREEN=Object.freeze({id:'gam',title:'Grand Asse Mediano: Melito',desktop:'./assets/ui/gam-loading.webp',mobile:'./assets/ui/gam-loading.webp',credit:'artwork ufficiale approvata'});
+export const LOADING_PHASES=9;
+
+// Progress counts completed startup operations, not elapsed time or estimated network bytes.
+export function setLoadingProgress(completed,{document:doc=globalThis.document}={}){
+ const value=Math.round(100*Math.max(0,Math.min(LOADING_PHASES,Number(completed)||0))/LOADING_PHASES);
+ const bar=doc?.getElementById?.('loading-bar');
+ bar?.style.setProperty('--loading-progress',value+'%');
+ bar?.setAttribute('aria-valuenow',String(value));
+ const label=doc?.getElementById?.('loading-percent');
+ if(label)label.textContent=value+'%';
+ return value;
+}
+
 let lastInMemory=null;
 export function chooseLoadingScreen({storage,random=Math.random}={}){
  if(storage===undefined){try{storage=globalThis.localStorage;}catch{storage=null;}}
@@ -27,7 +41,7 @@ export function chooseLoadingScreen({storage,random=Math.random}={}){
 export function applyLoadingScreen({document:doc=globalThis.document,storage,random,forceId}={}){
  const loading=doc?.getElementById?.('loading');
  if(!loading)return null;
- const screen=LOADING_SCREENS.find(s=>s.id===forceId)||chooseLoadingScreen({storage,random});
+ const screen=forceId==='gam'?GAM_LOADING_SCREEN:LOADING_SCREENS.find(s=>s.id===forceId)||(forceId?chooseLoadingScreen({storage,random}):GAM_LOADING_SCREEN);
  loading.style.setProperty('--loading-desktop',`url("${screen.desktop}")`);
  loading.style.setProperty('--loading-mobile',`url("${screen.mobile}")`);
  loading.dataset.screen=screen.id;
