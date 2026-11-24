@@ -2512,7 +2512,7 @@ async function load(){
  state.loading=true;setLoadingProgress(0);loading('CARICO MELITO…','Recupero i confini ISTAT e la cartografia delle strade.');
  let completed=0;const advance=()=>setLoadingProgress(++completed);
  // Allow the browser to paint between loading and synchronous world construction.
- const paint=()=>new Promise(resolve=>{const t=setTimeout(resolve,120);requestAnimationFrame(()=>requestAnimationFrame(()=>{clearTimeout(t);resolve();}));});
+ const paint=()=>new Promise(resolve=>setTimeout(resolve,32));
  try{
   const resp=await fetch('./data/boundary.json',{cache:'no-cache'});if(!resp.ok)throw Error('Confine comunale mancante');
   const boundary=await resp.json();advance();let map=null,staticError='';
